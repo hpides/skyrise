@@ -1,0 +1,38 @@
+[submodule "third_party/arrow"]
+	path = third_party/arrow
+	url = https://github.com/apache/arrow.git
+	shallow = true
+[submodule "third_party/aws-lambda-cpp"]
+	path = third_party/aws-lambda-cpp
+	url = https://github.com/awslabs/aws-lambda-cpp.git
+    shallow = true
+[submodule "third_party/aws-sdk-cpp"]
+	path = third_party/aws-sdk-cpp
+	url = https://github.com/aws/aws-sdk-cpp.git
+    shallow = true
+[submodule "third_party/csv-parser"]
+	path = third_party/csv-parser
+	url = https://github.com/vincentlaucsb/csv-parser.git
+	shallow = true
+[submodule "third_party/cxxopts"]
+	path = third_party/cxxopts
+	url = https://github.com/jarro2783/cxxopts.git
+	shallow = true
+[submodule "third_party/googletest"]
+	path = third_party/googletest
+	url = https://github.com/google/googletest.git
+	shallow = true
+[submodule "third_party/jemalloc"]
+	path = third_party/jemalloc
+	url = https://github.com/jemalloc/jemalloc.git
+	branch = dev
+	shallow = true
+[submodule "third_party/json"]
+	path = third_party/json
+	url = https://github.com/nlohmann/json.git
+	branch = develop
+	shallow = true
+[submodule "third_party/orc"]
+	path = third_party/orc
+	url = https://github.com/apache/orc.git
+	shallow = true

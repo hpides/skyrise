@@ -1,0 +1,7 @@
+{
+  "HelloWorldFunction": {
+    "AWS_ACCESS_KEY_ID": "minio",
+    "AWS_SECRET_ACCESS_KEY": "miniostorage",
+    "SAM_CLI_TELEMETRY": 0
+  }
+}

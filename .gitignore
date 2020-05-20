@@ -1,0 +1,23 @@
+# Temporary files created by most text editors.
+*~
+# Merge files created by Git.
+*.orig
+# Byte compiled Python modules.
+*.pyc
+# Swap files created by Vim.
+.*.sw?
+.sw?
+# Files created by macOS.
+.DS_STORE
+# Target directory of Ccache.
+ccache
+# Project configuration of CLion.
+.idea
+# Build directories of CLion.
+cmake-build-*
+# Sublime.
+*.sublime-*
+# Configuration files of Visual Studio Code.
+.vscode
+# MinIO.
+minio/data/*
