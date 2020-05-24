@@ -6,9 +6,9 @@ ARG CMAKE_PATCH=2
 ARG CMAKE_DIR=/opt/cmake-${CMAKE_VERSION}.${CMAKE_PATCH}
 ARG CPPCHECK_VERSION=1.90
 ARG CPPCHECK_DIR=/opt/cppcheck-${CPPCHECK_VERSION}
-ARG CPPLINT_COMMIT=7a59e42
+ARG CPPLINT_COMMIT=35fd3f0
 ARG CPPLINT_DIR=/opt/cpplint-${CPPLINT_COMMIT}
-ARG DOCKER_LAMBDA_COMMIT=1016f89
+ARG DOCKER_LAMBDA_COMMIT=c1487e9
 ARG DOCKER_LAMBDA_DIR=/opt/docker-lambda-${DOCKER_LAMBDA_COMMIT}
 ARG GCC_VERSION=7.5.0
 ARG GCC_SUFFIX=75
@@ -17,7 +17,7 @@ ARG LLVM_VERSION=10.0.0
 ARG LLVM_DIR=/opt/llvm-${LLVM_VERSION}
 
 
-FROM lambci/lambda-base:build AS skyrise-base
+FROM lambci/lambda-base:build AS base
 ARG CCACHE_VERSION
 ARG CCACHE_DIR
 ARG CMAKE_VERSION
@@ -125,7 +125,7 @@ RUN wget -nv https://raw.githubusercontent.com/lambci/docker-lambda/${DOCKER_LAM
     rm -rf ${DOCKER_LAMBDA_DIR}/src
 
 
-FROM lambci/lambda-base:build AS skyrise-build
+FROM lambci/lambda-base:build AS build
 ARG GCC_DIR
 
 # Packages
@@ -145,7 +145,7 @@ RUN yum install -y \
     alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 1000 && \
     alternatives --set ld /usr/bin/ld.lld
 
-COPY --from=skyrise-base /opt /opt
+COPY --from=base /opt /opt
 
 RUN for file in /opt/*/bin/*; \
     do \
@@ -157,7 +157,7 @@ RUN for file in /opt/*/bin/*; \
     ln -s /usr/local/bin/ccache /usr/local/bin/clang++
 
 
-FROM lambci/lambda-base AS skyrise-run
+FROM lambci/lambda-base AS run
 ARG DOCKER_LAMBDA_DIR
 
 # Packages
@@ -171,7 +171,7 @@ RUN yum install -y \
 # In the AWS Lambda execution environment, language runtimes are located in /var/runtime
 WORKDIR /var/runtime/
 COPY script/docker/local_lambda_bootstrap.sh bootstrap
-COPY --from=skyrise-base ${DOCKER_LAMBDA_DIR}/init bootstrap_wrapper
+COPY --from=base ${DOCKER_LAMBDA_DIR}/init bootstrap_wrapper
 RUN chmod +x /var/runtime/bootstrap && \
     chmod +x /var/runtime/bootstrap_wrapper
 
