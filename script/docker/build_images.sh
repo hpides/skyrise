@@ -8,7 +8,7 @@
 #   --prune   Defines whether dangling (i.e., neither used nor tagged) images are removed (default is false)
 
 set -e
-cd "$(dirname "${BASH_SOURCE[0]}")/../../"
+SOURCE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../"; pwd)
 
 PREFIX=$USER
 PRUNE=false
@@ -23,9 +23,9 @@ done
 
 echo "Building images with repository prefix ${PREFIX}.."
 export DOCKER_BUILDKIT=1
-docker build --target base --tag ${PREFIX}/skyrise:base .
-docker build --target build --tag ${PREFIX}/skyrise:build .
-docker build --target run --tag ${PREFIX}/skyrise:run .
+docker build --build-arg BUILDKIT_INLINE_CACHE=1 --pull --target base --tag ${PREFIX}/skyrise:base ${SOURCE_DIR}
+docker build --build-arg BUILDKIT_INLINE_CACHE=1 --pull --target build --tag ${PREFIX}/skyrise:build ${SOURCE_DIR}
+docker build --build-arg BUILDKIT_INLINE_CACHE=1 --pull --target run --tag ${PREFIX}/skyrise:run ${SOURCE_DIR}
 
 if [ "$PRUNE" = true ]; then
     echo "Removing dangling images.."
