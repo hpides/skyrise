@@ -1,2 +1,2 @@
 *
-!script/docker/local_lambda_bootstrap.sh
+!script/docker/local_function_bootstrap.sh

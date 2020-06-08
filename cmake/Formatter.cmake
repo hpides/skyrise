@@ -7,13 +7,13 @@ if(SKYRISE_ENABLE_CLANG_FORMAT)
         find_package(Python3 REQUIRED)
         # Configuration in .clang-format file
         add_custom_target(
-                clang-format-edit ALL
+            clang-format-edit ALL
 
-                COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/script/run_clang_format.py
-                --clang_format_binary clang-format
-                --source_dir ${CMAKE_SOURCE_DIR}/src
-                --fix
-                --quiet
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/script/run_clang_format.py
+            --clang_format_binary clang-format
+            --source_dir ${CMAKE_SOURCE_DIR}/src
+            --fix
+            --quiet
         )
         message(STATUS "Clang-Format enabled")
     else()

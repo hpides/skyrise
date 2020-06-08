@@ -8,15 +8,20 @@
 #   --prune   Defines whether dangling (i.e., neither used nor tagged) images are removed (default is false)
 
 set -e
-SOURCE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../"; pwd)
+exitWithError() {
+    echo "$1";
+    echo "Usage: $0 [--prefix PREFIX] [--prune]";
+    exit 1;
+}
 
+SOURCE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../"; pwd)
 PREFIX=$USER
 PRUNE=false
 while [ "$#" -gt 0 ]; do
     case $1 in
         --prefix) PREFIX="$2"; shift ;;
         --prune) PRUNE=true ;;
-            *) echo "Unknown parameter: $1"; echo "Usage: $0 [--prefix PREFIX] [--prune]"; exit 1 ;;
+            *) exitWithError "Unknown parameter: $1" ;;
     esac
     shift
 done

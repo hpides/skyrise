@@ -170,7 +170,7 @@ RUN yum install -y \
 
 # In the AWS Lambda execution environment, language runtimes are located in /var/runtime
 WORKDIR /var/runtime/
-COPY script/docker/local_lambda_bootstrap.sh bootstrap
+COPY script/docker/local_function_bootstrap.sh bootstrap
 COPY --from=base ${DOCKER_LAMBDA_DIR}/init bootstrap_wrapper
 RUN chmod +x /var/runtime/bootstrap && \
     chmod +x /var/runtime/bootstrap_wrapper

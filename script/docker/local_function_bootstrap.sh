@@ -14,35 +14,35 @@
 #   SKYRISE_ARTIFACT_INCL_LIBC  Defines whether SKYRISE_ARTIFACT depends on a custom libc (default is false)
 #   SKYRISE_DEBUG               Defines whether SKYRISE_ARTIFACT is run in GDB (default is false)
 #   SKYRISE_DEBUG_IP            The IP of GDB server, if SKYRISE_DBUG is true
-#   SKYRISE_DEBUG_PORT          The port of GDB server, if SKYRISE_DBUG is true (default is 2345)
+#   SKYRISE_DEBUG_PORT          The port of GDB server, if SKYRISE_DBUG is true (default is 2159)
 
 SKYRISE_ARTIFACT_INCL_LIBC=${SKYRISE_ARTIFACT_INCL_LIBC:-false}
 SKYRISE_DEBUG=${SKYRISE_DEBUG:-false}
-SKYRISE_DEBUG_PORT=${SKYRISE_DEBUG_PORT:-"2345"}
+SKYRISE_DEBUG_PORT=${SKYRISE_DEBUG_PORT:-"2159"}
 
 set -euo pipefail
 export AWS_EXECUTION_ENV=lambda-cpp
 if [ -z "$SKYRISE_ARTIFACT" ] ; then
-    echo -e "Error: SKYRISE_ARTIFACT is required but not set\n"
+    echo "Error: SKYRISE_ARTIFACT is required but not set"
     exit 1
 fi
 if [ "$SKYRISE_ARTIFACT_INCL_LIBC" = false ]; then
-    echo -e "SKYRISE_ARTIFACT does not depend on custom libc\n"
+    echo "${SKYRISE_ARTIFACT} does not depend on custom libc"
     # LD_LIBRARY_PATH additionally contains /lib64, /usr/lib64, /var/runtime and /var/task
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$LAMBDA_TASK_ROOT/lib
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$LAMBDA_TASK_ROOT/lib:$LAMBDA_TASK_ROOT/lib/lib64
     command="$LAMBDA_TASK_ROOT/bin/$SKYRISE_ARTIFACT ${_HANDLER}"
 else
-    echo -e "SKYRISE_ARTIFACT depends on custom libc\n"
+    echo "${SKYRISE_ARTIFACT} depends on custom libc"
     command="$LAMBDA_TASK_ROOT/lib/ld-linux-x86-64.so.2 --library-path $LAMBDA_TASK_ROOT/lib $LAMBDA_TASK_ROOT/bin/$SKYRISE_ARTIFACT ${_HANDLER}"
 fi
 if [ "$SKYRISE_DEBUG" = false ]; then
-    echo -e "Executing ${SKYRISE_ARTIFACT} without gdbserver\n"
+    echo "Executing ${SKYRISE_ARTIFACT} without gdbserver"
 else
     if [ -z "$SKYRISE_DEBUG_IP" ] ; then
-        echo -e "Error: SKYRISE_DEBUG_IP is required but not set\n"
+        echo "Error: SKYRISE_DEBUG_IP is required but not set"
         exit 1
     fi
-    echo -e "Executing ${SKYRISE_ARTIFACT} with gdbserver on ${SKYRISE_DEBUG_IP}:${SKYRISE_DEBUG_PORT}\n"
+    echo "Executing ${SKYRISE_ARTIFACT} with gdbserver on ${SKYRISE_DEBUG_IP}:${SKYRISE_DEBUG_PORT}"
     command="gdbserver ${SKYRISE_DEBUG_IP}:${SKYRISE_DEBUG_PORT} $command"
 fi
 exec $command
