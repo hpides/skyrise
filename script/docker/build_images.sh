@@ -35,4 +35,6 @@ docker build --build-arg BUILDKIT_INLINE_CACHE=1 --pull --target run --tag ${PRE
 if [ "$PRUNE" = true ]; then
     echo "Removing dangling images.."
     docker image prune -f
+    echo "Removing dangling build caches.."
+    docker builder prune -f
 fi
