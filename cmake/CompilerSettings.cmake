@@ -1,5 +1,3 @@
-option(SKYRISE_ENABLE_CCACHE "Enable build caching with Ccache" ON)
-
 # Check build type
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Debug)

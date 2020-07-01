@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 include_directories(
     ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-core/include
     ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-s3/include
+    ${PROJECT_SOURCE_DIR}/third_party/orc/c++/include
+    ${CMAKE_BINARY_DIR}/third_party/orc/c++/include
 )
 
 add_compile_options(-pthread -Wall -Wextra -Wpedantic -Werror)

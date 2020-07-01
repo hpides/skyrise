@@ -1,7 +1,3 @@
-option(SKYRISE_ENABLE_CLANG_TIDY "Enable static analysis with clang-tidy" OFF)
-option(SKYRISE_ENABLE_CPPCHECK "Enable static analysis with cppcheck" OFF)
-option(SKYRISE_ENABLE_CPPLINT "Enable static analysis with cpplint" OFF)
-
 # Clang-Tidy
 if(SKYRISE_ENABLE_CLANG_TIDY)
     find_program(CLANG_TIDY clang-tidy)

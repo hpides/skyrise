@@ -197,6 +197,8 @@ RUN for file in /opt/*/bin/*; \
     ln -s /usr/local/bin/ccache /usr/local/bin/clang && \
     ln -s /usr/local/bin/ccache /usr/local/bin/clang++
 
+ENV CC=clang
+ENV CXX=clang++
 
 # Run stage
 FROM lambci/lambda-base AS run

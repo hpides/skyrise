@@ -1,5 +1,3 @@
-option(SKYRISE_ENABLE_CLANG_FORMAT "Enable formatting with clang-format" ON)
-
 # Clang-Format
 if(SKYRISE_ENABLE_CLANG_FORMAT)
     find_program(CLANG_FORMAT clang-format)

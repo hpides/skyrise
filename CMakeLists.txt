@@ -2,7 +2,13 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
 project(skyrise
     VERSION 0.1.0
-    LANGUAGES CXX)
+    LANGUAGES C CXX)
+
+option(SKYRISE_ENABLE_CCACHE "Enable build caching with Ccache" ON)
+option(SKYRISE_ENABLE_CLANG_FORMAT "Enable formatting with clang-format" ON)
+option(SKYRISE_ENABLE_CLANG_TIDY "Enable static analysis with clang-tidy" OFF)
+option(SKYRISE_ENABLE_CPPCHECK "Enable static analysis with cppcheck" OFF)
+option(SKYRISE_ENABLE_CPPLINT "Enable static analysis with cpplint" OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
