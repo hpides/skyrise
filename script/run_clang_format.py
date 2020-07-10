@@ -19,13 +19,15 @@
 # Modified from the Apache Arrow project (https://github.com/apache/arrow at commit e5a33f1).
 
 from __future__ import print_function
-import lintutils
-from subprocess import PIPE
+
 import argparse
 import difflib
 import multiprocessing as mp
+import subprocess
 import sys
-from functools import partial
+from subprocess import PIPE
+
+import lintutils
 
 
 # examine the output of clang-format and if changes are
@@ -64,6 +66,12 @@ if __name__ == "__main__":
     parser.add_argument("--source_dir",
                         required=True,
                         help="Root directory of the source code")
+    parser.add_argument("--as_git_hook", default=False,
+                        action="store_true",
+                        help="If specified, will only re-format files "
+                             "that are currently staged in Git, defaults "
+                             "to %(default)s. Intended for use as a Git "
+                             "pre-commit hook")
     parser.add_argument("--fix", default=False,
                         action="store_true",
                         help="If specified, will re-format the source "
@@ -83,6 +91,21 @@ if __name__ == "__main__":
     for path in lintutils.get_sources(arguments.source_dir, exclude_globs):
         formatted_filenames.append(str(path))
 
+    if arguments.as_git_hook:
+        arguments.fix = True
+        arguments.quiet = True
+        repository_root = subprocess.getoutput("git rev-parse --show-toplevel")
+        git_diff_files = subprocess.getoutput("git diff --name-only --cached")
+        staged_filenames = [
+            "{}/{}".format(repository_root, filename)
+            for filename in git_diff_files.splitlines()
+        ]
+        formatted_filenames = [
+            filename
+            for filename in formatted_filenames
+            if filename in staged_filenames
+        ]
+
     if arguments.fix:
         if not arguments.quiet:
             print("\n".join(map(lambda x: "Formatting {}".format(x),
@@ -94,6 +117,10 @@ if __name__ == "__main__":
             [arguments.clang_format_binary, "-i"] + some
             for some in lintutils.chunk(formatted_filenames, 16)
         ])
+
+        if arguments.as_git_hook:
+            subprocess.getoutput("git add {}".format(" ".join(formatted_filenames)))
+
         for returncode, stdout, stderr in results:
             # if any clang-format reported a parse error, bubble it
             if returncode != 0:
