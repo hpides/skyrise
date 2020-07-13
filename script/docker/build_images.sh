@@ -9,9 +9,9 @@
 
 set -e
 exitWithError() {
-    echo "$1";
-    echo "Usage: $0 [--prefix PREFIX] [--prune]";
-    exit 1;
+    echo "$1"
+    echo "Usage: $0 [--prefix PREFIX] [--prune]"
+    exit 1
 }
 
 SOURCE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../"; pwd)

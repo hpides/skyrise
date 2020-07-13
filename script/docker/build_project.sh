@@ -13,9 +13,9 @@
 
 set -e
 exitWithError() {
-    echo "$1";
-    echo "Usage: $0 [-b|--build-dir BUILD_DIR] [-c|--cmake CMAKE_OPTIONS] [-p|--prefix PREFIX] [-t|--build-type BUILD_TYPE] [-v|--verbose]";
-    exit 1;
+    echo "$1"
+    echo "Usage: $0 [-b|--build-dir BUILD_DIR] [-c|--cmake CMAKE_OPTIONS] [-p|--prefix PREFIX] [-t|--build-type BUILD_TYPE] [-v|--verbose]"
+    exit 1
 }
 
 SOURCE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../"; pwd)
@@ -43,8 +43,8 @@ if [ "$(uname -s)" = Linux ]; then
 elif [ "$(uname -s)" = Darwin ]; then
     NUM_CORES=$(sysctl -n hw.logicalcpu)
 else
-    echo "Unsupported operating system: $(uname -s)";
-    exit 1;
+    echo "Unsupported operating system: $(uname -s)"
+    exit 1
 fi
 
 USER_ID="$(id -u)"

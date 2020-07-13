@@ -5,7 +5,7 @@
 # Thereby, it handles C++ cloud function artifacts that depend on either Lambda's own version of libc or a custom version
 # from another Linux distribution (than Amazon Linux 1). It can optionally run the cloud function in GDB for debugging.
 #
-# We call this script from within a local Docker container that runs our skyrise-run image (specified in Dockerfile).
+# We call this script from within a local Docker container that runs our skyrise:run image (specified in Dockerfile).
 # This image simulates Lambda's execution environment via docker-lambda (https://github.com/lambci/docker-lambda), and
 # thus allows for testing and debugging as in a cloud deployment.
 #

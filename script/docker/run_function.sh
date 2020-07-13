@@ -18,10 +18,10 @@
 
 set -e
 exitWithError() {
-    echo "$1";
+    echo "$1"
     echo "Usage: $0 FUNCTION [-a|--arguments ARGUMENTS] [-b|--build-dir BUILD_DIR] [-d/--debug DEBUG]" \
-    "[-I/--debug-ip DEBUG_IP] [-P/--debug-port DEBUG_PORT] [-p|--prefix PREFIX] [-v|--verbose] ";
-    exit 1;
+    "[-I/--debug-ip DEBUG_IP] [-P/--debug-port DEBUG_PORT] [-p|--prefix PREFIX] [-v|--verbose] "
+    exit 1
 }
 
 SOURCE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../"; pwd)
