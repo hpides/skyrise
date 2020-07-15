@@ -1,0 +1,39 @@
+#pragma once
+
+#include <aws/core/Aws.h>
+#include <aws/core/auth/AWSCredentialsProvider.h>
+#include <aws/core/client/ClientConfiguration.h>
+#include <aws/pricing/PricingClient.h>
+#include <aws/pricing/model/Filter.h>
+
+#include "pricing.hpp"
+
+namespace skyrise {
+
+/*
+ * The CostCalculator class uses service consumption information together with pricing information from the Pricing
+ * class to estimate costs for the AWS services that Skyrise is built on. In order to keep costs comparable, it does not
+ * take free tiers or any discounts into account.
+ */
+
+class CostCalculator {
+ public:
+  CostCalculator(const std::shared_ptr<Pricing> pricing) : _pricing(pricing) {}
+
+  // AWS rounds up the compute duration to the nearest 100ms
+  double calculate_cost_lambda(const size_t compute_duration_ms, const size_t lambda_size_mb) const;
+
+  /*
+   * Any storage capacity that is being used on S3 is billed for at least a whole month - even if it's only stored for a
+   * minute (cf. https://forums.aws.amazon.com/thread.jspa?threadID=118983). At this point, we only use the first
+   * storage pricing unit (0-50TB) to guarantee comparability between calculations.
+   */
+  double calculate_cost_s3_storage_monthly(const size_t used_storage_bytes) const;
+  double calculate_cost_s3_requests(const size_t requests_tier1, const size_t requests_tier2) const;
+  double calculate_cost_s3_select(const size_t returned_bytes, const size_t scanned_bytes) const;
+
+ private:
+  const std::shared_ptr<Pricing> _pricing;
+};
+
+}  // namespace skyrise

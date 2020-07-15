@@ -3,16 +3,22 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # w/cpp/compiler_support)
 set(CMAKE_CXX_STANDARD 17)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(SKYRISE_DEBUG)
+endif()
+
+add_compile_options(-pthread -Wall -Wextra -Wpedantic -Werror)
+
 include_directories(
+    ${PROJECT_SOURCE_DIR}/src/lib
     ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-core/include
+    ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-pricing/include
     ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-s3/include
     ${PROJECT_SOURCE_DIR}/third_party/orc/c++/include
     ${CMAKE_BINARY_DIR}/third_party/orc/c++/include
 )
 
-add_compile_options(-pthread -Wall -Wextra -Wpedantic -Werror)
-
 add_subdirectory(benchmark)
-#add_subdirectory(bin)
-#add_subdirectory(lib)
-#add_subdirectory(test)
+add_subdirectory(bin)
+add_subdirectory(lib)
+add_subdirectory(test)
