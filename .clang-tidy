@@ -64,5 +64,5 @@ CheckOptions:
     value: lower_case
   - key: readability-identifier-naming.VariableCase
     value: lower_case
-WarningsAsErrors: '*'
+WarningsAsErrors: ''
 HeaderFilterRegex: 'src/[^/]*\.(cpp|hpp)$'

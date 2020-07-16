@@ -5,7 +5,7 @@ project(skyrise
     LANGUAGES C CXX)
 
 option(SKYRISE_ENABLE_CCACHE "Enable build caching with Ccache" ON)
-option(SKYRISE_ENABLE_CLANG_FORMAT "Enable formatting with clang-format" ON)
+option(SKYRISE_ENABLE_CLANG_FORMAT "Enable formatting with clang-format" OFF)
 option(SKYRISE_ENABLE_CLANG_TIDY "Enable static analysis with clang-tidy" OFF)
 option(SKYRISE_ENABLE_CPPCHECK "Enable static analysis with cppcheck" OFF)
 option(SKYRISE_ENABLE_CPPLINT "Enable static analysis with cpplint" OFF)

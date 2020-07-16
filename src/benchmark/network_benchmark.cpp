@@ -1,3 +1,10 @@
+#include <algorithm>
+#include <fstream>
+#include <iterator>
+#include <regex>
+#include <tuple>
+#include <vector>
+
 #include <aws/core/Aws.h>
 #include <aws/core/auth/AWSCredentialsProvider.h>
 #include <aws/core/client/ClientConfiguration.h>
@@ -9,13 +16,6 @@
 #include <aws/s3/S3Client.h>
 #include <aws/s3/model/GetObjectRequest.h>
 #include <aws/s3/model/PutObjectRequest.h>
-
-#include <algorithm>
-#include <fstream>
-#include <iterator>
-#include <regex>
-#include <tuple>
-#include <vector>
 
 // globals
 namespace lambda_rt = aws::lambda_runtime;
