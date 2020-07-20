@@ -1,7 +1,3 @@
-[submodule "third_party/arrow"]
-	path = third_party/arrow
-	url = https://github.com/apache/arrow.git
-	shallow = true
 [submodule "third_party/aws-lambda-cpp"]
 	path = third_party/aws-lambda-cpp
 	url = https://github.com/awslabs/aws-lambda-cpp.git

@@ -9,7 +9,7 @@ set(ENABLE_TESTS OFF CACHE BOOL "Enable tests for AWS Lambda runtime for C++")
 add_subdirectory(aws-lambda-cpp)
 
 # aws-sdk-cpp
-set(BUILD_ONLY ce;elasticache;lambda;monitoring;pricing;s3;xray)
+set(BUILD_ONLY lambda;monitoring;pricing;s3;xray)
 set(BUILD_SHARED_LIBS ON CACHE BOOL "Enable shared libraries for AWS SDK for C++")
 set(CPP_STANDARD 17)
 set(CUSTOM_MEMORY_MANAGEMENT OFF)
