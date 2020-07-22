@@ -55,30 +55,23 @@ pipeline {
     }
 
     post {
-        success {
-          slackSend(
-            color: '#00FF00',
-            message: "SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})"
-          )
-        }
-
         failure {
-          slackSend(
-            color: '#FF0000',
-            message: "FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})"
-          )
+            slackSend(
+                color: '#FF0000',
+                message: "FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})"
+            )
         }
 
         always {
-          xunit(
-            thresholds: [
-              skipped(failureThreshold: '0'),
-              failed(failureThreshold: '0')
-            ],
-            tools: [
-              GoogleTest(pattern: 'cmake-build-debug/test-results.xml')
-            ]
-          )
+            xunit(
+                thresholds: [
+                    skipped(failureThreshold: '0'),
+                    failed(failureThreshold: '0')
+                ],
+                tools: [
+                    GoogleTest(pattern: 'cmake-build-debug/test-results.xml')
+                ]
+            )
         }
-      }
+    }
 }
