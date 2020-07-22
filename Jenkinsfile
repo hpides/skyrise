@@ -2,6 +2,7 @@ pipeline {
     agent {
         docker {
             image 'hpiepic/skyrise:build'
+            alwaysPull true
         }
     }
 
