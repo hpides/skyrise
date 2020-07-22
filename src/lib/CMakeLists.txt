@@ -26,16 +26,18 @@ add_library(skyriseCoordinator SHARED ${COORDINATOR_SOURCES})
 
 target_link_libraries(skyriseCoordinator PUBLIC ${COORDINATOR_LIBRARIES})
 
-# set(
-#     WORKER_SOURCES
-#     utils/profiling/function_host_information.(cpp|hpp)
-#     ${SHARED_SOURCES}
-# )
+set(
+    WORKER_SOURCES
+    utils/profiling/function_host_information.cpp
+    utils/profiling/function_host_information.hpp
+    ${SHARED_SOURCES}
+)
 
-# set(
-#     WORKER_LIBRARIES
-# )
+set(
+    WORKER_LIBRARIES
+    aws-cpp-sdk-core
+)
 
-# add_library(skyriseWorker SHARED ${WORKER_SOURCES})
+add_library(skyriseWorker SHARED ${WORKER_SOURCES})
 
-# target_link_libraries(skyriseWorker PUBLIC ${WORKER_LIBRARIES})
+target_link_libraries(skyriseWorker PUBLIC ${WORKER_LIBRARIES})

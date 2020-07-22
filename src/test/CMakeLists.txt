@@ -10,6 +10,7 @@ set(
     lib/utils/costs/costs_test_utils.cpp
     lib/utils/costs/costs_test_utils.hpp
     lib/utils/costs/pricing_test.cpp
+    lib/utils/profiling/function_host_information_test.cpp
 )
 
 # Libraries
@@ -20,4 +21,4 @@ set(
 
 add_executable(skyriseTest ${TEST_SOURCES})
 
-target_link_libraries(skyriseTest skyriseCoordinator ${TEST_LIBRARIES})
+target_link_libraries(skyriseTest skyriseCoordinator skyriseWorker ${TEST_LIBRARIES})
