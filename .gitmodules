@@ -23,11 +23,6 @@
 	url = https://github.com/jemalloc/jemalloc.git
 	branch = dev
 	shallow = true
-[submodule "third_party/json"]
-	path = third_party/json
-	url = https://github.com/nlohmann/json.git
-	branch = develop
-	shallow = true
 [submodule "third_party/orc"]
 	path = third_party/orc
 	url = https://github.com/apache/orc.git
