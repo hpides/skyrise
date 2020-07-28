@@ -56,13 +56,6 @@ pipeline {
     }
 
     post {
-        failure {
-            slackSend(
-                color: '#FF0000',
-                message: "FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})"
-            )
-        }
-
         always {
             xunit(
                 thresholds: [
@@ -74,5 +67,80 @@ pipeline {
                 ]
             )
         }
+        changed {
+            script {
+                isSuccess = currentBuild.currentResult == 'SUCCESS'
+                slackSend(
+                     channel: '#ci',
+                     color: isSuccess ? '#5cb58a' : '#FF0000',
+                     message: """\
+                     *[${currentBuild.currentResult}] <${env.RUN_DISPLAY_URL}|Build #${env.BUILD_NUMBER}>*
+                     ${getChangeType()}: <${getChangeUrl()}|${getChangeName()}>
+                     Commit: ${getCommitMessage()} (<${getCommitUrl()}|${getCommitSha().substring(0, 7)}>)
+                     Author: <@${getCommitterSlackUserId()}>${isSuccess ? '' : ' (also looping in @channel)'}
+                     """.stripIndent()
+                 )
+            }
+        }
     }
+}
+
+String getCommitterSlackUserId() {
+    if (env.CHANGE_ID)
+        committerName = getShellOutput("git --no-pager show HEAD^ -s --format='%an'")
+    else
+        committerName = getShellOutput("git --no-pager show -s --format='%an'")
+
+    gitHubToSlack = [
+        "CAJan": "U014UBW46AU",
+        "d-justen": "U0144J0QCPM",
+        "engelfa": "U014UBW46AU",
+        "JanSiebert": "U0142D6U51T",
+        "jkhlr": "U0149F0BZPW",
+        "maltenbergert": "U014GG68EDP",
+        "tobodner": "U014FR9CNRF"
+    ]
+    return gitHubToSlack[committerName]
+}
+
+String getChangeType() {
+    if (env.CHANGE_ID)
+        return "Pull Request"
+    return "Branch"
+}
+
+String getChangeName() {
+    if (env.CHANGE_ID)
+        return "${pullRequest.title} (#${pullRequest.number})"
+    return env.BRANCH_NAME
+}
+
+String getChangeUrl() {
+    if (env.CHANGE_ID)
+        return "${getRepoUrl()}/pull/${env.CHANGE_ID}"
+    return "${getRepoUrl()}/tree/${env.BRANCH_NAME}"
+}
+
+String getCommitUrl() {
+    return "${getRepoUrl()}/commit/${getCommitSha()}"
+}
+
+String getCommitMessage() {
+    if (env.CHANGE_ID)
+        return getShellOutput("git --no-pager show HEAD^ -s --format=%s")
+    return getShellOutput("git --no-pager show -s --format=%s")
+}
+
+String getCommitSha() {
+    if (env.CHANGE_ID)
+        return getShellOutput("git rev-parse HEAD^")
+    return getShellOutput("git rev-parse HEAD")
+}
+
+String getRepoUrl() {
+    return env.GIT_URL.substring(0, env.GIT_URL.lastIndexOf('.'))
+}
+
+String getShellOutput(command) {
+    return sh(script: '#!/bin/sh -e\n' + command, returnStdout: true).trim()
 }
