@@ -10,10 +10,14 @@ endif()
 add_compile_options(-pthread -Wall -Wextra -Wpedantic -Werror)
 
 include_directories(
+    ${PROJECT_SOURCE_DIR}/src/benchmark/lib
     ${PROJECT_SOURCE_DIR}/src/lib
     ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-core/include
+    ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-iam/include
+    ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-lambda/include
     ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-pricing/include
     ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-s3/include
+    ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-sqs/include
     ${PROJECT_SOURCE_DIR}/third_party/orc/c++/include
     ${CMAKE_BINARY_DIR}/third_party/orc/c++/include
 )

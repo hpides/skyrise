@@ -1,16 +1,35 @@
 add_executable(
-    skyriseMicroBenchmarks
+    skyriseFunctionMinimal
 
-    network_benchmark.cpp
+    function_minimal.cpp
 )
 
 target_link_libraries(
-    skyriseMicroBenchmarks
+    skyriseFunctionMinimal
 
     PRIVATE
     aws-lambda-runtime
-    aws-cpp-sdk-s3
-    aws-cpp-sdk-core
 )
 
-aws_lambda_package_target(skyriseMicroBenchmarks NO_LIBC)
+# TODO: Employ custom packager that does not include libraries present in AWS Lambda's execution environment.
+aws_lambda_package_target(skyriseFunctionMinimal NO_LIBC)
+
+add_executable(
+    simpleBenchmark
+
+    simple_benchmark.cpp
+    lib/benchmark_config.cpp
+    lib/benchmark_config.hpp
+    lib/benchmark_runner.cpp
+    lib/benchmark_runner.hpp
+)
+
+target_link_libraries(
+    simpleBenchmark
+
+    PRIVATE
+    aws-cpp-sdk-core
+    aws-cpp-sdk-iam
+    aws-cpp-sdk-lambda
+    aws-cpp-sdk-sqs
+)

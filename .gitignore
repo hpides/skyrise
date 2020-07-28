@@ -19,5 +19,7 @@ cmake-build-*
 *.sublime-*
 # Configuration files of Visual Studio Code.
 .vscode
+# Build files of Visual Studio Code.
+build
 # MinIO.
 minio/data/*
