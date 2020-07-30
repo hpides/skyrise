@@ -5,6 +5,8 @@
 #include <future>
 #include <iostream>
 #include <memory>
+#include <string>
+#include <utility>
 
 #include <aws/core/auth/AWSCredentialsProvider.h>
 #include <aws/core/client/ClientConfiguration.h>

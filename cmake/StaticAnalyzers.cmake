@@ -30,10 +30,14 @@ endif()
 if(SKYRISE_ENABLE_CPPLINT)
     find_program(CPPLINT cpplint.py)
     if(CPPLINT)
+        set(CPPLINT_FILTERS "-build/c++11,-build/include_order,-build/include_what_you_use,")
+        set(CPPLINT_FILTERS "${CPPLINT_FILTERS}-legal/copyright,-readability/todo,-runtime/string,")
+        set(CPPLINT_FILTERS "${CPPLINT_FILTERS}-whitespace/braces,-whitespace/newline")
         set(CMAKE_CXX_CPPLINT ${CPPLINT}
             --counting=detailed
             --extensions=cpp,hpp
             --linelength=120
+            --filter=${CPPLINT_FILTERS}
             --verbose=0
         )
         message(STATUS "Cpplint enabled")

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+
 #include <aws/core/Aws.h>
 #include <aws/pricing/PricingClient.h>
 

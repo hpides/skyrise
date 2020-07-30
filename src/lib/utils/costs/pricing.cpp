@@ -63,7 +63,7 @@ const std::shared_ptr<PricingS3> Pricing::get_s3_pricing() {
   _cached_pricing_s3 = std::make_shared<PricingS3>(pricing);
 
   return _cached_pricing_s3;
-};
+}
 
 std::map<Aws::String, double> Pricing::_fetch_pricing(const Aws::String& service_code) const {
   const auto location = _translate_region_to_location(_region);

@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <map>
+#include <vector>
 
 #include <aws/core/Aws.h>
 #include <aws/core/utils/Outcome.h>
