@@ -35,7 +35,7 @@ namespace skyrise {
 // Default location of certificate authority file on Amazon Linux 1
 const std::string kCaFile = "/etc/pki/tls/certs/ca-bundle.crt";
 
-BenchmarkRunner::BenchmarkRunner(const BenchmarkConfig& config) : config_(config) {
+BenchmarkRunner::BenchmarkRunner() {
   Aws::Client::ClientConfiguration client_config;
 
   client_config.caFile = kCaFile;
@@ -55,14 +55,13 @@ BenchmarkRunner::BenchmarkRunner(const BenchmarkConfig& config) : config_(config
   std::cout << "\nCreating Client(s)...\n";
   iam_client_ = Aws::IAM::IAMClient(credentials_provider, client_config);
   lambda_client_ = Aws::Lambda::LambdaClient(credentials_provider, client_config);
-
-  if (IsAsyncBenchmark()) {
-    sqs_client_ = Aws::SQS::SQSClient(credentials_provider, client_config);
-  }
+  sqs_client_ = Aws::SQS::SQSClient(credentials_provider, client_config);
 }
 
-void BenchmarkRunner::Run() {
+void BenchmarkRunner::RunConfig(const BenchmarkConfig& config) {
   // TODO: Assert !result
+
+  SetConfig(config);
 
   Setup();
 
@@ -84,18 +83,27 @@ const std::shared_ptr<std::vector<BenchmarkItemResult>> BenchmarkRunner::GetBenc
   return result_;
 }
 
+void BenchmarkRunner::SetConfig(const BenchmarkConfig& config) {
+  if (config_history_.emplace(config.benchmark_id_).second) {
+    config_ = std::make_shared<BenchmarkConfig>(config);
+  } else {
+    std::cout << "ERROR: BenchmarkConfig has already been run.\n";
+    exit(1);
+  }
+}
+
 void BenchmarkRunner::Setup() {
   std::cout << "\nCreating Functions...\n";
 
   const auto get_role_outcome =
-      iam_client_.GetRole(Aws::IAM::Model::GetRoleRequest().WithRoleName(config_.function_role_name_));
+      iam_client_.GetRole(Aws::IAM::Model::GetRoleRequest().WithRoleName(config_->function_role_name_));
   // TODO: Assert success
 
   const auto role_arn = get_role_outcome.GetResult().GetRole().GetArn();
 
   std::vector<std::future<Aws::Lambda::Model::CreateFunctionOutcome>> create_function_outcomes;
 
-  for (const auto& function_config : *config_.function_configs_) {
+  for (const auto& function_config : *config_->function_configs_) {
     std::cout << "Creating Function " << function_config.function_name << "...\n";
 
     create_function_outcomes.emplace_back(std::async([&]() {
@@ -106,7 +114,7 @@ void BenchmarkRunner::Setup() {
               .WithRole(role_arn)
               .WithHandler("HandlerFunction")
               .WithCode(Aws::Lambda::Model::FunctionCode().WithZipFile(OpenFunctionZip(function_config.function_path)))
-              .WithTimeout(config_.timeout_)
+              .WithTimeout(config_->timeout_)
               .WithMemorySize(function_config.memory_size);
 
       return lambda_client_.CreateFunction(create_function_request);
@@ -136,7 +144,7 @@ void BenchmarkRunner::Setup() {
 }
 
 void BenchmarkRunner::SetupAsync() {
-  const Aws::String queue_name = config_.benchmark_id_ + "-" + config_.benchmark_timestamp_;
+  const Aws::String queue_name = config_->benchmark_id_ + "-" + config_->benchmark_timestamp_;
 
   std::cout << "\nCreating Queue " << queue_name << "\n";
 
@@ -162,7 +170,7 @@ void BenchmarkRunner::SetupAsync() {
   const auto queue_arn =
       queue_attributes_outcome.GetResult().GetAttributes().at(Aws::SQS::Model::QueueAttributeName::QueueArn);
 
-  for (const auto& function_config : *config_.function_configs_) {
+  for (const auto& function_config : *config_->function_configs_) {
     lambda_client_.PutFunctionEventInvokeConfig(
         Aws::Lambda::Model::PutFunctionEventInvokeConfigRequest()
             .WithFunctionName(function_config.function_name)
@@ -177,7 +185,7 @@ void BenchmarkRunner::Teardown() {
 
   std::vector<std::pair<Aws::String, std::future<Aws::Lambda::Model::DeleteFunctionOutcome>>> delete_function_outcomes;
 
-  for (const auto& function_config : *config_.function_configs_) {
+  for (const auto& function_config : *config_->function_configs_) {
     delete_function_outcomes.emplace_back(
         function_config.function_name, std::async([&]() {
           const auto delete_function_request =
@@ -278,7 +286,7 @@ std::shared_ptr<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>> Benchm
   const auto invocation_type = IsAsyncBenchmark() ? Aws::Lambda::Model::InvocationType::Event
                                                   : Aws::Lambda::Model::InvocationType::RequestResponse;
 
-  for (const auto& config : *(config_.invocation_configs_)) {
+  for (const auto& config : *(config_->invocation_configs_)) {
     auto invoke_request = Aws::Lambda::Model::InvokeRequest()
                               .WithFunctionName(config.function_name)
                               .WithInvocationType(invocation_type)
@@ -303,7 +311,7 @@ std::shared_ptr<std::map<Aws::String, Aws::String>> BenchmarkRunner::CollectSqsM
 
   size_t receive_message_requests = 0;
 
-  while (sqs_messages->size() < num_invocations && receive_message_requests < config_.timeout_) {
+  while (sqs_messages->size() < num_invocations && receive_message_requests < config_->timeout_) {
     receive_message_requests++;
     const auto receive_message_outcome = sqs_client_.ReceiveMessage(Aws::SQS::Model::ReceiveMessageRequest()
                                                                         .WithQueueUrl(*sqs_queue_url_)
@@ -378,16 +386,16 @@ void BenchmarkRunner::WriteResult(const std::shared_ptr<std::vector<BenchmarkIte
 }
 
 bool BenchmarkRunner::IsWarmStartBenchmark() {
-  return config_.execute_mode_ == ExecuteMode::WarmAsync || config_.execute_mode_ == ExecuteMode::WarmParallel ||
-         config_.execute_mode_ == ExecuteMode::WarmSequential;
+  return config_->execute_mode_ == ExecuteMode::WarmAsync || config_->execute_mode_ == ExecuteMode::WarmParallel ||
+         config_->execute_mode_ == ExecuteMode::WarmSequential;
 }
 
 bool BenchmarkRunner::IsAsyncBenchmark() {
-  return config_.execute_mode_ == ExecuteMode::ColdAsync || config_.execute_mode_ == ExecuteMode::WarmAsync;
+  return config_->execute_mode_ == ExecuteMode::ColdAsync || config_->execute_mode_ == ExecuteMode::WarmAsync;
 }
 
 bool BenchmarkRunner::IsParallelBenchmark() {
-  return config_.execute_mode_ == ExecuteMode::ColdParallel || config_.execute_mode_ == ExecuteMode::WarmParallel;
+  return config_->execute_mode_ == ExecuteMode::ColdParallel || config_->execute_mode_ == ExecuteMode::WarmParallel;
 }
 
 }  // namespace skyrise

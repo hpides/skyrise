@@ -10,38 +10,43 @@
 
 const size_t kLambdaSize = 128;
 const size_t kNumInvocations = 15;
-const skyrise::ExecuteMode kExecuteMode = skyrise::ExecuteMode::WarmAsync;
 
 int main() {
   Aws::SDKOptions options;
   Aws::InitAPI(options);
   // TODO: Refactor this block
   {
-    std::cout << "Creating config...\n";
+    std::cout << "Creating BenchmarkConfigs...\n";
 
-    const skyrise::BenchmarkConfig config("skyriseFunctionMinimal", kLambdaSize, "AWSLambda", kNumInvocations,
-                                          kExecuteMode);
+    std::vector<skyrise::BenchmarkConfig> configs{
+        {"skyriseFunctionMinimal", kLambdaSize, "AWSLambda", kNumInvocations, skyrise::ExecuteMode::WarmAsync},
+        {"skyriseFunctionMinimal", kLambdaSize, "AWSLambda", kNumInvocations, skyrise::ExecuteMode::WarmParallel},
+        {"skyriseFunctionMinimal", kLambdaSize, "AWSLambda", kNumInvocations, skyrise::ExecuteMode::WarmSequential}};
 
-    std::cout << "Config created.\n";
+    std::cout << "BenchmarkConfigs created.\n";
 
     std::cout << "Creating BenchmarkRunner...\n";
-    skyrise::BenchmarkRunner benchmark_runner(config);
+
+    skyrise::BenchmarkRunner runner;
+
     std::cout << "BenchmarkRunner created.\n";
 
-    std::cout << "\n########################\n\n";
-    std::cout << "#Invocations: " << kNumInvocations << "\n";
-    std::cout << "Execute Mode: Warm Async\n";
-    std::cout << "\n########################\n\n";
+    for (const auto& config : configs) {
+      runner.RunConfig(config);
 
-    benchmark_runner.Run();
+      const auto results = runner.GetBenchmarkResult();
 
-    const auto results = benchmark_runner.GetBenchmarkResult();
-    std::cout << "\nID\t\t\t\t\t\t\t| Success\t| Duration ms\n";
-    std::cout << "--------------------------------------------------------|---------------|----------------\n";
-    for (const auto& result : *results) {
-      std::cout << result.invocation_id << "\t|\t";
-      std::cout << result.success << "\t| ";
-      std::cout << (result.end_time - result.start_time).count() / 1'000'000.0 << "\n";
+      std::cout << "\n*****************************************************************************************\n";
+      // TODO: Add skyrise::ExecuteMode to std::string translation needed in the JSON output as well
+      std::cout << "Execute Mode: " << static_cast<int>(config.execute_mode_) << "\n\n";
+      std::cout << "\nID\t\t\t\t\t\t\t| Success\t| Duration ms\n";
+      std::cout << "--------------------------------------------------------|---------------|----------------\n";
+      for (const auto& result : *results) {
+        std::cout << result.invocation_id << "\t|\t";
+        std::cout << result.success << "\t| ";
+        std::cout << (result.end_time - result.start_time).count() / 1'000'000.0 << "\n";
+      }
+      std::cout << "*****************************************************************************************\n";
     }
   }
   Aws::ShutdownAPI(options);

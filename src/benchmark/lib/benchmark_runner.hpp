@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <map>
+#include <unordered_set>
 #include <vector>
 
 #include <aws/core/Aws.h>
@@ -31,13 +32,15 @@ struct BenchmarkItemResult {
 
 class BenchmarkRunner {
  public:
-  BenchmarkRunner(const BenchmarkConfig& config);
+  BenchmarkRunner();
 
-  void Run();
+  void RunConfig(const BenchmarkConfig& config);
 
   const std::shared_ptr<std::vector<BenchmarkItemResult>> GetBenchmarkResult() const;
 
  private:
+  void SetConfig(const BenchmarkConfig& config);
+
   void Setup();
   void SetupAsync();
   void Teardown();
@@ -60,7 +63,9 @@ class BenchmarkRunner {
   bool IsAsyncBenchmark();
   bool IsParallelBenchmark();
 
-  const BenchmarkConfig config_;
+  std::shared_ptr<BenchmarkConfig> config_;
+  std::unordered_set<Aws::String> config_history_;
+
   std::shared_ptr<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>> invoke_requests_;
   std::shared_ptr<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>> invoke_warmup_requests_;
 
