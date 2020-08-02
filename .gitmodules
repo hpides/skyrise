@@ -23,6 +23,10 @@
 	url = https://github.com/jemalloc/jemalloc.git
 	branch = dev
 	shallow = true
+[submodule "third_party/magic_enum"]
+	path = third_party/magic_enum
+	url = https://github.com/Neargye/magic_enum.git
+	shallow = true
 [submodule "third_party/orc"]
 	path = third_party/orc
 	url = https://github.com/apache/orc.git

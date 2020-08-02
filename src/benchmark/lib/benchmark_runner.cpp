@@ -52,7 +52,6 @@ BenchmarkRunner::BenchmarkRunner() {
     exit(1);
   }
 
-  std::cout << "\nCreating Client(s)...\n";
   iam_client_ = Aws::IAM::IAMClient(credentials_provider, client_config);
   lambda_client_ = Aws::Lambda::LambdaClient(credentials_provider, client_config);
   sqs_client_ = Aws::SQS::SQSClient(credentials_provider, client_config);
@@ -93,7 +92,7 @@ void BenchmarkRunner::SetConfig(const BenchmarkConfig& config) {
 }
 
 void BenchmarkRunner::Setup() {
-  std::cout << "\nCreating Functions...\n";
+  std::cout << "Creating functions...\n";
 
   const auto get_role_outcome =
       iam_client_.GetRole(Aws::IAM::Model::GetRoleRequest().WithRoleName(config_->function_role_name_));
@@ -104,7 +103,7 @@ void BenchmarkRunner::Setup() {
   std::vector<std::future<Aws::Lambda::Model::CreateFunctionOutcome>> create_function_outcomes;
 
   for (const auto& function_config : *config_->function_configs_) {
-    std::cout << "Creating Function " << function_config.function_name << "...\n";
+    std::cout << "Creating function " << function_config.function_name << "...\n";
 
     create_function_outcomes.emplace_back(std::async([&]() {
       const auto create_function_request =
@@ -126,15 +125,15 @@ void BenchmarkRunner::Setup() {
     // TODO: Assert success
 
     if (outcome.IsSuccess()) {
-      std::cout << outcome.GetResult().GetFunctionName() << " created.\n";
+      std::cout << "Function " << outcome.GetResult().GetFunctionName() << " created.\n";
     }
   }
+
+  std::cout << "Functions created.\n\n";
 
   if (IsAsyncBenchmark()) {
     SetupAsync();
   }
-
-  std::cout << "\nCreating Invoke Requests...\n";
 
   if (IsWarmStartBenchmark()) {
     invoke_warmup_requests_ = CreateInvokeRequests(true);
@@ -146,14 +145,14 @@ void BenchmarkRunner::Setup() {
 void BenchmarkRunner::SetupAsync() {
   const Aws::String queue_name = config_->benchmark_id_ + "-" + config_->benchmark_timestamp_;
 
-  std::cout << "\nCreating Queue " << queue_name << "\n";
+  std::cout << "Creating queue " << queue_name << "...\n";
 
   const auto create_queue_outcome =
       sqs_client_.CreateQueue(Aws::SQS::Model::CreateQueueRequest().WithQueueName(queue_name));
 
   if (create_queue_outcome.IsSuccess()) {
     sqs_queue_url_ = std::make_shared<Aws::String>(create_queue_outcome.GetResult().GetQueueUrl());
-    std::cout << "Queue " << create_queue_outcome.GetResult().GetQueueUrl() << " created.\n";
+    std::cout << "Queue " << queue_name << " created.\n\n";
   } else {
     std::cout << "ERROR: CreateQueue failed due to the following error. "
               << create_queue_outcome.GetError().GetMessage() << ".\n";
@@ -181,11 +180,13 @@ void BenchmarkRunner::SetupAsync() {
 }
 
 void BenchmarkRunner::Teardown() {
-  std::cout << "\nDeleting Functions...\n";
+  std::cout << "Deleting functions...\n";
 
   std::vector<std::pair<Aws::String, std::future<Aws::Lambda::Model::DeleteFunctionOutcome>>> delete_function_outcomes;
 
   for (const auto& function_config : *config_->function_configs_) {
+    std::cout << "Deleting function " << function_config.function_name << "...\n";
+
     delete_function_outcomes.emplace_back(
         function_config.function_name, std::async([&]() {
           const auto delete_function_request =
@@ -205,18 +206,22 @@ void BenchmarkRunner::Teardown() {
     }
   }
 
+  std::cout << "Functions deleted.\n\n";
+
   if (sqs_queue_url_) {
-    std::cout << "\nDeleting SQS Queue...\n";
+    std::cout << "Deleting queue " << *sqs_queue_url_ << "...\n";
 
     const auto outcome = sqs_client_.DeleteQueue(Aws::SQS::Model::DeleteQueueRequest().WithQueueUrl(*sqs_queue_url_));
     if (outcome.IsSuccess()) {
-      std::cout << "Deleted Queue " << *sqs_queue_url_ << "\n";
+      std::cout << "Queue " << *sqs_queue_url_ << " deleted.\n\n";
     }
+
+    sqs_queue_url_.reset();
   }
 }
 
 void BenchmarkRunner::RunSequential() {
-  std::cout << "\nInvoking Functions sequentially...\n";
+  std::cout << "Invoking functions sequentially...\n";
 
   const auto benchmark_item_results = std::make_shared<std::vector<BenchmarkItemResult>>();
 
@@ -232,11 +237,13 @@ void BenchmarkRunner::RunSequential() {
   const auto benchmark_run_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(benchmark_end - benchmark_start);
 
+  std::cout << "Functions invoked sequentially.\n\n";
+
   WriteResult(benchmark_item_results, benchmark_run_duration);
 }
 
 void BenchmarkRunner::RunParallel() {
-  std::cout << "\nInvoking Functions concurrently...\n";
+  std::cout << "Invoking functions concurrently...\n";
 
   std::vector<std::future<BenchmarkItemResult>> future_results;
   const auto benchmark_item_results = std::make_shared<std::vector<BenchmarkItemResult>>();
@@ -257,11 +264,13 @@ void BenchmarkRunner::RunParallel() {
   const auto benchmark_run_duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(benchmark_end - benchmark_start);
 
+  std::cout << "Functions invoked concurrently.\n\n";
+
   WriteResult(benchmark_item_results, benchmark_run_duration);
 }
 
 void BenchmarkRunner::WarmUpFunctions() {
-  std::cout << "\nWarming up Functions...\n";
+  std::cout << "Warming up functions...\n";
 
   std::vector<std::future<BenchmarkItemResult>> future_results;
 
@@ -277,10 +286,14 @@ void BenchmarkRunner::WarmUpFunctions() {
   if (IsAsyncBenchmark()) {
     CollectSqsMessages(future_results.size());
   }
+
+  std::cout << "Functions warmed up.\n\n";
 }
 
 std::shared_ptr<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>> BenchmarkRunner::CreateInvokeRequests(
     const bool with_warm_up_suffix) {
+  std::cout << "Creating invoke requests" << (with_warm_up_suffix ? " for function warm-up" : "") << "...\n";
+
   const auto invoke_requests = std::make_shared<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>>();
 
   const auto invocation_type = IsAsyncBenchmark() ? Aws::Lambda::Model::InvocationType::Event
@@ -303,6 +316,9 @@ std::shared_ptr<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>> Benchm
 
     invoke_requests->emplace(std::make_pair(invocation_id, invoke_request));
   }
+
+  std::cout << "Invoke requests" << (with_warm_up_suffix ? " for function warm-up" : "") << " created.\n\n";
+
   return invoke_requests;
 }
 
@@ -339,21 +355,20 @@ Aws::Utils::CryptoBuffer BenchmarkRunner::OpenFunctionZip(const Aws::String& fun
   std::ifstream infile;
   infile.open(function_path, std::ios::binary);
 
-  if (infile.is_open()) {
-    std::vector<char> buffer;
-
-    while (!infile.eof()) {
-      buffer.emplace_back(static_cast<char>(infile.get()));
-    }
-    infile.close();
-    std::string ret(buffer.begin(), buffer.end() - 1);
-
-    return Aws::Utils::CryptoBuffer((unsigned const char*)ret.c_str(), ret.size());
-  } else {
-    // TODO Fail
-    std::cout << "File could not be opened\n";
-    return Aws::Utils::CryptoBuffer();
+  if (!infile.is_open()) {
+    std::cout << "ERROR: " << function_path << " could not be openend.\n";
+    exit(1);
   }
+
+  std::vector<char> buffer;
+
+  while (!infile.eof()) {
+    buffer.emplace_back(static_cast<char>(infile.get()));
+  }
+  infile.close();
+  std::string ret(buffer.begin(), buffer.end() - 1);
+
+  return Aws::Utils::CryptoBuffer(reinterpret_cast<const unsigned char*>(ret.c_str()), ret.size());
 }
 
 BenchmarkItemResult BenchmarkRunner::RunBenchmarkItem(const Aws::String& invocation_id,
@@ -380,7 +395,7 @@ void BenchmarkRunner::WriteResult(const std::shared_ptr<std::vector<BenchmarkIte
     }
   }
 
-  std::cout << "\nTotal benchmark run duration: " << benchmark_run_duration.count() << " ms\n";
+  std::cout << "Total benchmark run duration: " << benchmark_run_duration.count() << " ms\n\n";
 
   result_ = benchmark_item_results;
 }

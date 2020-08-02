@@ -1,7 +1,9 @@
+#include <iomanip>
 #include <iostream>
 #include <memory>
 
 #include <aws/core/Aws.h>
+#include <magic_enum.hpp>
 
 #include "benchmark_config.hpp"
 #include "benchmark_runner.hpp"
@@ -23,30 +25,31 @@ int main() {
         {"skyriseFunctionMinimal", kLambdaSize, "AWSLambda", kNumInvocations, skyrise::ExecuteMode::WarmParallel},
         {"skyriseFunctionMinimal", kLambdaSize, "AWSLambda", kNumInvocations, skyrise::ExecuteMode::WarmSequential}};
 
-    std::cout << "BenchmarkConfigs created.\n";
+    std::cout << "BenchmarkConfigs created.\n\n";
 
     std::cout << "Creating BenchmarkRunner...\n";
 
     skyrise::BenchmarkRunner runner;
 
-    std::cout << "BenchmarkRunner created.\n";
+    std::cout << "BenchmarkRunner created.\n\n";
 
     for (const auto& config : configs) {
       runner.RunConfig(config);
 
       const auto results = runner.GetBenchmarkResult();
 
-      std::cout << "\n*****************************************************************************************\n";
-      // TODO: Add skyrise::ExecuteMode to std::string translation needed in the JSON output as well
-      std::cout << "Execute Mode: " << static_cast<int>(config.execute_mode_) << "\n\n";
-      std::cout << "\nID\t\t\t\t\t\t\t| Success\t| Duration ms\n";
+      std::cout << "*****************************************************************************************\n";
+      std::cout << "Execute Mode: " << magic_enum::enum_name(config.execute_mode_) << "\n";
+      std::cout << "*****************************************************************************************\n";
+      std::cout << "\nID\t\t\t\t\t\t\t| Success\t| Duration [ms]\n";
       std::cout << "--------------------------------------------------------|---------------|----------------\n";
       for (const auto& result : *results) {
-        std::cout << result.invocation_id << "\t|\t";
-        std::cout << result.success << "\t| ";
-        std::cout << (result.end_time - result.start_time).count() / 1'000'000.0 << "\n";
+        std::cout << result.invocation_id << "\t| ";
+        std::cout << std::boolalpha << result.success << "\t\t| ";
+        const auto duration = (result.end_time - result.start_time).count() / 1'000'000.0;
+        std::cout << std::fixed << std::setprecision(3) << duration << "\n";
       }
-      std::cout << "*****************************************************************************************\n";
+      std::cout << "*****************************************************************************************\n\n";
     }
   }
   Aws::ShutdownAPI(options);

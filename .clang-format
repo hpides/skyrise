@@ -2,7 +2,7 @@ BasedOnStyle: Google
 ColumnLimit: 120
 DerivePointerAlignment: false
 IncludeCategories:
-  - Regex:           '^<.*\.h>'
+  - Regex:           '^<.*\.h(pp)?>'
     Priority:        2
     SortPriority:    0
   - Regex:           '^<.*'
