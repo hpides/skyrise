@@ -34,9 +34,7 @@ int main() {
     std::cout << "BenchmarkRunner created.\n\n";
 
     for (const auto& config : configs) {
-      runner.RunConfig(config);
-
-      const auto results = runner.GetBenchmarkResult();
+      const auto results = runner.RunConfig(config);
 
       std::cout << "*****************************************************************************************\n";
       std::cout << "Execute Mode: " << magic_enum::enum_name(config.execute_mode_) << "\n";

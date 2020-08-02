@@ -57,7 +57,7 @@ BenchmarkRunner::BenchmarkRunner() {
   sqs_client_ = Aws::SQS::SQSClient(credentials_provider, client_config);
 }
 
-void BenchmarkRunner::RunConfig(const BenchmarkConfig& config) {
+std::shared_ptr<std::vector<BenchmarkItemResult>> BenchmarkRunner::RunConfig(const BenchmarkConfig& config) {
   // TODO: Assert !result
 
   SetConfig(config);
@@ -75,11 +75,8 @@ void BenchmarkRunner::RunConfig(const BenchmarkConfig& config) {
   }
 
   Teardown();
-}
 
-const std::shared_ptr<std::vector<BenchmarkItemResult>> BenchmarkRunner::GetBenchmarkResult() const {
-  // TODO: Assert result != null
-  return result_;
+  return std::move(result_);
 }
 
 void BenchmarkRunner::SetConfig(const BenchmarkConfig& config) {

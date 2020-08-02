@@ -34,9 +34,7 @@ class BenchmarkRunner {
  public:
   BenchmarkRunner();
 
-  void RunConfig(const BenchmarkConfig& config);
-
-  const std::shared_ptr<std::vector<BenchmarkItemResult>> GetBenchmarkResult() const;
+  std::shared_ptr<std::vector<BenchmarkItemResult>> RunConfig(const BenchmarkConfig& config);
 
  private:
   void SetConfig(const BenchmarkConfig& config);
