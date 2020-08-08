@@ -1,4 +1,4 @@
-# As in lambci/lambda:provided 6e00fa7e01b3 2020-07-21T14:52:50.858520706Z
+# As in lambci/lambda:provided e30f58a5a05b 2020-08-06T15:02:00.768547783Z
 ld-2.17.so
 ld-linux-x86-64.so.2
 libacl.so.1
@@ -449,3 +449,4 @@ libXtst.so.6.1.0
 libXxf86vm.so.1
 libXxf86vm.so.1.0.0
 p11-kit-proxy.so
+p11-kit-trust.so
