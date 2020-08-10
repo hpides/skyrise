@@ -35,8 +35,8 @@ class BenchmarkConfig {
                   const Aws::String& function_role, const size_t num_invocations, const ExecuteMode execute_mode,
                   const size_t timeout);
 
-  void SetPayloads(std::vector<std::shared_ptr<Aws::IOStream>>& payloads);
-  void SetOnePayloadForAllFunctions(std::shared_ptr<Aws::IOStream> payload);
+  void SetPayloads(const std::vector<std::shared_ptr<Aws::IOStream>>& payloads);
+  void SetOnePayloadForAllFunctions(const std::shared_ptr<Aws::IOStream> payload);
 
   const Aws::String function_role_name_;
   const size_t num_invocations_;

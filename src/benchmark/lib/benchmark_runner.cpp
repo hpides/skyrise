@@ -288,8 +288,8 @@ void BenchmarkRunner::WarmUpFunctions() {
 }
 
 std::shared_ptr<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>> BenchmarkRunner::CreateInvokeRequests(
-    const bool with_warm_up_suffix) {
-  std::cout << "Creating invoke requests" << (with_warm_up_suffix ? " for function warm-up" : "") << "...\n";
+    const bool is_warm_up) {
+  std::cout << "Creating invoke requests" << (is_warm_up ? " for function warm-up" : "") << "...\n";
 
   const auto invoke_requests = std::make_shared<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>>();
 
@@ -302,9 +302,15 @@ std::shared_ptr<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>> Benchm
                               .WithInvocationType(invocation_type)
                               .WithLogType(Aws::Lambda::Model::LogType::Tail);
 
-    const Aws::String invocation_id = with_warm_up_suffix ? (config.invocation_id + "-warmup") : config.invocation_id;
+    Aws::StringStream payload_stream;
+    payload_stream << config.payload->rdbuf();
+    config.payload->seekg(std::ios::beg);
 
-    const auto json_value = Aws::Utils::Json::JsonValue(*config.payload).WithString("invocationID", invocation_id);
+    const Aws::String invocation_id = is_warm_up ? (config.invocation_id + "-warmup") : config.invocation_id;
+
+    const auto json_value = Aws::Utils::Json::JsonValue(payload_stream.str())
+                                .WithString("invocationID", invocation_id)
+                                .WithBool("isWarmup", is_warm_up);
     const auto json_view = json_value.View();
     const auto body = std::make_shared<Aws::StringStream>(json_view.WriteCompact());
 
@@ -314,7 +320,7 @@ std::shared_ptr<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>> Benchm
     invoke_requests->emplace(std::make_pair(invocation_id, invoke_request));
   }
 
-  std::cout << "Invoke requests" << (with_warm_up_suffix ? " for function warm-up" : "") << " created.\n\n";
+  std::cout << "Invoke requests" << (is_warm_up ? " for function warm-up" : "") << " created.\n\n";
 
   return invoke_requests;
 }
@@ -372,14 +378,20 @@ BenchmarkItemResult BenchmarkRunner::RunBenchmarkItem(const Aws::String& invocat
                                                       const Aws::Lambda::Model::InvokeRequest& invoke_request) {
   const auto benchmark_item_start = std::chrono::steady_clock::now();
 
-  const auto lambda_outcome =
-      std::make_shared<Aws::Lambda::Model::InvokeOutcome>(lambda_client_.Invoke(invoke_request));
+  auto lambda_outcome = lambda_client_.Invoke(invoke_request);
 
   const auto benchmark_item_end = std::chrono::steady_clock::now();
 
-  return BenchmarkItemResult{
-      invocation_id,  invoke_request, lambda_outcome->IsSuccess(), benchmark_item_start, benchmark_item_end,
-      lambda_outcome, nullptr};
+  const auto lambda_result =
+      std::make_shared<Aws::Lambda::Model::InvokeResult>(lambda_outcome.GetResultWithOwnership());
+
+  return BenchmarkItemResult{invocation_id,
+                             invoke_request,
+                             lambda_outcome.IsSuccess(),
+                             benchmark_item_start,
+                             benchmark_item_end,
+                             lambda_result,
+                             {}};
 }
 
 void BenchmarkRunner::WriteResult(const std::shared_ptr<std::vector<BenchmarkItemResult>> benchmark_item_results,
@@ -388,7 +400,7 @@ void BenchmarkRunner::WriteResult(const std::shared_ptr<std::vector<BenchmarkIte
     sqs_messages_ = CollectSqsMessages(benchmark_item_results->size());
 
     for (auto& result : *benchmark_item_results) {
-      result.sqs_message_body = std::make_shared<Aws::String>(sqs_messages_->at(result.invocation_id));
+      result.sqs_message_body = sqs_messages_->at(result.invocation_id);
     }
   }
 

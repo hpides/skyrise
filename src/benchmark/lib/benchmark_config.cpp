@@ -38,7 +38,7 @@ BenchmarkConfig::BenchmarkConfig(const std::vector<Aws::String>& function_zip_na
       for (size_t invocation_index = 0; invocation_index < num_invocations; invocation_index++) {
         const Aws::String function_name = benchmark_id_ + "-" + benchmark_timestamp_ + "-" +
                                           function_zip_names[function_names_index] + "-" +
-                                          std::to_string(invocation_index);
+                                          std::to_string(function_names_index) + "-" + std::to_string(invocation_index);
         const LambdaFunctionConfig function_config{function_path, function_name, memory_sizes[function_names_index]};
         function_configs_->emplace_back(function_config);
 
@@ -64,25 +64,24 @@ BenchmarkConfig::BenchmarkConfig(const std::vector<Aws::String>& function_zip_na
   }
 }
 
-void BenchmarkConfig::SetPayloads(std::vector<std::shared_ptr<Aws::IOStream>>& payloads) {
+void BenchmarkConfig::SetPayloads(const std::vector<std::shared_ptr<Aws::IOStream>>& payloads) {
   // Assert payloads size == function_names
   for (size_t payload_index = 0; payload_index < payloads.size(); payload_index++) {
     invocation_configs_->at(payload_index).payload = payloads[payload_index];
   }
 }
 
-void BenchmarkConfig::SetOnePayloadForAllFunctions(std::shared_ptr<Aws::IOStream> payload) {
+void BenchmarkConfig::SetOnePayloadForAllFunctions(const std::shared_ptr<Aws::IOStream> payload) {
   for (auto& config : *invocation_configs_) {
     config.payload = payload;
   }
 }
 
 Aws::String BenchmarkConfig::GetRandomString() {
-  const char charset[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-  const size_t max_index = (sizeof(charset) - 1);
+  const std::string charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
   std::default_random_engine random_number_generator(std::random_device{}());
-  std::uniform_int_distribution<> distribution(0, max_index);
+  std::uniform_int_distribution<> distribution(0, charset.size() - 1);
 
   std::string random_string(8, 0);
   std::generate_n(random_string.begin(), 8, [&]() { return charset[distribution(random_number_generator)]; });
