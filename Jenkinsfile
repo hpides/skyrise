@@ -87,20 +87,25 @@ pipeline {
 
 String getCommitterSlackUserId() {
     if (env.CHANGE_ID)
-        committerName = getShellOutput("git --no-pager show HEAD^ -s --format='%an'")
+        branchName = pullRequest.base
     else
-        committerName = getShellOutput("git --no-pager show -s --format='%an'")
+        branchName = env.BRANCH_NAME
+
+    endOfBranchPrefix = branchName.indexOf('/')
+    if (endOfBranchPrefix == -1)
+        return "Unknown (Invalid branch name: ${branchName})"
+    committerName = branchName.substring(0, endOfBranchPrefix).toLowerCase()
 
     gitHubToSlack = [
-        "CAJan": "U014UBW46AU",
+        "cajan93": "U014UBW46AU",
         "d-justen": "U0144J0QCPM",
         "engelfa": "U014UBW46AU",
-        "JanSiebert": "U0142D6U51T",
+        "jansiebert": "U0142D6U51T",
         "jkhlr": "U0149F0BZPW",
         "maltenbergert": "U014GG68EDP",
         "tobodner": "U014FR9CNRF"
     ]
-    return gitHubToSlack[committerName]
+    return gitHubToSlack.containsKey(committerName) ? gitHubToSlack[committerName] : "Unknown (Invalid branch prefix: ${committerName})"
 }
 
 String getChangeType() {
