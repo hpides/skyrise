@@ -27,7 +27,7 @@ VERBOSE=false
 while [ "$#" -gt 0 ]; do
     case $1 in
         -b|--build-dir) BUILD_DIR="$2"; shift ;;
-        -c|--cmake) CMAKE_OPTIONS="$2" shift ;;
+        -c|--cmake) CMAKE_OPTIONS="$2"; shift ;;
         -p|--prefix) PREFIX="$2"; shift ;;
         -t|--build-type) BUILD_TYPE="$2"; shift ;;
         -v|--verbose) VERBOSE=true ;;
