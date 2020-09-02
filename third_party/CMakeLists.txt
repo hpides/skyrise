@@ -43,3 +43,6 @@ target_link_libraries(
     ${ORC_THIRDPARTY_LIBRARY_OUTPUT_DIRECTORY}/zlib_ep-install/lib/libz.a
     ${ORC_THIRDPARTY_LIBRARY_OUTPUT_DIRECTORY}/zstd_ep-install/lib/libzstd.a
 )
+
+# tpch-dbgen
+add_subdirectory(tpch-dbgen)

@@ -31,3 +31,7 @@
 	path = third_party/orc
 	url = https://github.com/apache/orc.git
 	shallow = true
+[submodule "third_party/tpch-dbgen"]
+	path = third_party/tpch-dbgen
+	url = https://github.com/hpi-epic/tpch-dbgen.git
+	shallow = true

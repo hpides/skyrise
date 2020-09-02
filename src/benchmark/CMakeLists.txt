@@ -33,3 +33,5 @@ target_link_libraries(
     aws-cpp-sdk-lambda
     aws-cpp-sdk-sqs
 )
+
+add_subdirectory(bin)
