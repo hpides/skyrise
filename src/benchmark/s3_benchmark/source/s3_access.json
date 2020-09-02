@@ -1,6 +1,0 @@
-{
-  "HelloWorldFunction": {
-    "AWS_ACCESS_KEY_ID": "somekey",
-    "AWS_SECRET_ACCESS_KEY": "someseckey"
-  }
-}
