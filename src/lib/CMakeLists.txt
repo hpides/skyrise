@@ -5,6 +5,7 @@ set(
     utils/literals.hpp
     utils/string_utils.cpp
     utils/string_utils.hpp
+    utils/unit_conversion.hpp
 )
 
 set(

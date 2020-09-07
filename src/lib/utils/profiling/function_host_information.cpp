@@ -5,6 +5,8 @@
 
 #include <aws/core/utils/json/JsonSerializer.h>
 
+#include "utils/unit_conversion.hpp"
+
 namespace skyrise {
 FunctionHostInformationCollector::FunctionHostInformationCollector(FunctionHostInformationCollectorConfiguration config)
     : _config(config) {}
@@ -140,7 +142,7 @@ size_t FunctionHostInformationCollector::_ram_size_mb() {
   const auto file_content = _read_file_content(_config.meminfo_path);
   const auto match = _find_first(REGEX, file_content);
   const auto ram_size_kb = match.empty() ? 0 : stoul(match.front());
-  return ram_size_kb / 1024;
+  return ByteToMb(KbToByte(ram_size_kb));
 }
 
 std::vector<std::string> FunctionHostInformationCollector::_find_first(const std::string& regex_string,
