@@ -1,25 +1,20 @@
 /**
- * Taken and modified from our Hyrise sister project (https://github.com/hyrise/hyrise at commit b856b57)
- *
- * Changelog:
- * - Change namespace
- * - Remove dependency on Boost Preprocessor
+ * Taken and modified from our sister project Hyrise (https://github.com/hyrise/hyrise)
  */
 
 #pragma once
 
 #include <exception>
-#include <iostream>
-#include <stdexcept>
 #include <string>
 
 #include "invalid_input_exception.hpp"
 #include "string_utils.hpp"
 
 /**
- * This file provides better assertions than the std cassert/assert.h - DebugAssert(condition, msg) and Fail(msg) can be
- * used
- * to both harden code by programming by contract and document the invariants enforced in messages.
+ * This file provides better assertions than the std cassert/assert.h
+ *
+ * DebugAssert(condition, msg) and Fail(msg) can be used to both harden code by programming by contract and document the
+ * invariants enforced in messages.
  *
  * --> Use DebugAssert() whenever a certain invariant must hold, as in
  *
@@ -27,7 +22,6 @@
  *   DebugAssert(denominator == 0, "Divisions by zero are not allowed");
  *   return numerator / denominator;
  * }
- *
  *
  * --> Use Fail() whenever an illegal code path is taken. Especially useful for switch statements:
  *
@@ -49,36 +43,38 @@
 namespace skyrise {
 
 namespace detail {
+
 // We need this indirection so that we can throw exceptions from destructors without the compiler complaining. That is
 // generally forbidden and might lead to std::terminate, but since we don't want to handle most errors anyway,
 // that's fine.
-[[noreturn]] inline void fail(const std::string& msg) { throw std::logic_error(msg); }
+[[noreturn]] inline void Fail(const std::string& message) { throw std::logic_error(message); }
+
 }  // namespace detail
 
-#define Fail(msg)                                                                                               \
-  skyrise::detail::fail(skyrise::trim_source_file_path(__FILE__) + ":" + std::to_string(__LINE__) + " " + msg); \
-  static_assert(true, "End call of macro with a semicolon")
+#define Fail(message)                                                                                            \
+  skyrise::detail::Fail(skyrise::TrimSourceFilePath(__FILE__) + ":" + std::to_string(__LINE__) + " " + message); \
+  static_assert(true, "End macro call with a semicolon")
 
-[[noreturn]] inline void FailInput(const std::string& msg) {
-  throw InvalidInputException(std::string("Invalid input error: ") + msg);
+[[noreturn]] inline void FailInput(const std::string& message) {
+  throw InvalidInputException(std::string("Error: Invalid input; ") + message);
 }
 
 }  // namespace skyrise
 
-#define Assert(expr, msg)         \
-  if (!static_cast<bool>(expr)) { \
-    Fail(msg);                    \
-  }                               \
-  static_assert(true, "End call of macro with a semicolon")
+#define Assert(expression, message)     \
+  if (!static_cast<bool>(expression)) { \
+    Fail(message);                      \
+  }                                     \
+  static_assert(true, "End macro call with a semicolon")
 
-#define AssertInput(expr, msg)                                               \
-  if (!static_cast<bool>(expr)) {                                            \
-    throw InvalidInputException(std::string("Invalid input error: ") + msg); \
-  }                                                                          \
-  static_assert(true, "End call of macro with a semicolon")
+#define AssertInput(expression, message)                                          \
+  if (!static_cast<bool>(expression)) {                                           \
+    throw InvalidInputException(std::string("Error: Invalid input; ") + message); \
+  }                                                                               \
+  static_assert(true, "End macro call with a semicolon")
 
 #if SKYRISE_DEBUG
-#define DebugAssert(expr, msg) Assert(expr, msg)
+#define DebugAssert(expression, message) Assert(expression, message)
 #else
-#define DebugAssert(expr, msg)
+#define DebugAssert(expression, message)
 #endif

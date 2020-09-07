@@ -1,19 +1,17 @@
 /**
- * Taken and modified from our Hyrise sister project
- *
- * See header for changelog
+ * Taken and modified from our sister project Hyrise (https://github.com/hyrise/hyrise)
  */
 
 #include "string_utils.hpp"
 
+#include <string>
+
 namespace skyrise {
 
-std::string trim_source_file_path(const std::string& path) {
-  const auto src_pos = path.find("/src/");
-  if (src_pos == std::string::npos) return path;
+std::string TrimSourceFilePath(const std::string& path) {
+  const auto src_position = path.find("/src/");
 
-  // "+ 1", since we want "src/lib/file.cpp" and not "/src/lib/file.cpp"
-  return path.substr(src_pos + 1);
+  return src_position == std::string::npos ? path : path.substr(src_position + 1);
 }
 
 }  // namespace skyrise
