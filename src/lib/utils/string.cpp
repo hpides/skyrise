@@ -2,7 +2,7 @@
  * Taken and modified from our sister project Hyrise (https://github.com/hyrise/hyrise)
  */
 
-#include "string_utils.hpp"
+#include "string.hpp"
 
 #include <string>
 

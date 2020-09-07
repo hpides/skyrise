@@ -8,7 +8,7 @@
 #include <string>
 
 #include "invalid_input_exception.hpp"
-#include "string_utils.hpp"
+#include "string.hpp"
 
 /**
  * This file provides better assertions than the std cassert/assert.h

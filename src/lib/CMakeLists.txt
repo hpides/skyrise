@@ -2,9 +2,9 @@ set(
     SHARED_SOURCES
     utils/assert.hpp
     utils/invalid_input_exception.hpp
-    utils/literals.hpp
-    utils/string_utils.cpp
-    utils/string_utils.hpp
+    utils/literal.hpp
+    utils/string.cpp
+    utils/string.hpp
     utils/unit_conversion.hpp
 )
 
