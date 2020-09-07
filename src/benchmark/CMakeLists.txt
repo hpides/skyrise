@@ -18,20 +18,9 @@ add_executable(
     simpleBenchmark
 
     simple_benchmark.cpp
-    lib/benchmark_config.cpp
-    lib/benchmark_config.hpp
-    lib/benchmark_runner.cpp
-    lib/benchmark_runner.hpp
 )
 
-target_link_libraries(
-    simpleBenchmark
-
-    PRIVATE
-    aws-cpp-sdk-core
-    aws-cpp-sdk-iam
-    aws-cpp-sdk-lambda
-    aws-cpp-sdk-sqs
-)
+target_link_libraries(simpleBenchmark skyriseBenchmark)
 
 add_subdirectory(bin)
+add_subdirectory(lib)

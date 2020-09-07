@@ -1,11 +1,11 @@
 add_executable(
-    skyriseBenchmark
+    skyriseBenchmarkConsole
 
     benchmark_console.cpp
 )
 
 target_link_libraries(
-    skyriseBenchmark
+        skyriseBenchmarkConsole
 
     tpch-dbgen
 )

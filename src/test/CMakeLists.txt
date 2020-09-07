@@ -6,6 +6,7 @@ include_directories(
 # Sources
 set(
     TEST_SOURCES
+    benchmark/lib/utils/benchmark_helper_test.cpp
     lib/utils/costs/cost_calculator_test.cpp
     lib/utils/costs/costs_test_utils.cpp
     lib/utils/costs/costs_test_utils.hpp
@@ -21,4 +22,4 @@ set(
 
 add_executable(skyriseTest ${TEST_SOURCES})
 
-target_link_libraries(skyriseTest skyriseCoordinator skyriseWorker ${TEST_LIBRARIES})
+target_link_libraries(skyriseTest skyriseBenchmark skyriseCoordinator skyriseWorker ${TEST_LIBRARIES})
