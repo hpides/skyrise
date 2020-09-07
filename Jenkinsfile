@@ -77,7 +77,7 @@ pipeline {
                      *[${currentBuild.currentResult}] <${env.RUN_DISPLAY_URL}|Build #${env.BUILD_NUMBER}>*
                      ${getChangeType()}: <${getChangeUrl()}|${getChangeName()}>
                      Commit: ${getCommitMessage()} (<${getCommitUrl()}|${getCommitSha().substring(0, 7)}>)
-                     Author: <@${getCommitterSlackUserId()}>${isSuccess ? '' : ' (also looping in @channel)'}
+                     Author: ${getSlackAuthorMention()}${isSuccess ? '' : ' (also looping in @channel)'}
                      """.stripIndent()
                  )
             }
@@ -85,19 +85,29 @@ pipeline {
     }
 }
 
+String getSlackAuthorMention() {
+    committerSlackUserId = getCommitterSlackUserId()
+    if (committerSlackUserId == null)
+        return ""
+    return "<@${committerSlackUserId}>"
+}
+
 String getCommitterSlackUserId() {
     if (env.CHANGE_ID)
-        branchName = pullRequest.base
+        branchName = pullRequest.headRef
     else
         branchName = env.BRANCH_NAME
+
+    if (branchName == "master")
+        return null
 
     endOfBranchPrefix = branchName.indexOf('/')
     if (endOfBranchPrefix == -1)
         return "Unknown (Invalid branch name: ${branchName})"
-    committerName = branchName.substring(0, endOfBranchPrefix).toLowerCase()
 
+    committerName = branchName.substring(0, endOfBranchPrefix).toLowerCase()
     gitHubToSlack = [
-        "cajan93": "U014UBW46AU",
+        "cajan93": "U01435GN1U5",
         "d-justen": "U0144J0QCPM",
         "engelfa": "U014UBW46AU",
         "jansiebert": "U0142D6U51T",
