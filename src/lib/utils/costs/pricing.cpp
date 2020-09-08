@@ -170,7 +170,7 @@ Aws::String Pricing::_translate_region_to_location(const Aws::String& region) co
   else if (region == Aws::Region::US_GOV_EAST_1)
     return "AWS GovCloud (US-East)";
   else
-    Fail("Region not supported.");
+    FailInput("AWS region " + region + " not supported.");
 }
 
 }  // namespace skyrise

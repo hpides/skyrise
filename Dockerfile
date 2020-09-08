@@ -8,7 +8,7 @@ ARG CPPCHECK_VERSION=2.1
 ARG CPPCHECK_DIR=/opt/cppcheck-${CPPCHECK_VERSION}
 ARG CPPLINT_COMMIT=25e977d
 ARG CPPLINT_DIR=/opt/cpplint-${CPPLINT_COMMIT}
-ARG DOCKER_LAMBDA_COMMIT=7a36e3e
+ARG DOCKER_LAMBDA_COMMIT=51711e9
 ARG DOCKER_LAMBDA_DIR=/opt/docker-lambda-${DOCKER_LAMBDA_COMMIT}
 ARG GCC_VERSION=7.5.0
 ARG GCC_SUFFIX=75
@@ -18,13 +18,11 @@ ARG LLVM_DIR=/opt/llvm-${LLVM_VERSION}
 
 
 # Packages
-FROM lambci/lambda-base:build AS base-install
+FROM lambci/lambda-base-2:build AS base-install
 
 RUN yum install -y \
     # General
     wget \
-    # Compilation
-    gcc72-c++ \
     # Lambda bootstrap wrapper dependency
     golang.x86_64 \
     # LLDB dependency
@@ -33,12 +31,7 @@ RUN yum install -y \
     yum remove -y \
     cmake && \
     yum clean all && \
-    rm -rf /var/cache/yum && \
-    # Default commands
-    alternatives --set cpp /usr/bin/cpp72 && \
-    alternatives --set g++ /usr/bin/g++72 && \
-    alternatives --set gcc /usr/bin/gcc72
-
+    rm -rf /var/cache/yum
 
 # Ccache
 FROM base-install AS base-ccache
@@ -121,6 +114,7 @@ ARG GCC_DIR
 WORKDIR ${GCC_DIR}/src
 RUN wget -nv https://mirrors.kernel.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz -O - \
         | tar -xz --strip-components=1 && \
+    ./contrib/download_prerequisites && \
     mkdir build && \
     cd build && \
     ../configure --enable-languages=c,c++ --disable-multilib --prefix=${GCC_DIR} --program-suffix=${GCC_SUFFIX} && \
@@ -147,7 +141,7 @@ RUN wget -nv https://github.com/llvm/llvm-project/releases/download/llvmorg-${LL
 
 
 # Base stage combining all tools
-FROM lambci/lambda-base:build AS base
+FROM lambci/lambda-base-2:build AS base
 ARG CCACHE_DIR
 ARG CMAKE_DIR
 ARG CPPCHECK_DIR
@@ -166,7 +160,7 @@ COPY --from=base-llvm-clang ${LLVM_DIR} ${LLVM_DIR}
 
 
 # Build stage
-FROM lambci/lambda-base:build AS build
+FROM lambci/lambda-base-2:build AS build
 ARG GCC_DIR
 
 # Packages
@@ -174,6 +168,8 @@ RUN yum install -y \
     # Stack traces
     binutils-devel \
     # AWS SDK dependency
+    libcurl-devel \
+    openssl-devel \
     libuuid-devel && \
     # Cleanup
     yum remove -y \
@@ -197,28 +193,29 @@ RUN for file in /opt/*/bin/*; \
     ln -s /usr/local/bin/ccache /usr/local/bin/clang && \
     ln -s /usr/local/bin/ccache /usr/local/bin/clang++
 
-ENV CC=clang
-ENV CXX=clang++
+ENV CC=clang \
+    CXX=clang++
 
 # Run stage
-FROM lambci/lambda-base AS run
+FROM lambci/lambda-base-2 AS run
 ARG DOCKER_LAMBDA_DIR
+ARG LLVM_DIR
 
-# Packages
-RUN yum install -y \
-    # Debugging
-    gdb-gdbserver && \
-    # Cleanup
-    yum clean all && \
-    rm -rf /var/cache/yum
-
+# Copy over LLDB
+COPY --from=base-llvm-clang ${LLVM_DIR}/bin/lldb* ${LLVM_DIR}/bin/
+COPY --from=base-llvm-clang ${LLVM_DIR}/include/lldb ${LLVM_DIR}/include/lldb/
+COPY --from=base-llvm-clang ${LLVM_DIR}/lib/liblldb* ${LLVM_DIR}/lib/
+COPY --from=base-llvm-clang /usr/lib64/ /usr/lib64/
+RUN for file in ${LLVM_DIR}/bin/*; \
+        do \
+            ln -s $file /usr/bin/$(basename $file); \
+        done
 # In the AWS Lambda execution environment, language runtimes are located in /var/runtime
 WORKDIR /var/runtime/
 COPY script/docker/local_function_bootstrap.sh bootstrap
-
 COPY --from=base-docker-lambda ${DOCKER_LAMBDA_DIR}/init bootstrap_wrapper
-
 RUN chmod +x /var/runtime/bootstrap && \
     chmod +x /var/runtime/bootstrap_wrapper
-
+ENV PATH=/var/lang/bin:$PATH \
+    LD_LIBRARY_PATH=/var/lang/lib:$LD_LIBRARY_PATH
 ENTRYPOINT ["/var/runtime/bootstrap_wrapper"]

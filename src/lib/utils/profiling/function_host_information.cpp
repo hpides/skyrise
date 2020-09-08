@@ -205,4 +205,5 @@ std::string FunctionHostInformationCollector::_read_stdout(const std::string& co
   }
   return command_stdout;
 }
-};  // namespace skyrise
+
+}  // namespace skyrise

@@ -32,7 +32,7 @@
 
 namespace skyrise {
 
-// Default location of certificate authority file on Amazon Linux 1
+// Default location of certificate authority file on Amazon Linux 2
 const std::string kCaFile = "/etc/pki/tls/certs/ca-bundle.crt";
 
 BenchmarkRunner::BenchmarkRunner() {
@@ -106,7 +106,7 @@ void BenchmarkRunner::Setup() {
       const auto create_function_request =
           Aws::Lambda::Model::CreateFunctionRequest()
               .WithFunctionName(function_config.function_name)
-              .WithRuntime(Aws::Lambda::Model::Runtime::provided)
+              .WithRuntime(Aws::Lambda::Model::Runtime::provided_al2)
               .WithRole(role_arn)
               .WithHandler("HandlerFunction")
               .WithCode(Aws::Lambda::Model::FunctionCode().WithZipFile(OpenFunctionZip(function_config.function_path)))

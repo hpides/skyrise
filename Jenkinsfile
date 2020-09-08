@@ -16,14 +16,14 @@ pipeline {
                 script {
                     parallel(
                         "Format": {
-                            stage ("Format") {
+                            stage("Format") {
                                 stage("clang-format") {
                                     sh 'python3 script/run_clang_format.py --clang_format_binary clang-format --source_dir src --quiet'
                                 }
                             }
                         },
                         "ClangDebug": {
-                            stage ("ClangDebug") {
+                            stage("ClangDebug") {
                                 stage("Build") {
                                     sh 'mkdir -p cmake-build-debug'
                                     dir('cmake-build-debug') {
@@ -39,7 +39,7 @@ pipeline {
                             }
                         },
                         "ClangRelease": {
-                            stage ("ClangRelease") {
+                            stage("ClangRelease") {
                                 stage("Build") {
                                     sh 'mkdir -p cmake-build-release'
                                     dir('cmake-build-release') {
