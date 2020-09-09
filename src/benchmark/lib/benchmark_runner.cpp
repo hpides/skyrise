@@ -225,8 +225,17 @@ void BenchmarkRunner::RunSequential() {
   // BENCHMARK STARTS
   const auto benchmark_start = std::chrono::steady_clock::now();
 
+  size_t invocation_index = 0;
   for (const auto& [invocation_id, invoke_request] : *invoke_requests_) {
     benchmark_item_results->emplace_back(RunBenchmarkItem(invocation_id, invoke_request));
+
+    const auto is_last_invocation_of_repetition = (invocation_index + 1) % config_->num_invocations_ == 0;
+    if (config_->num_repetitions_ > 1 && is_last_invocation_of_repetition) {
+      const size_t current_repetition = (invocation_index / config_->num_invocations_);
+      std::cout << "Repetition " << current_repetition << " completed.\n";
+      config_->after_repetition_callbacks_[current_repetition]();
+    }
+    invocation_index++;
   }
 
   // BENCHMARK ENDS
@@ -248,8 +257,17 @@ void BenchmarkRunner::RunParallel() {
   // BENCHMARK STARTS
   const auto benchmark_start = std::chrono::steady_clock::now();
 
+  size_t invocation_index = 0;
   for (const auto& [invocation_id, invoke_request] : *invoke_requests_) {
     future_results.emplace_back(std::async(&BenchmarkRunner::RunBenchmarkItem, this, invocation_id, invoke_request));
+
+    const auto is_last_invocation_of_repetition = (invocation_index + 1) % config_->num_invocations_ == 0;
+    if (config_->num_repetitions_ > 1 && is_last_invocation_of_repetition) {
+      const auto current_repetition = (invocation_index / config_->num_invocations_);
+      std::cout << "Repetition " << current_repetition << " dispatched.\n";
+      config_->after_repetition_callbacks_[current_repetition]();
+    }
+    invocation_index++;
   }
 
   for (auto& result : future_results) {
@@ -295,29 +313,33 @@ std::shared_ptr<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>> Benchm
 
   const auto invocation_type = IsAsyncBenchmark() ? Aws::Lambda::Model::InvocationType::Event
                                                   : Aws::Lambda::Model::InvocationType::RequestResponse;
+  for (size_t i = 0; i < config_->num_repetitions_; i++) {
+    for (const auto& config : *(config_->invocation_configs_)) {
+      auto invoke_request = Aws::Lambda::Model::InvokeRequest()
+                                .WithFunctionName(config.function_name)
+                                .WithInvocationType(invocation_type)
+                                .WithLogType(Aws::Lambda::Model::LogType::Tail);
 
-  for (const auto& config : *(config_->invocation_configs_)) {
-    auto invoke_request = Aws::Lambda::Model::InvokeRequest()
-                              .WithFunctionName(config.function_name)
-                              .WithInvocationType(invocation_type)
-                              .WithLogType(Aws::Lambda::Model::LogType::Tail);
+      Aws::StringStream payload_stream;
+      payload_stream << config.payload->rdbuf();
+      config.payload->seekg(std::ios::beg);
 
-    Aws::StringStream payload_stream;
-    payload_stream << config.payload->rdbuf();
-    config.payload->seekg(std::ios::beg);
+      const Aws::String invocation_id_repetition = config_->num_repetitions_ > 1
+                                                       ? "repetition-" + std::to_string(i) + "-" + config.invocation_id
+                                                       : config.invocation_id;
+      const Aws::String invocation_id = is_warm_up ? (invocation_id_repetition + "-warmup") : invocation_id_repetition;
 
-    const Aws::String invocation_id = is_warm_up ? (config.invocation_id + "-warmup") : config.invocation_id;
+      const auto json_value = Aws::Utils::Json::JsonValue(payload_stream.str())
+                                  .WithString("invocationID", invocation_id)
+                                  .WithBool("isWarmup", is_warm_up);
+      const auto json_view = json_value.View();
+      const auto body = std::make_shared<Aws::StringStream>(json_view.WriteCompact());
 
-    const auto json_value = Aws::Utils::Json::JsonValue(payload_stream.str())
-                                .WithString("invocationID", invocation_id)
-                                .WithBool("isWarmup", is_warm_up);
-    const auto json_view = json_value.View();
-    const auto body = std::make_shared<Aws::StringStream>(json_view.WriteCompact());
+      invoke_request.SetBody(body);
+      invoke_request.SetContentType("application/json");
 
-    invoke_request.SetBody(body);
-    invoke_request.SetContentType("application/json");
-
-    invoke_requests->emplace(std::make_pair(invocation_id, invoke_request));
+      invoke_requests->emplace(std::make_pair(invocation_id, invoke_request));
+    }
   }
 
   std::cout << "Invoke requests" << (is_warm_up ? " for function warm-up" : "") << " created.\n\n";

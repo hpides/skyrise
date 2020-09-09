@@ -22,7 +22,8 @@ class FunctionHostInformationTest : public ::testing::Test {
                                                        true};
 
   void set_up() const {
-    _create_file("2:cpu:/sandbox-root-pQEzKi/sandbox-service-c53732/sandbox-f22810\n1:blkio:/\n", config.cgroup_path);
+    _create_file("2:cpu,cpuacct:/sandbox-root-pQEzKi/sandbox-service-c53732/sandbox-f22810\n1:blkio:/\n",
+                 config.cgroup_path);
     _create_file("ctxt 9999999\nbtime 123456\n", config.stat_path);
     _create_file("1234.56 789.10\n", config.uptime_path);
     _create_file(

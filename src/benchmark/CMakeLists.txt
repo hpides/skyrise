@@ -8,7 +8,7 @@ target_link_libraries(
     skyriseFunctionMinimal
 
     PRIVATE
-    aws-lambda-runtime
+    skyriseWorker
 )
 
 # TODO: Employ custom packager that does not include libraries present in AWS Lambda's execution environment.

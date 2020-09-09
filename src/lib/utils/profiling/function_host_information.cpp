@@ -64,7 +64,7 @@ std::string FunctionHostInformationCollector::as_json(FunctionHostInformationIde
 }
 
 std::string FunctionHostInformationCollector::_id() {
-  constexpr auto REGEX = "[0-9]+:cpu:/sandbox-root-([0-9a-zA-Z]{6})";
+  constexpr auto REGEX = "[0-9]+:cpu,cpuacct:/sandbox-root-([0-9a-zA-Z]{6})";
   const auto file_content = _read_file_content(_config.cgroup_path);
   const auto match = _find_first(REGEX, file_content);
   return match.empty() ? "" : match.front();

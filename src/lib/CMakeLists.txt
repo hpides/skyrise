@@ -38,6 +38,7 @@ set(
 set(
     WORKER_LIBRARIES
     aws-cpp-sdk-core
+    aws-lambda-runtime
 )
 
 add_library(skyriseWorker SHARED ${WORKER_SOURCES})

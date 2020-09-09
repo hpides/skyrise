@@ -1,6 +1,5 @@
 #include <iomanip>
 #include <iostream>
-#include <memory>
 
 #include <aws/core/Aws.h>
 #include <magic_enum.hpp>
@@ -11,7 +10,10 @@
 // This hacky place is a playground to try out the BenchmarkRunner.
 
 const size_t kLambdaSize = 128;
-const size_t kNumInvocations = 15;
+const size_t kNumInvocations = 10;
+const size_t kNumRepetitions = 12;
+const std::vector<std::function<void()>> kAfterRepetitonCallbacks{[]() { std::cout << "After Repetition 0\n"; },
+                                                                  []() { std::cout << "After Repetition 1\n"; }};
 
 int main() {
   Aws::SDKOptions options;
@@ -21,10 +23,13 @@ int main() {
     std::cout << "Creating BenchmarkConfigs...\n";
 
     std::vector<skyrise::BenchmarkConfig> configs{
-        {"skyriseFunctionMinimal", kLambdaSize, "AWSLambda", kNumInvocations, skyrise::ExecuteMode::WarmAsync},
-        {"skyriseFunctionMinimal", kLambdaSize, "AWSLambda", kNumInvocations, skyrise::ExecuteMode::WarmParallel},
-        {"skyriseFunctionMinimal", kLambdaSize, "AWSLambda", kNumInvocations, skyrise::ExecuteMode::WarmSequential}};
-
+        {"skyriseFunctionMinimal", kLambdaSize, "AWSLambda", kNumInvocations, skyrise::ExecuteMode::WarmAsync,
+         kNumRepetitions, kAfterRepetitonCallbacks},
+        {"skyriseFunctionMinimal", kLambdaSize, "AWSLambda", kNumInvocations, skyrise::ExecuteMode::WarmParallel,
+         kNumRepetitions, kAfterRepetitonCallbacks},
+        {"skyriseFunctionMinimal", kLambdaSize, "AWSLambda", kNumInvocations, skyrise::ExecuteMode::WarmSequential,
+         kNumRepetitions, kAfterRepetitonCallbacks},
+    };
     std::cout << "BenchmarkConfigs created.\n\n";
 
     std::cout << "Creating BenchmarkRunner...\n";
