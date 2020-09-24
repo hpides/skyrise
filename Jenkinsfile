@@ -1,13 +1,14 @@
 pipeline {
-    agent {
-        docker {
-            image 'hpiepic/skyrise:build'
-            alwaysPull true
-        }
-    }
+    agent any
 
     stages {
-        stage ("Parallel Pipeline"){
+        stage("Amazon Linux") {
+            agent {
+                docker {
+                    image 'hpiepic/skyrise:build'
+                    alwaysPull true
+                }
+            }
             environment {
                 AWS_ACCESS_KEY_ID = credentials('skyrise-ci-aws-access-key-id')
                 AWS_SECRET_ACCESS_KEY = credentials('skyrise-ci-aws-secret-access-key')
@@ -15,8 +16,8 @@ pipeline {
             steps {
                 script {
                     parallel(
-                        "Format": {
-                            stage("Format") {
+                        "ClangFormat": {
+                            stage("ClangFormat") {
                                 stage("clang-format") {
                                     sh 'python3 script/run_clang_format.py --clang_format_binary clang-format --source_dir src --quiet'
                                 }
@@ -35,6 +36,15 @@ pipeline {
                                     dir('cmake-build-debug') {
                                         sh 'bin/skyriseTest --gtest_output="xml:test-results.xml"'
                                     }
+                                    xunit(
+                                        thresholds: [
+                                            skipped(failureThreshold: '0'),
+                                            failed(failureThreshold: '0')
+                                        ],
+                                        tools: [
+                                            GoogleTest(pattern: 'cmake-build-debug/test-results.xml')
+                                        ]
+                                    )
                                 }
                             }
                         },
@@ -53,20 +63,33 @@ pipeline {
                 }
             }
         }
-    }
-
-    post {
-        always {
-            xunit(
-                thresholds: [
-                    skipped(failureThreshold: '0'),
-                    failed(failureThreshold: '0')
-                ],
-                tools: [
-                    GoogleTest(pattern: 'cmake-build-debug/test-results.xml')
-                ]
-            )
+        stage("Ubuntu") {
+            agent {
+                docker {
+                    image 'hpiepic/skyrise:ubuntu'
+                    alwaysPull true
+                }
+            }
+            steps {
+                script {
+                    parallel(
+                        "GccDebug": {
+                            stage("GccDebug") {
+                                stage("Build") {
+                                    sh 'mkdir -p cmake-build-debug'
+                                    dir('cmake-build-debug') {
+                                        sh 'cmake .. -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_BUILD_TYPE=Debug'
+                                        sh 'make all -j$(nproc)'
+                                    }
+                                }
+                            }
+                        }
+                    )
+                }
+            }
         }
+    }
+    post {
         changed {
             script {
                 isSuccess = currentBuild.currentResult == 'SUCCESS'

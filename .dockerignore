@@ -1,2 +1,3 @@
 *
 !script/docker/local_function_bootstrap.sh
+!script/install_toolchain.sh

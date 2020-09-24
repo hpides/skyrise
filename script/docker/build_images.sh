@@ -31,6 +31,7 @@ export DOCKER_BUILDKIT=1
 docker build --build-arg BUILDKIT_INLINE_CACHE=1 --pull --target base --tag ${PREFIX}/skyrise:base ${SOURCE_DIR}
 docker build --build-arg BUILDKIT_INLINE_CACHE=1 --pull --target build --tag ${PREFIX}/skyrise:build ${SOURCE_DIR}
 docker build --build-arg BUILDKIT_INLINE_CACHE=1 --pull --target run --tag ${PREFIX}/skyrise:run ${SOURCE_DIR}
+docker build --build-arg BUILDKIT_INLINE_CACHE=1 --pull --target ubuntu --tag ${PREFIX}/skyrise:ubuntu ${SOURCE_DIR}
 
 if [ "$PRUNE" = true ]; then
     echo "Removing dangling images.."

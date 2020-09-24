@@ -169,8 +169,9 @@ RUN yum install -y \
     binutils-devel \
     # AWS SDK dependency
     libcurl-devel \
+    libuuid-devel \
     openssl-devel \
-    libuuid-devel && \
+    system-lsb-core && \
     # Cleanup
     yum remove -y \
     clang \
@@ -219,3 +220,13 @@ RUN chmod +x /var/runtime/bootstrap && \
 ENV PATH=/var/lang/bin:$PATH \
     LD_LIBRARY_PATH=/var/lang/lib:$LD_LIBRARY_PATH
 ENTRYPOINT ["/var/runtime/bootstrap_wrapper"]
+
+FROM ubuntu:20.04 AS ubuntu
+RUN apt-get update && \
+    apt-get install -y \
+    lsb-release \
+    sudo \
+    tzdata
+COPY script/install_toolchain.sh install_toolchain.sh
+RUN ./install_toolchain.sh && \
+    rm install_toolchain.sh

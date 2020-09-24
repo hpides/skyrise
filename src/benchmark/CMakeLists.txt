@@ -11,8 +11,7 @@ target_link_libraries(
     skyriseWorker
 )
 
-# TODO: Employ custom packager that does not include libraries present in AWS Lambda's execution environment.
-aws_lambda_package_target(skyriseFunctionMinimal NO_LIBC)
+aws_lambda_package_target(skyriseFunctionMinimal)
 
 add_executable(
     simpleBenchmark
