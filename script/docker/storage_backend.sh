@@ -16,6 +16,9 @@ HOST="127.0.0.1:9000"
 BUCKET="data"
 DOCKER=true
 
+# Sets ACCESS_KEY, ACCESS_KEY_SOURCE, SECRET_KEY and SECRET_KEY_SOURCE
+source $(dirname "${BASH_SOURCE[0]}")/get_aws_credentials.sh
+
 # Helper functions
 exitWithError() {
     echo "$1";
@@ -88,18 +91,18 @@ XAMZDATE=$(date -u "+%Y%m%dT%H%M%SZ")
 DAY=$(date -u "+%Y%m%d")
 
 get_signing_key() {
-	date_key=$(printf "$DAY" | openssl dgst -sha256 -mac HMAC -macopt "key:AWS4${SECRET_KEY}")
-	date_region_key=$(printf "us-east-1" | openssl dgst -sha256 -mac HMAC -macopt "hexkey:${date_key}")
-	date_region_service_key=$(printf "s3" | openssl dgst -sha256 -mac HMAC -macopt "hexkey:${date_region_key}")
-	signing_key=$(printf "aws4_request" | openssl dgst -sha256 -mac HMAC -macopt "hexkey:${date_region_service_key}")
+	date_key=$(printf "$DAY" | openssl dgst -sha256 -mac HMAC -macopt "key:AWS4${SECRET_KEY}" -binary | xxd -p -c 256)
+	date_region_key=$(printf "us-east-1" | openssl dgst -sha256 -mac HMAC -macopt "hexkey:${date_key}" -binary | xxd -p -c 256)
+	date_region_service_key=$(printf "s3" | openssl dgst -sha256 -mac HMAC -macopt "hexkey:${date_region_key}" -binary | xxd -p -c 256)
+	signing_key=$(printf "aws4_request" | openssl dgst -sha256 -mac HMAC -macopt "hexkey:${date_region_service_key}" -binary | xxd -p -c 256)
 	printf ${signing_key}
 }
 
 get_canonical_request_hash() {
-	URI=$1
-	PAYLOAD_HASH=$2
-	canonical_request="PUT\n/$URI\n\nhost:$HOST\nx-amz-content-sha256:$PAYLOAD_HASH\nx-amz-date:$XAMZDATE\n\nhost;x-amz-content-sha256;x-amz-date\n$PAYLOAD_HASH"
-	printf $(printf "$canonical_request" | openssl sha256)
+	uri=$1
+	payload_hash=$2
+	canonical_request="PUT\n/$uri\n\nhost:$HOST\nx-amz-content-sha256:$payload_hash\nx-amz-date:$XAMZDATE\n\nhost;x-amz-content-sha256;x-amz-date\n$payload_hash"
+	printf $(printf "$canonical_request" | openssl sha256 -binary | xxd -p -c 256)
 }
 
 get_authorization_string() {
@@ -107,8 +110,8 @@ get_authorization_string() {
 	signing_key=$(get_signing_key)
 	scope="$DAY/us-east-1/s3/aws4_request"
 	string_to_sign="AWS4-HMAC-SHA256\n$XAMZDATE\n$scope\n$canonical_request_hash"
-	signature=$(printf "$string_to_sign" | openssl dgst -sha256 -mac HMAC -macopt "hexkey:${signing_key}")
-	printf "AWS4-HMAC-SHA256 Credential=$KEY/$scope,SignedHeaders=host;x-amz-content-sha256;x-amz-date,Signature=${signature}"
+	signature=$(printf "$string_to_sign" | openssl dgst -sha256 -mac HMAC -macopt "hexkey:${signing_key}" -binary | xxd -p -c 256)
+	printf "AWS4-HMAC-SHA256 Credential=${ACCESS_KEY}/$scope,SignedHeaders=host;x-amz-content-sha256;x-amz-date,Signature=${signature}"
 }
 
 create_bucket() {
@@ -129,8 +132,8 @@ create_bucket() {
 
 upload_file() {
 	filename=$1
-	file_sha256=$(cat "$filename" | openssl sha256)
-	file_size=$(stat -f "%z" "$filename")
+	file_sha256=$(cat "$filename" | openssl sha256 -binary | xxd -p -c 256)
+	file_size=$(wc -c < "$filename")
 	canonical_request_hash=$(get_canonical_request_hash "$BUCKET/$filename" "$file_sha256")
 	auth=$(get_authorization_string "$canonical_request_hash")
 	response=$(curl -s -v -X PUT \
@@ -161,43 +164,26 @@ start_minio() {
 		exit 0
 	fi
 
-  if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
-    credentials_file="$HOME/.aws/credentials"
-    access_key_from_file=$(awk -F "=" '/aws_access_key_id/ {print $2}' $credentials_file 2>/dev/null)
-    secret_key_from_file=$(awk -F "=" '/aws_secret_access_key/ {print $2}' $credentials_file 2>/dev/null)
-    if [ -z "$access_key_from_file" ] || [ -z "$secret_key_from_file" ]; then
-      access_key="minio"
-      access_key_source=$access_key
-      secret_key="minio"
-      secret_key_source=$secret_key
-    else
-      access_key=$access_key_from_file
-      access_key_source="<from $credentials_file>"
-      secret_key=$secret_key_from_file
-      secret_key_source="<from $credentials_file>"
-    fi
-  else
-    access_key=$AWS_ACCESS_KEY_ID
-    access_key_source="<from AWS_ACCESS_KEY_ID environment variable>"
-    secret_key=$AWS_SECRET_ACCESS_KEY
-    secret_key_source="<from AWS_SECRET_ACCESS_KEY environment variable>"
-  fi
+	if [ ${#ACCESS_KEY} -le 2 ] || [ ${#SECRET_KEY} -le 7 ]; then
+		echo "ACCESS_KEY requires at least 3 characters. SECRET_KEY requires at least 8 characters."
+		exit 1
+	fi
 
 	echo "Creating container.. "
 	CONTAINER_ID=$(docker run \
 		-d  \
 		--name $CONTAINER_NAME \
 		-p 9000:9000 \
-		-e "MINIO_ACCESS_KEY=$access_key" \
-		-e "MINIO_SECRET_KEY=$secret_key" \
+		-e "MINIO_ACCESS_KEY=$ACCESS_KEY" \
+		-e "MINIO_SECRET_KEY=$SECRET_KEY" \
 		minio/minio server /data)
 
 	[ $? -eq "0" ] || { echo >&2 "Container creation failed. Please make sure Docker is configured correctly."; exit 1; }
 
 	echo "Container ID     : ${CONTAINER_ID:0:12}"
 	echo "Container Name   : $CONTAINER_NAME"
-	echo "Access Key ID    : $access_key_source"
-	echo "Secret Access Key: $secret_key_source"
+	echo "Access Key ID    : $ACCESS_KEY_SOURCE"
+	echo "Secret Access Key: $SECRET_KEY_SOURCE"
 }
 
 # Stop
@@ -298,7 +284,7 @@ while [ "$#" -gt 0 ]; do
         shift
         ;;
     --no-docker)
-        Docker=false
+        DOCKER=false
         ;;
     *) 
 	break 
@@ -335,7 +321,7 @@ case "$1" in
 	put_minio "$@"
 	;;
 	*)
-	exitWithError "Unknown command";	
+	exitWithError "Unknown command";
 	;;
 esac
 
