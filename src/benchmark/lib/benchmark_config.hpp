@@ -33,14 +33,14 @@ class BenchmarkConfig {
                   const size_t num_invocations, const ExecuteMode execute_mode);
   BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size, const Aws::String& function_role,
                   const size_t num_invocations, const ExecuteMode execute_mode, const size_t num_repetitions,
-                  const std::vector<std::function<void()>> after_repetitions_callbacks);
+                  const std::vector<std::function<void()>>& after_repetitions_callbacks);
   BenchmarkConfig(const std::vector<Aws::String>& function_zip_names, const std::vector<size_t>& memory_sizes,
                   const Aws::String& function_role, const size_t num_invocations, const ExecuteMode execute_mode,
-                  const size_t num_repetitions, const std::vector<std::function<void()>> after_repetition_callbacks,
+                  const size_t num_repetitions, const std::vector<std::function<void()>>& after_repetition_callbacks,
                   const size_t timeout);
 
   void SetPayloads(const std::vector<std::shared_ptr<Aws::IOStream>>& payloads);
-  void SetOnePayloadForAllFunctions(const std::shared_ptr<Aws::IOStream> payload);
+  void SetOnePayloadForAllFunctions(const std::shared_ptr<Aws::IOStream>& payload);
 
   const Aws::String function_role_name_;
   const size_t num_invocations_;
@@ -55,8 +55,8 @@ class BenchmarkConfig {
   const std::shared_ptr<std::vector<LambdaInvocationConfig>> invocation_configs_;
 
  private:
-  Aws::String GetRandomString();
-  Aws::String GetTimestamp();
+  static Aws::String GetRandomString();
+  static Aws::String GetTimestamp();
 };
 
 }  // namespace skyrise

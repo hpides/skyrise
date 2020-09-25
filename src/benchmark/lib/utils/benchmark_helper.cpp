@@ -8,8 +8,8 @@
 namespace skyrise {
 
 BenchmarkAggregates BenchmarkHelper::CalculateAggregates(
-    std::shared_ptr<std::vector<BenchmarkItemResult>> benchmark_result,
-    std::function<double(const BenchmarkItemResult&)> extract_metric) {
+    const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
+    const std::function<double(const BenchmarkItemResult&)>& extract_metric) {
   std::vector<double> metrics;
   std::transform(benchmark_result->cbegin(), benchmark_result->cend(), std::back_inserter(metrics),
                  [&](const BenchmarkItemResult& result) { return extract_metric(result); });
@@ -46,7 +46,7 @@ BenchmarkAggregates BenchmarkHelper::CalculateAggregates(std::vector<double>& me
 
 Aws::Utils::Json::JsonValue BenchmarkHelper::GenerateJsonOutput(
     const Aws::String& benchmark_name, const std::vector<std::tuple<Aws::String, double>>& aggregated_metrics,
-    std::shared_ptr<std::vector<BenchmarkItemResult>> benchmark_result,
+    const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
     const std::vector<std::function<std::tuple<Aws::String, double>(const BenchmarkItemResult&)>>& metrics) {
   auto json_output = Aws::Utils::Json::JsonValue().WithString("name", benchmark_name);
 

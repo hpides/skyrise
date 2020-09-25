@@ -50,10 +50,10 @@ class BenchmarkRunner {
   std::shared_ptr<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>> CreateInvokeRequests(const bool is_warm_up);
   std::shared_ptr<std::map<Aws::String, Aws::String>> CollectSqsMessages(const size_t num_invocations);
 
-  Aws::Utils::CryptoBuffer OpenFunctionZip(const Aws::String& function_path);
+  static Aws::Utils::CryptoBuffer OpenFunctionZip(const Aws::String& function_path);
   BenchmarkItemResult RunBenchmarkItem(const Aws::String& invocation_id,
                                        const Aws::Lambda::Model::InvokeRequest& invoke_request);
-  void WriteResult(const std::shared_ptr<std::vector<BenchmarkItemResult>> benchmark_item_results,
+  void WriteResult(const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_item_results,
                    const std::chrono::duration<size_t, std::milli> benchmark_run_duration);
 
   bool IsWarmStartBenchmark();

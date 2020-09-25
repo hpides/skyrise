@@ -26,12 +26,13 @@ struct BenchmarkAggregates {
 class BenchmarkHelper {
  public:
   BenchmarkHelper() {}
-  BenchmarkAggregates CalculateAggregates(std::shared_ptr<std::vector<BenchmarkItemResult>> benchmark_result,
-                                          std::function<double(const BenchmarkItemResult&)> extract_metric);
-  BenchmarkAggregates CalculateAggregates(std::vector<double>& metrics);
-  Aws::Utils::Json::JsonValue GenerateJsonOutput(
+  static BenchmarkAggregates CalculateAggregates(
+      const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
+      const std::function<double(const BenchmarkItemResult&)>& extract_metric);
+  static BenchmarkAggregates CalculateAggregates(std::vector<double>& metrics);
+  static Aws::Utils::Json::JsonValue GenerateJsonOutput(
       const Aws::String& benchmark_name, const std::vector<std::tuple<Aws::String, double>>& aggregated_metrics,
-      std::shared_ptr<std::vector<BenchmarkItemResult>> benchmark_result,
+      const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
       const std::vector<std::function<std::tuple<Aws::String, double>(const BenchmarkItemResult&)>>& metrics);
 };
 

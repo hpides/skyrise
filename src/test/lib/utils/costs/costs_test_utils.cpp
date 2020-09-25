@@ -4,7 +4,7 @@
 
 namespace skyrise {
 
-void InitAndShutDownAPI(const std::function<void()> func) {
+void InitAndShutDownAPI(const std::function<void()>& func) {
   Aws::SDKOptions options;
 
   Aws::InitAPI(options);

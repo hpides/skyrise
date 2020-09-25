@@ -22,17 +22,17 @@ class FunctionHostInformationTest : public ::testing::Test {
                                                        true};
 
   void set_up() const {
-    _create_file("2:cpu,cpuacct:/sandbox-root-pQEzKi/sandbox-service-c53732/sandbox-f22810\n1:blkio:/\n",
-                 config.cgroup_path);
-    _create_file("ctxt 9999999\nbtime 123456\n", config.stat_path);
-    _create_file("1234.56 789.10\n", config.uptime_path);
-    _create_file(
+    CreateFile("2:cpu,cpuacct:/sandbox-root-pQEzKi/sandbox-service-c53732/sandbox-f22810\n1:blkio:/\n",
+               config.cgroup_path);
+    CreateFile("ctxt 9999999\nbtime 123456\n", config.stat_path);
+    CreateFile("1234.56 789.10\n", config.uptime_path);
+    CreateFile(
         "processor\t: 0\nmodel name\t: CpuModelName\nflags\t: three test flags\n\n"
         "processor\t: 1\nmodel name\t: CpuModelName\nflags\t: three test flags\n",
         config.cpuinfo_path);
-    _create_file("MemTotal:      123456 kB\nMemFree:        7890 kB\n", config.meminfo_path);
+    CreateFile("MemTotal:      123456 kB\nMemFree:        7890 kB\n", config.meminfo_path);
     mkdir(config.tmp_path.c_str(), 0777);
-    _create_file("1234.56 789.10\n", "tmp/testTmpFile");
+    CreateFile("1234.56 789.10\n", "tmp/testTmpFile");
   }
 
   void tear_down() const {
@@ -46,7 +46,7 @@ class FunctionHostInformationTest : public ::testing::Test {
   }
 
  private:
-  static void _create_file(const std::string& content, const std::string& filename) {
+  static void CreateFile(const std::string& content, const std::string& filename) {
     std::ofstream file(filename);
     file << content;
   }
@@ -58,7 +58,7 @@ TEST_F(FunctionHostInformationTest, FunctionHostInformationTestIdentificationWit
   config.ip_public_command = "exit 1";
 
   FunctionHostInformationCollector collector(config);
-  FunctionHostInformationIdentification information_identification = collector.collect_information_identification();
+  FunctionHostInformationIdentification information_identification = collector.CollectInformationIdentification();
   EXPECT_EQ(information_identification.id, "pQEzKi");
   EXPECT_EQ(information_identification.ip_private, "1.2.3.4");
   EXPECT_EQ(information_identification.ip_public, "");
@@ -71,7 +71,7 @@ TEST_F(FunctionHostInformationTest, FunctionHostInformationTestIdentificationWit
   config.collect_ip_public = true;
 
   FunctionHostInformationCollector collector(config);
-  FunctionHostInformationIdentification information_identification = collector.collect_information_identification();
+  FunctionHostInformationIdentification information_identification = collector.CollectInformationIdentification();
   EXPECT_EQ(information_identification.ip_public, "5.6.7.8");
 
   tear_down();
@@ -81,7 +81,7 @@ TEST_F(FunctionHostInformationTest, FunctionHostInformationTestEnvironment) {
   set_up();
 
   FunctionHostInformationCollector collector(config);
-  FunctionHostInformationEnvironment information_environment = collector.collect_information_environment();
+  FunctionHostInformationEnvironment information_environment = collector.CollectInformationEnvironment();
   EXPECT_EQ(information_environment.operating_system_details, "OSDetails");
   EXPECT_EQ(information_environment.file_system_details, "testTmpFile");
   EXPECT_EQ(information_environment.boot_time_seconds, 123456);
@@ -94,7 +94,7 @@ TEST_F(FunctionHostInformationTest, FunctionHostInformationTestResources) {
   set_up();
 
   FunctionHostInformationCollector collector(config);
-  FunctionHostInformationResources information_resources = collector.collect_information_resources();
+  FunctionHostInformationResources information_resources = collector.CollectInformationResources();
   EXPECT_EQ(information_resources.cpu_count, 2);
   EXPECT_EQ(information_resources.cpu_model, "CpuModelName");
   EXPECT_EQ(information_resources.cpu_features, "three test flags");
@@ -106,7 +106,7 @@ TEST_F(FunctionHostInformationTest, FunctionHostInformationTestResources) {
 TEST_F(FunctionHostInformationTest, FunctionHostInformationTestJson) {
   set_up();
 
-  auto expected_json = R"""({
+  const auto* expected_json = R"""({
 	"identification":	{
 		"id":	"pQEzKi",
 		"ip_private":	"1.2.3.4",
@@ -127,7 +127,7 @@ TEST_F(FunctionHostInformationTest, FunctionHostInformationTestJson) {
 })""";
 
   FunctionHostInformationCollector collector(config);
-  auto json = collector.collect_json();
+  auto json = collector.CollectJson();
   EXPECT_EQ(json, expected_json);
 
   tear_down();

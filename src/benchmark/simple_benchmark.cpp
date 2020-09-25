@@ -18,7 +18,7 @@ const std::vector<std::function<void()>> kAfterRepetitonCallbacks{[]() { std::co
 int main() {
   Aws::SDKOptions options;
   Aws::InitAPI(options);
-  // TODO: Refactor this block
+  // TODO(anyone): Refactor this block
   {
     std::cout << "Creating BenchmarkConfigs...\n";
 

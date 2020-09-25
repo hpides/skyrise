@@ -8,19 +8,19 @@
 namespace skyrise {
 
 struct PricingLambda {
-  double price_per_request;
-  double price_per_gb_second;
-  double price_per_provisioned_gb_second;
-  double price_per_provisioned_concurrency_gb_second;
+  long double price_per_request;
+  long double price_per_gb_second;
+  long double price_per_provisioned_gb_second;
+  long double price_per_provisioned_concurrency_gb_second;
 };
 
 struct PricingS3 {
-  double price_per_request_tier1;
-  double price_per_request_tier2;
-  double price_per_returned_gb_select;
-  double price_per_scanned_gb_select;
-  double monthly_price_per_tag;
-  double monthly_price_per_stored_gb;  // This is the price for the first 50TB/month
+  long double price_per_request_tier1;
+  long double price_per_request_tier2;
+  long double price_per_returned_gb_select;
+  long double price_per_scanned_gb_select;
+  long double monthly_price_per_tag;
+  long double monthly_price_per_stored_gb;  // This is the price for the first 50TB/month
 };
 
 namespace UsageTypeLambda {
@@ -51,20 +51,20 @@ class Pricing {
  public:
   Pricing(const Aws::String& region);
 
-  const std::shared_ptr<PricingLambda> get_lambda_pricing();
-  const std::shared_ptr<PricingS3> get_s3_pricing();
+  std::shared_ptr<PricingLambda> GetLambdaPricing();
+  std::shared_ptr<PricingS3> GetS3Pricing();
 
  private:
-  std::map<Aws::String, double> _fetch_pricing(const Aws::String& service_code) const;
+  std::map<Aws::String, long double> FetchPricing(const Aws::String& service_code) const;
 
-  Aws::String _translate_region_to_location(const Aws::String& region) const;
+  static Aws::String TranslateRegionToLocation(const Aws::String& region);
 
-  Aws::Pricing::PricingClient _client;
+  Aws::Pricing::PricingClient client_;
 
-  Aws::String _region;
+  Aws::String region_;
 
-  std::shared_ptr<PricingLambda> _cached_pricing_lambda;
-  std::shared_ptr<PricingS3> _cached_pricing_s3;
+  std::shared_ptr<PricingLambda> cached_pricing_lambda_;
+  std::shared_ptr<PricingS3> cached_pricing_s3_;
 };
 
 }  // namespace skyrise

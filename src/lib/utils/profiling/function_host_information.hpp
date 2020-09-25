@@ -49,40 +49,40 @@ struct FunctionHostInformationCollectorConfiguration {
 class FunctionHostInformationCollector {
  public:
   FunctionHostInformationCollector() = default;
-  explicit FunctionHostInformationCollector(FunctionHostInformationCollectorConfiguration config);
+  explicit FunctionHostInformationCollector(const FunctionHostInformationCollectorConfiguration& config);
 
-  FunctionHostInformationIdentification collect_information_identification();
-  FunctionHostInformationEnvironment collect_information_environment();
-  FunctionHostInformationResources collect_information_resources();
-  std::string collect_json();
-  std::string as_json(FunctionHostInformationIdentification information_identification,
-                      FunctionHostInformationEnvironment information_environment,
-                      FunctionHostInformationResources information_resources);
+  FunctionHostInformationIdentification CollectInformationIdentification();
+  FunctionHostInformationEnvironment CollectInformationEnvironment();
+  FunctionHostInformationResources CollectInformationResources();
+  std::string CollectJson();
+  std::string AsJson(const FunctionHostInformationIdentification& information_identification,
+                     const FunctionHostInformationEnvironment& information_environment,
+                     const FunctionHostInformationResources& information_resources) const;
 
  private:
-  struct _CpuInfo {
+  struct CpuInfo_ {
     size_t cpu_count;
     std::string cpu_model;
     std::string cpu_features;
   };
 
-  FunctionHostInformationCollectorConfiguration _config;
+  FunctionHostInformationCollectorConfiguration config_;
 
-  std::string _id();
-  std::string _ip_private();
-  std::string _ip_public();
+  std::string Id() const;
+  std::string IpPrivate() const;
+  std::string IpPublic() const;
 
-  std::string _operating_system_details();
-  std::string _file_system_details();
-  size_t _boot_time_seconds();
-  size_t _uptime_seconds();
+  std::string OperatingSystemDetails() const;
+  std::string FileSystemDetails() const;
+  size_t BootTimeSeconds() const;
+  size_t UptimeSeconds() const;
 
-  _CpuInfo _cpu_information();
-  size_t _ram_size_mb();
+  CpuInfo_ CpuInformation() const;
+  size_t RamSizeMb() const;
 
-  std::vector<std::string> _find_first(const std::string& regex_string, const std::string& search_string);
-  static std::vector<std::vector<std::string>> _find_all(const std::string& regex_string, std::string search_string);
-  static std::string _read_file_content(const std::string& filename);
-  static std::string _read_stdout(const std::string& command);
+  static std::vector<std::string> FindFirst(const std::string& regex_string, const std::string& search_string);
+  static std::vector<std::vector<std::string>> FindAll(const std::string& regex_string, std::string search_string);
+  static std::string ReadFileContent(const std::string& filename);
+  static std::string ReadStdout(const std::string& command);
 };
 }  // namespace skyrise

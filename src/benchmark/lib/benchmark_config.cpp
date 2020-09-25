@@ -18,7 +18,7 @@ BenchmarkConfig::BenchmarkConfig(const Aws::String& function_zip_name, const siz
 BenchmarkConfig::BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size,
                                  const Aws::String& function_role, const size_t num_invocations,
                                  const ExecuteMode execute_mode, const size_t num_repetitions,
-                                 const std::vector<std::function<void()>> after_repetitions_callbacks)
+                                 const std::vector<std::function<void()>>& after_repetitions_callbacks)
     : BenchmarkConfig(std::vector<Aws::String>(1, function_zip_name), std::vector<size_t>(1, memory_size),
                       function_role, num_invocations, execute_mode, num_repetitions, after_repetitions_callbacks, 900) {
 }
@@ -27,7 +27,7 @@ BenchmarkConfig::BenchmarkConfig(const std::vector<Aws::String>& function_zip_na
                                  const std::vector<size_t>& memory_sizes, const Aws::String& function_role,
                                  const size_t num_invocations, const ExecuteMode execute_mode,
                                  const size_t num_repetitions,
-                                 const std::vector<std::function<void()>> after_repetition_callbacks,
+                                 const std::vector<std::function<void()>>& after_repetition_callbacks,
                                  const size_t timeout)
     : function_role_name_(function_role),
       num_invocations_(num_invocations),
@@ -41,12 +41,12 @@ BenchmarkConfig::BenchmarkConfig(const std::vector<Aws::String>& function_zip_na
       invocation_configs_(std::make_shared<std::vector<LambdaInvocationConfig>>()) {
   const std::shared_ptr<Aws::IOStream> empty_payload = Aws::MakeShared<Aws::StringStream>("");
   if (num_repetitions > 1 && after_repetition_callbacks.size() != num_repetitions) {
-    // TODO: Align with our new error-handling strategy
+    // TODO(anyone): Align with our new error-handling strategy
     throw std::runtime_error("Number of after_repetition_callbacks must be equal to num_repetitions");
   }
 
   for (size_t function_names_index = 0; function_names_index < function_zip_names.size(); function_names_index++) {
-    // TODO: Make function discovery more flexible and robust
+    // TODO(anyone): Make function discovery more flexible and robust
     const Aws::String function_path = "./pkg/" + function_zip_names[function_names_index] + ".zip";
 
     if (execute_mode == ExecuteMode::ColdAsync || execute_mode == ExecuteMode::ColdParallel ||
@@ -88,7 +88,7 @@ void BenchmarkConfig::SetPayloads(const std::vector<std::shared_ptr<Aws::IOStrea
   }
 }
 
-void BenchmarkConfig::SetOnePayloadForAllFunctions(const std::shared_ptr<Aws::IOStream> payload) {
+void BenchmarkConfig::SetOnePayloadForAllFunctions(const std::shared_ptr<Aws::IOStream>& payload) {
   for (auto& config : *invocation_configs_) {
     config.payload = payload;
   }

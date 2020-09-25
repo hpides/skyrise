@@ -46,7 +46,7 @@ BenchmarkRunner::BenchmarkRunner() {
 
   const auto credentials_provider = std::make_shared<Aws::Auth::EnvironmentAWSCredentialsProvider>();
 
-  // TODO: Improve error handling; below AWS SDK call just checks for presence of AWS_ACCESS_KEY_ID
+  // TODO(anyone): Improve error handling; below AWS SDK call just checks for presence of AWS_ACCESS_KEY_ID
   if (credentials_provider == nullptr || (*credentials_provider).GetAWSCredentials().IsEmpty()) {
     std::cout << "ERROR: AWS credentials are missing. Please export AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.\n";
     exit(1);
@@ -58,7 +58,7 @@ BenchmarkRunner::BenchmarkRunner() {
 }
 
 std::shared_ptr<std::vector<BenchmarkItemResult>> BenchmarkRunner::RunConfig(const BenchmarkConfig& config) {
-  // TODO: Assert !result
+  // TODO(anyone): Assert !result
 
   SetConfig(config);
 
@@ -93,7 +93,7 @@ void BenchmarkRunner::Setup() {
 
   const auto get_role_outcome =
       iam_client_.GetRole(Aws::IAM::Model::GetRoleRequest().WithRoleName(config_->function_role_name_));
-  // TODO: Assert success
+  // TODO(anyone): Assert success
 
   const auto role_arn = get_role_outcome.GetResult().GetRole().GetArn();
 
@@ -119,7 +119,7 @@ void BenchmarkRunner::Setup() {
 
   for (auto& outcome_future : create_function_outcomes) {
     const auto outcome = outcome_future.get();
-    // TODO: Assert success
+    // TODO(anyone): Assert success
 
     if (outcome.IsSuccess()) {
       std::cout << "Function " << outcome.GetResult().GetFunctionName() << " created.\n";
@@ -162,7 +162,7 @@ void BenchmarkRunner::SetupAsync() {
                                          .WithAttributeNames(std::vector<Aws::SQS::Model::QueueAttributeName>(
                                              1, Aws::SQS::Model::QueueAttributeName::QueueArn)));
 
-  // TODO: Assert success
+  // TODO(anyone): Assert success
   const auto queue_arn =
       queue_attributes_outcome.GetResult().GetAttributes().at(Aws::SQS::Model::QueueAttributeName::QueueArn);
 
@@ -289,7 +289,7 @@ void BenchmarkRunner::WarmUpFunctions() {
 
   std::vector<std::future<BenchmarkItemResult>> future_results;
 
-  // TODO: Do not run every invoke request if not necessary
+  // TODO(anyone): Do not run every invoke request if not necessary
   for (const auto& [invocation_id, invoke_request] : *invoke_warmup_requests_) {
     future_results.emplace_back(std::async(&BenchmarkRunner::RunBenchmarkItem, this, invocation_id, invoke_request));
   }
@@ -309,7 +309,7 @@ std::shared_ptr<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>> Benchm
     const bool is_warm_up) {
   std::cout << "Creating invoke requests" << (is_warm_up ? " for function warm-up" : "") << "...\n";
 
-  const auto invoke_requests = std::make_shared<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>>();
+  auto invoke_requests = std::make_shared<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>>();
 
   const auto invocation_type = IsAsyncBenchmark() ? Aws::Lambda::Model::InvocationType::Event
                                                   : Aws::Lambda::Model::InvocationType::RequestResponse;
@@ -348,7 +348,7 @@ std::shared_ptr<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>> Benchm
 }
 
 std::shared_ptr<std::map<Aws::String, Aws::String>> BenchmarkRunner::CollectSqsMessages(const size_t num_invocations) {
-  const auto sqs_messages = std::make_shared<std::map<Aws::String, Aws::String>>();
+  auto sqs_messages = std::make_shared<std::map<Aws::String, Aws::String>>();
 
   size_t receive_message_requests = 0;
 
@@ -370,7 +370,7 @@ std::shared_ptr<std::map<Aws::String, Aws::String>> BenchmarkRunner::CollectSqsM
       sqs_client_.DeleteMessage(Aws::SQS::Model::DeleteMessageRequest()
                                     .WithQueueUrl(*sqs_queue_url_)
                                     .WithReceiptHandle(message.GetReceiptHandle()));
-      // TODO: Assert success
+      // TODO(anyone): Assert success
     }
   }
   return sqs_messages;
@@ -416,7 +416,7 @@ BenchmarkItemResult BenchmarkRunner::RunBenchmarkItem(const Aws::String& invocat
                              {}};
 }
 
-void BenchmarkRunner::WriteResult(const std::shared_ptr<std::vector<BenchmarkItemResult>> benchmark_item_results,
+void BenchmarkRunner::WriteResult(const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_item_results,
                                   const std::chrono::duration<size_t, std::milli> benchmark_run_duration) {
   if (IsAsyncBenchmark()) {
     sqs_messages_ = CollectSqsMessages(benchmark_item_results->size());

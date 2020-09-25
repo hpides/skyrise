@@ -8,34 +8,35 @@
 #include "utils/unit_conversion.hpp"
 
 namespace skyrise {
-FunctionHostInformationCollector::FunctionHostInformationCollector(FunctionHostInformationCollectorConfiguration config)
-    : _config(config) {}
+FunctionHostInformationCollector::FunctionHostInformationCollector(
+    const FunctionHostInformationCollectorConfiguration& config)
+    : config_(config) {}
 
-FunctionHostInformationIdentification FunctionHostInformationCollector::collect_information_identification() {
-  return FunctionHostInformationIdentification{_id(), _ip_private(), _ip_public()};
+FunctionHostInformationIdentification FunctionHostInformationCollector::CollectInformationIdentification() {
+  return FunctionHostInformationIdentification{Id(), IpPrivate(), IpPublic()};
 }
 
-FunctionHostInformationEnvironment FunctionHostInformationCollector::collect_information_environment() {
-  return FunctionHostInformationEnvironment{_operating_system_details(), _file_system_details(), _boot_time_seconds(),
-                                            _uptime_seconds()};
+FunctionHostInformationEnvironment FunctionHostInformationCollector::CollectInformationEnvironment() {
+  return FunctionHostInformationEnvironment{OperatingSystemDetails(), FileSystemDetails(), BootTimeSeconds(),
+                                            UptimeSeconds()};
 }
 
-FunctionHostInformationResources FunctionHostInformationCollector::collect_information_resources() {
-  const auto cpu_info = _cpu_information();
-  return FunctionHostInformationResources{cpu_info.cpu_count, cpu_info.cpu_model, cpu_info.cpu_features,
-                                          _ram_size_mb()};
+FunctionHostInformationResources FunctionHostInformationCollector::CollectInformationResources() {
+  const auto cpu_info = CpuInformation();
+  return FunctionHostInformationResources{cpu_info.cpu_count, cpu_info.cpu_model, cpu_info.cpu_features, RamSizeMb()};
 }
 
-std::string FunctionHostInformationCollector::collect_json() {
-  const auto information_identification = collect_information_identification();
-  const auto information_environment = collect_information_environment();
-  const auto information_resources = collect_information_resources();
-  return as_json(information_identification, information_environment, information_resources);
+std::string FunctionHostInformationCollector::CollectJson() {
+  const auto information_identification = CollectInformationIdentification();
+  const auto information_environment = CollectInformationEnvironment();
+  const auto information_resources = CollectInformationResources();
+  return AsJson(information_identification, information_environment, information_resources);
 }
 
-std::string FunctionHostInformationCollector::as_json(FunctionHostInformationIdentification information_identification,
-                                                      FunctionHostInformationEnvironment information_environment,
-                                                      FunctionHostInformationResources information_resources) {
+std::string FunctionHostInformationCollector::AsJson(
+    const FunctionHostInformationIdentification& information_identification,
+    const FunctionHostInformationEnvironment& information_environment,
+    const FunctionHostInformationResources& information_resources) const {
   Aws::Utils::Json::JsonValue information_identification_json;
   information_identification_json.WithString("id", information_identification.id);
   information_identification_json.WithString("ip_private", information_identification.ip_private);
@@ -57,38 +58,38 @@ std::string FunctionHostInformationCollector::as_json(FunctionHostInformationIde
   root.WithObject("identification", information_identification_json);
   root.WithObject("environment", information_environment_json);
   root.WithObject("resources", information_resources_json);
-  if (_config.readableJson) {
+  if (config_.readableJson) {
     return root.View().WriteReadable();
   }
   return root.View().WriteCompact();
 }
 
-std::string FunctionHostInformationCollector::_id() {
-  constexpr auto REGEX = "[0-9]+:cpu,cpuacct:/sandbox-root-([0-9a-zA-Z]{6})";
-  const auto file_content = _read_file_content(_config.cgroup_path);
-  const auto match = _find_first(REGEX, file_content);
+std::string FunctionHostInformationCollector::Id() const {
+  constexpr auto kRegex = "[0-9]+:cpu,cpuacct:/sandbox-root-([0-9a-zA-Z]{6})";
+  const auto file_content = ReadFileContent(config_.cgroup_path);
+  const auto match = FindFirst(kRegex, file_content);
   return match.empty() ? "" : match.front();
 }
 
-std::string FunctionHostInformationCollector::_ip_private() {
-  constexpr auto REGEX = "([0-9]+.[0-9]+.[0-9]+.[0-9]+)";
-  const auto command_output = _read_stdout(_config.ip_private_command);
-  const auto match = _find_first(REGEX, command_output);
+std::string FunctionHostInformationCollector::IpPrivate() const {
+  constexpr auto kRegex = "([0-9]+.[0-9]+.[0-9]+.[0-9]+)";
+  const auto command_output = ReadStdout(config_.ip_private_command);
+  const auto match = FindFirst(kRegex, command_output);
   return match.empty() ? "" : match.front();
 }
 
-std::string FunctionHostInformationCollector::_ip_public() {
-  if (!_config.collect_ip_public) {
+std::string FunctionHostInformationCollector::IpPublic() const {
+  if (!config_.collect_ip_public) {
     return "";
   }
-  constexpr auto REGEX = "([0-9]+.[0-9]+.[0-9]+.[0-9]+)";
-  const auto command_output = _read_stdout(_config.ip_public_command);
-  const auto match = _find_first(REGEX, command_output);
+  constexpr auto kRegex = "([0-9]+.[0-9]+.[0-9]+.[0-9]+)";
+  const auto command_output = ReadStdout(config_.ip_public_command);
+  const auto match = FindFirst(kRegex, command_output);
   return match.empty() ? "" : match.front();
 }
 
-std::string FunctionHostInformationCollector::_operating_system_details() {
-  auto command_output = _read_stdout(_config.operating_system_details_command);
+std::string FunctionHostInformationCollector::OperatingSystemDetails() const {
+  auto command_output = ReadStdout(config_.operating_system_details_command);
 
   if (!command_output.empty() && command_output.back() == '\n') {
     command_output.pop_back();
@@ -96,8 +97,8 @@ std::string FunctionHostInformationCollector::_operating_system_details() {
   return command_output;
 }
 
-std::string FunctionHostInformationCollector::_file_system_details() {
-  auto command_output = _read_stdout(_config.ls_command + " " + _config.tmp_path);
+std::string FunctionHostInformationCollector::FileSystemDetails() const {
+  auto command_output = ReadStdout(config_.ls_command + " " + config_.tmp_path);
 
   if (!command_output.empty() && command_output.back() == '\n') {
     command_output.pop_back();
@@ -105,48 +106,48 @@ std::string FunctionHostInformationCollector::_file_system_details() {
   return command_output;
 }
 
-size_t FunctionHostInformationCollector::_boot_time_seconds() {
-  constexpr auto REGEX = "btime ([^[:space:]]*)";
-  const auto file_content = _read_file_content(_config.stat_path);
-  const auto match = _find_first(REGEX, file_content);
+size_t FunctionHostInformationCollector::BootTimeSeconds() const {
+  constexpr auto kRegex = "btime ([^[:space:]]*)";
+  const auto file_content = ReadFileContent(config_.stat_path);
+  const auto match = FindFirst(kRegex, file_content);
   return match.empty() ? 0 : stoul(match.front());
 }
 
-size_t FunctionHostInformationCollector::_uptime_seconds() {
-  constexpr auto REGEX = "([0-9]*).[0-9]{2} [0-9]*.[0-9]{2}";
-  const auto file_content = _read_file_content(_config.uptime_path);
-  const auto match = _find_first(REGEX, file_content);
+size_t FunctionHostInformationCollector::UptimeSeconds() const {
+  constexpr auto kRegex = "([0-9]*).[0-9]{2} [0-9]*.[0-9]{2}";
+  const auto file_content = ReadFileContent(config_.uptime_path);
+  const auto match = FindFirst(kRegex, file_content);
   return match.empty() ? 0 : stoul(match.front());
 }
 
-FunctionHostInformationCollector::_CpuInfo FunctionHostInformationCollector::_cpu_information() {
-  const auto file_content = _read_file_content(_config.cpuinfo_path);
+FunctionHostInformationCollector::CpuInfo_ FunctionHostInformationCollector::CpuInformation() const {
+  const auto file_content = ReadFileContent(config_.cpuinfo_path);
 
-  constexpr auto CPU_COUNT_REGEX = "processor\\s+:\\s([0-9]+)\\n";
-  const auto cpu_count_matches = _find_all(CPU_COUNT_REGEX, file_content);
+  constexpr auto kCpuCountRegex = R"(processor\s+:\s([0-9]+)\n)";
+  const auto cpu_count_matches = FindAll(kCpuCountRegex, file_content);
   const auto cpu_count = cpu_count_matches.size();
 
-  constexpr auto CPU_MODEL_REGEX = "model name\\s+:\\s(.+)\\n";
-  const auto cpu_model_match = _find_first(CPU_MODEL_REGEX, file_content);
+  constexpr auto kCpuModelRegex = R"(model name\s+:\s(.+)\n)";
+  const auto cpu_model_match = FindFirst(kCpuModelRegex, file_content);
   const auto cpu_model = cpu_model_match.empty() ? "" : cpu_model_match.front();
 
-  constexpr auto CPU_FEATURES_REGEX = "flags\\s+:\\s(.+)\\n";
-  const auto cpu_features_match = _find_first(CPU_FEATURES_REGEX, file_content);
+  constexpr auto kCpuFeaturesRegex = R"(flags\s+:\s(.+)\n)";
+  const auto cpu_features_match = FindFirst(kCpuFeaturesRegex, file_content);
   const auto cpu_features = cpu_features_match.empty() ? "" : cpu_features_match.front();
 
   return {cpu_count, cpu_model, cpu_features};
 }
 
-size_t FunctionHostInformationCollector::_ram_size_mb() {
-  constexpr auto REGEX = "MemTotal:\\s+([0-9]+)(\\skB)?\\n";
-  const auto file_content = _read_file_content(_config.meminfo_path);
-  const auto match = _find_first(REGEX, file_content);
+size_t FunctionHostInformationCollector::RamSizeMb() const {
+  constexpr auto kRegex = R"(MemTotal:\s+([0-9]+)(\skB)?\n)";
+  const auto file_content = ReadFileContent(config_.meminfo_path);
+  const auto match = FindFirst(kRegex, file_content);
   const auto ram_size_kb = match.empty() ? 0 : stoul(match.front());
   return ByteToMb(KbToByte(ram_size_kb));
 }
 
-std::vector<std::string> FunctionHostInformationCollector::_find_first(const std::string& regex_string,
-                                                                       const std::string& search_string) {
+std::vector<std::string> FunctionHostInformationCollector::FindFirst(const std::string& regex_string,
+                                                                     const std::string& search_string) {
   std::smatch matches;
   const std::regex regex(regex_string);
   regex_search(search_string, matches, regex);
@@ -159,8 +160,8 @@ std::vector<std::string> FunctionHostInformationCollector::_find_first(const std
   return result;
 }
 
-std::vector<std::vector<std::string>> FunctionHostInformationCollector::_find_all(const std::string& regex_string,
-                                                                                  std::string search_string) {
+std::vector<std::vector<std::string>> FunctionHostInformationCollector::FindAll(const std::string& regex_string,
+                                                                                std::string search_string) {
   std::smatch matches;
   const std::regex regex(regex_string);
 
@@ -178,7 +179,7 @@ std::vector<std::vector<std::string>> FunctionHostInformationCollector::_find_al
   return results;
 }
 
-std::string FunctionHostInformationCollector::_read_file_content(const std::string& filename) {
+std::string FunctionHostInformationCollector::ReadFileContent(const std::string& filename) {
   std::ifstream file(filename);
   if (file.fail()) {
     throw std::runtime_error("File '" + filename + "' could not be opened.");
@@ -187,8 +188,8 @@ std::string FunctionHostInformationCollector::_read_file_content(const std::stri
   return file_content;
 }
 
-std::string FunctionHostInformationCollector::_read_stdout(const std::string& command) {
-  auto pipe{popen(command.c_str(), "r")};
+std::string FunctionHostInformationCollector::ReadStdout(const std::string& command) {
+  auto* pipe{popen(command.c_str(), "r")};
   if (pipe == nullptr) {
     throw std::runtime_error("Could not run command: " + command);
   }

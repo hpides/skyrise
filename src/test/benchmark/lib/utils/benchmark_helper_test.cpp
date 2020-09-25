@@ -32,8 +32,7 @@ TEST_F(BenchmarkHelperTest, CalculateAggregates) {
         BenchmarkItemResult{"", invoke_request, true, begin, end, nullptr, std::to_string(i)});
   }
 
-  BenchmarkHelper benchmark_helper;
-  const auto aggregates = benchmark_helper.CalculateAggregates(
+  const auto aggregates = BenchmarkHelper::CalculateAggregates(
       benchmark_results, [](const BenchmarkItemResult& b) { return std::stod(b.sqs_message_body); });
 
   double variance = 0;
@@ -73,9 +72,8 @@ TEST_F(BenchmarkHelperTest, GenerateJsonOutput) {
       [](const BenchmarkItemResult& b) { return std::make_tuple("metric_1", std::stod(b.sqs_message_body)); },
       [](const BenchmarkItemResult& b) { return std::make_tuple("metric_2", static_cast<double>(b.success)); }};
 
-  BenchmarkHelper benchmark_helper;
   const auto json_value =
-      benchmark_helper.GenerateJsonOutput("benchmark", aggregated_metrics, benchmark_results, extract_metric_functions);
+      BenchmarkHelper::GenerateJsonOutput("benchmark", aggregated_metrics, benchmark_results, extract_metric_functions);
   const auto json_view = json_value.View();
   EXPECT_EQ(json_view.WriteCompact(),
             "{\"name\":\"benchmark\",\"metric\":0,\"runs\":[{\"name\":\"benchmark/"

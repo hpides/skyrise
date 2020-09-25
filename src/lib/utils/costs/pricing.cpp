@@ -17,56 +17,55 @@
 
 namespace skyrise {
 
-Pricing::Pricing(const Aws::String& region) : _region(region) {
+Pricing::Pricing(const Aws::String& region) : region_(region) {
   Aws::Client::ClientConfiguration config;
   config.region = Aws::Region::US_EAST_1;
   config.caFile = "/etc/pki/tls/certs/ca-bundle.crt";
 
-  char const TAG[] = "FETCH_PRICELIST";
-  const auto credentials_provider = Aws::MakeShared<Aws::Auth::EnvironmentAWSCredentialsProvider>(TAG);
+  const auto credentials_provider = std::make_shared<Aws::Auth::EnvironmentAWSCredentialsProvider>();
 
   Assert(!credentials_provider->GetAWSCredentials().IsExpiredOrEmpty(),
          "Set valid AWS credentials via the environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY");
 
-  _client = Aws::Pricing::PricingClient(credentials_provider, config);
+  client_ = Aws::Pricing::PricingClient(credentials_provider, config);
 }
 
-const std::shared_ptr<PricingLambda> Pricing::get_lambda_pricing() {
-  if (_cached_pricing_lambda) {
-    return _cached_pricing_lambda;
+std::shared_ptr<PricingLambda> Pricing::GetLambdaPricing() {
+  if (cached_pricing_lambda_) {
+    return cached_pricing_lambda_;
   }
 
   const Aws::String service_code = "AWSLambda";
-  const auto prices_map = _fetch_pricing(service_code);
+  const auto prices_map = FetchPricing(service_code);
 
   const PricingLambda pricing{prices_map.at(UsageTypeLambda::Request), prices_map.at(UsageTypeLambda::LambdaGBSecond),
                               prices_map.at(UsageTypeLambda::LambdaProvisionedGBSecond),
                               prices_map.at(UsageTypeLambda::LambdaProvisionedConcurrency)};
-  _cached_pricing_lambda = std::make_shared<PricingLambda>(pricing);
+  cached_pricing_lambda_ = std::make_shared<PricingLambda>(pricing);
 
-  return _cached_pricing_lambda;
+  return cached_pricing_lambda_;
 }
 
-const std::shared_ptr<PricingS3> Pricing::get_s3_pricing() {
-  if (_cached_pricing_s3) {
-    return _cached_pricing_s3;
+std::shared_ptr<PricingS3> Pricing::GetS3Pricing() {
+  if (cached_pricing_s3_) {
+    return cached_pricing_s3_;
   }
 
   const Aws::String service_code = "AmazonS3";
-  const auto prices_map = _fetch_pricing(service_code);
+  const auto prices_map = FetchPricing(service_code);
 
   const PricingS3 pricing{
       prices_map.at(UsageTypeS3::RequestTier1),        prices_map.at(UsageTypeS3::RequestTier2),
       prices_map.at(UsageTypeS3::SelectReturnedBytes), prices_map.at(UsageTypeS3::SelectScannedBytes),
       prices_map.at(UsageTypeS3::TagStorage),          prices_map.at(UsageTypeS3::TimedStorage)};
 
-  _cached_pricing_s3 = std::make_shared<PricingS3>(pricing);
+  cached_pricing_s3_ = std::make_shared<PricingS3>(pricing);
 
-  return _cached_pricing_s3;
+  return cached_pricing_s3_;
 }
 
-std::map<Aws::String, double> Pricing::_fetch_pricing(const Aws::String& service_code) const {
-  const auto location = _translate_region_to_location(_region);
+std::map<Aws::String, long double> Pricing::FetchPricing(const Aws::String& service_code) const {
+  const auto location = TranslateRegionToLocation(region_);
 
   // Create filters for Price List Service API
   Aws::Vector<Aws::Pricing::Model::Filter> filters = {Aws::Pricing::Model::Filter()
@@ -78,10 +77,10 @@ std::map<Aws::String, double> Pricing::_fetch_pricing(const Aws::String& service
   request.SetServiceCode(service_code);
   request.SetFilters(filters);
 
-  const auto outcome = _client.GetProducts(request);
+  const auto outcome = client_.GetProducts(request);
   Assert(outcome.IsSuccess(), "Price List API call was unsuccessful: " + outcome.GetError().GetMessage());
 
-  std::map<Aws::String, double> prices_map;
+  std::map<Aws::String, long double> prices_map;
   const auto price_list = outcome.GetResult().GetPriceList();
 
   for (const auto& price : price_list) {
@@ -102,14 +101,12 @@ std::map<Aws::String, double> Pricing::_fetch_pricing(const Aws::String& service
       Aws::Vector<std::pair<size_t, double>> unit_prices;
 
       for (auto const& price_dimension : price_dimensions_view) {
-        const size_t beginRange = std::stoi(price_dimension.second.GetString("beginRange"));
-        const double unit_price = std::stod(price_dimension.second.GetObject("pricePerUnit").GetString("USD"));
-        const std::pair<const size_t, const double> price_pair(beginRange, unit_price);
-        unit_prices.emplace_back(price_pair);
+        const size_t begin_range = std::stoi(price_dimension.second.GetString("beginRange"));
+        const long double unit_price = std::stold(price_dimension.second.GetObject("pricePerUnit").GetString("USD"));
+        unit_prices.emplace_back(std::make_pair(begin_range, unit_price));
       }
 
-      std::sort(unit_prices.begin(), unit_prices.end(),
-                [](std::pair<size_t, double> a, std::pair<size_t, double> b) { return a.first < b.first; });
+      std::sort(unit_prices.begin(), unit_prices.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
       prices_map.emplace(std::make_pair(usage_type, unit_prices[0].second));
     } else {
       const auto single_price = price_dimensions_view.cbegin()->second.GetObject("pricePerUnit").GetString("USD");
@@ -120,7 +117,7 @@ std::map<Aws::String, double> Pricing::_fetch_pricing(const Aws::String& service
   return prices_map;
 }
 
-Aws::String Pricing::_translate_region_to_location(const Aws::String& region) const {
+Aws::String Pricing::TranslateRegionToLocation(const Aws::String& region) {
   if (region == Aws::Region::US_EAST_1)
     return "US East (N. Virginia)";
   else if (region == Aws::Region::US_EAST_2)
