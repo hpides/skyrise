@@ -24,6 +24,7 @@ exitWithError() {
     exit 1
 }
 
+# Default variables
 SOURCE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../"; pwd)
 ARGUMENTS='{}'
 BUILD_DIR=cmake-build-debug
@@ -32,6 +33,10 @@ DEBUG_IP='127.0.0.1'
 DEBUG_PORT=2159
 PREFIX=$USER
 VERBOSE=false
+
+# Sets ACCESS_KEY, ACCESS_KEY_SOURCE, SECRET_KEY and SECRET_KEY_SOURCE
+source $(dirname "${BASH_SOURCE[0]}")/get_aws_credentials.sh
+
 while [ "$#" -gt 0 ]; do
     case $1 in
         -a|--arguments) ARGUMENTS="$2"; shift ;;
@@ -59,14 +64,22 @@ fi
 
 COMMAND="docker run --rm \
 --volume ${SOURCE_DIR}/${BUILD_DIR}:/var/task \
+--env AWS_ACCESS_KEY_ID=${ACCESS_KEY} \
+--env AWS_SECRET_ACCESS_KEY=${SECRET_KEY} \
 --env AWS_LAMBDA_EVENT_BODY=${ARGUMENTS} \
 --env SKYRISE_ARTIFACT=${FUNCTION} \
-${DEBUG_ENV}\
+${DEBUG_ENV} \
 ${PREFIX}/skyrise:run"
 
+echo "Running function ${FUNCTION} with arguments ${ARGUMENTS}.."
+echo "AWS Access Key ID    : ${ACCESS_KEY_SOURCE}"
+echo "AWS Secret Access Key: ${SECRET_KEY_SOURCE}"
+if [ "$DEBUG" = true ]; then
+    echo "Debugger Server IP   : ${DEBUG_IP}"
+    echo "Debugger Server Port : ${DEBUG_PORT}"
+fi
+
 if [ "$VERBOSE" = true ]; then
-    echo "Running function ${FUNCTION} with arguments ${ARGUMENTS}.."
-    echo "Executing run command: ${COMMAND}"
     eval ${COMMAND}
 else
     eval ${COMMAND} 2> /dev/null
