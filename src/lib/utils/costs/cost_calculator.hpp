@@ -18,6 +18,7 @@ namespace skyrise {
 
 class CostCalculator {
  public:
+  // TODO(anyone): Take AWS region as parameter and construct pricing object internally
   CostCalculator(const std::shared_ptr<Pricing> pricing) : _pricing(pricing) {}
 
   // AWS rounds up the compute duration to the nearest 100ms

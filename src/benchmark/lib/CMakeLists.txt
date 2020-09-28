@@ -20,4 +20,10 @@ set(
 
 add_library(skyriseBenchmark SHARED ${BENCHMARK_SOURCES})
 
-target_link_libraries(skyriseBenchmark PUBLIC ${BENCHMARK_LIBRARIES})
+target_link_libraries(
+    skyriseBenchmark
+    INTERFACE
+    skyriseCoordinator
+    PUBLIC
+    ${BENCHMARK_LIBRARIES}
+)
