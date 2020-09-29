@@ -41,9 +41,16 @@ done
 
 mkdir -p "${SOURCE_DIR}/${BUILD_DIR}"
 
-NUM_CORES=$(nproc)
-USER_ID="$(id -u)"
+if [ "$(uname -s)" = Linux ]; then
+    NUM_CORES=$(nproc)
+elif [ "$(uname -s)" = Darwin ]; then
+    NUM_CORES=$(sysctl -n hw.logicalcpu)
+else
+    echo "Unsupported operating system: $(uname -s)"
+    exit 1
+fi
 
+USER_ID="$(id -u)"
 BUILD_COMMAND="cd /var/skyrise/${BUILD_DIR}; \
 cmake .. -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ${CMAKE_OPTIONS}; \
 make $MAKE_TARGET -j$NUM_CORES"
