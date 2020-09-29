@@ -18,6 +18,7 @@
 #include <aws/s3/model/ObjectIdentifier.h>
 #include <aws/s3/model/PutObjectRequest.h>
 
+#include "utils/string.hpp"
 #include "utils/unit_conversion.hpp"
 
 namespace skyrise {
@@ -213,12 +214,10 @@ double BenchmarkHelper::EmptyS3Bucket(const Aws::String& bucket_name) {
 }
 
 double BenchmarkHelper::ExtractMetric(const BenchmarkItemResult& result, const Aws::String& key) {
-  // TODO(anyone): Use StringToStream helper function
-
   Aws::StringStream payload_stream;
   payload_stream << result.invoke_result->GetPayload().rdbuf();
   result.invoke_result->GetPayload().seekg(std::ios::beg);
-  const auto payload_value = Aws::Utils::Json::JsonValue(payload_stream.str());
+  const auto payload_value = Aws::Utils::Json::JsonValue(StreamToString(payload_stream));
   const auto payload_view = payload_value.View();
 
   return payload_view.GetDouble(key);

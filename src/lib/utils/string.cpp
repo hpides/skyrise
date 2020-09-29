@@ -4,8 +4,6 @@
 
 #include "string.hpp"
 
-#include <string>
-
 namespace skyrise {
 
 std::string TrimSourceFilePath(const std::string& path) {
