@@ -30,8 +30,6 @@
 #include <aws/sqs/model/ReceiveMessageRequest.h>
 #include <aws/sqs/model/ReceiveMessageResult.h>
 
-#include "utils/string.hpp"
-
 namespace skyrise {
 
 // Default location of certificate authority file on Amazon Linux 2
@@ -322,12 +320,16 @@ std::shared_ptr<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>> Benchm
                                 .WithInvocationType(invocation_type)
                                 .WithLogType(Aws::Lambda::Model::LogType::Tail);
 
+      Aws::StringStream payload_stream;
+      payload_stream << config.payload->rdbuf();
+      config.payload->seekg(std::ios::beg);
+
       const Aws::String invocation_id_repetition = config_->num_repetitions_ > 1
                                                        ? "repetition-" + std::to_string(i) + "-" + config.invocation_id
                                                        : config.invocation_id;
       const Aws::String invocation_id = is_warm_up ? (invocation_id_repetition + "-warmup") : invocation_id_repetition;
 
-      const auto json_value = Aws::Utils::Json::JsonValue(StreamToString(config.payload))
+      const auto json_value = Aws::Utils::Json::JsonValue(payload_stream.str())
                                   .WithString("invocationID", invocation_id)
                                   .WithBool("isWarmup", is_warm_up);
       const auto json_view = json_value.View();
