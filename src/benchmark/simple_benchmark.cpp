@@ -11,7 +11,7 @@
 
 const size_t kLambdaSize = 128;
 const size_t kNumInvocations = 10;
-const size_t kNumRepetitions = 12;
+const size_t kNumRepetitions = 2;
 const std::vector<std::function<void()>> kAfterRepetitonCallbacks{[]() { std::cout << "After Repetition 0\n"; },
                                                                   []() { std::cout << "After Repetition 1\n"; }};
 
@@ -49,8 +49,8 @@ int main() {
       for (const auto& result : *results) {
         std::cout << result.invocation_id << "\t| ";
         std::cout << std::boolalpha << result.success << "\t\t| ";
-        const auto duration = (result.end_time - result.start_time).count() / 1'000'000.0;
-        std::cout << std::fixed << std::setprecision(3) << duration << "\n";
+        std::cout << std::fixed << std::setprecision(3)
+                  << std::chrono::duration<double, std::milli>(result.end_time - result.start_time).count() << "\n";
       }
       std::cout << "*****************************************************************************************\n\n";
     }
