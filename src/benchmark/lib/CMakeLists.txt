@@ -6,7 +6,6 @@ set(
     benchmark_runner.hpp
     utils/benchmark_helper.cpp
     utils/benchmark_helper.hpp
-    ${SHARED_SOURCES}
 )
 
 set(
@@ -16,6 +15,7 @@ set(
     aws-cpp-sdk-lambda
     aws-cpp-sdk-s3
     aws-cpp-sdk-sqs
+    skyriseShared
 )
 
 add_library(skyriseBenchmark SHARED ${BENCHMARK_SOURCES})
