@@ -54,6 +54,9 @@ done
 if [ -z ${FUNCTION} ]; then
     exitWithError "Missing argument: FUNCTION"
 fi
+if [ -z $(ls ${BUILD_DIR}/bin/ | grep -w ${FUNCTION}) ]; then
+    exitWithError "Function ${BUILD_DIR}/bin/${FUNCTION} does not exist"
+fi
 
 if [ "$DEBUG" = false ]; then
     DEBUG_ENV=''
