@@ -2,8 +2,7 @@
 
 #include <map>
 
-#include <aws/core/Aws.h>
-#include <aws/pricing/PricingClient.h>
+#include "client/client_aws.hpp"
 
 namespace skyrise {
 
@@ -49,7 +48,7 @@ static const char* const TimedStorage = "TimedStorage-ByteHrs";
 
 class Pricing {
  public:
-  Pricing(const Aws::String& region);
+  Pricing(std::shared_ptr<ClientAws> client_aws) : client_aws_(client_aws) {}
 
   std::shared_ptr<PricingLambda> GetLambdaPricing();
   std::shared_ptr<PricingS3> GetS3Pricing();
@@ -59,9 +58,7 @@ class Pricing {
 
   static Aws::String TranslateRegionToLocation(const Aws::String& region);
 
-  Aws::Pricing::PricingClient client_;
-
-  Aws::String region_;
+  std::shared_ptr<ClientAws> client_aws_;
 
   std::shared_ptr<PricingLambda> cached_pricing_lambda_;
   std::shared_ptr<PricingS3> cached_pricing_s3_;

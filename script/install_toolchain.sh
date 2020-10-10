@@ -30,9 +30,11 @@ if [[ "$unamestr" == 'Linux' ]]; then
                 zlib1g-dev
                 pip3 install cpplint
                 
-                sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 90 --slave /usr/bin/g++ g++ /usr/bin/g++-10
-                sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-10 90 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-10
-                
+                sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-10 100 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-10
+                sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-10 100
+                sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-10 100
+                sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+
                 # Symlink to default Amazon Linux certificate file
                 sudo mkdir -p /etc/pki/tls/certs
                 sudo ln -s /etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt

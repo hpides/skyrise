@@ -1,13 +1,8 @@
 #include "pricing.hpp"
 
 #include <algorithm>
-#include <memory>
 #include <utility>
 
-#include <aws/core/Region.h>
-#include <aws/core/auth/AWSCredentialsProvider.h>
-#include <aws/core/client/ClientConfiguration.h>
-#include <aws/core/platform/Environment.h>
 #include <aws/core/utils/Outcome.h>
 #include <aws/core/utils/json/JsonSerializer.h>
 #include <aws/pricing/model/Filter.h>
@@ -16,19 +11,6 @@
 #include "utils/assert.hpp"
 
 namespace skyrise {
-
-Pricing::Pricing(const Aws::String& region) : region_(region) {
-  Aws::Client::ClientConfiguration config;
-  config.region = Aws::Region::US_EAST_1;
-  config.caFile = "/etc/pki/tls/certs/ca-bundle.crt";
-
-  const auto credentials_provider = std::make_shared<Aws::Auth::EnvironmentAWSCredentialsProvider>();
-
-  Assert(!credentials_provider->GetAWSCredentials().IsExpiredOrEmpty(),
-         "Set valid AWS credentials via the environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY");
-
-  client_ = Aws::Pricing::PricingClient(credentials_provider, config);
-}
 
 std::shared_ptr<PricingLambda> Pricing::GetLambdaPricing() {
   if (cached_pricing_lambda_) {
@@ -65,7 +47,7 @@ std::shared_ptr<PricingS3> Pricing::GetS3Pricing() {
 }
 
 std::map<Aws::String, long double> Pricing::FetchPricing(const Aws::String& service_code) const {
-  const auto location = TranslateRegionToLocation(region_);
+  const auto location = TranslateRegionToLocation(client_aws_->GetClientRegion());
 
   // Create filters for Price List Service API
   Aws::Vector<Aws::Pricing::Model::Filter> filters = {Aws::Pricing::Model::Filter()
@@ -77,7 +59,7 @@ std::map<Aws::String, long double> Pricing::FetchPricing(const Aws::String& serv
   request.SetServiceCode(service_code);
   request.SetFilters(filters);
 
-  const auto outcome = client_.GetProducts(request);
+  const auto outcome = client_aws_->GetPricingClient().GetProducts(request);
   Assert(outcome.IsSuccess(), "Price List API call was unsuccessful: " + outcome.GetError().GetMessage());
 
   std::map<Aws::String, long double> prices_map;
@@ -166,8 +148,9 @@ Aws::String Pricing::TranslateRegionToLocation(const Aws::String& region) {
     return "Middle East (Bahrain)";
   else if (region == Aws::Region::US_GOV_EAST_1)
     return "AWS GovCloud (US-East)";
-  else
-    FailInput("AWS region " + region + " not supported.");
+  else {
+    Fail("AWS region " + region + " not supported.");
+  }
 }
 
 }  // namespace skyrise

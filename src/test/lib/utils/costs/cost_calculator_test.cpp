@@ -5,6 +5,7 @@
 
 #include <aws/core/Region.h>
 
+#include "client/client_aws.hpp"
 #include "costs_test_utils.hpp"
 #include "gtest/gtest.h"
 #include "utils/costs/pricing.hpp"
@@ -15,9 +16,10 @@ class CostCalculatorTest : public ::testing::Test {};
 
 TEST_F(CostCalculatorTest, CalculateCostLambda) {
   const std::function<void()> func = []() {
-    const auto pricing = std::make_shared<Pricing>(Aws::Region::US_EAST_1);
-    const CostCalculator cost_calculator(pricing);
-    const auto lambda_pricing = pricing->GetLambdaPricing();
+    const auto clients = std::make_shared<ClientAws>();
+    Pricing pricing(clients);
+    const CostCalculator cost_calculator(clients);
+    const auto lambda_pricing = pricing.GetLambdaPricing();
 
     const long double lambda_cost1 = cost_calculator.CalculateCostLambda(998, 512);
     const long double expected_cost1 = lambda_pricing->price_per_gb_second / 2.0L + lambda_pricing->price_per_request;
@@ -42,9 +44,10 @@ TEST_F(CostCalculatorTest, CalculateCostLambda) {
 
 TEST_F(CostCalculatorTest, CalculateCostS3Storage) {
   const std::function<void()> func = []() {
-    const auto pricing = std::make_shared<Pricing>(Aws::Region::US_EAST_1);
-    const CostCalculator cost_calculator(pricing);
-    const auto s3_pricing = pricing->GetS3Pricing();
+    const auto clients = std::make_shared<ClientAws>();
+    Pricing pricing(clients);
+    const CostCalculator cost_calculator(clients);
+    const auto s3_pricing = pricing.GetS3Pricing();
 
     const long double storage_cost1 = cost_calculator.CalculateCostS3StorageMonthly(1073741823);
     const long double expected_cost1 = (1073741823.0 / 1073741824.0) * s3_pricing->monthly_price_per_stored_gb;
@@ -60,9 +63,10 @@ TEST_F(CostCalculatorTest, CalculateCostS3Storage) {
 
 TEST_F(CostCalculatorTest, CalculateCostS3Requests) {
   const std::function<void()> func = []() {
-    const auto pricing = std::make_shared<Pricing>(Aws::Region::US_EAST_1);
-    const CostCalculator cost_calculator(pricing);
-    const auto s3_pricing = pricing->GetS3Pricing();
+    const auto clients = std::make_shared<ClientAws>();
+    Pricing pricing(clients);
+    const CostCalculator cost_calculator(clients);
+    const auto s3_pricing = pricing.GetS3Pricing();
 
     const long double requests_cost = cost_calculator.CalculateCostS3Requests(700, 800);
     const long double expected_cost =
@@ -75,9 +79,10 @@ TEST_F(CostCalculatorTest, CalculateCostS3Requests) {
 
 TEST_F(CostCalculatorTest, CalculateCostS3Select) {
   const std::function<void()> func = []() {
-    const auto pricing = std::make_shared<Pricing>(Aws::Region::US_EAST_1);
-    const CostCalculator cost_calculator(pricing);
-    const auto s3_pricing = pricing->GetS3Pricing();
+    const auto clients = std::make_shared<ClientAws>();
+    Pricing pricing(clients);
+    const CostCalculator cost_calculator(clients);
+    const auto s3_pricing = pricing.GetS3Pricing();
 
     const long double select_cost1 = cost_calculator.CalculateCostS3Select(1048576, 1048576);
     const long double expected_cost1 =

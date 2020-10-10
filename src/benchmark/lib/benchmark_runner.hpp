@@ -1,19 +1,16 @@
 #pragma once
 
 #include <chrono>
-#include <map>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 #include <aws/core/Aws.h>
-#include <aws/core/utils/Outcome.h>
-#include <aws/iam/IAMClient.h>
-#include <aws/lambda/LambdaClient.h>
 #include <aws/lambda/model/InvokeRequest.h>
 #include <aws/lambda/model/InvokeResult.h>
-#include <aws/sqs/SQSClient.h>
 
 #include "benchmark_config.hpp"
+#include "client/client_aws.hpp"
 
 namespace skyrise {
 
@@ -32,9 +29,11 @@ struct BenchmarkItemResult {
 
 class BenchmarkRunner {
  public:
-  BenchmarkRunner();
+  BenchmarkRunner(std::shared_ptr<ClientAws> client_aws);
 
   std::shared_ptr<std::vector<BenchmarkItemResult>> RunConfig(const BenchmarkConfig& config);
+
+  size_t num_setup_threads_ = 32;
 
  private:
   void SetConfig(const BenchmarkConfig& config);
@@ -47,10 +46,16 @@ class BenchmarkRunner {
   void RunParallel();
 
   void WarmUpFunctions();
-  std::shared_ptr<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>> CreateInvokeRequests(const bool is_warm_up);
-  std::shared_ptr<std::map<Aws::String, Aws::String>> CollectSqsMessages(const size_t num_invocations);
+  std::pair<Aws::String, Aws::Lambda::Model::InvokeRequest> CreateInvokeRequest(
+      const Aws::String& function_name, const Aws::String& invocation_id, const size_t repetition, const bool is_warmup,
+      const std::shared_ptr<Aws::IOStream>& payload = nullptr);
+  std::shared_ptr<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>> CreateInvokeRequests();
+  std::shared_ptr<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>> CreateWarmupInvokeRequests();
+  std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> CollectSqsMessages(const size_t num_invocations);
 
   static Aws::Utils::CryptoBuffer OpenFunctionZip(const Aws::String& function_path);
+  std::vector<Aws::Lambda::Model::CreateFunctionOutcome> UploadFunctions(const size_t num_threads,
+                                                                         const size_t thread_index);
   BenchmarkItemResult RunBenchmarkItem(const Aws::String& invocation_id,
                                        const Aws::Lambda::Model::InvokeRequest& invoke_request);
   void WriteResult(const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_item_results,
@@ -63,17 +68,18 @@ class BenchmarkRunner {
   std::shared_ptr<BenchmarkConfig> config_;
   std::unordered_set<Aws::String> config_history_;
 
-  std::shared_ptr<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>> invoke_requests_;
-  std::shared_ptr<std::map<Aws::String, Aws::Lambda::Model::InvokeRequest>> invoke_warmup_requests_;
+  std::shared_ptr<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>> invoke_requests_;
+  std::shared_ptr<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>> invoke_warmup_requests_;
 
-  Aws::IAM::IAMClient iam_client_;
-  Aws::Lambda::LambdaClient lambda_client_;
-  Aws::SQS::SQSClient sqs_client_;
+  const std::shared_ptr<ClientAws> client_aws_;
 
   std::shared_ptr<Aws::String> sqs_queue_url_;
-  std::shared_ptr<std::map<Aws::String, Aws::String>> sqs_messages_;
+  std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> sqs_messages_;
 
   std::shared_ptr<std::vector<BenchmarkItemResult>> result_;
+
+  const Aws::String kFunctionRoleName = "AWSLambda";
+  Aws::String function_role_arn_;
 };
 
 }  // namespace skyrise

@@ -6,6 +6,7 @@
 
 #include "benchmark_config.hpp"
 #include "benchmark_runner.hpp"
+#include "client/client_aws.hpp"
 
 // This hacky place is a playground to try out the BenchmarkRunner.
 
@@ -20,21 +21,27 @@ int main() {
   Aws::InitAPI(options);
   // TODO(anyone): Refactor this block
   {
+    std::cout << "Creating Clients...\n";
+
+    const auto clients = std::make_shared<skyrise::ClientAws>();
+
+    std::cout << "Clients created.\n\n";
+
     std::cout << "Creating BenchmarkConfigs...\n";
 
     std::vector<skyrise::BenchmarkConfig> configs{
-        {"skyriseFunctionMinimal", kLambdaSize, "AWSLambda", kNumInvocations, skyrise::ExecuteMode::WarmAsync,
-         kNumRepetitions, kAfterRepetitonCallbacks},
-        {"skyriseFunctionMinimal", kLambdaSize, "AWSLambda", kNumInvocations, skyrise::ExecuteMode::WarmParallel,
-         kNumRepetitions, kAfterRepetitonCallbacks},
-        {"skyriseFunctionMinimal", kLambdaSize, "AWSLambda", kNumInvocations, skyrise::ExecuteMode::WarmSequential,
-         kNumRepetitions, kAfterRepetitonCallbacks},
+        {"skyriseFunctionMinimal", kLambdaSize, kNumInvocations, skyrise::ExecuteMode::WarmAsync, kNumRepetitions,
+         kAfterRepetitonCallbacks},
+        {"skyriseFunctionMinimal", kLambdaSize, kNumInvocations, skyrise::ExecuteMode::WarmParallel, kNumRepetitions,
+         kAfterRepetitonCallbacks},
+        {"skyriseFunctionMinimal", kLambdaSize, kNumInvocations, skyrise::ExecuteMode::WarmSequential, kNumRepetitions,
+         kAfterRepetitonCallbacks},
     };
     std::cout << "BenchmarkConfigs created.\n\n";
 
     std::cout << "Creating BenchmarkRunner...\n";
 
-    skyrise::BenchmarkRunner runner;
+    skyrise::BenchmarkRunner runner(clients);
 
     std::cout << "BenchmarkRunner created.\n\n";
 

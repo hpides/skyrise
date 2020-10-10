@@ -19,6 +19,9 @@ target_link_libraries(skyriseShared PUBLIC ${SHARED_LIBRARIES})
 
 set(
     COORDINATOR_SOURCES
+    client/client_aws.cpp
+    client/client_aws.hpp
+    limits.hpp
     utils/costs/cost_calculator.cpp
     utils/costs/cost_calculator.hpp
     utils/costs/pricing.cpp
@@ -29,7 +32,13 @@ set(
 set(
     COORDINATOR_LIBRARIES
     aws-cpp-sdk-core
+    aws-cpp-sdk-iam
+    aws-cpp-sdk-lambda
+    aws-cpp-sdk-monitoring
     aws-cpp-sdk-pricing
+    aws-cpp-sdk-s3
+    aws-cpp-sdk-sqs
+    aws-cpp-sdk-xray
     skyriseShared
 )
 

@@ -29,20 +29,18 @@ enum class ExecuteMode { ColdSequential, ColdParallel, ColdAsync, WarmSequential
 
 class BenchmarkConfig {
  public:
-  BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size, const Aws::String& function_role,
-                  const size_t num_invocations, const ExecuteMode execute_mode);
-  BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size, const Aws::String& function_role,
-                  const size_t num_invocations, const ExecuteMode execute_mode, const size_t num_repetitions,
+  BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size, const size_t num_invocations,
+                  const ExecuteMode execute_mode);
+  BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size, const size_t num_invocations,
+                  const ExecuteMode execute_mode, const size_t num_repetitions,
                   const std::vector<std::function<void()>>& after_repetitions_callbacks);
   BenchmarkConfig(const std::vector<Aws::String>& function_zip_names, const std::vector<size_t>& memory_sizes,
-                  const Aws::String& function_role, const size_t num_invocations, const ExecuteMode execute_mode,
-                  const size_t num_repetitions, const std::vector<std::function<void()>>& after_repetition_callbacks,
-                  const size_t timeout);
+                  const size_t num_invocations, const ExecuteMode execute_mode, const size_t num_repetitions,
+                  const std::vector<std::function<void()>>& after_repetition_callbacks, const size_t timeout);
 
   void SetPayloads(const std::vector<std::shared_ptr<Aws::IOStream>>& payloads);
   void SetOnePayloadForAllFunctions(const std::shared_ptr<Aws::IOStream>& payload);
 
-  const Aws::String function_role_name_;
   const size_t num_invocations_;
   const ExecuteMode execute_mode_;
   const size_t num_repetitions_;

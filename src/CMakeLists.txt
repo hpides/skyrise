@@ -15,9 +15,11 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-core/include
     ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-iam/include
     ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-lambda/include
+    ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-monitoring/include
     ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-pricing/include
     ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-s3/include
     ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-sqs/include
+    ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-xray/include
     ${PROJECT_SOURCE_DIR}/third_party/magic_enum/include
     ${PROJECT_SOURCE_DIR}/third_party/orc/c++/include
     ${CMAKE_BINARY_DIR}/third_party/orc/c++/include

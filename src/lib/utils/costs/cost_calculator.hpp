@@ -1,11 +1,5 @@
 #pragma once
 
-#include <aws/core/Aws.h>
-#include <aws/core/auth/AWSCredentialsProvider.h>
-#include <aws/core/client/ClientConfiguration.h>
-#include <aws/pricing/PricingClient.h>
-#include <aws/pricing/model/Filter.h>
-
 #include "pricing.hpp"
 
 namespace skyrise {
@@ -18,8 +12,7 @@ namespace skyrise {
 
 class CostCalculator {
  public:
-  // TODO(anyone): Take AWS region as parameter and construct pricing object internally
-  CostCalculator(const std::shared_ptr<Pricing> pricing) : _pricing(pricing) {}
+  CostCalculator(std::shared_ptr<ClientAws> client_aws) : pricing_(std::make_unique<Pricing>(client_aws)) {}
 
   // AWS rounds up the compute duration to the nearest 100ms
   long double CalculateCostLambda(const size_t compute_duration_ms, const size_t lambda_size_mb) const;
@@ -34,7 +27,7 @@ class CostCalculator {
   long double CalculateCostS3Select(const size_t returned_bytes, const size_t scanned_bytes) const;
 
  private:
-  const std::shared_ptr<Pricing> _pricing;
+  std::unique_ptr<Pricing> pricing_;
 };
 
 }  // namespace skyrise

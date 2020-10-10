@@ -1,14 +1,13 @@
 #pragma once
 
 #include <functional>
-#include <memory>
 #include <tuple>
 
 #include <aws/core/Aws.h>
 #include <aws/core/utils/json/JsonSerializer.h>
-#include <aws/s3/S3Client.h>
 
 #include "benchmark_runner.hpp"
+#include "client/client_aws.hpp"
 #include "utils/costs/cost_calculator.hpp"
 
 namespace skyrise {
@@ -27,8 +26,7 @@ struct BenchmarkAggregates {
 
 class BenchmarkHelper {
  public:
-  // TODO(anyone): Centralize AWS client creation and configuration and reuse clients here
-  BenchmarkHelper(const bool use_sdk = false);
+  BenchmarkHelper(std::shared_ptr<ClientAws> client_aws) : client_aws_(client_aws), cost_calculator_(client_aws) {}
   static BenchmarkAggregates CalculateAggregates(
       const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
       const std::function<double(const BenchmarkItemResult&)>& extract_metric);
@@ -38,18 +36,18 @@ class BenchmarkHelper {
       const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
       const std::vector<std::function<std::tuple<Aws::String, double>(const BenchmarkItemResult&)>>& metrics);
 
-  double CreateS3BucketIfNotExists(const Aws::String& bucket_name);
+  long double CreateS3BucketIfNotExists(const Aws::String& bucket_name);
   static std::shared_ptr<Aws::IOStream> GenerateRandomObject(const size_t num_bytes);
   long double UploadObjectToS3Bucket(const Aws::String& bucket_name, const Aws::String& object_key,
                                      const std::shared_ptr<Aws::IOStream>& object, const size_t num_bytes);
-  double EmptyS3Bucket(const Aws::String& bucket_name);
+  long double EmptyS3Bucket(const Aws::String& bucket_name);
 
   static double ExtractMetric(const BenchmarkItemResult& result, const Aws::String& key);
   static double ExtractBilledLambdaDuration(const BenchmarkItemResult& result);
 
  private:
-  std::shared_ptr<CostCalculator> cost_calculator_;
-  Aws::S3::S3Client s3_client_;
+  std::shared_ptr<ClientAws> client_aws_;
+  const CostCalculator cost_calculator_;
 };
 
 }  // namespace skyrise

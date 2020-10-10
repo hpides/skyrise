@@ -7,30 +7,30 @@
 #include <random>
 #include <string>
 
+#include "limits.hpp"
+
 namespace skyrise {
 
 BenchmarkConfig::BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size,
-                                 const Aws::String& function_role, const size_t num_invocations,
-                                 const ExecuteMode execute_mode)
+                                 const size_t num_invocations, const ExecuteMode execute_mode)
     : BenchmarkConfig(std::vector<Aws::String>(1, function_zip_name), std::vector<size_t>(1, memory_size),
-                      function_role, num_invocations, execute_mode, 1, std::vector<std::function<void()>>(), 900) {}
+                      num_invocations, execute_mode, 1, std::vector<std::function<void()>>(),
+                      kLambdaFunctionTimeoutSeconds) {}
 
 BenchmarkConfig::BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size,
-                                 const Aws::String& function_role, const size_t num_invocations,
-                                 const ExecuteMode execute_mode, const size_t num_repetitions,
-                                 const std::vector<std::function<void()>>& after_repetitions_callbacks)
-    : BenchmarkConfig(std::vector<Aws::String>(1, function_zip_name), std::vector<size_t>(1, memory_size),
-                      function_role, num_invocations, execute_mode, num_repetitions, after_repetitions_callbacks, 900) {
-}
-
-BenchmarkConfig::BenchmarkConfig(const std::vector<Aws::String>& function_zip_names,
-                                 const std::vector<size_t>& memory_sizes, const Aws::String& function_role,
                                  const size_t num_invocations, const ExecuteMode execute_mode,
                                  const size_t num_repetitions,
+                                 const std::vector<std::function<void()>>& after_repetitions_callbacks)
+    : BenchmarkConfig(std::vector<Aws::String>(1, function_zip_name), std::vector<size_t>(1, memory_size),
+                      num_invocations, execute_mode, num_repetitions, after_repetitions_callbacks,
+                      kLambdaFunctionTimeoutSeconds) {}
+
+BenchmarkConfig::BenchmarkConfig(const std::vector<Aws::String>& function_zip_names,
+                                 const std::vector<size_t>& memory_sizes, const size_t num_invocations,
+                                 const ExecuteMode execute_mode, const size_t num_repetitions,
                                  const std::vector<std::function<void()>>& after_repetition_callbacks,
                                  const size_t timeout)
-    : function_role_name_(function_role),
-      num_invocations_(num_invocations),
+    : num_invocations_(num_invocations),
       execute_mode_(execute_mode),
       num_repetitions_(num_repetitions),
       after_repetition_callbacks_(after_repetition_callbacks),

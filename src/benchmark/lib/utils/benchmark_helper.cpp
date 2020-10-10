@@ -8,8 +8,6 @@
 #include <random>
 #include <regex>
 
-#include <aws/core/auth/AWSCredentialsProvider.h>
-#include <aws/core/platform/Environment.h>
 #include <aws/core/utils/base64/Base64.h>
 #include <aws/s3/model/CreateBucketRequest.h>
 #include <aws/s3/model/Delete.h>
@@ -18,33 +16,10 @@
 #include <aws/s3/model/ObjectIdentifier.h>
 #include <aws/s3/model/PutObjectRequest.h>
 
-#include "utils/string.hpp"
+#include "utils/assert.hpp"
 #include "utils/unit_conversion.hpp"
 
 namespace skyrise {
-
-BenchmarkHelper::BenchmarkHelper(const bool use_sdk) {
-  if (use_sdk) {
-    const auto credentials_provider = std::make_shared<Aws::Auth::EnvironmentAWSCredentialsProvider>();
-
-    // TODO(anyone): Improve error handling; below AWS SDK call just checks for presence of AWS_ACCESS_KEY_ID
-    if (credentials_provider == nullptr || (*credentials_provider).GetAWSCredentials().IsEmpty()) {
-      std::cout << "ERROR: AWS credentials are missing. Please export AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.\n";
-      exit(1);
-    }
-
-    Aws::Client::ClientConfiguration client_config;
-    client_config.caFile = "/etc/pki/tls/certs/ca-bundle.crt";
-
-    if (!std::ifstream(client_config.caFile).good()) {
-      std::cout << "ERROR: AWS certificates are missing. Please provide caFile.\n";
-      exit(1);
-    }
-
-    s3_client_ = Aws::S3::S3Client(credentials_provider, client_config);
-    cost_calculator_ = std::make_shared<CostCalculator>(std::make_shared<Pricing>(client_config.region));
-  }
-}
 
 BenchmarkAggregates BenchmarkHelper::CalculateAggregates(
     const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
@@ -112,15 +87,15 @@ Aws::Utils::Json::JsonValue BenchmarkHelper::GenerateJsonOutput(
   return json_output;
 }
 
-double BenchmarkHelper::CreateS3BucketIfNotExists(const Aws::String& bucket_name) {
-  const auto list_buckets_outcome = s3_client_.ListBuckets();
+long double BenchmarkHelper::CreateS3BucketIfNotExists(const Aws::String& bucket_name) {
+  const auto& s3_client = client_aws_->GetS3Client();
 
-  const auto cost = cost_calculator_->CalculateCostS3Requests(1, 0);
+  const auto list_buckets_outcome = s3_client.ListBuckets();
+
+  const long double cost = cost_calculator_.CalculateCostS3Requests(1, 0);
 
   if (!list_buckets_outcome.IsSuccess()) {
-    // TODO(anyone): Align with to-be-defined error handling convention
-    std::cout << list_buckets_outcome.GetError().GetMessage() << "\n";
-    return cost;
+    Fail(list_buckets_outcome.GetError().GetMessage());
   }
 
   const auto& buckets = list_buckets_outcome.GetResult().GetBuckets();
@@ -130,11 +105,10 @@ double BenchmarkHelper::CreateS3BucketIfNotExists(const Aws::String& bucket_name
 
   if (contains_bucket_iterator == buckets.cend()) {
     const auto create_bucket_outcome =
-        s3_client_.CreateBucket(Aws::S3::Model::CreateBucketRequest().WithBucket(bucket_name));
+        s3_client.CreateBucket(Aws::S3::Model::CreateBucketRequest().WithBucket(bucket_name));
 
     if (!create_bucket_outcome.IsSuccess()) {
-      // TODO(anyone): Align with to-be-defined error handling convention
-      std::cout << create_bucket_outcome.GetError().GetMessage() << "\n";
+      Fail(create_bucket_outcome.GetError().GetMessage());
     }
   }
 
@@ -163,31 +137,29 @@ long double BenchmarkHelper::UploadObjectToS3Bucket(const Aws::String& bucket_na
   auto put_object_request = Aws::S3::Model::PutObjectRequest().WithBucket(bucket_name).WithKey(object_key);
   put_object_request.SetBody(object);
 
-  const auto put_object_outcome = s3_client_.PutObject(put_object_request);
+  const auto put_object_outcome = client_aws_->GetS3Client().PutObject(put_object_request);
 
   if (!put_object_outcome.IsSuccess()) {
-    // TODO(anyone): Align with to-be-defined error handling convention
-    std::cout << put_object_outcome.GetError().GetMessage() << "\n";
+    Fail(put_object_outcome.GetError().GetMessage());
   }
 
   std::cout << "File uploaded.\n";
 
-  const long double storage_cost = cost_calculator_->CalculateCostS3StorageMonthly(num_bytes);
-  const long double request_cost = cost_calculator_->CalculateCostS3Requests(1, 0);
+  const long double storage_cost = cost_calculator_.CalculateCostS3StorageMonthly(num_bytes);
+  const long double request_cost = cost_calculator_.CalculateCostS3Requests(1, 0);
 
   return storage_cost + request_cost;
 }
 
-double BenchmarkHelper::EmptyS3Bucket(const Aws::String& bucket_name) {
-  const auto list_objects_outcome =
-      s3_client_.ListObjects(Aws::S3::Model::ListObjectsRequest().WithBucket(bucket_name));
+long double BenchmarkHelper::EmptyS3Bucket(const Aws::String& bucket_name) {
+  const auto& s3_client = client_aws_->GetS3Client();
 
-  const auto cost = cost_calculator_->CalculateCostS3Requests(1, 0);
+  const auto list_objects_outcome = s3_client.ListObjects(Aws::S3::Model::ListObjectsRequest().WithBucket(bucket_name));
+
+  const auto cost = cost_calculator_.CalculateCostS3Requests(1, 0);
 
   if (!list_objects_outcome.IsSuccess()) {
-    // TODO(anyone): Align with to-be-defined error handling convention
-    std::cout << list_objects_outcome.GetError().GetMessage() << "\n";
-    return cost;
+    Fail(list_objects_outcome.GetError().GetMessage());
   }
 
   const auto& listed_objects = list_objects_outcome.GetResult().GetContents();
@@ -202,12 +174,11 @@ double BenchmarkHelper::EmptyS3Bucket(const Aws::String& bucket_name) {
                  [](const auto& object) { return Aws::S3::Model::ObjectIdentifier().WithKey(object.GetKey()); });
   const auto delete_objects = Aws::S3::Model::Delete().WithObjects(objects_to_delete);
 
-  const auto delete_objects_outcome = s3_client_.DeleteObjects(
+  const auto delete_objects_outcome = s3_client.DeleteObjects(
       Aws::S3::Model::DeleteObjectsRequest().WithBucket(bucket_name).WithDelete(delete_objects));
 
   if (!delete_objects_outcome.IsSuccess()) {
-    // TODO(anyone): Align with to-be-defined error handling convention
-    std::cout << list_objects_outcome.GetError().GetMessage() << "\n";
+    Fail(list_objects_outcome.GetError().GetMessage());
   }
 
   return cost;
