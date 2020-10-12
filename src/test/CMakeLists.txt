@@ -7,6 +7,11 @@ include_directories(
 set(
     TEST_SOURCES
     benchmark/lib/utils/benchmark_helper_test.cpp
+
+    lib/storage/types/chunk_test.cpp
+    lib/storage/types/table_column_definition_test.cpp
+    lib/storage/types/value_segment_test.cpp
+
     lib/utils/costs/cost_calculator_test.cpp
     lib/utils/costs/costs_test_utils.cpp
     lib/utils/costs/costs_test_utils.hpp

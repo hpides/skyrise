@@ -1,5 +1,6 @@
 Checks: '
         *,
+        -*-avoid-goto,
         -*-default-arguments*,
         -*-magic-numbers,
         -*-non-private-member-variables-in-classes,
@@ -12,6 +13,7 @@ Checks: '
         -cppcoreguidelines-owning-memory,
         -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
         -cppcoreguidelines-pro-type-reinterpret-cast,
+        -fuchsia-overloaded-operator,
         -fuchsia-statically-constructed-objects,
         -hicpp-no-array-decay,
         -llvm-include-order,
@@ -21,6 +23,7 @@ Checks: '
         '
 
 # Explanation of disabled checks
+#   *-avoid-goto                                            Does not like Google Test
 #   *-default-arguments*                                    We use default arguments
 #   *-magic-numbers                                         We do not want to enforce constants for every "magic" number
 #   *-non-private-member-variables-in-classes               We use public member variables
@@ -33,6 +36,7 @@ Checks: '
 #   cppcoreguidelines-owning-memory                         Does not like Google Test
 #   cppcoreguidelines-pro-bounds-array-to-pointer-decay     Does not like Pricing pricing(Aws::Region::US_EAST_1);
 #   cppcoreguidelines-pro-type-reinterpret-cast             We use reinterpret_cast
+#   fuchsia-overloaded-operator                             We overload operators
 #   fuchsia-statically-constructed-objects                  Does not like Google Test
 #   hicpp-no-array-decay                                    Does not like Pricing pricing(Aws::Region::US_EAST_1);
 #   llvm-include-order                                      We use #pragma once
