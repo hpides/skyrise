@@ -4,6 +4,7 @@ Checks: '
         -*-default-arguments*,
         -*-else-after-return,
         -*-magic-numbers,
+        -*-multiple-inheritance,
         -*-non-private-member-variables-in-classes,
         -*-uppercase-literal-suffix,
         -*braces-around-statements,
@@ -29,6 +30,7 @@ Checks: '
 #   *-default-arguments*                                    We use default arguments
 #   *-else-after-return                                     We use else blocks after return statements
 #   *-magic-numbers                                         We do not want to enforce constants for every "magic" number
+#   *-multiple-inheritance                                  We want to look at this in reviews on a case to case basis
 #   *-non-private-member-variables-in-classes               We use public member variables
 #   *-uppercase-literal-suffix                              Using 1.0f instead of 1.0F is fine for us
 #   *braces-around-statements                               We allow if statements without braces
