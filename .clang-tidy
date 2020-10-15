@@ -2,6 +2,7 @@ Checks: '
         *,
         -*-avoid-goto,
         -*-default-arguments*,
+        -*-else-after-return,
         -*-magic-numbers,
         -*-non-private-member-variables-in-classes,
         -*-uppercase-literal-suffix,
@@ -9,6 +10,7 @@ Checks: '
         -cert-dcl16-c,
         -cert-env33-c,
         -cert-err58-cpp,
+        -cppcoreguidelines-avoid-non-const-global-variables,
         -cppcoreguidelines-interfaces-global-init,
         -cppcoreguidelines-owning-memory,
         -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
@@ -19,13 +21,13 @@ Checks: '
         -llvm-include-order,
         -llvmlibc-*,
         -modernize-pass-by-value,
-        -modernize-use-trailing-return-type,
-        -readability-else-after-return
+        -modernize-use-trailing-return-type
         '
 
 # Explanation of disabled checks
 #   *-avoid-goto                                            Does not like Google Test
 #   *-default-arguments*                                    We use default arguments
+#   *-else-after-return                                     We use else blocks after return statements
 #   *-magic-numbers                                         We do not want to enforce constants for every "magic" number
 #   *-non-private-member-variables-in-classes               We use public member variables
 #   *-uppercase-literal-suffix                              Using 1.0f instead of 1.0F is fine for us
@@ -33,6 +35,7 @@ Checks: '
 #   cert-dcl16-c                                            Using 1.0f instead of 1.0F is fine for us
 #   cert-env33-c                                            We use popen()
 #   cert-err58-cpp                                          We are okay with uncaught errors
+#   cppcoreguidelines-avoid-non-const-global-variables      Does not like Google Test
 #   cppcoreguidelines-interfaces-global-init                Does not like std::vector<std::function<void()>> a{[]() { std::cout << "a"; }};
 #   cppcoreguidelines-owning-memory                         Does not like Google Test
 #   cppcoreguidelines-pro-bounds-array-to-pointer-decay     Does not like Pricing pricing(Aws::Region::US_EAST_1);
@@ -44,7 +47,6 @@ Checks: '
 #   llvmlibc-*                                              We do not use LLVM's libc++, but GCC's libstdc++
 #   modernize-pass-by-value                                 We do not trust people to properly use std::move
 #   modernize-use-trailing-return-type                      We do not want to use trailing return types
-#   readability-else-after-return                           We use else blocks after return statements
 
 CheckOptions:
   - { key: readability-identifier-naming.ClassCase,                value: CamelCase  }

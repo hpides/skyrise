@@ -87,7 +87,7 @@ Aws::Utils::Json::JsonValue BenchmarkHelper::GenerateJsonOutput(
   return json_output;
 }
 
-long double BenchmarkHelper::CreateS3BucketIfNotExists(const Aws::String& bucket_name) {
+long double BenchmarkHelper::CreateS3BucketIfNotExists(const Aws::String& bucket_name) const {
   const auto& s3_client = client_aws_->GetS3Client();
 
   const auto list_buckets_outcome = s3_client.ListBuckets();
@@ -131,7 +131,7 @@ std::shared_ptr<Aws::IOStream> BenchmarkHelper::GenerateRandomObject(const size_
 
 long double BenchmarkHelper::UploadObjectToS3Bucket(const Aws::String& bucket_name, const Aws::String& object_key,
                                                     const std::shared_ptr<Aws::IOStream>& object,
-                                                    const size_t num_bytes) {
+                                                    const size_t num_bytes) const {
   std::cout << "Uploading " << ByteToMb(num_bytes) << " MB file to S3...\n";
 
   auto put_object_request = Aws::S3::Model::PutObjectRequest().WithBucket(bucket_name).WithKey(object_key);
@@ -151,7 +151,7 @@ long double BenchmarkHelper::UploadObjectToS3Bucket(const Aws::String& bucket_na
   return storage_cost + request_cost;
 }
 
-long double BenchmarkHelper::EmptyS3Bucket(const Aws::String& bucket_name) {
+long double BenchmarkHelper::EmptyS3Bucket(const Aws::String& bucket_name) const {
   const auto& s3_client = client_aws_->GetS3Client();
 
   const auto list_objects_outcome = s3_client.ListObjects(Aws::S3::Model::ListObjectsRequest().WithBucket(bucket_name));

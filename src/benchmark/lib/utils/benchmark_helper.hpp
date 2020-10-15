@@ -36,11 +36,11 @@ class BenchmarkHelper {
       const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
       const std::vector<std::function<std::tuple<Aws::String, double>(const BenchmarkItemResult&)>>& metrics);
 
-  long double CreateS3BucketIfNotExists(const Aws::String& bucket_name);
+  long double CreateS3BucketIfNotExists(const Aws::String& bucket_name) const;
   static std::shared_ptr<Aws::IOStream> GenerateRandomObject(const size_t num_bytes);
   long double UploadObjectToS3Bucket(const Aws::String& bucket_name, const Aws::String& object_key,
-                                     const std::shared_ptr<Aws::IOStream>& object, const size_t num_bytes);
-  long double EmptyS3Bucket(const Aws::String& bucket_name);
+                                     const std::shared_ptr<Aws::IOStream>& object, const size_t num_bytes) const;
+  long double EmptyS3Bucket(const Aws::String& bucket_name) const;
 
   static double ExtractMetric(const BenchmarkItemResult& result, const Aws::String& key);
   static double ExtractBilledLambdaDuration(const BenchmarkItemResult& result);
