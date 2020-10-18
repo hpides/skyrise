@@ -15,6 +15,9 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_PACKAGE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/pkg)
 file(MAKE_DIRECTORY ${CMAKE_PACKAGE_OUTPUT_DIRECTORY})
 
+# Define job pool of size 1 for jobs that require serial execution
+set_property(GLOBAL PROPERTY JOB_POOLS serial_jobs=1)
+
 # Set compiler settings for third-party and Skyrise sources
 include(cmake/CompilerSettings.cmake)
 

@@ -165,6 +165,8 @@ ARG GCC_DIR
 
 # Packages
 RUN yum install -y \
+    # Build system
+    ninja-build \
     # Stack traces
     binutils-devel \
     # AWS SDK dependency

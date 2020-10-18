@@ -20,6 +20,7 @@ function(aws_lambda_package_target target)
             COMMAND ${STRIP_FUNCTION_PACKAGE_SCRIPT} ${target}.zip
             DEPENDS aws-lambda-package-${target}
             WORKING_DIRECTORY ${CMAKE_PACKAGE_OUTPUT_DIRECTORY}
+            JOB_POOL serial_jobs
         )
     endif()
 
@@ -28,5 +29,6 @@ function(aws_lambda_package_target target)
         COMMAND ${AWS_LAMBDA_PACKAGING_SCRIPT} ${PACKAGER_NO_LIBC} $<TARGET_FILE:${target}>
         DEPENDS ${target}
         WORKING_DIRECTORY ${CMAKE_PACKAGE_OUTPUT_DIRECTORY}
+        JOB_POOL serial_jobs
     )
 endfunction()

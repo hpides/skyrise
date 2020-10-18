@@ -52,8 +52,8 @@ fi
 
 USER_ID="$(id -u)"
 BUILD_COMMAND="cd /var/skyrise/${BUILD_DIR}; \
-cmake .. -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ${CMAKE_OPTIONS}; \
-make $MAKE_TARGET -j$NUM_CORES"
+cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ${CMAKE_OPTIONS}; \
+ninja-build $MAKE_TARGET -j$NUM_CORES"
 
 COMMAND="docker run --rm \
 --user ${USER_ID} \
