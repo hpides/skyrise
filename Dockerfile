@@ -227,6 +227,7 @@ FROM ubuntu:20.04 AS ubuntu
 RUN apt-get update && \
     apt-get install -y \
     lsb-release \
+    ninja-build \
     sudo \
     tzdata
 COPY script/install_toolchain.sh install_toolchain.sh

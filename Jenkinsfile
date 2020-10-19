@@ -29,8 +29,8 @@ pipeline {
                                 stage("Build") {
                                     sh 'mkdir -p cmake-build-debug'
                                     dir('cmake-build-debug') {
-                                        sh 'cmake .. -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=Debug -DSKYRISE_ENABLE_CLANG_TIDY=ON'
-                                        sh 'make all -j$NUM_CORES'
+                                        sh 'cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=Debug -DSKYRISE_ENABLE_CLANG_TIDY=ON'
+                                        sh 'ninja-build all -j$NUM_CORES'
                                     }
                                 }
                                 stage("Test") {
@@ -54,8 +54,8 @@ pipeline {
                                 stage("Build") {
                                     sh 'mkdir -p cmake-build-release'
                                     dir('cmake-build-release') {
-                                        sh 'cmake .. -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=Release'
-                                        sh 'make all -j$NUM_CORES'
+                                        sh 'cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=Release'
+                                        sh 'ninja-build all -j$NUM_CORES'
                                     }
                                 }
                             }
@@ -80,8 +80,8 @@ pipeline {
                                 stage("Build") {
                                     sh 'mkdir -p cmake-build-debug'
                                     dir('cmake-build-debug') {
-                                        sh 'cmake .. -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_BUILD_TYPE=Debug'
-                                        sh 'make all -j$NUM_CORES'
+                                        sh 'cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_BUILD_TYPE=Debug'
+                                        sh 'ninja all -j$NUM_CORES'
                                     }
                                 }
                             }
