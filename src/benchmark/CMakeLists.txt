@@ -1,4 +1,13 @@
 add_executable(
+    invocationThroughputBenchmark
+
+    invocation_throughput_benchmark.cpp
+    ${SHARED_SOURCES}
+)
+
+target_link_libraries(invocationThroughputBenchmark skyriseBenchmark)
+
+add_executable(
     skyriseFunctionMinimal
     function_minimal.cpp
 )
