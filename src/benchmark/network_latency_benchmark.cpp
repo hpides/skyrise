@@ -9,12 +9,12 @@
 
 namespace skyrise {
 
-NetworkLatencyBenchmark::NetworkLatencyBenchmark(const std::shared_ptr<ClientAws>& client_aws,
+NetworkLatencyBenchmark::NetworkLatencyBenchmark(std::shared_ptr<BenchmarkHelper> helper,
+                                                 std::shared_ptr<CostCalculator> cost_calculator,
                                                  const std::vector<size_t>& function_instance_sizes,
                                                  const ExecuteMode execute_mode, const size_t num_iterations)
-    : client_aws_(client_aws),
-      helper_(client_aws),
-      cost_calculator_(client_aws),
+    : helper_(std::move(helper)),
+      cost_calculator_(std::move(cost_calculator)),
       function_instance_sizes_(function_instance_sizes),
       execute_mode_(execute_mode),
       num_iterations_(num_iterations),
@@ -45,20 +45,20 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> NetworkLatencyBenchmark::Run(
 }
 
 void NetworkLatencyBenchmark::Setup() {
-  cost_overhead_ += helper_.CreateS3BucketIfNotExists(kReadBucket);
-  cost_overhead_ += helper_.CreateS3BucketIfNotExists(kWriteBucket);
+  cost_overhead_ += helper_->CreateS3BucketIfNotExists(kReadBucket);
+  cost_overhead_ += helper_->CreateS3BucketIfNotExists(kWriteBucket);
 
-  cost_overhead_ += helper_.EmptyS3Bucket(kReadBucket);
-  cost_overhead_ += helper_.EmptyS3Bucket(kWriteBucket);
+  cost_overhead_ += helper_->EmptyS3Bucket(kReadBucket);
+  cost_overhead_ += helper_->EmptyS3Bucket(kWriteBucket);
 
   if (execute_mode_ == ExecuteMode::ColdSequential || execute_mode_ == ExecuteMode::WarmSequential) {
-    cost_overhead_ += helper_.UploadObjectToS3Bucket(
+    cost_overhead_ += helper_->UploadObjectToS3Bucket(
         kReadBucket, kObjectKey, BenchmarkHelper::GenerateRandomObject(kObjectSizeBytes), kObjectSizeBytes);
   } else {
     for (size_t i = 0; i < num_iterations_; i++) {
       cost_overhead_ +=
-          helper_.UploadObjectToS3Bucket(kReadBucket, kObjectKey + "-" + std::to_string(i),
-                                         BenchmarkHelper::GenerateRandomObject(kObjectSizeBytes), kObjectSizeBytes);
+          helper_->UploadObjectToS3Bucket(kReadBucket, kObjectKey + "-" + std::to_string(i),
+                                          BenchmarkHelper::GenerateRandomObject(kObjectSizeBytes), kObjectSizeBytes);
     }
   }
 
@@ -68,8 +68,8 @@ void NetworkLatencyBenchmark::Setup() {
 }
 
 void NetworkLatencyBenchmark::Teardown() {
-  cost_overhead_ += helper_.EmptyS3Bucket(kReadBucket);
-  cost_overhead_ += helper_.EmptyS3Bucket(kWriteBucket);
+  cost_overhead_ += helper_->EmptyS3Bucket(kReadBucket);
+  cost_overhead_ += helper_->EmptyS3Bucket(kWriteBucket);
 }
 
 long double NetworkLatencyBenchmark::CalculateBenchmarkCost(
@@ -170,7 +170,7 @@ long double NetworkLatencyBenchmark::ExtractFunctionCost(const BenchmarkItemResu
                                                          const size_t function_instance_size) {
   const double billed_duration = BenchmarkHelper::ExtractBilledLambdaDuration(result);
   const long double function_instance_cost =
-      cost_calculator_.CalculateCostLambda(billed_duration, function_instance_size);
+      cost_calculator_->CalculateCostLambda(billed_duration, function_instance_size);
 
   // TODO(anyone): use stream to string helper PR
   Aws::StringStream payload_stream;
@@ -179,13 +179,13 @@ long double NetworkLatencyBenchmark::ExtractFunctionCost(const BenchmarkItemResu
   const auto payload_view = payload_value.View();
   result.invoke_result->GetPayload().seekg(std::ios::beg);
 
-  const size_t num_tier_1_requests = payload_view.GetInteger("num_s3_requests_tier_1");
-  const size_t num_tier_2_requests = payload_view.GetInteger("num_s3_requests_tier_2");
-  const size_t used_storage_bytes = payload_view.GetInt64("s3_storage_used_bytes");
+  const size_t num_s3_requests_tier_1 = payload_view.GetInteger("num_s3_requests_tier_1");
+  const size_t num_s3_requests_tier_2 = payload_view.GetInteger("num_s3_requests_tier_2");
+  const size_t s3_storage_used_bytes = payload_view.GetInt64("s3_storage_used_bytes");
 
   const long double s3_request_cost =
-      cost_calculator_.CalculateCostS3Requests(num_tier_1_requests, num_tier_2_requests);
-  const long double s3_storage_cost = cost_calculator_.CalculateCostS3StorageMonthly(used_storage_bytes);
+      cost_calculator_->CalculateCostS3Requests(num_s3_requests_tier_1, num_s3_requests_tier_2);
+  const long double s3_storage_cost = cost_calculator_->CalculateCostS3StorageMonthly(s3_storage_used_bytes);
 
   return function_instance_cost + s3_request_cost + s3_storage_cost;
 }

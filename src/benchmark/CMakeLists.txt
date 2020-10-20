@@ -38,6 +38,8 @@ add_executable(
     simpleBenchmark
     network_latency_benchmark.cpp
     network_latency_benchmark.hpp
+    network_throughput_benchmark.cpp
+    network_throughput_benchmark.hpp
     simple_benchmark.cpp
 )
 

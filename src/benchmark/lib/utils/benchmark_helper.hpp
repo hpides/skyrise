@@ -46,7 +46,7 @@ class BenchmarkHelper {
   static double ExtractBilledLambdaDuration(const BenchmarkItemResult& result);
 
  private:
-  std::shared_ptr<ClientAws> client_aws_;
+  const std::shared_ptr<ClientAws> client_aws_;
   const CostCalculator cost_calculator_;
 };
 

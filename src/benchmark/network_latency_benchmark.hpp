@@ -18,7 +18,7 @@ namespace skyrise {
 
 class NetworkLatencyBenchmark {
  public:
-  NetworkLatencyBenchmark(const std::shared_ptr<ClientAws>& client_aws,
+  NetworkLatencyBenchmark(std::shared_ptr<BenchmarkHelper> helper, std::shared_ptr<CostCalculator> cost_calculator,
                           const std::vector<size_t>& function_instance_sizes, const ExecuteMode execute_mode,
                           const size_t num_iterations);
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> Run(const std::shared_ptr<BenchmarkRunner>& benchmark_runner);
@@ -36,9 +36,8 @@ class NetworkLatencyBenchmark {
 
   long double ExtractFunctionCost(const BenchmarkItemResult& result, const size_t function_instance_size);
 
-  const std::shared_ptr<ClientAws> client_aws_;
-  const BenchmarkHelper helper_;
-  const CostCalculator cost_calculator_;
+  const std::shared_ptr<BenchmarkHelper> helper_;
+  const std::shared_ptr<CostCalculator> cost_calculator_;
 
   const std::vector<size_t> function_instance_sizes_;
   const ExecuteMode execute_mode_;
