@@ -1,6 +1,12 @@
+set(PRE_CONFIGURE_FILE "utils/git_metadata.cpp.in")
+set(POST_CONFIGURE_FILE "utils/git_metadata.cpp")
+include(${PROJECT_SOURCE_DIR}/third_party/cmake-git-version-tracking/git_watcher.cmake)
+
 set(
     SHARED_SOURCES
     utils/assert.hpp
+    utils/git_metadata.cpp
+    utils/git_metadata.hpp
     utils/invalid_input_exception.hpp
     utils/literal.hpp
     utils/map.hpp
@@ -15,6 +21,8 @@ set(
 )
 
 add_library(skyriseShared SHARED ${SHARED_SOURCES})
+
+add_dependencies(skyriseShared check_git)
 
 target_link_libraries(skyriseShared PUBLIC ${SHARED_LIBRARIES})
 

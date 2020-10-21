@@ -1,11 +1,15 @@
 [submodule "third_party/aws-lambda-cpp"]
 	path = third_party/aws-lambda-cpp
 	url = https://github.com/awslabs/aws-lambda-cpp.git
-    shallow = true
+	shallow = true
 [submodule "third_party/aws-sdk-cpp"]
 	path = third_party/aws-sdk-cpp
 	url = https://github.com/aws/aws-sdk-cpp.git
-    shallow = true
+	shallow = true
+[submodule "third_party/cmake-git-version-tracking"]
+	path = third_party/cmake-git-version-tracking
+	url = https://github.com/andrew-hardin/cmake-git-version-tracking.git
+	shallow = true
 [submodule "third_party/csv-parser"]
 	path = third_party/csv-parser
 	url = https://github.com/vincentlaucsb/csv-parser.git

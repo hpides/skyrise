@@ -21,5 +21,5 @@ cmake-build-*
 .vscode
 # Build files of Visual Studio Code.
 build
-# MinIO.
-minio/data/*
+# Implementation file created by Git Watcher.
+src/lib/utils/git_metadata.cpp
