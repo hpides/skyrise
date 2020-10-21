@@ -12,6 +12,8 @@ set(
     utils/map.hpp
     utils/string.cpp
     utils/string.hpp
+    utils/time.hpp
+    utils/time.cpp
     utils/unit_conversion.hpp
 )
 

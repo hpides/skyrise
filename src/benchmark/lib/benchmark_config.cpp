@@ -1,13 +1,12 @@
 #include "benchmark_config.hpp"
 
 #include <algorithm>
-#include <ctime>
-#include <iomanip>
 #include <memory>
 #include <random>
 #include <string>
 
 #include "limits.hpp"
+#include "utils/time.hpp"
 
 namespace skyrise {
 
@@ -36,7 +35,7 @@ BenchmarkConfig::BenchmarkConfig(const std::vector<Aws::String>& function_zip_na
       after_repetition_callbacks_(after_repetition_callbacks),
       timeout_(timeout),
       benchmark_id_(GetRandomString()),
-      benchmark_timestamp_(GetTimestamp()),
+      benchmark_timestamp_(GetFormattedTimestamp("%Y%m%dT%H%M%S")),
       function_configs_(std::make_shared<std::vector<LambdaFunctionConfig>>()),
       invocation_configs_(std::make_shared<std::vector<LambdaInvocationConfig>>()) {
   const std::shared_ptr<Aws::IOStream> empty_payload = Aws::MakeShared<Aws::StringStream>("");
@@ -104,15 +103,6 @@ Aws::String BenchmarkConfig::GetRandomString() {
   std::generate_n(random_string.begin(), 8, [&]() { return charset[distribution(random_number_generator)]; });
 
   return random_string;
-}
-
-Aws::String BenchmarkConfig::GetTimestamp() {
-  const auto time = std::time(nullptr);
-  const auto localtime = *std::localtime(&time);
-  std::stringstream timestamp;
-  timestamp << std::put_time(&localtime, "%Y%m%dT%H%M%S");
-
-  return timestamp.str();
 }
 
 }  // namespace skyrise
