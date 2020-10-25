@@ -10,6 +10,7 @@ set(
     utils/invalid_input_exception.hpp
     utils/literal.hpp
     utils/map.hpp
+    utils/random.hpp
     utils/string.cpp
     utils/string.hpp
     utils/time.hpp
