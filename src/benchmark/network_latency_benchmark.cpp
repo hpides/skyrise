@@ -149,7 +149,7 @@ Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
        {"put_object_latency_std_dev", put_latency_aggregates.standard_deviation},
        {"benchmark_cost_usd", CalculateBenchmarkCost(result, function_instance_size)},
        {"benchmark_cost_overhead_usd", cost_overhead_ / function_instance_sizes_.size()}},
-      result,
+      {/*aggregated string metrics*/}, result,
       {[&](const auto& result) {
          return std::make_tuple("get_object_latency_ms",
                                 BenchmarkHelper::ExtractMetric(result, kJsonGetObjectDurationKey));
@@ -163,7 +163,8 @@ Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
        },
        [&](const auto& result) {
          return std::make_tuple("function_cost_usd", ExtractFunctionCost(result, function_instance_size));
-       }});
+       }},
+      {/*extract string metric functions*/});
 }
 
 long double NetworkLatencyBenchmark::ExtractFunctionCost(const BenchmarkItemResult& result,

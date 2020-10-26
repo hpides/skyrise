@@ -184,7 +184,7 @@ Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
        {"benchmark_cost_usd",
         static_cast<double>(CalculateBenchmarkCost(result.results_, result.function_instance_mb_size_))},
        {"benchmark_cost_overhead_usd", cost_overhead_ / num_results}},
-      result.results_,
+      {/*aggregated string metrics*/}, result.results_,
       {[&](const BenchmarkItemResult& single_result) {
          const double duration_seconds =
              std::chrono::duration<double>(std::chrono::duration<double, std::milli>(
@@ -208,7 +208,8 @@ Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
        [&](const BenchmarkItemResult& single_result) {
          return std::make_tuple("function_cost_usd", static_cast<double>(ExtractFunctionCost(
                                                          single_result, result.function_instance_mb_size_)));
-       }});
+       }},
+      {/*extract string metric functions*/});
 }
 
 long double NetworkThroughputBenchmark::ExtractFunctionCost(const BenchmarkItemResult& result,

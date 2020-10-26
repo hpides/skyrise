@@ -30,11 +30,15 @@ class BenchmarkHelper {
   static BenchmarkAggregates CalculateAggregates(
       const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
       const std::function<double(const BenchmarkItemResult&)>& extract_metric);
-  static BenchmarkAggregates CalculateAggregates(std::vector<double>& metrics);
+  static BenchmarkAggregates CalculateAggregates(std::vector<double> metrics);
   static Aws::Utils::Json::JsonValue GenerateJsonOutput(
-      const Aws::String& benchmark_name, const std::vector<std::tuple<Aws::String, double>>& aggregated_metrics,
+      const Aws::String& benchmark_name, const std::vector<std::tuple<Aws::String, double>>& aggregated_numeric_metrics,
+      const std::vector<std::tuple<Aws::String, Aws::String>>& aggregated_alphabetic_metrics,
       const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
-      const std::vector<std::function<std::tuple<Aws::String, double>(const BenchmarkItemResult&)>>& metrics);
+      const std::vector<std::function<std::tuple<Aws::String, double>(const BenchmarkItemResult&)>>&
+          extract_numeric_metric_functions,
+      const std::vector<std::function<std::tuple<Aws::String, Aws::String>(const BenchmarkItemResult&)>>&
+          extract_alphabetic_metric_functions);
 
   long double CreateS3BucketIfNotExists(const Aws::String& bucket_name) const;
   static std::shared_ptr<Aws::IOStream> GenerateRandomObject(const size_t num_bytes);

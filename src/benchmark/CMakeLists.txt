@@ -1,4 +1,13 @@
 add_executable(
+    idleLifetimeBenchmark
+
+    idle_lifetime_benchmark.cpp
+    ${SHARED_SOURCES}
+)
+
+target_link_libraries(idleLifetimeBenchmark skyriseBenchmark)
+
+add_executable(
     invocationThroughputBenchmark
 
     invocation_throughput_benchmark.cpp
@@ -6,6 +15,21 @@ add_executable(
 )
 
 target_link_libraries(invocationThroughputBenchmark skyriseBenchmark)
+
+add_executable(
+    skyriseFunctionHostId
+
+    function_host_id.cpp
+)
+
+target_link_libraries(
+    skyriseFunctionHostId
+
+    PRIVATE
+    skyriseWorker
+)
+
+aws_lambda_package_target(skyriseFunctionHostId)
 
 add_executable(
     skyriseFunctionMinimal

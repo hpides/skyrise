@@ -58,11 +58,12 @@ Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
   const double throughput = benchmark_config.num_invocations_ / duration;
 
   return BenchmarkHelper::GenerateJsonOutput(
-      benchmark_name.str(), {{"throughput", throughput}}, benchmark_result,
+      benchmark_name.str(), {{"throughput", throughput}}, {/*aggregated string metrics*/}, benchmark_result,
       {[&](const BenchmarkItemResult& item_result) {
         return std::make_tuple("duration",
                                std::chrono::duration<double>(item_result.end_time - item_result.start_time).count());
-      }});
+      }},
+      {/*extract string metric functions*/});
 }
 
 }  // namespace skyrise

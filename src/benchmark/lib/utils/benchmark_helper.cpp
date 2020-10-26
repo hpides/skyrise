@@ -31,7 +31,7 @@ BenchmarkAggregates BenchmarkHelper::CalculateAggregates(
   return CalculateAggregates(metrics);
 }
 
-BenchmarkAggregates BenchmarkHelper::CalculateAggregates(std::vector<double>& metrics) {
+BenchmarkAggregates BenchmarkHelper::CalculateAggregates(std::vector<double> metrics) {
   if (metrics.empty()) {
     return {};
   }
@@ -58,14 +58,24 @@ BenchmarkAggregates BenchmarkHelper::CalculateAggregates(std::vector<double>& me
           percentile_99_9, percentile_99_99, standard_deviation};
 }
 
+// TODO(anyone): Split this into a) CreateJsonOutput, b) AddDoubleMetrics, and c) AddStringMetrics once it gets moved to
+// the abstract Benchmark class
 Aws::Utils::Json::JsonValue BenchmarkHelper::GenerateJsonOutput(
-    const Aws::String& benchmark_name, const std::vector<std::tuple<Aws::String, double>>& aggregated_metrics,
+    const Aws::String& benchmark_name, const std::vector<std::tuple<Aws::String, double>>& aggregated_numeric_metrics,
+    const std::vector<std::tuple<Aws::String, Aws::String>>& aggregated_alphabetic_metrics,
     const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
-    const std::vector<std::function<std::tuple<Aws::String, double>(const BenchmarkItemResult&)>>& metrics) {
+    const std::vector<std::function<std::tuple<Aws::String, double>(const BenchmarkItemResult&)>>&
+        extract_numeric_metric_functions,
+    const std::vector<std::function<std::tuple<Aws::String, Aws::String>(const BenchmarkItemResult&)>>&
+        extract_alphabetic_metric_functions) {
   auto json_output = Aws::Utils::Json::JsonValue().WithString("name", benchmark_name);
 
-  for (const auto& [metric_name, metric] : aggregated_metrics) {
-    json_output = json_output.WithDouble(metric_name, metric);
+  for (const auto& [metric_name, aggregated_numeric_metric] : aggregated_numeric_metrics) {
+    json_output = json_output.WithDouble(metric_name, aggregated_numeric_metric);
+  }
+
+  for (const auto& [metric_name, aggregated_alphabetic_metric] : aggregated_alphabetic_metrics) {
+    json_output = json_output.WithString(metric_name, aggregated_alphabetic_metric);
   }
 
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> benchmark_runs(benchmark_result->size());
@@ -74,9 +84,14 @@ Aws::Utils::Json::JsonValue BenchmarkHelper::GenerateJsonOutput(
     auto benchmark_run_value =
         Aws::Utils::Json::JsonValue().WithString("name", benchmark_name + "/" + std::to_string(i));
 
-    for (const auto& extract_metric : metrics) {
-      const auto& [metric_name, metric] = extract_metric(benchmark_result->at(i));
-      benchmark_run_value = benchmark_run_value.WithDouble(metric_name, metric);
+    for (const auto& extract_numeric_metric_function : extract_numeric_metric_functions) {
+      const auto& [metric_name, numeric_metric] = extract_numeric_metric_function(benchmark_result->at(i));
+      benchmark_run_value = benchmark_run_value.WithDouble(metric_name, numeric_metric);
+    }
+
+    for (const auto& extract_alphabetic_metric_function : extract_alphabetic_metric_functions) {
+      const auto& [metric_name, alphabetic_metric] = extract_alphabetic_metric_function(benchmark_result->at(i));
+      benchmark_run_value = benchmark_run_value.WithString(metric_name, alphabetic_metric);
     }
 
     benchmark_runs[i] = benchmark_run_value;
