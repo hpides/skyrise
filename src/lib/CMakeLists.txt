@@ -16,6 +16,7 @@ set(
     utils/time.hpp
     utils/time.cpp
     utils/unit_conversion.hpp
+    utils/vector.hpp
 )
 
 set(
