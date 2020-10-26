@@ -4,8 +4,12 @@
 
 #pragma once
 
+#include <algorithm>
+#include <iterator>
 #include <memory>
+#include <sstream>
 #include <string>
+#include <vector>
 
 #include <aws/core/Aws.h>
 
@@ -17,6 +21,20 @@ std::string TrimSourceFilePath(const std::string& path);
 
 // Convert a stream to a string
 Aws::String StreamToString(Aws::IOStream* stream);
+
+// Convert a vector to a string
+template <typename T>
+std::string VectorToString(const std::vector<T>& vector, const std::string& deliminter) {
+  std::ostringstream string_stream;
+
+  if (!vector.empty()) {
+    std::copy(vector.cbegin(), vector.cend() - 1, std::ostream_iterator<T>(string_stream, deliminter.c_str()));
+
+    string_stream << vector.back();
+  }
+
+  return string_stream.str();
+}
 
 /**
  * Get the number of bytes that are allocated on the heap for the given string.
