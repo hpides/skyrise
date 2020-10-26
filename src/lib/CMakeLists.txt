@@ -4,6 +4,7 @@ include(${PROJECT_SOURCE_DIR}/third_party/cmake-git-version-tracking/git_watcher
 
 set(
     SHARED_SOURCES
+    utils/array.hpp
     utils/assert.hpp
     utils/git_metadata.cpp
     utils/git_metadata.hpp
