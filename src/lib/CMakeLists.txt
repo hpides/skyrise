@@ -6,6 +6,8 @@ set(
     SHARED_SOURCES
     utils/array.hpp
     utils/assert.hpp
+    utils/filesystem.cpp
+    utils/filesystem.hpp
     utils/git_metadata.cpp
     utils/git_metadata.hpp
     utils/invalid_input_exception.hpp
@@ -14,8 +16,8 @@ set(
     utils/random.hpp
     utils/string.cpp
     utils/string.hpp
-    utils/time.hpp
     utils/time.cpp
+    utils/time.hpp
     utils/unit_conversion.hpp
     utils/vector.hpp
 )
