@@ -2,10 +2,10 @@
 
 #include <algorithm>
 #include <memory>
-#include <random>
 #include <string>
 
 #include "limits.hpp"
+#include "utils/string.hpp"
 #include "utils/time.hpp"
 
 namespace skyrise {
@@ -34,7 +34,7 @@ BenchmarkConfig::BenchmarkConfig(const std::vector<Aws::String>& function_zip_na
       num_repetitions_(num_repetitions),
       after_repetition_callbacks_(after_repetition_callbacks),
       timeout_(timeout),
-      benchmark_id_(GetRandomString()),
+      benchmark_id_(RandomString(8)),
       benchmark_timestamp_(GetFormattedTimestamp("%Y%m%dT%H%M%S")),
       function_configs_(std::make_shared<std::vector<LambdaFunctionConfig>>()),
       invocation_configs_(std::make_shared<std::vector<LambdaInvocationConfig>>()) {
@@ -91,18 +91,6 @@ void BenchmarkConfig::SetOnePayloadForAllFunctions(const std::shared_ptr<Aws::IO
   for (auto& config : *invocation_configs_) {
     config.payload = payload;
   }
-}
-
-Aws::String BenchmarkConfig::GetRandomString() {
-  const std::string charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
-  std::default_random_engine random_number_generator(std::random_device{}());
-  std::uniform_int_distribution<> distribution(0, charset.size() - 1);
-
-  std::string random_string(8, 0);
-  std::generate_n(random_string.begin(), 8, [&]() { return charset[distribution(random_number_generator)]; });
-
-  return random_string;
 }
 
 }  // namespace skyrise

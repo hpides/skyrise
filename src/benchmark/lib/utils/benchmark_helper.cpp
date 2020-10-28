@@ -5,7 +5,6 @@
 #include <fstream>
 #include <iterator>
 #include <numeric>
-#include <random>
 #include <regex>
 
 #include <aws/core/utils/base64/Base64.h>
@@ -17,6 +16,7 @@
 #include <aws/s3/model/PutObjectRequest.h>
 
 #include "utils/assert.hpp"
+#include "utils/string.hpp"
 #include "utils/unit_conversion.hpp"
 
 namespace skyrise {
@@ -130,18 +130,8 @@ long double BenchmarkHelper::CreateS3BucketIfNotExists(const Aws::String& bucket
   return cost;
 }
 
-// TODO(anyone): Introduce string utility function for random string generation and use it here
 std::shared_ptr<Aws::IOStream> BenchmarkHelper::GenerateRandomObject(const size_t num_bytes) {
-  const std::string charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
-  std::default_random_engine random_number_generator(std::random_device{}());
-  std::uniform_int_distribution<> distribution(0, charset.size() - 1);
-
-  std::string random_string(num_bytes, '0');
-  std::generate(random_string.begin(), random_string.end(),
-                [&]() { return charset[distribution(random_number_generator)]; });
-
-  return std::make_shared<Aws::StringStream>(random_string);
+  return std::make_shared<Aws::StringStream>(RandomString(num_bytes));
 }
 
 long double BenchmarkHelper::UploadObjectToS3Bucket(const Aws::String& bucket_name, const Aws::String& object_key,

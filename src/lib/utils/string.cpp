@@ -7,7 +7,7 @@
 #include <memory>
 #include <string>
 
-#include <aws/core/Aws.h>
+#include "random.hpp"
 
 namespace skyrise {
 
@@ -17,12 +17,16 @@ std::string TrimSourceFilePath(const std::string& path) {
   return src_position == std::string::npos ? path : path.substr(src_position + 1);
 }
 
-Aws::String StreamToString(Aws::IOStream* stream) {
-  Aws::StringStream string_stream;
-  string_stream << stream->rdbuf();
-  stream->seekg(std::ios::beg);
+std::string RandomString(const size_t length, const std::string& character_set) {
+  auto random_generator = RandomGenerator<std::mt19937>();
 
-  return string_stream.str();
+  std::uniform_int_distribution<size_t> uniform_distribution(0, character_set.size() - 1);
+
+  std::string random_string(length, '0');
+  std::generate(random_string.begin(), random_string.end(),
+                [&]() { return character_set[uniform_distribution(random_generator)]; });
+
+  return random_string;
 }
 
 size_t StringHeapSize(const std::string& string) {

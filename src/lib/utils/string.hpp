@@ -15,12 +15,24 @@
 
 namespace skyrise {
 
+// Character sets for randomly generated strings
+const std::string kCharacterSetUpper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const std::string kCharacterSetLower = "abcdefghijklmnopqrstuvwxyz";
+const std::string kCharacterSetNumber = "0123456789";
+
 // Crop a source file path to ensure readable assert messages (e.g., "/long/path/1234/src/lib/file.cpp" becomes
 // "src/lib/file.cpp")
 std::string TrimSourceFilePath(const std::string& path);
 
 // Convert a stream to a string
-Aws::String StreamToString(Aws::IOStream* stream);
+template <typename T>
+std::string StreamToString(T* stream) {
+  std::ostringstream string_stream;
+  string_stream << stream->rdbuf();
+  stream->seekg(std::ios::beg);
+
+  return string_stream.str();
+}
 
 // Convert a vector to a string
 template <typename T>
@@ -35,6 +47,11 @@ std::string VectorToString(const std::vector<T>& vector, const std::string& deli
 
   return string_stream.str();
 }
+
+// Create a randomly generated string
+std::string RandomString(const size_t length, const std::string& character_set = kCharacterSetUpper +
+                                                                                 kCharacterSetLower +
+                                                                                 kCharacterSetNumber);
 
 /**
  * Get the number of bytes that are allocated on the heap for the given string.

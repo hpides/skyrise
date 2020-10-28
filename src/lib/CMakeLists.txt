@@ -37,6 +37,7 @@ set(
     COORDINATOR_SOURCES
     client/client_aws.cpp
     client/client_aws.hpp
+    configuration.hpp
     limits.hpp
     utils/costs/cost_calculator.cpp
     utils/costs/cost_calculator.hpp

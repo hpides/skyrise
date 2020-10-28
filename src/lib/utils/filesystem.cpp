@@ -3,7 +3,7 @@
 #include <fstream>
 
 #include "assert.hpp"
-#include "limits.hpp"
+#include "configuration.hpp"
 
 namespace skyrise {
 

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <aws/core/Aws.h>
 
 #include "benchmark_runner.hpp"

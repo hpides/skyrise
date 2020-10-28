@@ -51,10 +51,6 @@ class BenchmarkConfig {
   const Aws::String benchmark_timestamp_;
   const std::shared_ptr<std::vector<LambdaFunctionConfig>> function_configs_;
   const std::shared_ptr<std::vector<LambdaInvocationConfig>> invocation_configs_;
-
- private:
-  static Aws::String GetRandomString();
-  static Aws::String GetTimestamp();
 };
 
 }  // namespace skyrise
