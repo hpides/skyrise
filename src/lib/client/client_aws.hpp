@@ -33,13 +33,15 @@ class ClientAws {
   const Aws::String& GetClientRegion() const;
 
  private:
-  Aws::CloudWatch::CloudWatchClient cloudwatch_client_;
-  Aws::IAM::IAMClient iam_client_;
-  Aws::Lambda::LambdaClient lambda_client_;
-  Aws::Pricing::PricingClient pricing_client_;
-  Aws::S3::S3Client s3_client_;
-  Aws::SQS::SQSClient sqs_client_;
-  Aws::XRay::XRayClient xray_client_;
+  Aws::Client::ClientConfiguration GenerateClientConfig() const;
+
+  std::unique_ptr<Aws::CloudWatch::CloudWatchClient> cloudwatch_client_;
+  std::unique_ptr<Aws::IAM::IAMClient> iam_client_;
+  std::unique_ptr<Aws::Lambda::LambdaClient> lambda_client_;
+  std::unique_ptr<Aws::Pricing::PricingClient> pricing_client_;
+  std::unique_ptr<Aws::S3::S3Client> s3_client_;
+  std::unique_ptr<Aws::SQS::SQSClient> sqs_client_;
+  std::unique_ptr<Aws::XRay::XRayClient> xray_client_;
 
   Aws::String client_region_;
 
