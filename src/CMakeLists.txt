@@ -10,6 +10,7 @@ endif()
 add_compile_options(-pthread -Wall -Wextra -Wpedantic -Werror)
 
 include_directories(
+    ${PROJECT_SOURCE_DIR}/src/benchmark
     ${PROJECT_SOURCE_DIR}/src/benchmark/lib
     ${PROJECT_SOURCE_DIR}/src/lib
     ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-core/include
@@ -20,6 +21,7 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-s3/include
     ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-sqs/include
     ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-xray/include
+    ${PROJECT_SOURCE_DIR}/third_party/cxxopts/include
     ${PROJECT_SOURCE_DIR}/third_party/magic_enum/include
     ${PROJECT_SOURCE_DIR}/third_party/orc/c++/include
     ${CMAKE_BINARY_DIR}/third_party/orc/c++/include
