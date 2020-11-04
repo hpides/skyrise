@@ -60,6 +60,8 @@ aws_lambda_package_target(skyriseFunctionReadWriteS3)
 
 add_executable(
     simpleBenchmark
+    network_benchmark.cpp
+    network_benchmark.hpp
     network_latency_benchmark.cpp
     network_latency_benchmark.hpp
     network_throughput_benchmark.cpp
