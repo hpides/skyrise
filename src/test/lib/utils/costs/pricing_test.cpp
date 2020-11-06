@@ -19,18 +19,18 @@ TEST_F(PricingTest, PricingLambda) {
 
     const auto lambda_pricing1 = pricing.GetLambdaPricing();
 
-    EXPECT_GT(lambda_pricing1->price_per_request, 0);
-    EXPECT_GT(lambda_pricing1->price_per_gb_second, 0);
-    EXPECT_GT(lambda_pricing1->price_per_provisioned_gb_second, 0);
-    EXPECT_GT(lambda_pricing1->price_per_provisioned_concurrency_gb_second, 0);
+    EXPECT_GT(lambda_pricing1->price_request_, 0);
+    EXPECT_GT(lambda_pricing1->price_gb_second_, 0);
+    EXPECT_GT(lambda_pricing1->price_provisioned_gb_second_, 0);
+    EXPECT_GT(lambda_pricing1->price_provisioned_concurrency_gb_second_, 0);
 
     const auto lambda_pricing2 = pricing.GetLambdaPricing();
 
-    EXPECT_EQ(lambda_pricing1->price_per_request, lambda_pricing2->price_per_request);
-    EXPECT_EQ(lambda_pricing1->price_per_gb_second, lambda_pricing2->price_per_gb_second);
-    EXPECT_EQ(lambda_pricing1->price_per_provisioned_gb_second, lambda_pricing2->price_per_provisioned_gb_second);
-    EXPECT_EQ(lambda_pricing1->price_per_provisioned_concurrency_gb_second,
-              lambda_pricing2->price_per_provisioned_concurrency_gb_second);
+    EXPECT_EQ(lambda_pricing1->price_request_, lambda_pricing2->price_request_);
+    EXPECT_EQ(lambda_pricing1->price_gb_second_, lambda_pricing2->price_gb_second_);
+    EXPECT_EQ(lambda_pricing1->price_provisioned_gb_second_, lambda_pricing2->price_provisioned_gb_second_);
+    EXPECT_EQ(lambda_pricing1->price_provisioned_concurrency_gb_second_,
+              lambda_pricing2->price_provisioned_concurrency_gb_second_);
   };
 
   InitAndShutDownAPI(func);
@@ -43,21 +43,21 @@ TEST_F(PricingTest, PricingS3) {
 
     const auto s3_pricing1 = pricing.GetS3Pricing();
 
-    EXPECT_GT(s3_pricing1->price_per_request_tier1, 0);
-    EXPECT_GT(s3_pricing1->price_per_request_tier2, 0);
-    EXPECT_GT(s3_pricing1->monthly_price_per_stored_gb, 0);
-    EXPECT_GT(s3_pricing1->price_per_returned_gb_select, 0);
-    EXPECT_GT(s3_pricing1->price_per_scanned_gb_select, 0);
-    EXPECT_GT(s3_pricing1->monthly_price_per_tag, 0);
+    EXPECT_GT(s3_pricing1->price_request_tier1_, 0);
+    EXPECT_GT(s3_pricing1->price_request_tier2_, 0);
+    EXPECT_GT(s3_pricing1->price_storage_gb_months_, 0);
+    EXPECT_GT(s3_pricing1->price_returned_gb_select_, 0);
+    EXPECT_GT(s3_pricing1->price_scanned_gb_select_, 0);
+    EXPECT_GT(s3_pricing1->price_storage_tag_hours_, 0);
 
     const auto s3_pricing2 = pricing.GetS3Pricing();
 
-    EXPECT_EQ(s3_pricing1->price_per_request_tier1, s3_pricing2->price_per_request_tier1);
-    EXPECT_EQ(s3_pricing1->price_per_request_tier2, s3_pricing2->price_per_request_tier2);
-    EXPECT_EQ(s3_pricing1->monthly_price_per_stored_gb, s3_pricing2->monthly_price_per_stored_gb);
-    EXPECT_EQ(s3_pricing1->price_per_returned_gb_select, s3_pricing2->price_per_returned_gb_select);
-    EXPECT_EQ(s3_pricing1->price_per_scanned_gb_select, s3_pricing2->price_per_scanned_gb_select);
-    EXPECT_EQ(s3_pricing1->monthly_price_per_tag, s3_pricing2->monthly_price_per_tag);
+    EXPECT_EQ(s3_pricing1->price_request_tier1_, s3_pricing2->price_request_tier1_);
+    EXPECT_EQ(s3_pricing1->price_request_tier2_, s3_pricing2->price_request_tier2_);
+    EXPECT_EQ(s3_pricing1->price_storage_gb_months_, s3_pricing2->price_storage_gb_months_);
+    EXPECT_EQ(s3_pricing1->price_returned_gb_select_, s3_pricing2->price_returned_gb_select_);
+    EXPECT_EQ(s3_pricing1->price_scanned_gb_select_, s3_pricing2->price_scanned_gb_select_);
+    EXPECT_EQ(s3_pricing1->price_storage_tag_hours_, s3_pricing2->price_storage_tag_hours_);
   };
 
   InitAndShutDownAPI(func);

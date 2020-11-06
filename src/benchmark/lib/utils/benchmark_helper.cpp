@@ -150,7 +150,9 @@ long double BenchmarkHelper::UploadObjectToS3Bucket(const Aws::String& bucket_na
 
   std::cout << "File uploaded.\n";
 
-  const long double storage_cost = cost_calculator_.CalculateCostS3StorageMonthly(num_bytes);
+  // TODO(d-justen): Find a way to track actual hours. For now, we assume that S3 objects will be deleted within an
+  // hour.
+  const long double storage_cost = cost_calculator_.CalculateCostS3StorageMonthly(num_bytes, 1);
   const long double request_cost = cost_calculator_.CalculateCostS3Requests(1, 0);
 
   return storage_cost + request_cost;

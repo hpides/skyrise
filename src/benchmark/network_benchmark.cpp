@@ -141,7 +141,10 @@ long double NetworkBenchmark::ExtractFunctionCost(const BenchmarkItemResult& res
 
   const long double s3_request_cost =
       cost_calculator_->CalculateCostS3Requests(num_s3_requests_tier_1, num_s3_requests_tier_2);
-  const long double s3_storage_cost = cost_calculator_->CalculateCostS3StorageMonthly(s3_storage_used_byte);
+
+  // TODO(d-justen): Find a way to track actual hours. For now, we assume that S3 object in this benchmark will be
+  // deleted within an hour.
+  const long double s3_storage_cost = cost_calculator_->CalculateCostS3StorageMonthly(s3_storage_used_byte, 1);
 
   return function_instance_cost + s3_request_cost + s3_storage_cost;
 }

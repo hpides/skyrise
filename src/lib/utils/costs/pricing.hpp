@@ -7,19 +7,19 @@
 namespace skyrise {
 
 struct PricingLambda {
-  long double price_per_request;
-  long double price_per_gb_second;
-  long double price_per_provisioned_gb_second;
-  long double price_per_provisioned_concurrency_gb_second;
+  long double price_request_;
+  long double price_gb_second_;
+  long double price_provisioned_gb_second_;
+  long double price_provisioned_concurrency_gb_second_;
 };
 
 struct PricingS3 {
-  long double price_per_request_tier1;
-  long double price_per_request_tier2;
-  long double price_per_returned_gb_select;
-  long double price_per_scanned_gb_select;
-  long double monthly_price_per_tag;
-  long double monthly_price_per_stored_gb;  // This is the price for the first 50TB/month
+  long double price_request_tier1_;
+  long double price_request_tier2_;
+  long double price_returned_gb_select_;
+  long double price_scanned_gb_select_;
+  long double price_storage_tag_hours_;
+  long double price_storage_gb_months_;  // This is the price for the first 50TB/month
 };
 
 namespace UsageTypeLambda {

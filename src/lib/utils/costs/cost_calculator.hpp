@@ -22,7 +22,7 @@ class CostCalculator {
    * minute (cf. https://forums.aws.amazon.com/thread.jspa?threadID=118983). At this point, we only use the first
    * storage pricing unit (0-50TB) to guarantee comparability between calculations.
    */
-  long double CalculateCostS3StorageMonthly(const size_t used_storage_bytes) const;
+  long double CalculateCostS3StorageMonthly(const size_t used_storage_bytes, const size_t hours) const;
   long double CalculateCostS3Requests(const size_t requests_tier1, const size_t requests_tier2) const;
   long double CalculateCostS3Select(const size_t returned_bytes, const size_t scanned_bytes) const;
 

@@ -9,6 +9,7 @@
 #include "costs_test_utils.hpp"
 #include "gtest/gtest.h"
 #include "utils/costs/pricing.hpp"
+#include "utils/unit_conversion.hpp"
 
 namespace skyrise {
 
@@ -22,19 +23,17 @@ TEST_F(CostCalculatorTest, CalculateCostLambda) {
     const auto lambda_pricing = pricing.GetLambdaPricing();
 
     const long double lambda_cost1 = cost_calculator.CalculateCostLambda(998, 512);
-    const long double expected_cost1 = lambda_pricing->price_per_gb_second / 2.0L + lambda_pricing->price_per_request;
+    const long double expected_cost1 = lambda_pricing->price_gb_second_ / 2.0L + lambda_pricing->price_request_;
 
     EXPECT_EQ(lambda_cost1, expected_cost1);
 
     const long double lambda_cost2 = cost_calculator.CalculateCostLambda(30, 128);
-    const long double expected_cost2 =
-        lambda_pricing->price_per_gb_second / 10.0L / 8.0L + lambda_pricing->price_per_request;
+    const long double expected_cost2 = lambda_pricing->price_gb_second_ / 10.0L / 8.0L + lambda_pricing->price_request_;
 
     EXPECT_EQ(lambda_cost2, expected_cost2);
 
     const long double lambda_cost3 = cost_calculator.CalculateCostLambda(440, 256);
-    const long double expected_cost3 =
-        lambda_pricing->price_per_gb_second / 2.0L / 4.0L + lambda_pricing->price_per_request;
+    const long double expected_cost3 = lambda_pricing->price_gb_second_ / 2.0L / 4.0L + lambda_pricing->price_request_;
 
     EXPECT_EQ(lambda_cost3, expected_cost3);
   };
@@ -49,12 +48,14 @@ TEST_F(CostCalculatorTest, CalculateCostS3Storage) {
     const CostCalculator cost_calculator(clients);
     const auto s3_pricing = pricing.GetS3Pricing();
 
-    const long double storage_cost1 = cost_calculator.CalculateCostS3StorageMonthly(1073741823);
-    const long double expected_cost1 = (1073741823.0 / 1073741824.0) * s3_pricing->monthly_price_per_stored_gb;
+    const long double storage_cost1 = cost_calculator.CalculateCostS3StorageMonthly(MbToByte(1023), 1);
+    const long double expected_cost1 =
+        ByteToGb(MbToByte(1023)) * 1 / 24.0L / 30.0L * s3_pricing->price_storage_gb_months_;
     EXPECT_EQ(storage_cost1, expected_cost1);
 
-    const long double storage_cost2 = cost_calculator.CalculateCostS3StorageMonthly(1000);
-    const long double expected_cost2 = (1000 / 1073741824.0) * s3_pricing->monthly_price_per_stored_gb;
+    const long double storage_cost2 = cost_calculator.CalculateCostS3StorageMonthly(KbToByte(15), 72);
+    const long double expected_cost2 =
+        ByteToGb(KbToByte(15)) * 72 / 24.0L / 30.0L * s3_pricing->price_storage_gb_months_;
     EXPECT_EQ(storage_cost2, expected_cost2);
   };
 
@@ -69,8 +70,7 @@ TEST_F(CostCalculatorTest, CalculateCostS3Requests) {
     const auto s3_pricing = pricing.GetS3Pricing();
 
     const long double requests_cost = cost_calculator.CalculateCostS3Requests(700, 800);
-    const long double expected_cost =
-        700 * s3_pricing->price_per_request_tier1 + 800 * s3_pricing->price_per_request_tier2;
+    const long double expected_cost = 700 * s3_pricing->price_request_tier1_ + 800 * s3_pricing->price_request_tier2_;
     EXPECT_EQ(requests_cost, expected_cost);
   };
 
@@ -86,12 +86,12 @@ TEST_F(CostCalculatorTest, CalculateCostS3Select) {
 
     const long double select_cost1 = cost_calculator.CalculateCostS3Select(1048576, 1048576);
     const long double expected_cost1 =
-        s3_pricing->price_per_returned_gb_select / 1024.0 + s3_pricing->price_per_scanned_gb_select / 1024.0;
+        s3_pricing->price_returned_gb_select_ / 1024.0 + s3_pricing->price_scanned_gb_select_ / 1024.0;
     EXPECT_EQ(select_cost1, expected_cost1);
 
     const long double select_cost2 = cost_calculator.CalculateCostS3Select(512, 134217728);
-    const long double expected_cost2 = s3_pricing->price_per_returned_gb_select / 1024.0 / 1024.0 / 2.0 +
-                                       s3_pricing->price_per_scanned_gb_select / 8.0;
+    const long double expected_cost2 =
+        s3_pricing->price_returned_gb_select_ / 1024.0 / 1024.0 / 2.0 + s3_pricing->price_scanned_gb_select_ / 8.0;
     EXPECT_EQ(select_cost2, expected_cost2);
   };
 
