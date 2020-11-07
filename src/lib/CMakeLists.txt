@@ -48,7 +48,6 @@ set(
 
 set(
     COORDINATOR_LIBRARIES
-    aws-cpp-sdk-core
     aws-cpp-sdk-iam
     aws-cpp-sdk-lambda
     aws-cpp-sdk-monitoring
@@ -65,6 +64,11 @@ target_link_libraries(skyriseCoordinator PUBLIC ${COORDINATOR_LIBRARIES})
 
 set(
     STORAGE_SOURCES
+    storage/backend/abstract_storage.hpp
+    storage/backend/storage_filesystem.cpp
+    storage/backend/storage_filesystem.hpp
+    storage/backend/storage_s3.cpp
+    storage/backend/storage_s3.hpp
     storage/types/abstract_segment.hpp
     storage/types/all_variants.hpp
     storage/types/base_value_segment.hpp
@@ -79,13 +83,15 @@ set(
 
 set(
     WORKER_SOURCES
-    ${STORAGE_SOURCES}
     utils/profiling/function_host_information.cpp
     utils/profiling/function_host_information.hpp
+    ${SHARED_SOURCES}
+    ${STORAGE_SOURCES}
 )
 
 set(
     WORKER_LIBRARIES
+    aws-cpp-sdk-s3
     aws-lambda-runtime
     skyriseShared
 )

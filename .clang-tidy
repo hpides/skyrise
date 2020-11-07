@@ -8,6 +8,7 @@ Checks: '
         -*-non-private-member-variables-in-classes,
         -*-uppercase-literal-suffix,
         -*braces-around-statements,
+        -abseil-string-find-startswith,
         -cert-dcl16-c,
         -cert-env33-c,
         -cert-err58-cpp,
@@ -15,12 +16,14 @@ Checks: '
         -cppcoreguidelines-interfaces-global-init,
         -cppcoreguidelines-owning-memory,
         -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+        -cppcoreguidelines-pro-bounds-pointer-arithmetic,
         -cppcoreguidelines-pro-type-reinterpret-cast,
         -fuchsia-overloaded-operator,
         -fuchsia-statically-constructed-objects,
         -hicpp-no-array-decay,
         -llvm-include-order,
         -llvmlibc-*,
+        -misc-no-recursion,
         -modernize-pass-by-value,
         -modernize-use-trailing-return-type
         '
@@ -34,6 +37,7 @@ Checks: '
 #   *-non-private-member-variables-in-classes               We use public member variables
 #   *-uppercase-literal-suffix                              Using 1.0f instead of 1.0F is fine for us
 #   *braces-around-statements                               We allow if statements without braces
+#   abseil-string-find-startswith                           We do not use abseil
 #   cert-dcl16-c                                            Using 1.0f instead of 1.0F is fine for us
 #   cert-env33-c                                            We use popen()
 #   cert-err58-cpp                                          We are okay with uncaught errors
@@ -41,12 +45,14 @@ Checks: '
 #   cppcoreguidelines-interfaces-global-init                Does not like std::vector<std::function<void()>> a{[]() { std::cout << "a"; }};
 #   cppcoreguidelines-owning-memory                         Does not like Google Test
 #   cppcoreguidelines-pro-bounds-array-to-pointer-decay     Does not like Pricing pricing(Aws::Region::US_EAST_1);
+#   cppcoreguidelines-pro-bounds-pointer-arithmetic         We have some c-style arrays
 #   cppcoreguidelines-pro-type-reinterpret-cast             We use reinterpret_cast
 #   fuchsia-overloaded-operator                             We overload operators
 #   fuchsia-statically-constructed-objects                  Does not like Google Test
 #   hicpp-no-array-decay                                    Does not like Pricing pricing(Aws::Region::US_EAST_1);
 #   llvm-include-order                                      We use #pragma once
 #   llvmlibc-*                                              We do not use LLVM's libc++, but GCC's libstdc++
+#   misc-no-recursion                                       Recursion is useful when parsing data nested structures
 #   modernize-pass-by-value                                 We do not trust people to properly use std::move
 #   modernize-use-trailing-return-type                      We do not want to use trailing return types
 

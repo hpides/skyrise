@@ -8,6 +8,11 @@ set(
     TEST_SOURCES
     benchmark/lib/utils/benchmark_helper_test.cpp
 
+    lib/storage/backend/abstract_provider.hpp
+    lib/storage/backend/filesystem_provider.hpp
+    lib/storage/backend/s3_provider.hpp
+    lib/storage/backend/storage_test.cpp
+
     lib/storage/types/chunk_test.cpp
     lib/storage/types/table_column_definition_test.cpp
     lib/storage/types/value_segment_test.cpp
@@ -17,6 +22,8 @@ set(
     lib/utils/costs/costs_test_utils.hpp
     lib/utils/costs/pricing_test.cpp
     lib/utils/profiling/function_host_information_test.cpp
+
+    lib/testing/aws_test.hpp
 )
 
 # Libraries
