@@ -1,5 +1,5 @@
 # Tool versions and locations
-ARG CCACHE_VERSION=3.7.12
+ARG CCACHE_VERSION=4.0
 ARG CCACHE_DIR=/opt/ccache-${CCACHE_VERSION}
 ARG CMAKE_VERSION=3.18
 ARG CMAKE_PATCH=4
@@ -8,7 +8,7 @@ ARG CPPCHECK_VERSION=2.2
 ARG CPPCHECK_DIR=/opt/cppcheck-${CPPCHECK_VERSION}
 ARG CPPLINT_COMMIT=96f6a64
 ARG CPPLINT_DIR=/opt/cpplint-${CPPLINT_COMMIT}
-ARG DOCKER_LAMBDA_COMMIT=a38b0ee
+ARG DOCKER_LAMBDA_COMMIT=ce25a2d
 ARG DOCKER_LAMBDA_DIR=/opt/docker-lambda-${DOCKER_LAMBDA_COMMIT}
 ARG GCC_VERSION=7.5.0
 ARG GCC_SUFFIX=75
@@ -23,6 +23,8 @@ FROM lambci/lambda-base-2:build AS base-install
 RUN yum install -y \
     # General
     wget \
+    # Ccache dependency
+    libzstd-devel \
     # Lambda bootstrap wrapper dependency
     golang.x86_64 \
     # LLDB dependency
@@ -32,22 +34,6 @@ RUN yum install -y \
     cmake && \
     yum clean all && \
     rm -rf /var/cache/yum
-
-# Ccache
-FROM base-install AS base-ccache
-ARG CCACHE_VERSION
-ARG CCACHE_DIR
-
-WORKDIR ${CCACHE_DIR}/src
-RUN wget -nv https://github.com/ccache/ccache/releases/download/v${CCACHE_VERSION}/ccache-${CCACHE_VERSION}.tar.gz -O - \
-        | tar -xz --strip-components=1 && \
-    mkdir build && \
-    cd build && \
-    ../configure --prefix=${CCACHE_DIR} && \
-    make -j$(nproc) && \
-    make install && \
-    rm -rf ${CCACHE_DIR}/src
-
 
 # CMake
 FROM base-install AS base-cmake
@@ -62,6 +48,22 @@ RUN wget -nv https://cmake.org/files/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.${
         do \
             ln -s $file /usr/bin/$(basename $file); \
         done
+
+
+# Ccache
+FROM base-cmake AS base-ccache
+ARG CCACHE_VERSION
+ARG CCACHE_DIR
+
+WORKDIR ${CCACHE_DIR}/src
+RUN wget -nv https://github.com/ccache/ccache/releases/download/v${CCACHE_VERSION}/ccache-${CCACHE_VERSION}.tar.gz -O - \
+        | tar -xz --strip-components=1 && \
+    mkdir build && \
+    cd build && \
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CCACHE_DIR} && \
+    make -j$(nproc) && \
+    make install && \
+    rm -rf ${CCACHE_DIR}/src
 
 
 # Cppcheck
@@ -167,6 +169,8 @@ ARG GCC_DIR
 RUN yum install -y \
     # Build system
     ninja-build \
+    # Ccache dependency
+    libzstd-devel \
     # Stack traces
     binutils-devel \
     # AWS SDK dependency
@@ -223,7 +227,7 @@ ENV PATH=/var/lang/bin:$PATH \
     LD_LIBRARY_PATH=/var/lang/lib:$LD_LIBRARY_PATH
 ENTRYPOINT ["/var/runtime/bootstrap_wrapper"]
 
-FROM ubuntu:20.04 AS ubuntu
+FROM ubuntu:20.10 AS ubuntu
 RUN apt-get update && \
     apt-get install -y \
     lsb-release \

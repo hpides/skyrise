@@ -1,4 +1,4 @@
-# As in lambci/lambda:provided.al2 e4af7bc7f878 2020-09-07T15:13:24+00:00
+# As in lambci/lambda:20201029-provided.al2 48b1307ba2b4
 ld-2.26.so
 ld-linux-x86-64.so.2
 libacl.so.1

@@ -6,14 +6,14 @@ if [[ "$unamestr" == 'Linux' ]]; then
     if [ -f /etc/lsb-release ] && cat /etc/lsb-release | grep DISTRIB_ID | grep Ubuntu >/dev/null; then
         echo "Installing toolchain..."   
         if sudo apt-get update >/dev/null; then
-            if [[ "$(lsb_release -sr)" == "20.04" ]]; then
+            if [[ "$(lsb_release -sr)" == "20.10" ]]; then
                 sudo apt-get install --no-install-recommends -y \
                 binutils-dev \
                 ca-certificates \
                 ccache \
-                clang-10 \
-                clang-format-10 \
-                clang-tidy-10 \
+                clang-11 \
+                clang-format-11 \
+                clang-tidy-11 \
                 cmake \
                 cppcheck \
                 curl \
@@ -30,10 +30,10 @@ if [[ "$unamestr" == 'Linux' ]]; then
                 zlib1g-dev
                 pip3 install cpplint
                 
-                sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-10 100 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-10
-                sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-10 100
-                sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-10 100
-                sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+                sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-11 110 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-11
+                sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-11 110
+                sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-11 110
+                sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 102 --slave /usr/bin/g++ g++ /usr/bin/g++-10
 
                 # Symlink to default Amazon Linux certificate file
                 sudo mkdir -p /etc/pki/tls/certs
