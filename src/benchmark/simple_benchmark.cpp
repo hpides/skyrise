@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include <aws/core/Aws.h>
+#include <aws/core/utils/logging/ConsoleLogSystem.h>
 #include <magic_enum.hpp>
 
 #include "benchmark_config.hpp"
@@ -13,11 +14,16 @@
 const size_t kLambdaSize = 128;
 const size_t kNumInvocations = 10;
 const size_t kNumRepetitions = 2;
-const std::vector<std::function<void()>> kAfterRepetitonCallbacks{[]() { std::cout << "After Repetition 0\n"; },
-                                                                  []() { std::cout << "After Repetition 1\n"; }};
+const std::vector<std::function<void()>> kAfterRepetitonCallbacks{[]() { std::cout << "After Repetition 0"; },
+                                                                  []() { std::cout << "After Repetition 1"; }};
 
 int main() {
   Aws::SDKOptions options;
+  options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Info;
+  options.loggingOptions.logger_create_fn = [] {
+    return std::make_shared<Aws::Utils::Logging::ConsoleLogSystem>(Aws::Utils::Logging::LogLevel::Info);
+  };
+
   Aws::InitAPI(options);
   // TODO(anyone): Refactor this block
   {
