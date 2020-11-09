@@ -9,6 +9,7 @@
 - Fabian Engel
 - David Justen
 - Jakob Köhler
-- Jan Mensch
-- Jan Siebert
 - Tobias Maltenberger
+- Jan Mensch
+- Pascal Schulze
+- Jan Siebert
