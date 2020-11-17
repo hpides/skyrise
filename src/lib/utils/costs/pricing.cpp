@@ -12,39 +12,23 @@
 
 namespace skyrise {
 
-std::shared_ptr<PricingLambda> Pricing::GetLambdaPricing() {
-  if (cached_pricing_lambda_) {
-    return cached_pricing_lambda_;
-  }
+Pricing::Pricing(std::shared_ptr<ClientAws> client_aws) : client_aws_(std::move(client_aws)) {
+  const auto pricing_lambda_map = FetchPricing("AWSLambda");
+  pricing_lambda_ = std::make_shared<PricingLambda>(PricingLambda{
+      pricing_lambda_map.at(UsageTypeLambda::Request), pricing_lambda_map.at(UsageTypeLambda::LambdaGBSecond),
+      pricing_lambda_map.at(UsageTypeLambda::LambdaProvisionedGBSecond),
+      pricing_lambda_map.at(UsageTypeLambda::LambdaProvisionedConcurrency)});
 
-  const Aws::String service_code = "AWSLambda";
-  const auto prices_map = FetchPricing(service_code);
-
-  const PricingLambda pricing{prices_map.at(UsageTypeLambda::Request), prices_map.at(UsageTypeLambda::LambdaGBSecond),
-                              prices_map.at(UsageTypeLambda::LambdaProvisionedGBSecond),
-                              prices_map.at(UsageTypeLambda::LambdaProvisionedConcurrency)};
-  cached_pricing_lambda_ = std::make_shared<PricingLambda>(pricing);
-
-  return cached_pricing_lambda_;
+  const auto pricing_s3_map = FetchPricing("AmazonS3");
+  pricing_s3_ = std::make_shared<PricingS3>(
+      PricingS3{pricing_s3_map.at(UsageTypeS3::RequestTier1), pricing_s3_map.at(UsageTypeS3::RequestTier2),
+                pricing_s3_map.at(UsageTypeS3::SelectReturnedBytes), pricing_s3_map.at(UsageTypeS3::SelectScannedBytes),
+                pricing_s3_map.at(UsageTypeS3::TagStorage), pricing_s3_map.at(UsageTypeS3::TimedStorage)});
 }
 
-std::shared_ptr<PricingS3> Pricing::GetS3Pricing() {
-  if (cached_pricing_s3_) {
-    return cached_pricing_s3_;
-  }
+std::shared_ptr<PricingLambda> Pricing::GetLambdaPricing() { return pricing_lambda_; }
 
-  const Aws::String service_code = "AmazonS3";
-  const auto prices_map = FetchPricing(service_code);
-
-  const PricingS3 pricing{
-      prices_map.at(UsageTypeS3::RequestTier1),        prices_map.at(UsageTypeS3::RequestTier2),
-      prices_map.at(UsageTypeS3::SelectReturnedBytes), prices_map.at(UsageTypeS3::SelectScannedBytes),
-      prices_map.at(UsageTypeS3::TagStorage),          prices_map.at(UsageTypeS3::TimedStorage)};
-
-  cached_pricing_s3_ = std::make_shared<PricingS3>(pricing);
-
-  return cached_pricing_s3_;
-}
+std::shared_ptr<PricingS3> Pricing::GetS3Pricing() { return pricing_s3_; }
 
 std::map<Aws::String, long double> Pricing::FetchPricing(const Aws::String& service_code) const {
   const auto location = TranslateRegionToLocation(client_aws_->GetClientRegion());

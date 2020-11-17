@@ -48,7 +48,7 @@ static const char* const TimedStorage = "TimedStorage-ByteHrs";
 
 class Pricing {
  public:
-  Pricing(std::shared_ptr<ClientAws> client_aws) : client_aws_(client_aws) {}
+  Pricing(std::shared_ptr<ClientAws> client_aws);
 
   std::shared_ptr<PricingLambda> GetLambdaPricing();
   std::shared_ptr<PricingS3> GetS3Pricing();
@@ -60,8 +60,8 @@ class Pricing {
 
   std::shared_ptr<ClientAws> client_aws_;
 
-  std::shared_ptr<PricingLambda> cached_pricing_lambda_;
-  std::shared_ptr<PricingS3> cached_pricing_s3_;
+  std::shared_ptr<PricingLambda> pricing_lambda_;
+  std::shared_ptr<PricingS3> pricing_s3_;
 };
 
 }  // namespace skyrise
