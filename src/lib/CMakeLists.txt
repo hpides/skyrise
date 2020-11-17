@@ -69,6 +69,8 @@ set(
     storage/backend/storage_filesystem.hpp
     storage/backend/storage_s3.cpp
     storage/backend/storage_s3.hpp
+    storage/formats/abstract_formatter.cpp
+    storage/formats/abstract_formatter.hpp
     storage/types/abstract_segment.hpp
     storage/types/all_variants.hpp
     storage/types/base_value_segment.hpp
