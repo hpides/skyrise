@@ -108,7 +108,7 @@ S3ObjectWriter::~S3ObjectWriter() { FinalizeUpload(); }
 
 StorageError S3ObjectWriter::Write(const char* data, size_t length) {
   if (closed_) {
-    return StorageError(StorageErrorType::kNotReady);
+    return StorageError(StorageErrorType::kInvalidState);
   }
 
   if (length == 0) {
@@ -328,7 +328,7 @@ StorageError S3MultipartUploader::Initialize() {
 
 StorageError S3MultipartUploader::WriteChunk(std::stringbuf* buffer) {
   if (!IsInitialized()) {
-    return StorageError(StorageErrorType::kNotReady);
+    return StorageError(StorageErrorType::kInvalidState);
   }
   auto stream = std::make_shared<Aws::IOStream>(buffer);
 

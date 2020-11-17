@@ -14,6 +14,7 @@ enum class StorageErrorType {
   kNotReady,
   kInternalError,
   kInvalidArgument,
+  kInvalidState,
   kIOError,
   kOperationNotSupported,
   kPermissionDenied,
