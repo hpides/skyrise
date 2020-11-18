@@ -50,8 +50,8 @@ class Pricing {
  public:
   Pricing(std::shared_ptr<ClientAws> client_aws);
 
-  std::shared_ptr<PricingLambda> GetLambdaPricing();
-  std::shared_ptr<PricingS3> GetS3Pricing();
+  const std::shared_ptr<PricingLambda>& GetLambdaPricing();
+  const std::shared_ptr<PricingS3>& GetS3Pricing();
 
  private:
   std::map<Aws::String, long double> FetchPricing(const Aws::String& service_code) const;

@@ -20,7 +20,7 @@ TEST_F(CostCalculatorTest, CalculateCostLambda) {
     const auto clients = std::make_shared<ClientAws>();
     Pricing pricing(clients);
     const CostCalculator cost_calculator(clients);
-    const auto lambda_pricing = pricing.GetLambdaPricing();
+    const auto& lambda_pricing = pricing.GetLambdaPricing();
 
     const long double lambda_cost1 = cost_calculator.CalculateCostLambda(998, 512);
     const long double expected_cost1 = lambda_pricing->price_gb_second_ / 2.0L + lambda_pricing->price_request_;
@@ -46,7 +46,7 @@ TEST_F(CostCalculatorTest, CalculateCostS3Storage) {
     const auto clients = std::make_shared<ClientAws>();
     Pricing pricing(clients);
     const CostCalculator cost_calculator(clients);
-    const auto s3_pricing = pricing.GetS3Pricing();
+    const auto& s3_pricing = pricing.GetS3Pricing();
 
     const long double storage_cost1 = cost_calculator.CalculateCostS3StorageMonthly(MbToByte(1023), 1);
     const long double expected_cost1 =
@@ -67,7 +67,7 @@ TEST_F(CostCalculatorTest, CalculateCostS3Requests) {
     const auto clients = std::make_shared<ClientAws>();
     Pricing pricing(clients);
     const CostCalculator cost_calculator(clients);
-    const auto s3_pricing = pricing.GetS3Pricing();
+    const auto& s3_pricing = pricing.GetS3Pricing();
 
     const long double requests_cost = cost_calculator.CalculateCostS3Requests(700, 800);
     const long double expected_cost = 700 * s3_pricing->price_request_tier1_ + 800 * s3_pricing->price_request_tier2_;
@@ -82,7 +82,7 @@ TEST_F(CostCalculatorTest, CalculateCostS3Select) {
     const auto clients = std::make_shared<ClientAws>();
     Pricing pricing(clients);
     const CostCalculator cost_calculator(clients);
-    const auto s3_pricing = pricing.GetS3Pricing();
+    const auto& s3_pricing = pricing.GetS3Pricing();
 
     const long double select_cost1 = cost_calculator.CalculateCostS3Select(1048576, 1048576);
     const long double expected_cost1 =

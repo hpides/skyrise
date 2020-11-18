@@ -26,9 +26,9 @@ Pricing::Pricing(std::shared_ptr<ClientAws> client_aws) : client_aws_(std::move(
                 pricing_s3_map.at(UsageTypeS3::TagStorage), pricing_s3_map.at(UsageTypeS3::TimedStorage)});
 }
 
-std::shared_ptr<PricingLambda> Pricing::GetLambdaPricing() { return pricing_lambda_; }
+const std::shared_ptr<PricingLambda>& Pricing::GetLambdaPricing() { return pricing_lambda_; }
 
-std::shared_ptr<PricingS3> Pricing::GetS3Pricing() { return pricing_s3_; }
+const std::shared_ptr<PricingS3>& Pricing::GetS3Pricing() { return pricing_s3_; }
 
 std::map<Aws::String, long double> Pricing::FetchPricing(const Aws::String& service_code) const {
   const auto location = TranslateRegionToLocation(client_aws_->GetClientRegion());
