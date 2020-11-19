@@ -6,6 +6,7 @@
 
 #include <aws/core/Aws.h>
 #include <cxxopts.hpp>
+#include <termcolor/termcolor.hpp>
 
 #include "benchmark.hpp"
 #include "benchmark_config.hpp"
@@ -38,6 +39,19 @@ class TestBenchmark : public Benchmark {
 
 }  // namespace skyrise
 
+enum class ConsoleInfoType { kDoubleSeparator, kSingleSeparator, kRun, kPassed, kFailed };
+
+const std::map<ConsoleInfoType, std::string> kConsoleInfoTypeText{{ConsoleInfoType::kDoubleSeparator, "[==========]"},
+                                                                  {ConsoleInfoType::kSingleSeparator, "[----------]"},
+                                                                  {ConsoleInfoType::kRun, "[ RUN      ]"},
+                                                                  {ConsoleInfoType::kPassed, "[  PASSED  ]"},
+                                                                  {ConsoleInfoType::kFailed, "[  FAILED  ]"}};
+
+void PrintConsoleInfo(ConsoleInfoType info_type, const std::string& info = "") {
+  std::cout << (info_type == ConsoleInfoType::kFailed ? termcolor::red : termcolor::green)
+            << kConsoleInfoTypeText.at(info_type) << termcolor::reset << " " << info << "\n";
+}
+
 class BenchmarkRegistry {
  public:
   void RegisterBenchmark(const std::string& name, std::unique_ptr<skyrise::Benchmark> benchmark) {
@@ -55,6 +69,12 @@ class BenchmarkRegistry {
 };
 
 int main(int argc, char* argv[]) {
+  int return_code = 0;
+
+  Aws::SDKOptions sdk_options;
+
+  Aws::InitAPI(sdk_options);
+
   try {
     // Parse the command line arguments
     cxxopts::Options cli_options("skyriseBenchmarkConsole", "Console for running Skyrise benchmarks");
@@ -81,10 +101,6 @@ int main(int argc, char* argv[]) {
     }
 
     // Initialize the clients
-    Aws::SDKOptions sdk_options;
-
-    Aws::InitAPI(sdk_options);
-
     const auto aws_client = std::make_shared<skyrise::ClientAws>();
     const auto benchmark_runner = std::make_shared<skyrise::BenchmarkRunner>(aws_client);
 
@@ -99,8 +115,8 @@ int main(int argc, char* argv[]) {
       const auto filter_names = cli_arguments["filter"].as<std::vector<std::string>>();
 
       if (!skyrise::IsSubset(filter_names, benchmark_names)) {
-        std::cout << "Option ‘filter’ has an invalid value\n\n"
-                  << "Possible values are subsets of " << skyrise::VectorToString(benchmark_names, ", ") << "\n";
+        throw std::invalid_argument("Option ‘filter’ has an invalid value\n\nPossible values are subsets of " +
+                                    skyrise::VectorToString(benchmark_names, ", "));
       }
 
       benchmark_names = filter_names;
@@ -111,12 +127,43 @@ int main(int argc, char* argv[]) {
       std::shuffle(benchmark_names.begin(), benchmark_names.end(), skyrise::RandomGenerator<std::mt19937>());
     }
 
+    PrintConsoleInfo(ConsoleInfoType::kDoubleSeparator, "Running " + std::to_string(benchmark_names.size()) +
+                                                            " benchmark" + (benchmark_names.size() > 1 ? "s" : ""));
+    PrintConsoleInfo(ConsoleInfoType::kSingleSeparator);
+
+    size_t total_duration = 0;
+
     // Run the benchmarks
     Aws::Utils::Array<Aws::Utils::Array<Aws::Utils::Json::JsonValue>> benchmark_results(benchmark_names.size());
 
     for (size_t i = 0; i < benchmark_names.size(); ++i) {
-      benchmark_results[i] = benchmark_registry.GetBenchmark(benchmark_names[i])->Run(benchmark_runner);
+      PrintConsoleInfo(ConsoleInfoType::kRun, benchmark_names[i]);
+
+      bool is_success = true;
+
+      const auto start_time = std::chrono::steady_clock::now();
+
+      try {
+        benchmark_results[i] = benchmark_registry.GetBenchmark(benchmark_names[i])->Run(benchmark_runner);
+      } catch (const std::exception& exception) {
+        std::cout << exception.what() << "\n";
+
+        is_success = false;
+      }
+
+      const auto end_time = std::chrono::steady_clock::now();
+
+      const size_t duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time).count();
+      total_duration += duration;
+
+      PrintConsoleInfo(is_success ? ConsoleInfoType::kPassed : ConsoleInfoType::kFailed,
+                       benchmark_names[i] + " (" + std::to_string(duration) + " s)");
+      PrintConsoleInfo(ConsoleInfoType::kSingleSeparator);
     }
+
+    PrintConsoleInfo(ConsoleInfoType::kDoubleSeparator, std::to_string(benchmark_names.size()) + " benchmark" +
+                                                            (benchmark_names.size() > 1 ? "s" : "") + " ran (" +
+                                                            std::to_string(total_duration) + " s total)");
 
     // Generate the output
     const auto output =
@@ -129,14 +176,13 @@ int main(int argc, char* argv[]) {
     // Save the output
     skyrise::WriteStringToFile(output.View().WriteReadable(), cli_arguments["output"].as<std::string>());
 
-    // TODO(maltenbergert): Print a status report to the command line
-
-    Aws::ShutdownAPI(sdk_options);
-
   } catch (const std::exception& exception) {
     std::cout << exception.what() << "\n";
-    exit(1);
+
+    return_code = 1;
   }
 
-  return 0;
+  Aws::ShutdownAPI(sdk_options);
+
+  return return_code;
 }
