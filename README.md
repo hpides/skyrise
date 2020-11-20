@@ -1,19 +1,19 @@
 # Skyrise
 
 ## Quickstart
-The Skyrise project is built and tested in a containerized **Docker** environment or on **Ubuntu 20.10**.
+The Skyrise project is built and tested in a containerized **Docker** environment or on **Ubuntu 20.10**. For either setup, run:
 ```
 git clone --recursive git@github.com:hpi-epic/skyrise.git
 cd skyrise
 ```
-
+In a Docker setup, continue with:
 ```
 ./script/docker/build_project.sh
 ```
-
+In a Ubuntu setup, proceed as follows:
 ```
 ./script/install_toolchain.sh
-mkdir cmake-build-debug && cd cmake-build-debug
+mkdir build && cd build
 cmake .. -GNinja
 ninja all
 ```
