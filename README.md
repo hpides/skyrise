@@ -1,7 +1,7 @@
 # Skyrise
 
 ## Quickstart
-The Skyrise project is built and tested with a containerized Docker environment.
+The Skyrise project is built and tested with a containerized **Docker** environment.
 ```
 git clone --recursive git@github.com:hpi-epic/skyrise.git
 cd skyrise
