@@ -10,7 +10,6 @@ endif()
 add_compile_options(-pthread -Wall -Wextra -Wpedantic -Werror)
 
 include_directories(
-    ${PROJECT_SOURCE_DIR}/src/benchmark
     ${PROJECT_SOURCE_DIR}/src/benchmark/lib
     ${PROJECT_SOURCE_DIR}/src/lib
     ${PROJECT_SOURCE_DIR}/third_party/aws-sdk-cpp/aws-cpp-sdk-core/include

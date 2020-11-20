@@ -1,4 +1,4 @@
-#include "utils/benchmark_helper.hpp"
+#include "benchmark_helper.hpp"
 
 #include <chrono>
 #include <cmath>

@@ -10,10 +10,10 @@
 
 #include "benchmark.hpp"
 #include "benchmark_config.hpp"
+#include "benchmark_helper.hpp"
 #include "benchmark_runner.hpp"
 #include "client/client_aws.hpp"
 #include "utils/array.hpp"
-#include "utils/benchmark_helper.hpp"
 #include "utils/filesystem.hpp"
 #include "utils/git_metadata.hpp"
 #include "utils/map.hpp"

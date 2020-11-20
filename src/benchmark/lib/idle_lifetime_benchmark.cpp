@@ -101,28 +101,3 @@ Aws::Utils::Json::JsonValue IdleLifetimeBenchmark::GenerateResultOutput(
 }
 
 }  // namespace skyrise
-
-// TODO(maltenbergert): Remove this main function once the BenchmarkConsole is ready to use
-int main(int /*argc*/, char** /*argv*/) {
-  Aws::SDKOptions options;
-  Aws::InitAPI(options);
-  {
-    const std::vector<size_t> function_sizes = {128};
-    const std::vector<size_t> invocation_counts = {20};
-    const std::vector<size_t> sleep_min_durations = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
-
-    skyrise::IdleLifetimeBenchmark benchmark(function_sizes, invocation_counts, sleep_min_durations);
-
-    const auto client = std::make_shared<skyrise::ClientAws>();
-    const auto runner = std::make_shared<skyrise::BenchmarkRunner>(client);
-
-    const auto results = benchmark.Run(runner);
-
-    for (size_t i = 0; i < results.GetLength(); ++i) {
-      std::cout << results[i].View().WriteReadable() << "\n";
-    }
-  }
-  Aws::ShutdownAPI(options);
-
-  return 0;
-}

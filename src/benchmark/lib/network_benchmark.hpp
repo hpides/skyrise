@@ -7,8 +7,8 @@
 #include <aws/core/utils/json/JsonSerializer.h>
 
 #include "benchmark.hpp"
+#include "benchmark_helper.hpp"
 #include "benchmark_runner.hpp"
-#include "utils/benchmark_helper.hpp"
 #include "utils/costs/cost_calculator.hpp"
 
 namespace skyrise {

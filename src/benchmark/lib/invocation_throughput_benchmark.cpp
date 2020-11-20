@@ -67,34 +67,3 @@ Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
 }
 
 }  // namespace skyrise
-
-// TODO(maltenbergert): Remove this main function
-int main(int /*argc*/, char** /*argv*/) {
-  Aws::SDKOptions options;
-  Aws::InitAPI(options);
-  {
-    const std::vector<size_t> function_sizes = {128};
-
-    // TODO(maltenbergert): Adjust this eventually to larger values
-    const std::vector<size_t> invocation_counts = {
-        32, 64  //, 512, 1024, 2048, 4096, 8192, 16384
-    };
-
-    const std::vector<skyrise::ExecuteMode> execute_modes = {
-        skyrise::ExecuteMode::kWarmAsync, skyrise::ExecuteMode::kWarmParallel, skyrise::ExecuteMode::kWarmSequential};
-
-    skyrise::InvocationThroughputBenchmark benchmark(function_sizes, invocation_counts, execute_modes);
-
-    const auto client = std::make_shared<skyrise::ClientAws>();
-    const auto runner = std::make_shared<skyrise::BenchmarkRunner>(client);
-
-    const auto results = benchmark.Run(runner);
-
-    for (size_t i = 0; i < results.GetLength(); ++i) {
-      std::cout << results[i].View().WriteReadable() << "\n";
-    }
-  }
-  Aws::ShutdownAPI(options);
-
-  return 0;
-}

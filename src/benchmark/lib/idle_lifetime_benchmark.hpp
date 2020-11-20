@@ -7,8 +7,8 @@
 
 #include "benchmark.hpp"
 #include "benchmark_config.hpp"
+#include "benchmark_helper.hpp"
 #include "benchmark_runner.hpp"
-#include "utils/benchmark_helper.hpp"
 
 namespace skyrise {
 
