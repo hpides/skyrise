@@ -1,9 +1,9 @@
 # Skyrise
 
 ## Quickstart
-The Skyrise project is built and tested with a containerized **Docker** environment or **Ubuntu 20.10**.
+The Skyrise project is built and tested in a containerized **Docker** environment or on **Ubuntu 20.10**.
 ```
-git clone --recursive -j[NUM_JOBS] git@github.com:hpi-epic/skyrise.git
+git clone --recursive git@github.com:hpi-epic/skyrise.git
 cd skyrise
 ```
 
@@ -15,7 +15,7 @@ cd skyrise
 ./script/install_toolchain.sh
 mkdir cmake-build-debug && cd cmake-build-debug
 cmake .. -GNinja
-ninja all -j [NUM_JOBS]
+ninja all
 ```
 
 ## Maintainers
