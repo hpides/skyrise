@@ -81,7 +81,7 @@ int main(int /*argc*/, char** /*argv*/) {
     };
 
     const std::vector<skyrise::ExecuteMode> execute_modes = {
-        skyrise::ExecuteMode::WarmAsync, skyrise::ExecuteMode::WarmParallel, skyrise::ExecuteMode::WarmSequential};
+        skyrise::ExecuteMode::kWarmAsync, skyrise::ExecuteMode::kWarmParallel, skyrise::ExecuteMode::kWarmSequential};
 
     skyrise::InvocationThroughputBenchmark benchmark(function_sizes, invocation_counts, execute_modes);
 

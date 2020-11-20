@@ -356,7 +356,7 @@ BenchmarkRunner::CreateWarmupInvokeRequests() {
 
   auto invoke_requests = std::make_shared<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>>();
 
-  if (config_->execute_mode_ == ExecuteMode::WarmSequential) {
+  if (config_->execute_mode_ == ExecuteMode::kWarmSequential) {
     invoke_requests->reserve(config_->num_repetitions_ * config_->function_configs_->size());
 
     for (const auto& function_config : *config_->function_configs_) {
@@ -499,16 +499,16 @@ void BenchmarkRunner::WriteResult(const std::shared_ptr<std::vector<BenchmarkIte
 }
 
 bool BenchmarkRunner::IsWarmStartBenchmark() {
-  return config_->execute_mode_ == ExecuteMode::WarmAsync || config_->execute_mode_ == ExecuteMode::WarmParallel ||
-         config_->execute_mode_ == ExecuteMode::WarmSequential;
+  return config_->execute_mode_ == ExecuteMode::kWarmAsync || config_->execute_mode_ == ExecuteMode::kWarmParallel ||
+         config_->execute_mode_ == ExecuteMode::kWarmSequential;
 }
 
 bool BenchmarkRunner::IsAsyncBenchmark() {
-  return config_->execute_mode_ == ExecuteMode::ColdAsync || config_->execute_mode_ == ExecuteMode::WarmAsync;
+  return config_->execute_mode_ == ExecuteMode::kColdAsync || config_->execute_mode_ == ExecuteMode::kWarmAsync;
 }
 
 bool BenchmarkRunner::IsParallelBenchmark() {
-  return config_->execute_mode_ == ExecuteMode::ColdParallel || config_->execute_mode_ == ExecuteMode::WarmParallel;
+  return config_->execute_mode_ == ExecuteMode::kColdParallel || config_->execute_mode_ == ExecuteMode::kWarmParallel;
 }
 
 }  // namespace skyrise

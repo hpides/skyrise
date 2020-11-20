@@ -66,7 +66,8 @@ void NetworkBenchmark::Setup() {
   cost_overhead_ += helper_->EmptyS3Bucket(read_bucket_);
   cost_overhead_ += helper_->EmptyS3Bucket(write_bucket_);
 
-  const bool is_parallel = execute_mode_ != ExecuteMode::ColdSequential && execute_mode_ != ExecuteMode::WarmSequential;
+  const bool is_parallel =
+      execute_mode_ != ExecuteMode::kColdSequential && execute_mode_ != ExecuteMode::kWarmSequential;
 
   for (const auto& [config, parameters] : configs_) {
     for (size_t i = 0; i < parameters.thread_count_; i++) {
@@ -101,7 +102,8 @@ Aws::String NetworkBenchmark::GenerateObjectKey(const bool is_parallel, const si
 std::vector<std::shared_ptr<Aws::IOStream>> NetworkBenchmark::GeneratePayloads(const size_t function_instance_mb_size,
                                                                                const size_t object_byte_size,
                                                                                const size_t thread_count) {
-  const bool is_parallel = execute_mode_ != ExecuteMode::ColdSequential && execute_mode_ != ExecuteMode::WarmSequential;
+  const bool is_parallel =
+      execute_mode_ != ExecuteMode::kColdSequential && execute_mode_ != ExecuteMode::kWarmSequential;
 
   std::vector<std::shared_ptr<Aws::IOStream>> payloads;
   payloads.reserve(num_iterations_ * thread_count);

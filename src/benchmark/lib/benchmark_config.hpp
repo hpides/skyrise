@@ -25,7 +25,7 @@ struct LambdaInvocationConfig {
  * *-Parallel: RequestResponse-Functions, invoked in parallel
  * *-Async: Event-Function, invoked in parallel
  */
-enum class ExecuteMode { ColdSequential, ColdParallel, ColdAsync, WarmSequential, WarmParallel, WarmAsync };
+enum class ExecuteMode { kColdSequential, kColdParallel, kColdAsync, kWarmSequential, kWarmParallel, kWarmAsync };
 
 class BenchmarkConfig {
  public:

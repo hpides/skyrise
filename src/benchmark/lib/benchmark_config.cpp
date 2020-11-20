@@ -48,8 +48,8 @@ BenchmarkConfig::BenchmarkConfig(const std::vector<Aws::String>& function_zip_na
     // TODO(anyone): Make function discovery more flexible and robust
     const Aws::String function_path = "./pkg/" + function_zip_names[function_names_index] + ".zip";
 
-    if (execute_mode == ExecuteMode::ColdAsync || execute_mode == ExecuteMode::ColdParallel ||
-        execute_mode == ExecuteMode::ColdSequential) {
+    if (execute_mode == ExecuteMode::kColdAsync || execute_mode == ExecuteMode::kColdParallel ||
+        execute_mode == ExecuteMode::kColdSequential) {
       // Add one function config and invocation config per zip and invocation if benchmarking coldstart
       for (size_t invocation_index = 0; invocation_index < num_invocations; invocation_index++) {
         const Aws::String function_name = benchmark_id_ + "-" + benchmark_timestamp_ + "-" +

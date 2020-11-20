@@ -29,7 +29,7 @@ class IdleLifetimeBenchmark : public Benchmark {
   std::vector<size_t> sleep_min_durations_;
 
   const Aws::String kFunctionName = "skyriseFunctionHostId";
-  const ExecuteMode kExecuteMode = ExecuteMode::ColdParallel;
+  const ExecuteMode kExecuteMode = ExecuteMode::kColdParallel;
 };
 
 }  // namespace skyrise

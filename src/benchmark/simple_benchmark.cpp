@@ -36,11 +36,11 @@ int main() {
     std::cout << "Creating BenchmarkConfigs...\n";
 
     std::vector<skyrise::BenchmarkConfig> configs{
-        {"skyriseFunctionMinimal", kLambdaSize, kNumInvocations, skyrise::ExecuteMode::WarmAsync, kNumRepetitions,
+        {"skyriseFunctionMinimal", kLambdaSize, kNumInvocations, skyrise::ExecuteMode::kWarmAsync, kNumRepetitions,
          kAfterRepetitonCallbacks},
-        {"skyriseFunctionMinimal", kLambdaSize, kNumInvocations, skyrise::ExecuteMode::WarmParallel, kNumRepetitions,
+        {"skyriseFunctionMinimal", kLambdaSize, kNumInvocations, skyrise::ExecuteMode::kWarmParallel, kNumRepetitions,
          kAfterRepetitonCallbacks},
-        {"skyriseFunctionMinimal", kLambdaSize, kNumInvocations, skyrise::ExecuteMode::WarmSequential, kNumRepetitions,
+        {"skyriseFunctionMinimal", kLambdaSize, kNumInvocations, skyrise::ExecuteMode::kWarmSequential, kNumRepetitions,
          kAfterRepetitonCallbacks},
     };
     std::cout << "BenchmarkConfigs created.\n\n";
