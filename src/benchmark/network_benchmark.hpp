@@ -13,10 +13,13 @@
 
 namespace skyrise {
 
+enum class S3OperationType { kRead, kWrite };
+
 struct NetworkBenchmarkParameters {
   size_t function_instance_mb_size_;
   size_t object_byte_size_;
   size_t thread_count_;
+  S3OperationType operation_type_;
 };
 
 class NetworkBenchmark : public Benchmark {
@@ -39,8 +42,8 @@ class NetworkBenchmark : public Benchmark {
   Aws::String GenerateObjectKey(const bool is_parallel, const size_t objects_byte_size, const size_t thread_index,
                                 const size_t iteration_index = 0);
   std::vector<std::shared_ptr<Aws::IOStream>> GeneratePayloads(const size_t function_instance_mb_size,
-                                                               const size_t object_byte_size,
-                                                               const size_t thread_count);
+                                                               const size_t object_byte_size, const size_t thread_count,
+                                                               const S3OperationType operation_type);
 
   long double ExtractFunctionCost(const BenchmarkItemResult& result, const size_t function_instance_mb_size);
   long double CalculateBenchmarkCost(const std::shared_ptr<std::vector<BenchmarkItemResult>>& result,
@@ -60,9 +63,7 @@ class NetworkBenchmark : public Benchmark {
   long double cost_overhead_;
 
   const Aws::String kFunctionName = "skyriseFunctionReadWriteS3";
-  const Aws::String kJsonGetObjectDurationKey = "get_object_duration_ms";
-  const Aws::String kJsonPutObjectDurationKey = "put_object_duration_ms";
-  const Aws::String kObjectKeySuffix = "networkbenchmark";
+  const Aws::String kObjectKeySuffix = "networkBenchmark";
 };
 
 }  // namespace skyrise

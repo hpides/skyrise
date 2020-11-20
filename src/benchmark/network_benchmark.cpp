@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <numeric>
 
+#include <magic_enum.hpp>
+
 #include "utils/string.hpp"
 #include "utils/unit_conversion.hpp"
 
@@ -26,10 +28,17 @@ NetworkBenchmark::NetworkBenchmark(std::shared_ptr<BenchmarkHelper> helper,
     for (const auto object_byte_size : object_byte_sizes) {
       for (const auto thread_count : thread_counts) {
         if (thread_count * object_byte_size <= MbToByte(function_instance_mb_size) / 2) {
-          BenchmarkConfig config(kFunctionName, function_instance_mb_size, num_iterations, execute_mode);
-          config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size, thread_count));
-          configs_.emplace_back(config,
-                                NetworkBenchmarkParameters{function_instance_mb_size, object_byte_size, thread_count});
+          for (const auto operation_type : {S3OperationType::kRead, S3OperationType::kWrite}) {
+            Aws::StringStream function_name;
+            function_name << "skyriseFunction";
+            function_name << magic_enum::enum_name(operation_type) << "S3";
+
+            BenchmarkConfig config(function_name.str(), function_instance_mb_size, num_iterations, execute_mode);
+            config.SetPayloads(
+                GeneratePayloads(function_instance_mb_size, object_byte_size, thread_count, operation_type));
+            configs_.emplace_back(config, NetworkBenchmarkParameters{function_instance_mb_size, object_byte_size,
+                                                                     thread_count, operation_type});
+          }
         }
       }
     }
@@ -70,17 +79,19 @@ void NetworkBenchmark::Setup() {
       execute_mode_ != ExecuteMode::kColdSequential && execute_mode_ != ExecuteMode::kWarmSequential;
 
   for (const auto& [config, parameters] : configs_) {
-    for (size_t i = 0; i < parameters.thread_count_; i++) {
-      if (is_parallel) {
-        for (size_t j = 0; j < num_iterations_; j++) {
+    if (parameters.operation_type_ == S3OperationType::kRead) {
+      for (size_t i = 0; i < parameters.thread_count_; i++) {
+        if (is_parallel) {
+          for (size_t j = 0; j < num_iterations_; j++) {
+            cost_overhead_ += helper_->UploadObjectToS3Bucket(
+                read_bucket_, GenerateObjectKey(true, parameters.object_byte_size_, i, j),
+                BenchmarkHelper::GenerateRandomObject(parameters.object_byte_size_), parameters.object_byte_size_);
+          }
+        } else {
           cost_overhead_ += helper_->UploadObjectToS3Bucket(
-              read_bucket_, GenerateObjectKey(true, parameters.object_byte_size_, i, j),
+              read_bucket_, GenerateObjectKey(false, parameters.object_byte_size_, i),
               BenchmarkHelper::GenerateRandomObject(parameters.object_byte_size_), parameters.object_byte_size_);
         }
-      } else {
-        cost_overhead_ += helper_->UploadObjectToS3Bucket(
-            read_bucket_, GenerateObjectKey(false, parameters.object_byte_size_, i),
-            BenchmarkHelper::GenerateRandomObject(parameters.object_byte_size_), parameters.object_byte_size_);
       }
     }
   }
@@ -93,6 +104,9 @@ void NetworkBenchmark::Teardown() {
 
 Aws::String NetworkBenchmark::GenerateObjectKey(const bool is_parallel, const size_t objects_byte_size,
                                                 const size_t thread_index, const size_t iteration_index) {
+  // TODO(d-justen): Employ objext key prefixes as described in
+  // https://docs.aws.amazon.com/AmazonS3/latest/dev/optimizing-performance.html
+
   Aws::StringStream object_key;
   object_key << thread_index << "-" << (is_parallel ? std::to_string(iteration_index) : "") << objects_byte_size << "B-"
              << kObjectKeySuffix;
@@ -101,7 +115,8 @@ Aws::String NetworkBenchmark::GenerateObjectKey(const bool is_parallel, const si
 
 std::vector<std::shared_ptr<Aws::IOStream>> NetworkBenchmark::GeneratePayloads(const size_t function_instance_mb_size,
                                                                                const size_t object_byte_size,
-                                                                               const size_t thread_count) {
+                                                                               const size_t thread_count,
+                                                                               const S3OperationType operation_type) {
   const bool is_parallel =
       execute_mode_ != ExecuteMode::kColdSequential && execute_mode_ != ExecuteMode::kWarmSequential;
 
@@ -109,22 +124,32 @@ std::vector<std::shared_ptr<Aws::IOStream>> NetworkBenchmark::GeneratePayloads(c
   payloads.reserve(num_iterations_ * thread_count);
 
   for (size_t i = 0; i < num_iterations_; i++) {
-    Aws::Utils::Array<Aws::String> read_object_keys(thread_count);
-    Aws::Utils::Array<Aws::String> write_object_keys(thread_count);
+    Aws::Utils::Array<Aws::String> object_keys(thread_count);
 
     for (size_t j = 0; j < thread_count; j++) {
-      read_object_keys[j] = GenerateObjectKey(is_parallel, object_byte_size, j, i);
-      write_object_keys[j] = read_object_keys[j] + "-" + std::to_string(function_instance_mb_size) + "MB";
+      Aws::StringStream object_key;
+      object_key << GenerateObjectKey(is_parallel, object_byte_size, j, i);
+
+      if (operation_type == S3OperationType::kWrite) {
+        object_key << "-" << function_instance_mb_size << "MB";
+      }
+      object_keys[j] = object_key.str();
     }
 
-    const auto payload_value = Aws::Utils::Json::JsonValue()
-                                   .WithString("s3_bucket_read", read_bucket_)
-                                   .WithArray("s3_keys_read", read_object_keys)
-                                   .WithString("s3_bucket_write", read_bucket_)
-                                   .WithArray("s3_keys_write", write_object_keys);
+    const auto payload = [&]() {
+      if (operation_type == S3OperationType::kRead) {
+        return Aws::Utils::Json::JsonValue().WithString("s3_bucket", read_bucket_).WithArray("s3_keys", object_keys);
+      } else {
+        return Aws::Utils::Json::JsonValue()
+            .WithString("s3_bucket", write_bucket_)
+            .WithArray("s3_keys", object_keys)
+            .WithInteger("object_byte_size", object_byte_size);
+      }
+    }();
 
-    payloads.emplace_back(std::make_shared<Aws::StringStream>(payload_value.View().WriteCompact()));
+    payloads.emplace_back(std::make_shared<Aws::StringStream>(payload.View().WriteCompact()));
   }
+
   return payloads;
 }
 
@@ -139,7 +164,7 @@ long double NetworkBenchmark::ExtractFunctionCost(const BenchmarkItemResult& res
 
   const size_t num_s3_requests_tier_1 = payload_view.GetInteger("num_s3_requests_tier_1");
   const size_t num_s3_requests_tier_2 = payload_view.GetInteger("num_s3_requests_tier_2");
-  const size_t s3_storage_used_byte = payload_view.GetInt64("s3_storage_used_byte");
+  const size_t s3_storage_used_byte = payload_view.GetInt64("s3_storage_used_bytes");
 
   const long double s3_request_cost =
       cost_calculator_->CalculateCostS3Requests(num_s3_requests_tier_1, num_s3_requests_tier_2);

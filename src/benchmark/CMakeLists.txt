@@ -45,18 +45,32 @@ target_link_libraries(
 aws_lambda_package_target(skyriseFunctionMinimal)
 
 add_executable(
-    skyriseFunctionReadWriteS3
-    function_read_write_s3.cpp
+    skyriseFunctionReadS3
+    function_read_s3.cpp
 )
 
 target_link_libraries(
-    skyriseFunctionReadWriteS3
+    skyriseFunctionReadS3
     PRIVATE
     aws-cpp-sdk-s3
     skyriseWorker
 )
 
-aws_lambda_package_target(skyriseFunctionReadWriteS3)
+aws_lambda_package_target(skyriseFunctionReadS3)
+
+add_executable(
+    skyriseFunctionWriteS3
+    function_write_s3.cpp
+)
+
+target_link_libraries(
+    skyriseFunctionWriteS3
+    PRIVATE
+    aws-cpp-sdk-s3
+    skyriseWorker
+)
+
+aws_lambda_package_target(skyriseFunctionWriteS3)
 
 add_executable(
     simpleBenchmark
