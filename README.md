@@ -1,5 +1,11 @@
 # Skyrise
 
+## Quickstart
+
+```
+git clone --recursive -j [NUM_JOBS] git@github.com:hpi-epic/skyrise.git
+```
+
 ## Maintainers
 
 - [Thomas Bodner](https://hpi.de/plattner/people/phd-students/thomas-bodner.html)
