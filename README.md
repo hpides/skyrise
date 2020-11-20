@@ -3,9 +3,15 @@
 ## Quickstart
 The Skyrise project is built and tested with a containerized **Docker** environment or **Ubuntu 20.10**.
 ```
-git clone --recursive git@github.com:hpi-epic/skyrise.git
+git clone --recursive -j[NUM_JOBS] git@github.com:hpi-epic/skyrise.git
 cd skyrise
+```
+
+```
 ./script/docker/build_project.sh
+```
+
+```
 ```
 
 ## Maintainers
