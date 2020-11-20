@@ -12,6 +12,10 @@ cd skyrise
 ```
 
 ```
+./script/install_toolchain.sh
+mkdir cmake-build-debug && cd cmake-build-debug
+cmake .. -GNinja
+ninja all -j [NUM_JOBS]
 ```
 
 ## Maintainers
