@@ -50,14 +50,16 @@ else
     exit 1
 fi
 
+PROJECT_MOUNT_POINT=/var/skyrise
 USER_ID="$(id -u)"
-BUILD_COMMAND="cd /var/skyrise/${BUILD_DIR}; \
+BUILD_COMMAND="export CCACHE_DIR=${PROJECT_MOUNT_POINT}/ccache; \
+cd ${PROJECT_MOUNT_POINT}/${BUILD_DIR}; \
 cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ${CMAKE_OPTIONS}; \
 ninja-build $MAKE_TARGET -j$NUM_CORES"
 
 COMMAND="docker run --rm \
 --user ${USER_ID} \
---volume ${SOURCE_DIR}:/var/skyrise \
+--volume ${SOURCE_DIR}:${PROJECT_MOUNT_POINT} \
 ${PREFIX}/skyrise:build bash -c \"${BUILD_COMMAND}\""
 
 if [ "$VERBOSE" = true ]; then
