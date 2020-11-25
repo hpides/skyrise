@@ -1,3 +1,11 @@
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+
+def buildNumber = env.BUILD_NUMBER as int
+if (buildNumber > 1)
+    milestone(buildNumber - 1)
+milestone(buildNumber)
+FULL_CI = buildWithFullCi()
+
 pipeline {
     agent any
 
@@ -7,7 +15,6 @@ pipeline {
                 docker {
                     image 'hpiepic/skyrise:build'
                     alwaysPull true
-                    args '--cpus 8 --env NUM_CORES=8 --memory 16G'
                 }
             }
             environment {
@@ -30,7 +37,7 @@ pipeline {
                                     sh 'mkdir -p cmake-build-debug'
                                     dir('cmake-build-debug') {
                                         sh 'cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=Debug -DSKYRISE_ENABLE_CLANG_TIDY=ON'
-                                        sh 'ninja-build all -j$NUM_CORES'
+                                        sh 'ninja-build all -j$(nproc)'
                                     }
                                 }
                                 stage("Test") {
@@ -52,10 +59,14 @@ pipeline {
                         "ClangRelease": {
                             stage("ClangRelease") {
                                 stage("Build") {
-                                    sh 'mkdir -p cmake-build-release'
-                                    dir('cmake-build-release') {
-                                        sh 'cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=Release'
-                                        sh 'ninja-build all -j$NUM_CORES'
+                                    if (FULL_CI == true) {
+                                        sh 'mkdir -p cmake-build-release'
+                                        dir('cmake-build-release') {
+                                            sh 'cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=Release'
+                                            sh 'ninja-build all -j$(nproc)'
+                                        }
+                                    } else {
+                                        Utils.markStageSkippedForConditional("ClangRelease")
                                     }
                                 }
                             }
@@ -65,11 +76,14 @@ pipeline {
             }
         }
         stage("Ubuntu") {
+            when {
+                beforeAgent true
+                expression { FULL_CI == true }
+            }
             agent {
                 docker {
                     image 'hpiepic/skyrise:ubuntu'
                     alwaysPull true
-                    args '--cpus 8 --env NUM_CORES=8 --memory 16G'
                 }
             }
             steps {
@@ -81,7 +95,7 @@ pipeline {
                                     sh 'mkdir -p cmake-build-debug'
                                     dir('cmake-build-debug') {
                                         sh 'cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_BUILD_TYPE=Debug'
-                                        sh 'ninja all -j$NUM_CORES'
+                                        sh 'ninja all -j$(nproc)'
                                     }
                                 }
                             }
@@ -95,6 +109,7 @@ pipeline {
         changed {
             script {
                 isSuccess = currentBuild.currentResult == 'SUCCESS'
+                githubNotify context: 'full-ci', status: FULL_CI ? 'SUCCESS' : 'FAILURE'
                 slackSend(
                      channel: '#ci',
                      color: isSuccess ? '#5cb58a' : '#FF0000',
@@ -108,6 +123,13 @@ pipeline {
             }
         }
     }
+}
+
+Boolean buildWithFullCi() {
+    if (env.CHANGE_ID) {
+        return pullRequest.labels.contains('full-ci')
+    }
+    return env.BRANCH_NAME == 'master'
 }
 
 String getSlackAuthorMention() {
