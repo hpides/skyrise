@@ -8,6 +8,7 @@
 #include <regex>
 
 #include <aws/core/utils/base64/Base64.h>
+#include <aws/core/utils/logging/LogMacros.h>
 #include <aws/s3/model/CreateBucketRequest.h>
 #include <aws/s3/model/Delete.h>
 #include <aws/s3/model/DeleteObjectsRequest.h>
@@ -20,6 +21,9 @@
 #include "utils/unit_conversion.hpp"
 
 namespace skyrise {
+
+// TODO(anyone): Add commit hash to logging tag
+const std::string kTag = "SKYRISE/BENCHMARK/BENCHMARK_HELPER";
 
 BenchmarkAggregates BenchmarkHelper::CalculateAggregates(
     const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
@@ -137,7 +141,7 @@ std::shared_ptr<Aws::IOStream> BenchmarkHelper::GenerateRandomObject(const size_
 long double BenchmarkHelper::UploadObjectToS3Bucket(const Aws::String& bucket_name, const Aws::String& object_key,
                                                     const std::shared_ptr<Aws::IOStream>& object,
                                                     const size_t num_bytes) const {
-  std::cout << "Uploading " << ByteToMb(num_bytes) << " MB file to S3...\n";
+  AWS_LOGSTREAM_INFO(kTag.c_str(), "Uploading " << ByteToMb(num_bytes) << " MB file to S3...");
 
   auto put_object_request = Aws::S3::Model::PutObjectRequest().WithBucket(bucket_name).WithKey(object_key);
   put_object_request.SetBody(object);
@@ -148,7 +152,7 @@ long double BenchmarkHelper::UploadObjectToS3Bucket(const Aws::String& bucket_na
     Fail(put_object_outcome.GetError().GetMessage());
   }
 
-  std::cout << "File uploaded.\n";
+  AWS_LOGSTREAM_INFO(kTag.c_str(), "File uploaded.");
 
   // TODO(d-justen): Find a way to track actual hours. For now, we assume that S3 objects will be deleted within an
   // hour.
