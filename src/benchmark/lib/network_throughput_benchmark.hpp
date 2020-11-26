@@ -13,7 +13,7 @@ namespace skyrise {
 class NetworkThroughputBenchmark : public NetworkBenchmark {
  public:
   NetworkThroughputBenchmark(std::shared_ptr<BenchmarkHelper> helper, std::shared_ptr<CostCalculator> cost_calculator,
-                             const ExecuteMode execute_mode, const size_t num_iterations,
+                             const size_t num_iterations, const ExecuteMode execute_mode,
                              const std::vector<size_t>& function_instance_mb_sizes,
                              const std::vector<size_t>& object_byte_sizes, const std::vector<size_t>& thread_counts);
 

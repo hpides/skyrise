@@ -15,11 +15,11 @@ const Aws::String kWriteBucket = "network-throughput-benchmark-write";
 
 NetworkThroughputBenchmark::NetworkThroughputBenchmark(std::shared_ptr<BenchmarkHelper> helper,
                                                        std::shared_ptr<CostCalculator> cost_calculator,
-                                                       const ExecuteMode execute_mode, const size_t num_iterations,
+                                                       const size_t num_iterations, const ExecuteMode execute_mode,
                                                        const std::vector<size_t>& function_instance_mb_sizes,
                                                        const std::vector<size_t>& object_byte_sizes,
                                                        const std::vector<size_t>& thread_counts)
-    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), execute_mode, num_iterations, kReadBucket,
+    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), num_iterations, execute_mode, kReadBucket,
                        kWriteBucket, function_instance_mb_sizes, object_byte_sizes, thread_counts) {}
 
 Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(

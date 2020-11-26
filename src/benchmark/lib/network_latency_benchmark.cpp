@@ -16,9 +16,9 @@ const Aws::String kWriteBucket = "network-latency-benchmark-write";
 
 NetworkLatencyBenchmark::NetworkLatencyBenchmark(std::shared_ptr<BenchmarkHelper> helper,
                                                  std::shared_ptr<CostCalculator> cost_calculator,
-                                                 const std::vector<size_t>& function_instance_mb_sizes,
-                                                 const ExecuteMode execute_mode, const size_t num_iterations)
-    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), execute_mode, num_iterations, kReadBucket,
+                                                 const size_t num_iterations, const ExecuteMode execute_mode,
+                                                 const std::vector<size_t>& function_instance_mb_sizes)
+    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), num_iterations, execute_mode, kReadBucket,
                        kWriteBucket, function_instance_mb_sizes, {kObjectBytesSize}, {1}) {}
 
 Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(

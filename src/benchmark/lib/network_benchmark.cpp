@@ -11,16 +11,16 @@
 namespace skyrise {
 
 NetworkBenchmark::NetworkBenchmark(std::shared_ptr<BenchmarkHelper> helper,
-                                   std::shared_ptr<CostCalculator> cost_calculator, const ExecuteMode execute_mode,
-                                   size_t num_iterations, const Aws::String& read_bucket,
+                                   std::shared_ptr<CostCalculator> cost_calculator, const size_t num_iterations,
+                                   const ExecuteMode execute_mode, const Aws::String& read_bucket,
                                    const Aws::String& write_bucket,
                                    const std::vector<size_t>& function_instance_mb_sizes,
                                    const std::vector<size_t>& object_byte_sizes,
                                    const std::vector<size_t>& thread_counts)
     : helper_(std::move(helper)),
       cost_calculator_(std::move(cost_calculator)),
-      execute_mode_(execute_mode),
       num_iterations_(num_iterations),
+      execute_mode_(execute_mode),
       read_bucket_(read_bucket),
       write_bucket_(write_bucket),
       cost_overhead_(0) {

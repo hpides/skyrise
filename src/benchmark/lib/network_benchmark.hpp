@@ -28,7 +28,7 @@ class NetworkBenchmark : public Benchmark {
 
  protected:
   NetworkBenchmark(std::shared_ptr<BenchmarkHelper> helper, std::shared_ptr<CostCalculator> cost_calculator,
-                   const ExecuteMode execute_mode, size_t num_iterations, const Aws::String& read_bucket,
+                   const size_t num_iterations, const ExecuteMode execute_mode, const Aws::String& read_bucket,
                    const Aws::String& write_bucket, const std::vector<size_t>& function_instance_mb_sizes,
                    const std::vector<size_t>& object_byte_sizes, const std::vector<size_t>& thread_counts);
 
@@ -52,8 +52,8 @@ class NetworkBenchmark : public Benchmark {
   const std::shared_ptr<BenchmarkHelper> helper_;
   const std::shared_ptr<CostCalculator> cost_calculator_;
 
-  const ExecuteMode execute_mode_;
   const size_t num_iterations_;
+  const ExecuteMode execute_mode_;
 
   const Aws::String read_bucket_;
   const Aws::String write_bucket_;
