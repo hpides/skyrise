@@ -4,10 +4,14 @@ def buildNumber = env.BUILD_NUMBER as int
 if (buildNumber > 1)
     milestone(buildNumber - 1)
 milestone(buildNumber)
+
 FULL_CI = buildWithFullCi()
+if (FULL_CI) {
+    githubNotify context: 'full-ci', status: 'SUCCESS'
+}
 
 pipeline {
-    agent any
+    agent none
 
     stages {
         stage("Amazon Linux") {
@@ -107,19 +111,20 @@ pipeline {
     }
     post {
         changed {
-            script {
-                isSuccess = currentBuild.currentResult == 'SUCCESS'
-                githubNotify context: 'full-ci', status: FULL_CI ? 'SUCCESS' : 'FAILURE'
-                slackSend(
-                     channel: '#ci',
-                     color: isSuccess ? '#5cb58a' : '#FF0000',
-                     message: """\
-                     *[${currentBuild.currentResult}] <${env.RUN_DISPLAY_URL}|Build #${env.BUILD_NUMBER}>*
-                     ${getChangeType()}: <${getChangeUrl()}|${getChangeName()}>
-                     Commit: ${getCommitMessage()} (<${getCommitUrl()}|${getCommitSha().substring(0, 7)}>)
-                     Author: ${getSlackAuthorMention()}${isSuccess ? '' : ' (also looping in @channel)'}
-                     """.stripIndent()
-                 )
+            node(null) {
+                script {
+                    isSuccess = currentBuild.currentResult == 'SUCCESS'
+                    slackSend(
+                        channel: '#ci',
+                        color: isSuccess ? '#5cb58a' : '#FF0000',
+                        message: """\
+                        *[${currentBuild.currentResult}] <${env.RUN_DISPLAY_URL}|Build #${env.BUILD_NUMBER}>*
+                        ${getChangeType()}: <${getChangeUrl()}|${getChangeName()}>
+                        Commit: ${getCommitMessage()} (<${getCommitUrl()}|${getCommitSha().substring(0, 7)}>)
+                        Author: ${getSlackAuthorMention()}${isSuccess ? '' : ' (also looping in @channel)'}
+                        """.stripIndent()
+                    )
+                }
             }
         }
     }
@@ -200,7 +205,7 @@ String getCommitSha() {
 }
 
 String getRepoUrl() {
-    return env.GIT_URL.substring(0, env.GIT_URL.lastIndexOf('.'))
+    return scm.getUserRemoteConfigs()[0].getUrl().substring(0, scm.getUserRemoteConfigs()[0].getUrl().lastIndexOf('.'))
 }
 
 String getShellOutput(command) {
