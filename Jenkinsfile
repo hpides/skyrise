@@ -24,6 +24,7 @@ pipeline {
             environment {
                 AWS_ACCESS_KEY_ID = credentials('skyrise-ci-aws-access-key-id')
                 AWS_SECRET_ACCESS_KEY = credentials('skyrise-ci-aws-secret-access-key')
+                CCACHE_DISABLE = 'true'
             }
             steps {
                 script {
@@ -38,9 +39,9 @@ pipeline {
                         "ClangDebug": {
                             stage("ClangDebug") {
                                 stage("Build") {
-                                    sh 'mkdir -p cmake-build-debug'
+                                    sh 'mkdir cmake-build-debug'
                                     dir('cmake-build-debug') {
-                                        sh 'cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=Debug -DSKYRISE_ENABLE_CLANG_TIDY=ON'
+                                        sh 'cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=Debug -DSKYRISE_ENABLE_CCACHE=OFF -DSKYRISE_ENABLE_CLANG_TIDY=ON'
                                         sh 'ninja-build all -j$(nproc)'
                                     }
                                 }
@@ -64,9 +65,9 @@ pipeline {
                             stage("ClangRelease") {
                                 stage("Build") {
                                     if (FULL_CI == true) {
-                                        sh 'mkdir -p cmake-build-release'
+                                        sh 'mkdir cmake-build-release'
                                         dir('cmake-build-release') {
-                                            sh 'cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=Release'
+                                            sh 'cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=Release -DSKYRISE_ENABLE_CCACHE=OFF'
                                             sh 'ninja-build all -j$(nproc)'
                                         }
                                     } else {
@@ -96,9 +97,9 @@ pipeline {
                         "GccDebug": {
                             stage("GccDebug") {
                                 stage("Build") {
-                                    sh 'mkdir -p cmake-build-debug'
+                                    sh 'mkdir cmake-build-debug'
                                     dir('cmake-build-debug') {
-                                        sh 'cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_BUILD_TYPE=Debug'
+                                        sh 'cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_BUILD_TYPE=Debug -DSKYRISE_ENABLE_CCACHE=OFF'
                                         sh 'ninja all -j$(nproc)'
                                     }
                                 }
