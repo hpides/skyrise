@@ -73,6 +73,8 @@ set(
     storage/formats/abstract_formatter.hpp
     storage/formats/csv.cpp
     storage/formats/csv.hpp
+    storage/formats/orc.cpp
+    storage/formats/orc.hpp
     storage/types/abstract_segment.hpp
     storage/types/all_variants.hpp
     storage/types/base_value_segment.hpp
@@ -100,6 +102,13 @@ set(
     skyriseShared
 )
 
-add_library(skyriseWorker SHARED ${WORKER_SOURCES})
+add_library(skyriseWorkerLibrary SHARED ${WORKER_SOURCES})
 
-target_link_libraries(skyriseWorker PUBLIC ${WORKER_LIBRARIES})
+target_link_libraries(skyriseWorkerLibrary PUBLIC ${WORKER_LIBRARIES})
+
+add_library(skyriseWorker INTERFACE)
+target_link_libraries(skyriseWorker
+    INTERFACE
+    skyriseWorkerLibrary
+    orcWithDependencies
+)

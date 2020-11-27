@@ -59,6 +59,8 @@ Checks: '
 CheckOptions:
   - { key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor, value: 1          }
   - { key: hicpp-special-member-functions.AllowSoleDefaultDtor,             value: 1          }
+  - { key: hicpp-move-const-arg.CheckTriviallyCopyableMove,                 value: 0          }
+  - { key: performance-move-const-arg.CheckTriviallyCopyableMove,           value: 0          }
   - { key: readability-identifier-naming.ClassCase,                         value: CamelCase  }
   - { key: readability-identifier-naming.ClassMemberCase,                   value: lower_case }
   - { key: readability-identifier-naming.ClassMemberSuffix,                 value: _          }

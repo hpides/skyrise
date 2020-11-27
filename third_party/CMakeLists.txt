@@ -1,4 +1,10 @@
-add_compile_options(-Wno-array-bounds -Wno-extra-semi-stmt -Wno-unused-parameter)
+add_compile_options(
+    -Wno-array-bounds
+    -Wno-extra-semi-stmt
+    -Wno-suggest-destructor-override
+    -Wno-suggest-override
+    -Wno-unused-parameter
+)
 
 set(CMAKE_INSTALL_PREFIX ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
@@ -30,9 +36,9 @@ add_subdirectory(orc)
 
 find_package(Threads REQUIRED)
 set(ORC_THIRDPARTY_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/c++/libs/thirdparty)
-add_library(orc-with-dependencies INTERFACE)
+add_library(orcWithDependencies INTERFACE)
 target_link_libraries(
-    orc-with-dependencies
+    orcWithDependencies
 
     INTERFACE
     orc
