@@ -13,31 +13,20 @@
 #include "benchmark_helper.hpp"
 #include "benchmark_runner.hpp"
 #include "client/client_aws.hpp"
+#include "idle_lifetime_benchmark.hpp"
+#include "invocation_throughput_benchmark.hpp"
+#include "network_latency_benchmark.hpp"
+#include "network_throughput_benchmark.hpp"
 #include "utils/array.hpp"
+#include "utils/costs/cost_calculator.hpp"
 #include "utils/filesystem.hpp"
 #include "utils/git_metadata.hpp"
 #include "utils/map.hpp"
 #include "utils/random.hpp"
 #include "utils/string.hpp"
 #include "utils/time.hpp"
+#include "utils/unit_conversion.hpp"
 #include "utils/vector.hpp"
-
-namespace skyrise {
-
-// TODO(maltenbergert): Example for test purposes; remove and integrate all Benchmarks
-class TestBenchmark : public Benchmark {
- public:
-  explicit TestBenchmark(size_t /*test_count*/) {}
-  Aws::Utils::Array<Aws::Utils::Json::JsonValue> Run(
-      const std::shared_ptr<BenchmarkRunner>& /*benchmark_runner*/) override {
-    Aws::Utils::Array<Aws::Utils::Json::JsonValue> results(2);
-    results[0] = Aws::Utils::Json::JsonValue().WithDouble("key", 0.42);
-    results[1] = Aws::Utils::Json::JsonValue().WithString("id", "myID");
-    return results;
-  }
-};
-
-}  // namespace skyrise
 
 enum class ConsoleInfoType { kDoubleSeparator, kSingleSeparator, kRun, kPassed, kFailed };
 
@@ -103,11 +92,41 @@ int main(int argc, char* argv[]) {
     // Initialize the clients
     const auto aws_client = std::make_shared<skyrise::ClientAws>();
     const auto benchmark_runner = std::make_shared<skyrise::BenchmarkRunner>(aws_client);
+    const auto benchmark_helper = std::make_shared<skyrise::BenchmarkHelper>(aws_client);
+    const auto cost_calculator = std::make_shared<skyrise::CostCalculator>(aws_client);
 
     // Register the benchmarks
     BenchmarkRegistry benchmark_registry;
 
-    benchmark_registry.RegisterBenchmark("TestBenchmark", std::make_unique<skyrise::TestBenchmark>(42));
+    // Register IdleLifetimeBenchmark
+    benchmark_registry.RegisterBenchmark(
+        "IdleLifetimeBenchmark",
+        std::make_unique<skyrise::IdleLifetimeBenchmark>(std::vector<size_t>{128}, std::vector<size_t>{4096},
+                                                         std::vector<size_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}));
+
+    // Register InvocationThroughputBenchmark
+    benchmark_registry.RegisterBenchmark(
+        "InvocationThroughputBenchmark",
+        std::make_unique<skyrise::InvocationThroughputBenchmark>(
+            std::vector<size_t>{128}, std::vector<size_t>{128, 256, 512, 1024, 2048, 4096, 8192, 16384},
+            std::vector<skyrise::ExecuteMode>{skyrise::ExecuteMode::kWarmSequential,
+                                              skyrise::ExecuteMode::kWarmParallel, skyrise::ExecuteMode::kWarmAsync}));
+
+    // Register NetworkLatencyBenchmark
+    benchmark_registry.RegisterBenchmark(
+        "NetworkLatencyBenchmark",
+        std::make_unique<skyrise::NetworkLatencyBenchmark>(
+            benchmark_helper, cost_calculator, 10000, skyrise::ExecuteMode::kWarmSequential, std::vector<size_t>{128}));
+
+    // Register NetworkThroughputBenchmark
+    benchmark_registry.RegisterBenchmark(
+        "NetworkThroughputBenchmark",
+        std::make_unique<skyrise::NetworkThroughputBenchmark>(
+            benchmark_helper, cost_calculator, 10000, skyrise::ExecuteMode::kWarmSequential, std::vector<size_t>{128},
+            std::vector<size_t>{skyrise::MbToByte(1), skyrise::MbToByte(2), skyrise::MbToByte(4), skyrise::MbToByte(8),
+                                skyrise::MbToByte(16), skyrise::MbToByte(32), skyrise::MbToByte(64),
+                                skyrise::MbToByte(128), skyrise::MbToByte(256)},
+            std::vector<size_t>{1, 2, 4, 8}));
 
     // Filter the benchmarks (optional)
     std::vector<std::string> benchmark_names = benchmark_registry.GetRegisteredBenchmarkNames();
