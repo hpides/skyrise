@@ -25,7 +25,7 @@ IdleLifetimeBenchmark::IdleLifetimeBenchmark(const std::vector<size_t>& function
 
   for (const auto& sleep_min_duration : sleep_min_durations) {
     after_repetition_callbacks.emplace_back(
-        [&]() { std::this_thread::sleep_for(std::chrono::minutes(sleep_min_duration)); });
+        [sleep_min_duration]() { std::this_thread::sleep_for(std::chrono::minutes(sleep_min_duration)); });
   }
 
   after_repetition_callbacks.emplace_back([]() {});
