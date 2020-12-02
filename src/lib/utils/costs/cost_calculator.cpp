@@ -6,9 +6,8 @@ namespace skyrise {
 
 long double CostCalculator::CalculateCostLambda(const size_t compute_duration_ms, const size_t lambda_size_mb) const {
   const auto& pricing = pricing_->GetLambdaPricing();
-  const size_t rounded_duration = (compute_duration_ms + 99) / 100 * 100;
   const long double duration_cost =
-      pricing->price_gb_second_ * ByteToGb(MbToByte(lambda_size_mb)) * (rounded_duration / 1000.0L);
+      pricing->price_gb_second_ * ByteToGb(MbToByte(lambda_size_mb)) * (compute_duration_ms / 1000.0L);
 
   return duration_cost + pricing->price_request_;
 }

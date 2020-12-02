@@ -23,17 +23,20 @@ TEST_F(CostCalculatorTest, CalculateCostLambda) {
     const auto& lambda_pricing = pricing.GetLambdaPricing();
 
     const long double lambda_cost1 = cost_calculator.CalculateCostLambda(998, 512);
-    const long double expected_cost1 = lambda_pricing->price_gb_second_ / 2.0L + lambda_pricing->price_request_;
+    const long double expected_cost1 =
+        lambda_pricing->price_gb_second_ * 0.5L * 0.998L + lambda_pricing->price_request_;
 
     EXPECT_EQ(lambda_cost1, expected_cost1);
 
     const long double lambda_cost2 = cost_calculator.CalculateCostLambda(30, 128);
-    const long double expected_cost2 = lambda_pricing->price_gb_second_ / 10.0L / 8.0L + lambda_pricing->price_request_;
+    const long double expected_cost2 =
+        lambda_pricing->price_gb_second_ * 0.125L * 0.030L + lambda_pricing->price_request_;
 
     EXPECT_EQ(lambda_cost2, expected_cost2);
 
     const long double lambda_cost3 = cost_calculator.CalculateCostLambda(440, 256);
-    const long double expected_cost3 = lambda_pricing->price_gb_second_ / 2.0L / 4.0L + lambda_pricing->price_request_;
+    const long double expected_cost3 =
+        lambda_pricing->price_gb_second_ * 0.25L * 0.440L + lambda_pricing->price_request_;
 
     EXPECT_EQ(lambda_cost3, expected_cost3);
   };
