@@ -5,6 +5,8 @@
 #include <utility>
 
 #include <aws/core/Aws.h>
+#include <aws/core/utils/logging/ConsoleLogSystem.h>
+#include <aws/core/utils/logging/LogLevel.h>
 #include <cxxopts.hpp>
 #include <termcolor/termcolor.hpp>
 
@@ -60,9 +62,8 @@ class BenchmarkRegistry {
 int main(int argc, char* argv[]) {
   int return_code = 0;
 
+  cxxopts::ParseResult cli_arguments;
   Aws::SDKOptions sdk_options;
-
-  Aws::InitAPI(sdk_options);
 
   try {
     // Parse the command line arguments
@@ -73,12 +74,13 @@ int main(int argc, char* argv[]) {
     cli_options_adder("filter", "The benchmark filter <benchmark_1,...,benchmark_n>",
                       cxxopts::value<std::vector<std::string>>());
     cli_options_adder("shuffle", "Shuffle the benchmark execution order", cxxopts::value<bool>());
+    cli_options_adder("verbose", "Show the verbose status log", cxxopts::value<bool>());
     cli_options_adder("help", "Print the usage overview", cxxopts::value<bool>());
 
     cli_options.parse_positional({"output"});
     cli_options.positional_help("OUTPUT");
 
-    cxxopts::ParseResult cli_arguments = cli_options.parse(argc, argv);
+    cli_arguments = cli_options.parse(argc, argv);
 
     if (cli_arguments.count("help") > 0) {
       std::cout << cli_options.help();
@@ -88,6 +90,16 @@ int main(int argc, char* argv[]) {
     if (cli_arguments.count("output") == 0) {
       throw cxxopts::option_required_exception("OUTPUT");
     }
+
+    if (cli_arguments.count("verbose") > 0) {
+      Aws::Utils::Logging::LogLevel log_level{Aws::Utils::Logging::LogLevel::Info};
+      sdk_options.loggingOptions.logLevel = log_level;
+      sdk_options.loggingOptions.logger_create_fn = [log_level]() {
+        return Aws::MakeShared<Aws::Utils::Logging::ConsoleLogSystem>("console_logger", log_level);
+      };
+    }
+
+    Aws::InitAPI(sdk_options);
 
     // Initialize the clients
     const auto aws_client = std::make_shared<skyrise::ClientAws>();
