@@ -68,8 +68,10 @@ const Aws::String& ClientAws::GetClientRegion() const { return client_region_; }
 Aws::Client::ClientConfiguration ClientAws::GenerateClientConfig() const {
   Aws::Client::ClientConfiguration client_configuration;
   client_configuration.caFile = kCaFile;
-  client_configuration.requestTimeoutMs = kRequestTimeoutMs;
+  client_configuration.connectTimeoutMs = kConnectTimeoutMs;
+  client_configuration.enableTcpKeepAlive = kEnableTcpKeepAlive;
   client_configuration.maxConnections = kMaxConnections;
+  client_configuration.requestTimeoutMs = kRequestTimeoutMs;
 
   return client_configuration;
 }

@@ -47,9 +47,11 @@ class ClientAws {
 
   // Default location of certificate authority file on Amazon Linux 2
   const Aws::String kCaFile = "/etc/pki/tls/certs/ca-bundle.crt";
+  const size_t kConnectTimeoutMs = 10'000;
+  const bool kEnableTcpKeepAlive = false;
   const size_t kMaxConnections = 20'000;
   const Aws::String kPricingEndpoint = Aws::Region::US_EAST_1;
-  const size_t kRequestTimeoutMs = 0;
+  const size_t kRequestTimeoutMs = 900'000;
 };
 
 }  // namespace skyrise
