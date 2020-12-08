@@ -27,7 +27,7 @@ set(
     aws-cpp-sdk-core
 )
 
-add_library(skyriseShared SHARED ${SHARED_SOURCES})
+add_library(skyriseShared STATIC ${SHARED_SOURCES})
 
 add_dependencies(skyriseShared check_git)
 
@@ -58,7 +58,7 @@ set(
     skyriseShared
 )
 
-add_library(skyriseCoordinator SHARED ${COORDINATOR_SOURCES})
+add_library(skyriseCoordinator STATIC ${COORDINATOR_SOURCES})
 
 target_link_libraries(skyriseCoordinator PUBLIC ${COORDINATOR_LIBRARIES})
 
@@ -102,7 +102,7 @@ set(
     skyriseShared
 )
 
-add_library(skyriseWorkerLibrary SHARED ${WORKER_SOURCES})
+add_library(skyriseWorkerLibrary STATIC ${WORKER_SOURCES})
 
 target_link_libraries(skyriseWorkerLibrary PUBLIC ${WORKER_LIBRARIES})
 

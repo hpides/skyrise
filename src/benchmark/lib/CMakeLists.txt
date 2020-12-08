@@ -29,7 +29,7 @@ set(
     skyriseShared
 )
 
-add_library(skyriseBenchmark SHARED ${BENCHMARK_SOURCES})
+add_library(skyriseBenchmark STATIC ${BENCHMARK_SOURCES})
 
 target_link_libraries(
     skyriseBenchmark

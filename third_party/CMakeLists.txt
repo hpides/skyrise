@@ -9,14 +9,14 @@ add_compile_options(
 set(CMAKE_INSTALL_PREFIX ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 # aws-lambda-cpp
-set(BUILD_SHARED_LIBS ON CACHE BOOL "Enable shared libraries for AWS Lambda runtime for C++")
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Enable shared libraries for AWS Lambda runtime for C++")
 set(ENABLE_LTO ON CACHE BOOL "Enable LTO for AWS Lambda runtmie for C++")
 set(ENABLE_TESTS OFF CACHE BOOL "Enable tests for AWS Lambda runtime for C++")
 add_subdirectory(aws-lambda-cpp)
 
 # aws-sdk-cpp
 set(BUILD_ONLY iam;lambda;monitoring;pricing;s3;sqs;xray)
-set(BUILD_SHARED_LIBS ON CACHE BOOL "Enable shared libraries for AWS SDK for C++")
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Enable shared libraries for AWS SDK for C++")
 set(CPP_STANDARD 17)
 set(CUSTOM_MEMORY_MANAGEMENT OFF)
 set(ENABLE_TESTING OFF CACHE BOOL "Enable tests for AWS SDK for C++")
