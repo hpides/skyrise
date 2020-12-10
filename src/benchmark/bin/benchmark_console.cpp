@@ -19,6 +19,7 @@
 #include "invocation_throughput_benchmark.hpp"
 #include "network_latency_benchmark.hpp"
 #include "network_throughput_benchmark.hpp"
+#include "network_throughput_parallel_benchmark.hpp"
 #include "utils/array.hpp"
 #include "utils/costs/cost_calculator.hpp"
 #include "utils/filesystem.hpp"
@@ -126,19 +127,25 @@ int main(int argc, char* argv[]) {
 
     // Register NetworkLatencyBenchmark
     benchmark_registry.RegisterBenchmark(
-        "NetworkLatencyBenchmark",
-        std::make_unique<skyrise::NetworkLatencyBenchmark>(
-            benchmark_helper, cost_calculator, 10000, skyrise::ExecuteMode::kWarmSequential, std::vector<size_t>{128}));
+        "NetworkLatencyBenchmark", std::make_unique<skyrise::NetworkLatencyBenchmark>(benchmark_helper, cost_calculator,
+                                                                                      std::vector<size_t>{128}, 10000));
 
     // Register NetworkThroughputBenchmark
+    // TODO(d-justen): Utilize bigger function instances and more threads as well
     benchmark_registry.RegisterBenchmark(
         "NetworkThroughputBenchmark",
         std::make_unique<skyrise::NetworkThroughputBenchmark>(
-            benchmark_helper, cost_calculator, 10000, skyrise::ExecuteMode::kWarmSequential, std::vector<size_t>{128},
+            benchmark_helper, cost_calculator, std::vector<size_t>{128, 256, 512, 1024, 1792, 2048, 3008},
             std::vector<size_t>{skyrise::MbToByte(1), skyrise::MbToByte(2), skyrise::MbToByte(4), skyrise::MbToByte(8),
                                 skyrise::MbToByte(16), skyrise::MbToByte(32), skyrise::MbToByte(64),
                                 skyrise::MbToByte(128), skyrise::MbToByte(256)},
-            std::vector<size_t>{1, 2, 4, 8}));
+            std::vector<size_t>{1, 2, 4, 8}, 1000));
+
+    // Register NetworkThroughputParallelBenchmark
+    benchmark_registry.RegisterBenchmark(
+        "NetworkThroughputParallelBenchmark",
+        std::make_unique<skyrise::NetworkThroughputParallelBenchmark>(
+            benchmark_helper, cost_calculator, std::vector<size_t>{1, 10, 100, 1000, 10000}, 100));
 
     // Filter the benchmarks (optional)
     std::vector<std::string> benchmark_names = benchmark_registry.GetRegisteredBenchmarkNames();

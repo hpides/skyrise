@@ -257,9 +257,20 @@ void BenchmarkRunner::RunParallel() {
     future_results.emplace_back(std::async(&BenchmarkRunner::RunBenchmarkItem, this, invocation_id, invoke_request));
 
     const auto is_last_invocation_of_repetition = (invocation_index + 1) % config_->num_invocations_ == 0;
+
+    // TODO(anyone): Extend repetition framework to enable invocation in a nested for-loop
     if (config_->num_repetitions_ > 1 && is_last_invocation_of_repetition) {
       const auto current_repetition = (invocation_index / config_->num_invocations_);
-      AWS_LOGSTREAM_INFO(kTag.c_str(), "Repetition " << current_repetition << " dispatched.");
+
+      auto future_results_it = future_results.cbegin() + current_repetition * config_->num_invocations_;
+      auto future_results_end = future_results.cbegin() + (current_repetition + 1) * config_->num_invocations_;
+
+      while (future_results_it != future_results_end) {
+        future_results_it->wait();
+        future_results_it++;
+      }
+
+      AWS_LOGSTREAM_INFO(kTag.c_str(), "Repetition " << current_repetition << " finished.");
       config_->after_repetition_callbacks_[current_repetition]();
     }
     invocation_index++;

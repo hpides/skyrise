@@ -6,28 +6,33 @@
 #include <magic_enum.hpp>
 
 #include "utils/costs/pricing.hpp"
-#include "utils/literal.hpp"
 
 namespace skyrise {
 
-const size_t kObjectBytesSize = 1_KB;
-const Aws::String kReadBucket = "network-latency-benchmark-read";
-const Aws::String kWriteBucket = "network-latency-benchmark-write";
-
 NetworkLatencyBenchmark::NetworkLatencyBenchmark(std::shared_ptr<BenchmarkHelper> helper,
                                                  std::shared_ptr<CostCalculator> cost_calculator,
-                                                 const size_t num_iterations, const ExecuteMode execute_mode,
-                                                 const std::vector<size_t>& function_instance_mb_sizes)
-    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), num_iterations, execute_mode, kReadBucket,
-                       kWriteBucket, function_instance_mb_sizes, {kObjectBytesSize}, {1}) {}
+                                                 const std::vector<size_t>& function_instance_mb_sizes,
+                                                 const size_t num_iterations)
+    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), ExecuteMode::kWarmSequential, num_iterations) {
+  for (const auto function_instance_mb_size : function_instance_mb_sizes) {
+    for (const auto operation_type : {S3OperationType::kRead, S3OperationType::kWrite}) {
+      Aws::StringStream function_name;
+      function_name << "skyriseFunction" << (operation_type == S3OperationType::kRead ? "Read" : "Write") << "S3";
+
+      BenchmarkConfig config(function_name.str(), function_instance_mb_size, num_iterations_, execute_mode_);
+      config.SetPayloads(
+          GeneratePayloads(function_instance_mb_size, kObjectBytesSize, 1, operation_type, num_iterations_));
+      configs_.emplace_back(config,
+                            NetworkBenchmarkParameters{function_instance_mb_size, kObjectBytesSize, 1, operation_type});
+    }
+  }
+}
 
 Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
     const std::shared_ptr<std::vector<BenchmarkItemResult>>& result, const NetworkBenchmarkParameters& parameters) {
   Aws::StringStream benchmark_name;
-  benchmark_name << "NetworkLatencyBenchmark/";
-  benchmark_name << magic_enum::enum_name(execute_mode_) << "/" << parameters.function_instance_mb_size_
-                 << "FunctionInstanceMB/";
-  benchmark_name << magic_enum::enum_name(parameters.operation_type_);
+  benchmark_name << "NetworkLatencyBenchmark/" << parameters.function_instance_mb_size_ << "FunctionInstanceMB/"
+                 << magic_enum::enum_name(parameters.operation_type_);
 
   const auto aggregates = BenchmarkHelper::CalculateAggregates(result, [&](const BenchmarkItemResult& single_result) {
     return BenchmarkHelper::ExtractMetric(single_result, "duration_ms");

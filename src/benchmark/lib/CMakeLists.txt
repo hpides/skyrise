@@ -17,6 +17,8 @@ set(
     network_latency_benchmark.hpp
     network_throughput_benchmark.cpp
     network_throughput_benchmark.hpp
+    network_throughput_parallel_benchmark.cpp
+    network_throughput_parallel_benchmark.hpp
 )
 
 set(

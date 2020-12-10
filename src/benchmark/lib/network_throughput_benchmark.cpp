@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <tuple>
 
 #include <magic_enum.hpp>
 
@@ -10,47 +11,60 @@
 
 namespace skyrise {
 
-const Aws::String kReadBucket = "network-throughput-benchmark-read";
-const Aws::String kWriteBucket = "network-throughput-benchmark-write";
-
 NetworkThroughputBenchmark::NetworkThroughputBenchmark(std::shared_ptr<BenchmarkHelper> helper,
                                                        std::shared_ptr<CostCalculator> cost_calculator,
-                                                       const size_t num_iterations, const ExecuteMode execute_mode,
                                                        const std::vector<size_t>& function_instance_mb_sizes,
                                                        const std::vector<size_t>& object_byte_sizes,
-                                                       const std::vector<size_t>& thread_counts)
-    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), num_iterations, execute_mode, kReadBucket,
-                       kWriteBucket, function_instance_mb_sizes, object_byte_sizes, thread_counts) {}
+                                                       const std::vector<size_t>& thread_counts,
+                                                       const size_t num_iterations)
+    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), ExecuteMode::kWarmSequential, num_iterations) {
+  for (const auto function_instance_mb_size : function_instance_mb_sizes) {
+    for (const auto object_byte_size : object_byte_sizes) {
+      for (const auto thread_count : thread_counts) {
+        if (thread_count * object_byte_size <= MbToByte(function_instance_mb_size) / 2) {
+          for (const auto operation_type : {S3OperationType::kRead, S3OperationType::kWrite}) {
+            Aws::StringStream function_name;
+            function_name << "skyriseFunction" << (operation_type == S3OperationType::kRead ? "Read" : "Write") << "S3";
+
+            BenchmarkConfig config(function_name.str(), function_instance_mb_size, num_iterations_, execute_mode_);
+            config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size, thread_count,
+                                                operation_type, num_iterations_));
+            configs_.emplace_back(config, NetworkBenchmarkParameters{function_instance_mb_size, object_byte_size,
+                                                                     thread_count, operation_type});
+          }
+        }
+      }
+    }
+  }
+}
 
 Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
     const std::shared_ptr<std::vector<BenchmarkItemResult>>& result, const NetworkBenchmarkParameters& parameters) {
   Aws::StringStream benchmark_name;
-  benchmark_name << "NetworkThroughputBenchmark/";
-  benchmark_name << magic_enum::enum_name(execute_mode_) << "/" << parameters.function_instance_mb_size_
-                 << "FunctionInstanceMB/" << ByteToMb(parameters.object_byte_size_) << "ObjectMB/"
-                 << parameters.thread_count_ << "Threads/";
-  benchmark_name << magic_enum::enum_name(parameters.operation_type_);
+  benchmark_name << "NetworkThroughputBenchmark/" << parameters.function_instance_mb_size_ << "FunctionInstanceMB/"
+                 << ByteToMb(parameters.object_byte_size_) << "ObjectMB/" << parameters.thread_count_ << "Threads/"
+                 << magic_enum::enum_name(parameters.operation_type_);
 
   const auto aggregates = BenchmarkHelper::CalculateAggregates(result, [&](const BenchmarkItemResult& single_result) {
-    const double duration_seconds =
-        std::chrono::duration<double>(
-            std::chrono::duration<double, std::milli>(BenchmarkHelper::ExtractMetric(single_result, "duration_ms")))
-            .count();
-
-    return static_cast<double>(ByteToMb(parameters.object_byte_size_) * parameters.thread_count_ / duration_seconds);
+    return std::chrono::duration<double>(
+               std::chrono::duration<double, std::milli>(BenchmarkHelper::ExtractMetric(single_result, "duration_ms")))
+        .count();
   });
+
+  const auto to_throughput = [&](const double duration_seconds) {
+    return static_cast<double>(ByteToMb(parameters.object_byte_size_) * parameters.thread_count_ / duration_seconds);
+  };
 
   return BenchmarkHelper::GenerateJsonOutput(
       benchmark_name.str(),
-      {{"throughput_mb_per_s_average", aggregates.average},
-       {"throughput_mb_per_s_minimum", aggregates.minimum},
-       {"throughput_mb_per_s_median", aggregates.median},
-       {"throughput_mb_per_s_maximum", aggregates.maximum},
-       {"throughput_mb_per_s_percentile_90", aggregates.percentile_90},
-       {"throughput_mb_per_s_percentile_99", aggregates.percentile_99},
-       {"throughput_mb_per_s_percentile_99.9", aggregates.percentile_99_9},
-       {"throughput_mb_per_s_percentile_99.99", aggregates.percentile_99_99},
-       {"throughput_mb_per_s_std_dev", aggregates.standard_deviation},
+      {{"throughput_mb_per_s_average", to_throughput(aggregates.average)},
+       {"throughput_mb_per_s_minimum", to_throughput(aggregates.maximum)},
+       {"throughput_mb_per_s_median", to_throughput(aggregates.median)},
+       {"throughput_mb_per_s_maximum", to_throughput(aggregates.minimum)},
+       {"throughput_mb_per_s_percentile_10", to_throughput(aggregates.percentile_90)},
+       {"throughput_mb_per_s_percentile_1", to_throughput(aggregates.percentile_99)},
+       {"throughput_mb_per_s_percentile_0.1", to_throughput(aggregates.percentile_99_9)},
+       {"throughput_mb_per_s_percentile_0.01", to_throughput(aggregates.percentile_99_99)},
        {"benchmark_cost_usd",
         static_cast<double>(CalculateBenchmarkCost(result, parameters.function_instance_mb_size_))},
        {"benchmark_cost_overhead_usd", cost_overhead_ / configs_.size()}},

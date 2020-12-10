@@ -35,7 +35,7 @@ std::tuple<StorageError, double> PutObjectsS3(const std::shared_ptr<Aws::S3::S3C
   for (size_t i = 0; i < keys.GetLength(); i++) {
     write_object_result_futures.emplace_back(std::async(
         [&](const size_t i) {
-          auto object_writer = S3ObjectWriter(client, bucket, keys[i].AsString());
+          S3ObjectWriter object_writer(client, bucket, keys[i].AsString());
           object_writer.Write(s3_object.c_str(), num_bytes);
 
           return object_writer.Close();

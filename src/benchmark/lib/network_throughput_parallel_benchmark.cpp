@@ -1,0 +1,145 @@
+#include "network_throughput_parallel_benchmark.hpp"
+
+#include <algorithm>
+#include <numeric>
+#include <regex>
+#include <tuple>
+#include <unordered_map>
+
+#include <magic_enum.hpp>
+
+#include "utils/literal.hpp"
+#include "utils/string.hpp"
+#include "utils/unit_conversion.hpp"
+
+namespace skyrise {
+
+// TODO(d-justen): Change to the best performing parameters found by NetworkThroughputBenchmark
+const size_t kFunctionInstanceMbSize = 3008;
+const size_t kObjectByteSize = 16_MB;
+const size_t kThreadCount = 4;
+
+NetworkThroughputParallelBenchmark::NetworkThroughputParallelBenchmark(
+    std::shared_ptr<BenchmarkHelper> helper, std::shared_ptr<CostCalculator> cost_calculator,
+    const std::vector<size_t>& function_instance_counts, const size_t num_iterations)
+    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), ExecuteMode::kWarmParallel,
+                       *std::max_element(function_instance_counts.cbegin(), function_instance_counts.cend())) {
+  for (const auto operation_type : {S3OperationType::kRead, S3OperationType::kWrite}) {
+    Aws::StringStream function_name;
+    function_name << "skyriseFunction" << (operation_type == S3OperationType::kRead ? "Read" : "Write") << "S3";
+
+    for (const auto function_instance_count : function_instance_counts) {
+      BenchmarkConfig config(function_name.str(), kFunctionInstanceMbSize, function_instance_count, execute_mode_,
+                             num_iterations, std::vector<std::function<void()>>(num_iterations, [] {}));
+      config.SetPayloads(GeneratePayloads(kFunctionInstanceMbSize, kObjectByteSize, kThreadCount, operation_type,
+                                          function_instance_count));
+      configs_.emplace_back(
+          config, NetworkBenchmarkParameters{kFunctionInstanceMbSize, kObjectByteSize, kThreadCount, operation_type});
+    }
+  }
+}
+
+Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateResultOutput(
+    const std::shared_ptr<std::vector<BenchmarkItemResult>>& result, const NetworkBenchmarkParameters& parameters) {
+  Aws::StringStream benchmark_name;
+  benchmark_name << "NetworkThroughputParallelBenchmark/" << parameters.function_instance_mb_size_
+                 << "FunctionInstanceMB/" << ByteToMb(parameters.object_byte_size_) << "ObjectSizeMB/"
+                 << parameters.thread_count_ << "Threads/" << magic_enum::enum_name(parameters.operation_type_);
+
+  std::unordered_map<size_t, std::shared_ptr<std::vector<BenchmarkItemResult>>> repetition_map;
+
+  // TODO(anyone): Wrap the repetitions in a richer structure on the BenchmarkRunner side
+  const std::regex repetition_regex("repetition-(\\d+)");
+
+  for (const auto& benchmark_item_result : *result) {
+    std::smatch repetition_match;
+    std::regex_search(benchmark_item_result.invocation_id, repetition_match, repetition_regex);
+    const size_t repetition = std::stoi(repetition_match[1]);
+
+    if (repetition_map.find(repetition) == repetition_map.cend()) {
+      repetition_map[repetition] = std::make_shared<std::vector<BenchmarkItemResult>>();
+    }
+
+    repetition_map[repetition]->emplace_back(benchmark_item_result);
+  }
+
+  Aws::Utils::Array<Aws::Utils::Json::JsonValue> parallel_runs(repetition_map.size());
+  std::vector<double> seconds_durations;
+  seconds_durations.reserve(repetition_map.size());
+
+  for (const auto& [repetition, benchmark_item_results] : repetition_map) {
+    parallel_runs[repetition] =
+        GenerateSubResultOutput(benchmark_name.str(), repetition, benchmark_item_results, parameters);
+    seconds_durations.emplace_back(parallel_runs[repetition].View().GetDouble("duration_seconds"));
+  }
+
+  const auto aggregates = BenchmarkHelper::CalculateAggregates(seconds_durations);
+
+  const auto to_throughput = [&](const double duration_seconds) {
+    return static_cast<double>(ByteToMb(parameters.object_byte_size_) * parameters.thread_count_ *
+                               repetition_map[0]->size() / duration_seconds);
+  };
+
+  auto output_json = BenchmarkHelper::GenerateJsonOutput(
+      benchmark_name.str(),
+      {{"throughput_parallel_mb_per_s_average", to_throughput(aggregates.average)},
+       {"throughput_parallel_mb_per_s_minimum", to_throughput(aggregates.maximum)},
+       {"throughput_parallel_mb_per_s_median", to_throughput(aggregates.median)},
+       {"throughput_parallel_mb_per_s_maximum", to_throughput(aggregates.minimum)},
+       {"throughput_parallel_mb_per_s_percentile_10", to_throughput(aggregates.percentile_90)},
+       {"throughput_parallel_mb_per_s_percentile_1", to_throughput(aggregates.percentile_99)},
+       {"throughput_parallel_mb_per_s_percentile_0.1", to_throughput(aggregates.percentile_99_9)},
+       {"throughput_parallel_mb_per_s_percentile_0.01", to_throughput(aggregates.percentile_99_99)},
+       {"benchmark_cost_usd",
+        static_cast<double>(CalculateBenchmarkCost(result, parameters.function_instance_mb_size_))},
+       {"benchmark_cost_overhead_usd", cost_overhead_ / configs_.size()}},
+      {/*aggregated string metrics*/}, std::make_shared<std::vector<BenchmarkItemResult>>(), {},
+      {/*extract string metric functions*/});
+
+  return output_json.WithArray("runs", parallel_runs);
+}
+
+Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateSubResultOutput(
+    const Aws::String& benchmark_name, const size_t repetition,
+    const std::shared_ptr<std::vector<BenchmarkItemResult>>& result, const NetworkBenchmarkParameters& parameters) {
+  std::vector<double> durations_seconds;
+
+  std::transform(
+      result->cbegin(), result->cend(), std::back_inserter(durations_seconds),
+      [&](const BenchmarkItemResult& single_result) {
+        return std::chrono::duration<double>(std::chrono::duration<double, std::milli>(
+                                                 BenchmarkHelper::ExtractMetric(single_result, "duration_ms")))
+            .count();
+      });
+
+  const double max_duration_seconds = *std::max_element(durations_seconds.cbegin(), durations_seconds.cend());
+  const auto throughput_mb_per_second = static_cast<double>(
+      ByteToMb(parameters.object_byte_size_) * parameters.thread_count_ * result->size() / max_duration_seconds);
+
+  return BenchmarkHelper::GenerateJsonOutput(
+      benchmark_name + "/" + std::to_string(repetition),
+      {{"throughput_parallel_mb_per_s", throughput_mb_per_second},
+       {"duration_seconds", max_duration_seconds},
+       {"function_cost_aggregated_usd",
+        static_cast<double>(CalculateBenchmarkCost(result, parameters.function_instance_mb_size_))}},
+      {/*aggregated string metrics*/}, result,
+      {[&](const BenchmarkItemResult& single_result) {
+         const double duration_seconds =
+             std::chrono::duration<double>(std::chrono::duration<double, std::milli>(
+                                               BenchmarkHelper::ExtractMetric(single_result, "duration_ms")))
+                 .count();
+         return std::make_tuple("throughput_parallel_mb_per_s",
+                                ByteToMb(parameters.object_byte_size_) / duration_seconds * parameters.thread_count_);
+       },
+       [&](const BenchmarkItemResult& single_result) {
+         return std::make_tuple("billed_lambda_duration_ms",
+                                BenchmarkHelper::ExtractBilledLambdaDuration(single_result));
+       },
+       [&](const BenchmarkItemResult& single_result) {
+         return std::make_tuple("function_cost_usd", static_cast<double>(ExtractFunctionCost(
+                                                         single_result, parameters.function_instance_mb_size_)));
+       }},
+      {/*extract string metric functions*/});
+}
+
+}  // namespace skyrise

@@ -28,9 +28,7 @@ class NetworkBenchmark : public Benchmark {
 
  protected:
   NetworkBenchmark(std::shared_ptr<BenchmarkHelper> helper, std::shared_ptr<CostCalculator> cost_calculator,
-                   const size_t num_iterations, const ExecuteMode execute_mode, const Aws::String& read_bucket,
-                   const Aws::String& write_bucket, const std::vector<size_t>& function_instance_mb_sizes,
-                   const std::vector<size_t>& object_byte_sizes, const std::vector<size_t>& thread_counts);
+                   const ExecuteMode execute_mode, size_t num_iteration);
 
   virtual Aws::Utils::Json::JsonValue GenerateResultOutput(
       const std::shared_ptr<std::vector<BenchmarkItemResult>>& result,
@@ -43,7 +41,8 @@ class NetworkBenchmark : public Benchmark {
                                 const size_t iteration_index = 0);
   std::vector<std::shared_ptr<Aws::IOStream>> GeneratePayloads(const size_t function_instance_mb_size,
                                                                const size_t object_byte_size, const size_t thread_count,
-                                                               const S3OperationType operation_type);
+                                                               const S3OperationType operation_type,
+                                                               const size_t num_payloads);
 
   long double ExtractFunctionCost(const BenchmarkItemResult& result, const size_t function_instance_mb_size);
   long double CalculateBenchmarkCost(const std::shared_ptr<std::vector<BenchmarkItemResult>>& result,
@@ -52,11 +51,8 @@ class NetworkBenchmark : public Benchmark {
   const std::shared_ptr<BenchmarkHelper> helper_;
   const std::shared_ptr<CostCalculator> cost_calculator_;
 
-  const size_t num_iterations_;
   const ExecuteMode execute_mode_;
-
-  const Aws::String read_bucket_;
-  const Aws::String write_bucket_;
+  const size_t num_iterations_;
 
   std::vector<std::tuple<BenchmarkConfig, NetworkBenchmarkParameters>> configs_;
 
@@ -64,6 +60,8 @@ class NetworkBenchmark : public Benchmark {
 
   const Aws::String kFunctionName = "skyriseFunctionReadWriteS3";
   const Aws::String kObjectKeySuffix = "networkBenchmark";
+  const Aws::String kReadBucket = "network-benchmark-read";
+  const Aws::String kWriteBucket = "network-benchmark-write";
 };
 
 }  // namespace skyrise

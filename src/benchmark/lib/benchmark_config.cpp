@@ -5,6 +5,7 @@
 #include <string>
 
 #include "limits.hpp"
+#include "utils/assert.hpp"
 #include "utils/string.hpp"
 #include "utils/time.hpp"
 
@@ -81,7 +82,8 @@ BenchmarkConfig::BenchmarkConfig(const std::vector<Aws::String>& function_zip_na
 }
 
 void BenchmarkConfig::SetPayloads(const std::vector<std::shared_ptr<Aws::IOStream>>& payloads) {
-  // Assert payloads size == function_names
+  Assert(payloads.size() == invocation_configs_->size(), "Payloads must be the same size as invcations configs.");
+
   for (size_t payload_index = 0; payload_index < payloads.size(); payload_index++) {
     invocation_configs_->at(payload_index).payload = payloads[payload_index];
   }

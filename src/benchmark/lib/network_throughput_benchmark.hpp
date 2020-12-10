@@ -1,7 +1,5 @@
 #pragma once
 
-#include <tuple>
-
 #include <aws/core/Aws.h>
 #include <aws/core/utils/json/JsonSerializer.h>
 
@@ -13,9 +11,9 @@ namespace skyrise {
 class NetworkThroughputBenchmark : public NetworkBenchmark {
  public:
   NetworkThroughputBenchmark(std::shared_ptr<BenchmarkHelper> helper, std::shared_ptr<CostCalculator> cost_calculator,
-                             const size_t num_iterations, const ExecuteMode execute_mode,
                              const std::vector<size_t>& function_instance_mb_sizes,
-                             const std::vector<size_t>& object_byte_sizes, const std::vector<size_t>& thread_counts);
+                             const std::vector<size_t>& object_byte_sizes, const std::vector<size_t>& thread_counts,
+                             const size_t num_iterations);
 
  private:
   Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<std::vector<BenchmarkItemResult>>& result,
