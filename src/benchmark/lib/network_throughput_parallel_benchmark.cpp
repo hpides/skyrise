@@ -14,6 +14,7 @@
 
 namespace skyrise {
 
+const size_t kBatchSize = 1;
 // TODO(d-justen): Change to the best performing parameters found by NetworkThroughputBenchmark
 const size_t kFunctionInstanceMbSize = 3008;
 const size_t kObjectByteSize = 16_MB;
@@ -23,7 +24,8 @@ NetworkThroughputParallelBenchmark::NetworkThroughputParallelBenchmark(
     std::shared_ptr<BenchmarkHelper> helper, std::shared_ptr<CostCalculator> cost_calculator,
     const std::vector<size_t>& function_instance_counts, const size_t num_iterations)
     : NetworkBenchmark(std::move(helper), std::move(cost_calculator), ExecuteMode::kWarmParallel,
-                       *std::max_element(function_instance_counts.cbegin(), function_instance_counts.cend())) {
+                       *std::max_element(function_instance_counts.cbegin(), function_instance_counts.cend()),
+                       kBatchSize) {
   for (const auto operation_type : {S3OperationType::kRead, S3OperationType::kWrite}) {
     Aws::StringStream function_name;
     function_name << "skyriseFunction" << (operation_type == S3OperationType::kRead ? "Read" : "Write") << "S3";
@@ -102,17 +104,19 @@ Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateResultOu
 Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateSubResultOutput(
     const Aws::String& benchmark_name, const size_t repetition,
     const std::shared_ptr<std::vector<BenchmarkItemResult>>& result, const NetworkBenchmarkParameters& parameters) {
-  std::vector<double> durations_seconds;
+  std::vector<double> seconds_durations;
 
   std::transform(
-      result->cbegin(), result->cend(), std::back_inserter(durations_seconds),
+      result->cbegin(), result->cend(), std::back_inserter(seconds_durations),
       [&](const BenchmarkItemResult& single_result) {
-        return std::chrono::duration<double>(std::chrono::duration<double, std::milli>(
-                                                 BenchmarkHelper::ExtractMetric(single_result, "duration_ms")))
+        Aws::Utils::Json::JsonValue result_value(StreamToString(&single_result.invoke_result->GetPayload()));
+        const auto duration_views = result_value.View().GetArray("ms_durations");
+
+        return std::chrono::duration<double>(std::chrono::duration<double, std::milli>(duration_views[0].AsDouble()))
             .count();
       });
 
-  const double max_duration_seconds = *std::max_element(durations_seconds.cbegin(), durations_seconds.cend());
+  const double max_duration_seconds = *std::max_element(seconds_durations.cbegin(), seconds_durations.cend());
   const auto throughput_mb_per_second = static_cast<double>(
       ByteToMb(parameters.object_byte_size_) * parameters.thread_count_ * result->size() / max_duration_seconds);
 
@@ -124,11 +128,12 @@ Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateSubResul
         static_cast<double>(CalculateBenchmarkCost(result, parameters.function_instance_mb_size_))}},
       {/*aggregated string metrics*/}, result,
       {[&](const BenchmarkItemResult& single_result) {
+         Aws::Utils::Json::JsonValue result_value(StreamToString(&single_result.invoke_result->GetPayload()));
+         const auto duration_views = result_value.View().GetArray("ms_durations");
          const double duration_seconds =
-             std::chrono::duration<double>(std::chrono::duration<double, std::milli>(
-                                               BenchmarkHelper::ExtractMetric(single_result, "duration_ms")))
+             std::chrono::duration<double>(std::chrono::duration<double, std::milli>(duration_views[0].AsDouble()))
                  .count();
-         return std::make_tuple("throughput_parallel_mb_per_s",
+         return std::make_tuple("throughput_mb_per_s",
                                 ByteToMb(parameters.object_byte_size_) / duration_seconds * parameters.thread_count_);
        },
        [&](const BenchmarkItemResult& single_result) {

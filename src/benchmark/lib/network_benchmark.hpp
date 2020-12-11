@@ -28,7 +28,7 @@ class NetworkBenchmark : public Benchmark {
 
  protected:
   NetworkBenchmark(std::shared_ptr<BenchmarkHelper> helper, std::shared_ptr<CostCalculator> cost_calculator,
-                   const ExecuteMode execute_mode, size_t num_iteration);
+                   const ExecuteMode execute_mode, const size_t num_iterations, const size_t batch_size);
 
   virtual Aws::Utils::Json::JsonValue GenerateResultOutput(
       const std::shared_ptr<std::vector<BenchmarkItemResult>>& result,
@@ -48,11 +48,19 @@ class NetworkBenchmark : public Benchmark {
   long double CalculateBenchmarkCost(const std::shared_ptr<std::vector<BenchmarkItemResult>>& result,
                                      const size_t function_instance_mb_size);
 
+  Aws::Utils::Array<Aws::Utils::Json::JsonValue> GenerateBatchedSubResultOutput(
+      const std::shared_ptr<std::vector<BenchmarkItemResult>>& result, const Aws::String& benchmark_name,
+      const size_t function_instance_mb_size, const Aws::String& metric_name,
+      const std::function<double(const double)>& process_value);
+  std::vector<double> ExtractValuesFromBatchedSubResults(
+      const Aws::Utils::Array<Aws::Utils::Json::JsonValue>& batched_runs, const Aws::String& metric_name) const;
+
   const std::shared_ptr<BenchmarkHelper> helper_;
   const std::shared_ptr<CostCalculator> cost_calculator_;
 
   const ExecuteMode execute_mode_;
   const size_t num_iterations_;
+  const size_t batch_size_;
 
   std::vector<std::tuple<BenchmarkConfig, NetworkBenchmarkParameters>> configs_;
 

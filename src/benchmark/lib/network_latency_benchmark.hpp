@@ -15,7 +15,9 @@ namespace skyrise {
 class NetworkLatencyBenchmark : public NetworkBenchmark {
  public:
   NetworkLatencyBenchmark(std::shared_ptr<BenchmarkHelper> helper, std::shared_ptr<CostCalculator> cost_calculator,
-                          const std::vector<size_t>& function_instance_mb_sizes, const size_t num_iterations);
+                          const std::vector<size_t>& function_instance_mb_sizes,
+                          const std::vector<size_t>& object_byte_sizes_read,
+                          const std::vector<size_t>& object_byte_sizes_write, const size_t num_iterations);
 
  private:
   Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<std::vector<BenchmarkItemResult>>& result,

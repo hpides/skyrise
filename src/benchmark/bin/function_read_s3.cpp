@@ -20,35 +20,42 @@ namespace skyrise {
 
 const std::string kTag = "SKYRISE/BENCHMARK/WORKER/READ_S3";
 
-std::tuple<StorageError, double> GetObjectsS3(const std::shared_ptr<Aws::S3::S3Client>& client,
-                                              const Aws::String& bucket,
-                                              const Aws::Utils::Array<Aws::Utils::Json::JsonView>& keys) {
-  std::vector<std::future<StorageError>> read_object_result_futures;
-  read_object_result_futures.reserve(keys.GetLength());
+std::tuple<StorageError, Aws::Utils::Array<Aws::Utils::Json::JsonValue>> GetObjectsS3(
+    const std::shared_ptr<Aws::S3::S3Client>& client, const Aws::String& bucket,
+    const Aws::Utils::Array<Aws::Utils::Json::JsonView>& keys, const size_t batch_size) {
+  Aws::Utils::Array<Aws::Utils::Json::JsonValue> ms_durations(batch_size);
 
-  const auto start = std::chrono::steady_clock::now();
+  for (size_t i = 0; i < batch_size; i++) {
+    std::vector<std::future<StorageError>> read_object_result_futures;
+    read_object_result_futures.reserve(keys.GetLength());
 
-  for (size_t i = 0; i < keys.GetLength(); i++) {
-    read_object_result_futures.emplace_back(std::async(
-        [&](const size_t i) {
-          return S3ObjectReader(client, bucket, keys[i].AsString())
-              .Read(0, S3ObjectReader::kLastByteInFile, [](const char* /*data*/, size_t /*length*/) {});
-        },
-        i));
-  }
+    const auto start = std::chrono::steady_clock::now();
 
-  for (auto& read_object_result_future : read_object_result_futures) {
-    const auto& read_object_result = read_object_result_future.get();
-
-    if (read_object_result.GetType() != StorageErrorType::kNoError) {
-      AWS_LOGSTREAM_ERROR(kTag.c_str(), read_object_result.GetMessage());
-      return {read_object_result, 0.0};
+    for (size_t j = 0; j < keys.GetLength(); j++) {
+      read_object_result_futures.emplace_back(std::async(
+          [&](const size_t i) {
+            return S3ObjectReader(client, bucket, keys[i].AsString())
+                .Read(0, S3ObjectReader::kLastByteInFile, [](const char* /*data*/, size_t /*length*/) {});
+          },
+          j));
     }
+
+    for (auto& read_object_result_future : read_object_result_futures) {
+      const auto& read_object_result = read_object_result_future.get();
+
+      if (read_object_result.GetType() != StorageErrorType::kNoError) {
+        AWS_LOGSTREAM_ERROR(kTag.c_str(), read_object_result.GetMessage());
+        return {read_object_result, {}};
+      }
+    }
+
+    const auto end = std::chrono::steady_clock::now();
+
+    ms_durations[i] =
+        Aws::Utils::Json::JsonValue().AsDouble(std::chrono::duration<double, std::milli>(end - start).count());
   }
 
-  const auto end = std::chrono::steady_clock::now();
-
-  return {StorageError::Success(), std::chrono::duration<double, std::milli>(end - start).count()};
+  return {StorageError::Success(), ms_durations};
 }
 
 }  // namespace skyrise
@@ -67,19 +74,21 @@ aws::lambda_runtime::invocation_response HandlerFunction(const aws::lambda_runti
 
   const Aws::String s3_bucket = json_view.GetString("s3_bucket");
   const auto s3_keys = json_view.GetArray("s3_keys");
+  const size_t batch_size = json_view.GetInteger("batch_size");
 
-  const auto& [error, duration_ms] = skyrise::GetObjectsS3(s3_client, s3_bucket, s3_keys);
+  const auto& [error, ms_durations] = skyrise::GetObjectsS3(s3_client, s3_bucket, s3_keys, batch_size);
 
   if (error.GetType() != skyrise::StorageErrorType::kNoError) {
     return aws::lambda_runtime::invocation_response::failure(error.GetMessage(),
                                                              std::string(magic_enum::enum_name(error.GetType())));
   }
 
-  const auto response_value = Aws::Utils::Json::JsonValue()
-                                  .WithDouble("duration_ms", duration_ms)
-                                  .WithInteger("num_s3_requests_tier_1", 0)
-                                  .WithInteger("num_s3_requests_tier_2", s3_keys.GetLength())
-                                  .WithInt64("s3_storage_used_bytes", 0);
+  const auto response_value =
+      Aws::Utils::Json::JsonValue()
+          .WithArray("ms_durations", ms_durations)
+          .WithInteger("num_s3_requests_tier_1", 0)
+          .WithInteger("num_s3_requests_tier_2", static_cast<size_t>(s3_keys.GetLength() * batch_size))
+          .WithInt64("s3_storage_used_bytes", 0);
   return aws::lambda_runtime::invocation_response::success(response_value.View().WriteCompact(), "application/json");
 }
 

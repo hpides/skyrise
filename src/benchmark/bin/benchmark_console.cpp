@@ -127,8 +127,10 @@ int main(int argc, char* argv[]) {
 
     // Register NetworkLatencyBenchmark
     benchmark_registry.RegisterBenchmark(
-        "NetworkLatencyBenchmark", std::make_unique<skyrise::NetworkLatencyBenchmark>(benchmark_helper, cost_calculator,
-                                                                                      std::vector<size_t>{128}, 10000));
+        "NetworkLatencyBenchmark",
+        std::make_unique<skyrise::NetworkLatencyBenchmark>(
+            benchmark_helper, cost_calculator, std::vector<size_t>{128}, std::vector<size_t>{skyrise::KbToByte(1)},
+            std::vector<size_t>{skyrise::KbToByte(1), skyrise::MbToByte(100)}, 10000));
 
     // Register NetworkThroughputBenchmark
     // TODO(d-justen): Utilize bigger function instances and more threads as well

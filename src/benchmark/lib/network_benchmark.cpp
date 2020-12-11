@@ -3,8 +3,6 @@
 #include <algorithm>
 #include <numeric>
 
-#include <magic_enum.hpp>
-
 #include "utils/assert.hpp"
 #include "utils/string.hpp"
 #include "utils/unit_conversion.hpp"
@@ -13,11 +11,12 @@ namespace skyrise {
 
 NetworkBenchmark::NetworkBenchmark(std::shared_ptr<BenchmarkHelper> helper,
                                    std::shared_ptr<CostCalculator> cost_calculator, const ExecuteMode execute_mode,
-                                   size_t num_iterations)
+                                   const size_t num_iterations, const size_t batch_size)
     : helper_(std::move(helper)),
       cost_calculator_(std::move(cost_calculator)),
       execute_mode_(execute_mode),
       num_iterations_(num_iterations),
+      batch_size_(batch_size),
       cost_overhead_(0) {}
 
 Aws::Utils::Array<Aws::Utils::Json::JsonValue> NetworkBenchmark::Run(
@@ -114,13 +113,13 @@ std::vector<std::shared_ptr<Aws::IOStream>> NetworkBenchmark::GeneratePayloads(c
     }
 
     const auto payload = [&]() {
+      auto payload_value =
+          Aws::Utils::Json::JsonValue().WithArray("s3_keys", object_keys).WithInteger("batch_size", batch_size_);
+
       if (operation_type == S3OperationType::kRead) {
-        return Aws::Utils::Json::JsonValue().WithString("s3_bucket", kReadBucket).WithArray("s3_keys", object_keys);
+        return payload_value.WithString("s3_bucket", kReadBucket);
       } else {
-        return Aws::Utils::Json::JsonValue()
-            .WithString("s3_bucket", kWriteBucket)
-            .WithArray("s3_keys", object_keys)
-            .WithInteger("object_byte_size", object_byte_size);
+        return payload_value.WithString("s3_bucket", kWriteBucket).WithInteger("object_byte_size", object_byte_size);
       }
     }();
 
@@ -164,6 +163,51 @@ long double NetworkBenchmark::CalculateBenchmarkCost(const std::shared_ptr<std::
   const long double benchmark_cost = std::accumulate(function_costs.cbegin(), function_costs.cend(), 0.0l);
 
   return benchmark_cost;
+}
+
+Aws::Utils::Array<Aws::Utils::Json::JsonValue> NetworkBenchmark::GenerateBatchedSubResultOutput(
+    const std::shared_ptr<std::vector<BenchmarkItemResult>>& result, const Aws::String& benchmark_name,
+    const size_t function_instance_mb_size, const Aws::String& metric_name,
+    const std::function<double(const double)>& process_value) {
+  Aws::Utils::Array<Aws::Utils::Json::JsonValue> batched_runs(result->size());
+
+  for (size_t i = 0; i < result->size(); i++) {
+    Aws::Utils::Json::JsonValue result_value(StreamToString(&(*result)[i].invoke_result->GetPayload()));
+    const auto duration_views = result_value.View().GetArray("ms_durations");
+
+    Aws::Utils::Array<Aws::Utils::Json::JsonValue> duration_values(duration_views.GetLength());
+
+    for (size_t j = 0; j < duration_views.GetLength(); j++) {
+      const double duration_ms = process_value(duration_views[j].AsDouble());
+      duration_values[j] = Aws::Utils::Json::JsonValue().AsDouble(duration_ms);
+    }
+
+    batched_runs[i] =
+        Aws::Utils::Json::JsonValue()
+            .WithString("name", benchmark_name + "/" + std::to_string(i))
+            .WithArray(metric_name, duration_values)
+            .WithDouble("billed_lambda_duration_ms", BenchmarkHelper::ExtractBilledLambdaDuration((*result)[i]))
+            .WithDouble("function_cost_usd",
+                        static_cast<double>(ExtractFunctionCost((*result)[i], function_instance_mb_size)));
+  }
+
+  return batched_runs;
+}
+
+std::vector<double> NetworkBenchmark::ExtractValuesFromBatchedSubResults(
+    const Aws::Utils::Array<Aws::Utils::Json::JsonValue>& batched_runs, const Aws::String& metric_name) const {
+  std::vector<double> values;
+  values.reserve(batched_runs.GetLength() * batch_size_);
+
+  for (size_t i = 0; i < batched_runs.GetLength(); i++) {
+    const auto batch = batched_runs[i].View().GetArray(metric_name);
+
+    for (size_t j = 0; j < batch.GetLength(); j++) {
+      values.emplace_back(batch[j].AsDouble());
+    }
+  }
+
+  return values;
 }
 
 }  // namespace skyrise
