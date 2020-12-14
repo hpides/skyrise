@@ -14,8 +14,8 @@ namespace skyrise {
 
 class IdleLifetimeBenchmark : public Benchmark {
  public:
-  IdleLifetimeBenchmark(const std::vector<size_t>& function_sizes, const std::vector<size_t>& invocation_counts,
-                        const std::vector<size_t>& sleep_min_durations);
+  IdleLifetimeBenchmark(const std::vector<size_t>& function_instance_mb_sizes,
+                        const std::vector<size_t>& invocation_counts, const std::vector<size_t>& sleep_min_durations);
 
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> Run(const std::shared_ptr<BenchmarkRunner>& benchmark_runner);
 

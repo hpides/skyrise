@@ -12,24 +12,26 @@
 
 namespace skyrise {
 
-// TODO(anyone): Recursive Lambda invocation
-// TODO(anyone): VM (EC2) invocation
-class InvocationThroughputBenchmark : public Benchmark {
+class IdleAvailabilityBenchmark : public Benchmark {
  public:
-  InvocationThroughputBenchmark(const std::vector<size_t>& function_instance_mb_sizes,
-                                const std::vector<size_t>& invocation_counts,
-                                const std::vector<ExecuteMode>& execute_modes);
+  IdleAvailabilityBenchmark(const std::vector<size_t>& function_instance_mb_sizes,
+                            const std::vector<size_t>& invocation_counts, const size_t sleep_min_duration,
+                            const size_t repetition_count);
 
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> Run(const std::shared_ptr<BenchmarkRunner>& benchmark_runner);
 
  private:
-  static Aws::Utils::Json::JsonValue GenerateResultOutput(
+  Aws::Utils::Json::JsonValue GenerateResultOutput(
       const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
       const BenchmarkConfig& benchmark_config);
 
   std::vector<BenchmarkConfig> benchmark_configs_;
 
-  const Aws::String kFunctionName = "skyriseFunctionMinimal";
+  const size_t sleep_min_duration_;
+  const size_t repetition_count_;
+
+  const Aws::String kFunctionName = "skyriseFunctionHostId";
+  const ExecuteMode kExecuteMode = ExecuteMode::kColdParallel;
 };
 
 }  // namespace skyrise

@@ -7,6 +7,8 @@ set(
     benchmark_helper.hpp
     benchmark_runner.cpp
     benchmark_runner.hpp
+    idle_availability_benchmark.cpp
+    idle_availability_benchmark.hpp
     idle_lifetime_benchmark.cpp
     idle_lifetime_benchmark.hpp
     invocation_throughput_benchmark.cpp

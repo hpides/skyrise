@@ -13,7 +13,7 @@
 
 namespace skyrise {
 
-IdleLifetimeBenchmark::IdleLifetimeBenchmark(const std::vector<size_t>& function_sizes,
+IdleLifetimeBenchmark::IdleLifetimeBenchmark(const std::vector<size_t>& function_instance_mb_sizes,
                                              const std::vector<size_t>& invocation_counts,
                                              const std::vector<size_t>& sleep_min_durations)
     : sleep_min_durations_(sleep_min_durations) {
@@ -30,11 +30,11 @@ IdleLifetimeBenchmark::IdleLifetimeBenchmark(const std::vector<size_t>& function
 
   after_repetition_callbacks.emplace_back([]() {});
 
-  benchmark_configs_.reserve(function_sizes.size() * invocation_counts.size());
+  benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size());
 
-  for (const auto& function_size : function_sizes) {
+  for (const auto& function_instance_mb_size : function_instance_mb_sizes) {
     for (const auto& invocation_count : invocation_counts) {
-      benchmark_configs_.emplace_back(kFunctionName, function_size, invocation_count, kExecuteMode,
+      benchmark_configs_.emplace_back(kFunctionName, function_instance_mb_size, invocation_count, kExecuteMode,
                                       after_repetition_callbacks.size(), after_repetition_callbacks);
     }
   }

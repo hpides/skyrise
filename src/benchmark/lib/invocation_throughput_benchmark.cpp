@@ -6,15 +6,15 @@
 
 namespace skyrise {
 
-InvocationThroughputBenchmark::InvocationThroughputBenchmark(const std::vector<size_t>& function_sizes,
+InvocationThroughputBenchmark::InvocationThroughputBenchmark(const std::vector<size_t>& function_instance_mb_sizes,
                                                              const std::vector<size_t>& invocation_counts,
                                                              const std::vector<ExecuteMode>& execute_modes) {
-  benchmark_configs_.reserve(function_sizes.size() * invocation_counts.size() * execute_modes.size());
+  benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size() * execute_modes.size());
 
-  for (const auto& function_size : function_sizes) {
+  for (const auto& function_instance_mb_size : function_instance_mb_sizes) {
     for (const auto& invocation_count : invocation_counts) {
       for (const auto& execute_mode : execute_modes) {
-        benchmark_configs_.emplace_back(kFunctionName, function_size, invocation_count, execute_mode);
+        benchmark_configs_.emplace_back(kFunctionName, function_instance_mb_size, invocation_count, execute_mode);
       }
     }
   }
