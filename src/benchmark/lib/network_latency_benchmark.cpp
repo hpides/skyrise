@@ -58,10 +58,10 @@ Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
 
   auto output_json = BenchmarkHelper::GenerateJsonOutput(
       benchmark_name.str(),
-      {{"latency_ms_average", aggregates.average},
-       {"latency_ms_minimum", aggregates.minimum},
-       {"latency_ms_median", aggregates.median},
+      {{"latency_ms_minimum", aggregates.minimum},
        {"latency_ms_maximum", aggregates.maximum},
+       {"latency_ms_average", aggregates.average},
+       {"latency_ms_median", aggregates.median},
        {"latency_ms_percentile_90", aggregates.percentile_90},
        {"latency_ms_percentile_99", aggregates.percentile_99},
        {"latency_ms_percentile_99.9", aggregates.percentile_99_9},

@@ -48,6 +48,11 @@ BenchmarkAggregates BenchmarkHelper::CalculateAggregates(std::vector<double> met
 
   const double median = metrics.size() % 2 == 0 ? (metrics[metrics.size() / 2 - 1] + metrics[metrics.size() / 2]) / 2
                                                 : metrics[(metrics.size() / 2)];
+
+  const double percentile_0_01 = metrics[static_cast<size_t>(metrics.size() * 0.001)];
+  const double percentile_0_1 = metrics[static_cast<size_t>(metrics.size() * 0.0001)];
+  const double percentile_1 = metrics[static_cast<size_t>(metrics.size() * 0.01)];
+  const double percentile_10 = metrics[static_cast<size_t>(metrics.size() * 0.1)];
   const double percentile_90 = metrics[static_cast<size_t>(metrics.size() * 0.9)];
   const double percentile_99 = metrics[static_cast<size_t>(metrics.size() * 0.99)];
   const double percentile_99_9 = metrics[static_cast<size_t>(metrics.size() * 0.999)];
@@ -58,7 +63,8 @@ BenchmarkAggregates BenchmarkHelper::CalculateAggregates(std::vector<double> met
                           static_cast<double>(metrics.size());
   const double standard_deviation = std::sqrt(variance);
 
-  return {minimum,         maximum,          average,           median, percentile_90, percentile_99,
+  return {minimum,         maximum,          average,           median,        percentile_0_01,
+          percentile_0_1,  percentile_1,     percentile_10,     percentile_90, percentile_99,
           percentile_99_9, percentile_99_99, standard_deviation};
 }
 

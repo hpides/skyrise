@@ -54,23 +54,28 @@ Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
         return std::chrono::duration<double>(std::chrono::duration<double, std::milli>(value)).count();
       });
 
-  const auto aggregates =
-      BenchmarkHelper::CalculateAggregates(ExtractValuesFromBatchedSubResults(batched_runs, "duration_seconds"));
+  const auto seconds_durations = ExtractValuesFromBatchedSubResults(batched_runs, "duration_seconds");
 
-  const auto to_throughput = [&](const double duration_seconds) {
-    return static_cast<double>(ByteToMb(parameters.object_byte_size_) * parameters.thread_count_ / duration_seconds);
-  };
+  std::vector<double> throughputs;
+  throughputs.reserve(seconds_durations.size());
+
+  std::transform(seconds_durations.cbegin(), seconds_durations.cend(), std::back_inserter(throughputs),
+                 [&](const double seconds_duration) {
+                   return ByteToMb(parameters.object_byte_size_) * parameters.thread_count_ / seconds_duration;
+                 });
+
+  const auto aggregates = BenchmarkHelper::CalculateAggregates(throughputs);
 
   auto output_json = BenchmarkHelper::GenerateJsonOutput(
       benchmark_name.str(),
-      {{"throughput_mb_per_s_average", to_throughput(aggregates.average)},
-       {"throughput_mb_per_s_minimum", to_throughput(aggregates.maximum)},
-       {"throughput_mb_per_s_median", to_throughput(aggregates.median)},
-       {"throughput_mb_per_s_maximum", to_throughput(aggregates.minimum)},
-       {"throughput_mb_per_s_percentile_10", to_throughput(aggregates.percentile_90)},
-       {"throughput_mb_per_s_percentile_1", to_throughput(aggregates.percentile_99)},
-       {"throughput_mb_per_s_percentile_0.1", to_throughput(aggregates.percentile_99_9)},
-       {"throughput_mb_per_s_percentile_0.01", to_throughput(aggregates.percentile_99_99)},
+      {{"throughput_mb_per_s_minimum", aggregates.maximum},
+       {"throughput_mb_per_s_maximum", aggregates.minimum},
+       {"throughput_mb_per_s_average", aggregates.average},
+       {"throughput_mb_per_s_median", aggregates.median},
+       {"throughput_mb_per_s_percentile_0.01", aggregates.percentile_0_01},
+       {"throughput_mb_per_s_percentile_0.1", aggregates.percentile_0_1},
+       {"throughput_mb_per_s_percentile_1", aggregates.percentile_1},
+       {"throughput_mb_per_s_percentile_10", aggregates.percentile_10},
        {"benchmark_cost_usd",
         static_cast<double>(CalculateBenchmarkCost(result, parameters.function_instance_mb_size_))},
        {"benchmark_cost_overhead_usd", cost_overhead_ / configs_.size()}},

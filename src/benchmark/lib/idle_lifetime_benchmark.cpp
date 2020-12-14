@@ -81,19 +81,19 @@ Aws::Utils::Json::JsonValue IdleLifetimeBenchmark::GenerateResultOutput(
     }
   }
 
-  const auto lifetime_aggregates = BenchmarkHelper::CalculateAggregates(ExtractMapValues(vm_ids_to_idle_lifetimes));
+  const auto aggregates = BenchmarkHelper::CalculateAggregates(ExtractMapValues(vm_ids_to_idle_lifetimes));
 
   return BenchmarkHelper::GenerateJsonOutput(
       benchmark_name.str(),
-      {{"idle_lifetime_min_average", lifetime_aggregates.average},
-       {"idle_lifetime_min_minimum", lifetime_aggregates.minimum},
-       {"idle_lifetime_min_median", lifetime_aggregates.median},
-       {"idle_lifetime_min_maximum", lifetime_aggregates.maximum},
-       {"idle_lifetime_min_percentile_90", lifetime_aggregates.percentile_90},
-       {"idle_lifetime_min_percentile_99", lifetime_aggregates.percentile_99},
-       {"idle_lifetime_min_percentile_99.9", lifetime_aggregates.percentile_99_9},
-       {"idle_lifetime_min_percentile_99.99", lifetime_aggregates.percentile_99_99},
-       {"idle_lifetime_min_std_dev", lifetime_aggregates.standard_deviation}},
+      {{"idle_lifetime_min_minimum", aggregates.minimum},
+       {"idle_lifetime_min_maximum", aggregates.maximum},
+       {"idle_lifetime_min_average", aggregates.average},
+       {"idle_lifetime_min_median", aggregates.median},
+       {"idle_lifetime_min_percentile_0.01", aggregates.percentile_0_01},
+       {"idle_lifetime_min_percentile_0.1", aggregates.percentile_0_1},
+       {"idle_lifetime_min_percentile_1", aggregates.percentile_1},
+       {"idle_lifetime_min_percentile_10", aggregates.percentile_10},
+       {"idle_lifetime_min_std_dev", aggregates.standard_deviation}},
       {/*aggregated string metrics*/}, benchmark_result, {/*extract double metric functions*/},
       {[&](const BenchmarkItemResult& item_result) {
         return std::make_tuple("vm_id", StreamToString(&item_result.invoke_result->GetPayload()));

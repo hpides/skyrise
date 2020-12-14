@@ -17,6 +17,10 @@ struct BenchmarkAggregates {
   double maximum;
   double average;
   double median;
+  double percentile_0_01;
+  double percentile_0_1;
+  double percentile_1;
+  double percentile_10;
   double percentile_90;
   double percentile_99;
   double percentile_99_9;
