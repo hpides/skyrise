@@ -63,7 +63,7 @@ Aws::Utils::Json::JsonValue IdleLifetimeBenchmark::GenerateResultOutput(
     const BenchmarkConfig& benchmark_config) {
   // TODO(maltenbergert): Move this into a CreateBenchmarkName helper when extending the abstract Benchmark class
   Aws::StringStream benchmark_name;
-  benchmark_name << "IdleTimeBenchmark/" << benchmark_config.function_configs_->front().memory_size << "/"
+  benchmark_name << "IdleLifetimeBenchmark/" << benchmark_config.function_configs_->front().memory_size << "/"
                  << benchmark_config.num_invocations_ << "/" << VectorToString(sleep_min_durations_, ",");
 
   std::map<Aws::String, double> vm_ids_to_idle_lifetimes;
