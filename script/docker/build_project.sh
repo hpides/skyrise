@@ -8,7 +8,7 @@
 #   -b/--build-dir      The subdirectory of the project root where output files are stored (default is cmake-build-debug)
 #   -c/--cmake          A string of options that is passed to CMake (e.g. '-DONE_OPTION=ON -DOTHER_OPTION=OFF')
 #   -m/--make-target    The target for make (default is all)
-#   -p/--prefix         The prefix of the repository name for the Docker image (default is user's name)
+#   -p/--prefix         The prefix of the repository name for the Docker image (default is hpiepic)
 #   -t/--build-type     The CMake build type (default is Debug)
 #   -v/--verbose        Activate verbose console output
 
@@ -23,7 +23,7 @@ SOURCE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../"; pwd)
 BUILD_DIR=cmake-build-debug
 CMAKE_OPTIONS=''
 MAKE_TARGET=all
-PREFIX=$USER
+PREFIX=hpiepic
 BUILD_TYPE=Debug
 VERBOSE=false
 while [ "$#" -gt 0 ]; do
