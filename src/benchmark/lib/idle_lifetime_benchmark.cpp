@@ -52,7 +52,7 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> IdleLifetimeBenchmark::Run(
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> benchmark_outputs(benchmark_results.size());
 
   for (size_t i = 0; i < benchmark_results.size(); ++i) {
-    benchmark_outputs[i] = GenerateResultOutput(benchmark_results[i], benchmark_configs_[i]);
+    benchmark_outputs[i] = IdleLifetimeBenchmark::GenerateResultOutput(benchmark_results[i], benchmark_configs_[i]);
   }
 
   return benchmark_outputs;
@@ -60,18 +60,18 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> IdleLifetimeBenchmark::Run(
 
 Aws::Utils::Json::JsonValue IdleLifetimeBenchmark::GenerateResultOutput(
     const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
-    const BenchmarkConfig& benchmark_config) {
+    const BenchmarkConfig& benchmark_config) const {
   // TODO(maltenbergert): Move this into a CreateBenchmarkName helper when extending the abstract Benchmark class
   Aws::StringStream benchmark_name;
   benchmark_name << "IdleLifetimeBenchmark/" << benchmark_config.function_configs_->front().memory_size << "/"
-                 << benchmark_config.num_invocations_ << "/" << VectorToString(sleep_min_durations_, ",");
+                 << benchmark_config.invocation_count_ << "/" << VectorToString(sleep_min_durations_, ",");
 
   std::map<Aws::String, double> vm_ids_to_idle_lifetimes;
 
-  for (size_t i = 0; i < benchmark_config.num_repetitions_; ++i) {
-    for (size_t j = 0; j < benchmark_config.num_invocations_; ++j) {
+  for (size_t i = 0; i < benchmark_config.repetition_count_; ++i) {
+    for (size_t j = 0; j < benchmark_config.invocation_count_; ++j) {
       const Aws::String vm_id =
-          StreamToString(&(*benchmark_result)[i * benchmark_config.num_invocations_ + j].invoke_result->GetPayload());
+          StreamToString(&(*benchmark_result)[i * benchmark_config.invocation_count_ + j].invoke_result->GetPayload());
 
       if (i == 0) {
         vm_ids_to_idle_lifetimes.emplace(vm_id, 0);

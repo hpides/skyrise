@@ -12,7 +12,7 @@ class NetworkThroughputParallelBenchmark : public NetworkBenchmark {
  public:
   NetworkThroughputParallelBenchmark(std::shared_ptr<BenchmarkHelper> helper,
                                      std::shared_ptr<CostCalculator> cost_calculator,
-                                     const std::vector<size_t>& function_instance_counts, const size_t num_iterations);
+                                     const std::vector<size_t>& invocation_counts, const size_t repetition_count);
 
  private:
   Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<std::vector<BenchmarkItemResult>>& result,

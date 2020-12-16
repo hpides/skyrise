@@ -23,12 +23,11 @@ class IdleAvailabilityBenchmark : public Benchmark {
  private:
   Aws::Utils::Json::JsonValue GenerateResultOutput(
       const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
-      const BenchmarkConfig& benchmark_config);
+      const BenchmarkConfig& benchmark_config) const;
 
   std::vector<BenchmarkConfig> benchmark_configs_;
 
   const size_t sleep_min_duration_;
-  const size_t repetition_count_;
 
   const Aws::String kFunctionName = "skyriseFunctionHostId";
   const ExecuteMode kExecuteMode = ExecuteMode::kColdParallel;

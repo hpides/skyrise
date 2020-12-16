@@ -11,11 +11,11 @@ namespace skyrise {
 
 NetworkBenchmark::NetworkBenchmark(std::shared_ptr<BenchmarkHelper> helper,
                                    std::shared_ptr<CostCalculator> cost_calculator, const ExecuteMode execute_mode,
-                                   const size_t num_iterations, const size_t batch_size)
+                                   const size_t repetition_count, const size_t batch_size)
     : helper_(std::move(helper)),
       cost_calculator_(std::move(cost_calculator)),
       execute_mode_(execute_mode),
-      num_iterations_(num_iterations),
+      repetition_count_(repetition_count),
       batch_size_(batch_size),
       cost_overhead_(0) {}
 
@@ -57,7 +57,7 @@ void NetworkBenchmark::Setup() {
     if (parameters.operation_type_ == S3OperationType::kRead) {
       for (size_t i = 0; i < parameters.thread_count_; i++) {
         if (is_parallel) {
-          for (size_t j = 0; j < num_iterations_; j++) {
+          for (size_t j = 0; j < repetition_count_; j++) {
             cost_overhead_ += helper_->UploadObjectToS3Bucket(
                 kReadBucket, GenerateObjectKey(true, parameters.object_byte_size_, i, j),
                 BenchmarkHelper::GenerateRandomObject(parameters.object_byte_size_), parameters.object_byte_size_);
@@ -92,14 +92,14 @@ std::vector<std::shared_ptr<Aws::IOStream>> NetworkBenchmark::GeneratePayloads(c
                                                                                const size_t object_byte_size,
                                                                                const size_t thread_count,
                                                                                const S3OperationType operation_type,
-                                                                               const size_t num_payloads) {
+                                                                               const size_t payload_count) {
   const bool is_parallel =
       execute_mode_ != ExecuteMode::kColdSequential && execute_mode_ != ExecuteMode::kWarmSequential;
 
   std::vector<std::shared_ptr<Aws::IOStream>> payloads;
-  payloads.reserve(num_payloads);
+  payloads.reserve(payload_count);
 
-  for (size_t i = 0; i < num_payloads; i++) {
+  for (size_t i = 0; i < payload_count; i++) {
     Aws::Utils::Array<Aws::String> object_keys(thread_count);
 
     for (size_t j = 0; j < thread_count; j++) {

@@ -12,27 +12,27 @@
 namespace skyrise {
 
 BenchmarkConfig::BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size,
-                                 const size_t num_invocations, const ExecuteMode execute_mode)
+                                 const size_t invocation_count, const ExecuteMode execute_mode)
     : BenchmarkConfig(std::vector<Aws::String>(1, function_zip_name), std::vector<size_t>(1, memory_size),
-                      num_invocations, execute_mode, 1, std::vector<std::function<void()>>(),
+                      invocation_count, execute_mode, 1, std::vector<std::function<void()>>(),
                       kLambdaFunctionTimeoutSeconds) {}
 
 BenchmarkConfig::BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size,
-                                 const size_t num_invocations, const ExecuteMode execute_mode,
-                                 const size_t num_repetitions,
+                                 const size_t invocation_count, const ExecuteMode execute_mode,
+                                 const size_t repetition_count,
                                  const std::vector<std::function<void()>>& after_repetitions_callbacks)
     : BenchmarkConfig(std::vector<Aws::String>(1, function_zip_name), std::vector<size_t>(1, memory_size),
-                      num_invocations, execute_mode, num_repetitions, after_repetitions_callbacks,
+                      invocation_count, execute_mode, repetition_count, after_repetitions_callbacks,
                       kLambdaFunctionTimeoutSeconds) {}
 
 BenchmarkConfig::BenchmarkConfig(const std::vector<Aws::String>& function_zip_names,
-                                 const std::vector<size_t>& memory_sizes, const size_t num_invocations,
-                                 const ExecuteMode execute_mode, const size_t num_repetitions,
+                                 const std::vector<size_t>& memory_sizes, const size_t invocation_count,
+                                 const ExecuteMode execute_mode, const size_t repetition_count,
                                  const std::vector<std::function<void()>>& after_repetition_callbacks,
                                  const size_t timeout)
-    : num_invocations_(num_invocations),
+    : invocation_count_(invocation_count),
       execute_mode_(execute_mode),
-      num_repetitions_(num_repetitions),
+      repetition_count_(repetition_count),
       after_repetition_callbacks_(after_repetition_callbacks),
       timeout_(timeout),
       benchmark_id_(RandomString(8)),
@@ -40,9 +40,9 @@ BenchmarkConfig::BenchmarkConfig(const std::vector<Aws::String>& function_zip_na
       function_configs_(std::make_shared<std::vector<LambdaFunctionConfig>>()),
       invocation_configs_(std::make_shared<std::vector<LambdaInvocationConfig>>()) {
   const std::shared_ptr<Aws::IOStream> empty_payload = Aws::MakeShared<Aws::StringStream>("");
-  if (num_repetitions > 1 && after_repetition_callbacks.size() != num_repetitions) {
+  if (repetition_count > 1 && after_repetition_callbacks.size() != repetition_count) {
     // TODO(anyone): Align with our new error-handling strategy
-    throw std::runtime_error("Number of after_repetition_callbacks must be equal to num_repetitions");
+    throw std::runtime_error("Number of after_repetition_callbacks must be equal to repetition_count");
   }
 
   for (size_t function_names_index = 0; function_names_index < function_zip_names.size(); function_names_index++) {
@@ -52,7 +52,7 @@ BenchmarkConfig::BenchmarkConfig(const std::vector<Aws::String>& function_zip_na
     if (execute_mode == ExecuteMode::kColdAsync || execute_mode == ExecuteMode::kColdParallel ||
         execute_mode == ExecuteMode::kColdSequential) {
       // Add one function config and invocation config per zip and invocation if benchmarking coldstart
-      for (size_t invocation_index = 0; invocation_index < num_invocations; invocation_index++) {
+      for (size_t invocation_index = 0; invocation_index < invocation_count; invocation_index++) {
         const Aws::String function_name = benchmark_id_ + "-" + benchmark_timestamp_ + "-" +
                                           function_zip_names[function_names_index] + "-" +
                                           std::to_string(function_names_index) + "-" + std::to_string(invocation_index);
@@ -70,7 +70,7 @@ BenchmarkConfig::BenchmarkConfig(const std::vector<Aws::String>& function_zip_na
       const LambdaFunctionConfig function_config{function_path, function_name, memory_sizes[function_names_index]};
       function_configs_->emplace_back(function_config);
 
-      for (size_t invocation_index = 0; invocation_index < num_invocations; invocation_index++) {
+      for (size_t invocation_index = 0; invocation_index < invocation_count; invocation_index++) {
         const Aws::String invocation_id = benchmark_id_ + "-" + benchmark_timestamp_ + "-" +
                                           function_zip_names[function_names_index] + "-" +
                                           std::to_string(invocation_index);

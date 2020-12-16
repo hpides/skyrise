@@ -18,8 +18,8 @@ NetworkThroughputBenchmark::NetworkThroughputBenchmark(std::shared_ptr<Benchmark
                                                        const std::vector<size_t>& function_instance_mb_sizes,
                                                        const std::vector<size_t>& object_byte_sizes,
                                                        const std::vector<size_t>& thread_counts,
-                                                       const size_t num_iterations)
-    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), ExecuteMode::kWarmSequential, num_iterations,
+                                                       const size_t repetition_count)
+    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), ExecuteMode::kWarmSequential, repetition_count,
                        kBatchSize) {
   for (const auto function_instance_mb_size : function_instance_mb_sizes) {
     for (const auto object_byte_size : object_byte_sizes) {
@@ -29,10 +29,10 @@ NetworkThroughputBenchmark::NetworkThroughputBenchmark(std::shared_ptr<Benchmark
             Aws::StringStream function_name;
             function_name << "skyriseFunction" << (operation_type == S3OperationType::kRead ? "Read" : "Write") << "S3";
 
-            BenchmarkConfig config(function_name.str(), function_instance_mb_size, num_iterations_ / batch_size_,
+            BenchmarkConfig config(function_name.str(), function_instance_mb_size, repetition_count_ / batch_size_,
                                    execute_mode_);
             config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size, thread_count,
-                                                operation_type, num_iterations_ / batch_size_));
+                                                operation_type, repetition_count_ / batch_size_));
             configs_.emplace_back(config, NetworkBenchmarkParameters{function_instance_mb_size, object_byte_size,
                                                                      thread_count, operation_type});
           }

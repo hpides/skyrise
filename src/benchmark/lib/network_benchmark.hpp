@@ -28,7 +28,7 @@ class NetworkBenchmark : public Benchmark {
 
  protected:
   NetworkBenchmark(std::shared_ptr<BenchmarkHelper> helper, std::shared_ptr<CostCalculator> cost_calculator,
-                   const ExecuteMode execute_mode, const size_t num_iterations, const size_t batch_size);
+                   const ExecuteMode execute_mode, const size_t repetition_count, const size_t batch_size);
 
   virtual Aws::Utils::Json::JsonValue GenerateResultOutput(
       const std::shared_ptr<std::vector<BenchmarkItemResult>>& result,
@@ -42,7 +42,7 @@ class NetworkBenchmark : public Benchmark {
   std::vector<std::shared_ptr<Aws::IOStream>> GeneratePayloads(const size_t function_instance_mb_size,
                                                                const size_t object_byte_size, const size_t thread_count,
                                                                const S3OperationType operation_type,
-                                                               const size_t num_payloads);
+                                                               const size_t payload_count);
 
   long double ExtractFunctionCost(const BenchmarkItemResult& result, const size_t function_instance_mb_size);
   long double CalculateBenchmarkCost(const std::shared_ptr<std::vector<BenchmarkItemResult>>& result,
@@ -59,7 +59,7 @@ class NetworkBenchmark : public Benchmark {
   const std::shared_ptr<CostCalculator> cost_calculator_;
 
   const ExecuteMode execute_mode_;
-  const size_t num_iterations_;
+  const size_t repetition_count_;
   const size_t batch_size_;
 
   std::vector<std::tuple<BenchmarkConfig, NetworkBenchmarkParameters>> configs_;

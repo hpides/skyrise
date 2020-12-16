@@ -18,24 +18,24 @@ NetworkLatencyBenchmark::NetworkLatencyBenchmark(std::shared_ptr<BenchmarkHelper
                                                  const std::vector<size_t>& function_instance_mb_sizes,
                                                  const std::vector<size_t>& object_byte_sizes_read,
                                                  const std::vector<size_t>& object_byte_sizes_write,
-                                                 const size_t num_iterations)
-    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), ExecuteMode::kWarmSequential, num_iterations,
+                                                 const size_t repetition_count)
+    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), ExecuteMode::kWarmSequential, repetition_count,
                        kBatchSize) {
   for (const auto function_instance_mb_size : function_instance_mb_sizes) {
     for (const size_t object_byte_size_read : object_byte_sizes_read) {
-      BenchmarkConfig config("skyriseFunctionReadS3", function_instance_mb_size, num_iterations_ / batch_size_,
+      BenchmarkConfig config("skyriseFunctionReadS3", function_instance_mb_size, repetition_count_ / batch_size_,
                              execute_mode_);
       config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size_read, 1, S3OperationType::kRead,
-                                          num_iterations_ / batch_size_));
+                                          repetition_count_ / batch_size_));
       configs_.emplace_back(config, NetworkBenchmarkParameters{function_instance_mb_size, object_byte_size_read, 1,
                                                                S3OperationType::kRead});
     }
 
     for (const size_t object_byte_size_write : object_byte_sizes_write) {
-      BenchmarkConfig config("skyriseFunctionWriteS3", function_instance_mb_size, num_iterations_ / batch_size_,
+      BenchmarkConfig config("skyriseFunctionWriteS3", function_instance_mb_size, repetition_count_ / batch_size_,
                              execute_mode_);
       config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size_write, 1, S3OperationType::kWrite,
-                                          num_iterations_ / batch_size_));
+                                          repetition_count_ / batch_size_));
       configs_.emplace_back(config, NetworkBenchmarkParameters{function_instance_mb_size, object_byte_size_write, 1,
                                                                S3OperationType::kWrite});
     }

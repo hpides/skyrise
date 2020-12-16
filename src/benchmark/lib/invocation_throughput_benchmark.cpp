@@ -44,7 +44,7 @@ Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
     const BenchmarkConfig& benchmark_config) {
   Aws::StringStream benchmark_name;
   benchmark_name << "InvocationThroughputBenchmark/" << benchmark_config.function_configs_->front().memory_size << "/"
-                 << benchmark_config.num_invocations_ << "/" << magic_enum::enum_name(benchmark_config.execute_mode_);
+                 << benchmark_config.invocation_count_ << "/" << magic_enum::enum_name(benchmark_config.execute_mode_);
 
   auto min_start_time = benchmark_result->front().start_time;
   auto max_end_time = benchmark_result->front().end_time;
@@ -55,7 +55,7 @@ Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
   }
 
   const double duration = std::chrono::duration<double>(max_end_time - min_start_time).count();
-  const double throughput = benchmark_config.num_invocations_ / duration;
+  const double throughput = benchmark_config.invocation_count_ / duration;
 
   return BenchmarkHelper::GenerateJsonOutput(
       benchmark_name.str(), {{"throughput", throughput}}, {/*aggregated string metrics*/}, benchmark_result,

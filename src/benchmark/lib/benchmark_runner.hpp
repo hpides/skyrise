@@ -33,7 +33,7 @@ class BenchmarkRunner {
 
   std::shared_ptr<std::vector<BenchmarkItemResult>> RunConfig(const BenchmarkConfig& config);
 
-  size_t num_setup_threads_ = 32;
+  size_t setup_thread_count_ = 32;
 
  private:
   void SetConfig(const BenchmarkConfig& config);
@@ -51,10 +51,10 @@ class BenchmarkRunner {
       const std::shared_ptr<Aws::IOStream>& payload = nullptr);
   std::shared_ptr<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>> CreateInvokeRequests();
   std::shared_ptr<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>> CreateWarmupInvokeRequests();
-  std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> CollectSqsMessages(const size_t num_invocations);
+  std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> CollectSqsMessages(const size_t invocation_count);
 
   static Aws::Utils::CryptoBuffer OpenFunctionZip(const Aws::String& function_path);
-  std::vector<Aws::Lambda::Model::CreateFunctionOutcome> UploadFunctions(const size_t num_threads,
+  std::vector<Aws::Lambda::Model::CreateFunctionOutcome> UploadFunctions(const size_t thread_count,
                                                                          const size_t thread_index);
   BenchmarkItemResult RunBenchmarkItem(const Aws::String& invocation_id,
                                        const Aws::Lambda::Model::InvokeRequest& invoke_request);

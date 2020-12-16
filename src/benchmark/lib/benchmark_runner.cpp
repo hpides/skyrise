@@ -82,13 +82,13 @@ void BenchmarkRunner::SetConfig(const BenchmarkConfig& config) {
 void BenchmarkRunner::Setup() {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Creating functions...");
 
-  size_t num_functions = config_->function_configs_->size();
-  size_t num_threads = num_functions > num_setup_threads_ ? num_setup_threads_ : num_functions;
+  size_t function_count = config_->function_configs_->size();
+  size_t thread_count = function_count > setup_thread_count_ ? setup_thread_count_ : function_count;
   std::vector<std::future<std::vector<Aws::Lambda::Model::CreateFunctionOutcome>>> outcome_vec_futures;
-  outcome_vec_futures.reserve(num_threads);
+  outcome_vec_futures.reserve(thread_count);
 
-  for (size_t i = 0; i < num_threads; i++) {
-    outcome_vec_futures.emplace_back(std::async(&BenchmarkRunner::UploadFunctions, this, num_threads, i));
+  for (size_t i = 0; i < thread_count; i++) {
+    outcome_vec_futures.emplace_back(std::async(&BenchmarkRunner::UploadFunctions, this, thread_count, i));
   }
 
   // We first wait for all threads to finish so that we do not tear down functions that are still uploading in case of
@@ -221,9 +221,9 @@ void BenchmarkRunner::RunSequential() {
   for (const auto& [invocation_id, invoke_request] : *invoke_requests_) {
     benchmark_item_results->emplace_back(RunBenchmarkItem(invocation_id, invoke_request));
 
-    const auto is_last_invocation_of_repetition = (invocation_index + 1) % config_->num_invocations_ == 0;
-    if (config_->num_repetitions_ > 1 && is_last_invocation_of_repetition) {
-      const size_t current_repetition = (invocation_index / config_->num_invocations_);
+    const auto is_last_invocation_of_repetition = (invocation_index + 1) % config_->invocation_count_ == 0;
+    if (config_->repetition_count_ > 1 && is_last_invocation_of_repetition) {
+      const size_t current_repetition = (invocation_index / config_->invocation_count_);
       AWS_LOGSTREAM_INFO(kTag.c_str(), "Repetition " << current_repetition << " completed.");
       config_->after_repetition_callbacks_[current_repetition]();
     }
@@ -256,14 +256,14 @@ void BenchmarkRunner::RunParallel() {
   for (const auto& [invocation_id, invoke_request] : *invoke_requests_) {
     future_results.emplace_back(std::async(&BenchmarkRunner::RunBenchmarkItem, this, invocation_id, invoke_request));
 
-    const auto is_last_invocation_of_repetition = (invocation_index + 1) % config_->num_invocations_ == 0;
+    const auto is_last_invocation_of_repetition = (invocation_index + 1) % config_->invocation_count_ == 0;
 
     // TODO(anyone): Extend repetition framework to enable invocation in a nested for-loop
-    if (config_->num_repetitions_ > 1 && is_last_invocation_of_repetition) {
-      const auto current_repetition = (invocation_index / config_->num_invocations_);
+    if (config_->repetition_count_ > 1 && is_last_invocation_of_repetition) {
+      const auto current_repetition = (invocation_index / config_->invocation_count_);
 
-      auto future_results_it = future_results.cbegin() + current_repetition * config_->num_invocations_;
-      auto future_results_end = future_results.cbegin() + (current_repetition + 1) * config_->num_invocations_;
+      auto future_results_it = future_results.cbegin() + current_repetition * config_->invocation_count_;
+      auto future_results_end = future_results.cbegin() + (current_repetition + 1) * config_->invocation_count_;
 
       while (future_results_it != future_results_end) {
         future_results_it->wait();
@@ -317,7 +317,7 @@ std::pair<Aws::String, Aws::Lambda::Model::InvokeRequest> BenchmarkRunner::Creat
   const auto invocation_type = IsAsyncBenchmark() ? Aws::Lambda::Model::InvocationType::Event
                                                   : Aws::Lambda::Model::InvocationType::RequestResponse;
   Aws::StringStream supplemented_id;
-  supplemented_id << (config_->num_repetitions_ > 1 ? "repetition-" + std::to_string(repetition) + "-" : "");
+  supplemented_id << (config_->repetition_count_ > 1 ? "repetition-" + std::to_string(repetition) + "-" : "");
   supplemented_id << invocation_id << (is_warmup ? "-warmup" : "");
 
   const auto json_value = [&]() {
@@ -347,9 +347,9 @@ BenchmarkRunner::CreateInvokeRequests() {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Creating invoke requests...");
 
   auto invoke_requests = std::make_shared<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>>();
-  invoke_requests->reserve(config_->num_repetitions_ * config_->invocation_configs_->size());
+  invoke_requests->reserve(config_->repetition_count_ * config_->invocation_configs_->size());
 
-  for (size_t i = 0; i < config_->num_repetitions_; i++) {
+  for (size_t i = 0; i < config_->repetition_count_; i++) {
     for (const auto& config : *(config_->invocation_configs_)) {
       invoke_requests->emplace(
           CreateInvokeRequest(config.function_name, config.invocation_id, i, false, config.payload));
@@ -368,14 +368,14 @@ BenchmarkRunner::CreateWarmupInvokeRequests() {
   auto invoke_requests = std::make_shared<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>>();
 
   if (config_->execute_mode_ == ExecuteMode::kWarmSequential) {
-    invoke_requests->reserve(config_->num_repetitions_ * config_->function_configs_->size());
+    invoke_requests->reserve(config_->repetition_count_ * config_->function_configs_->size());
 
     for (const auto& function_config : *config_->function_configs_) {
       invoke_requests->emplace(
           CreateInvokeRequest(function_config.function_name, function_config.function_name, 0, true));
     }
   } else {
-    invoke_requests->reserve(config_->num_repetitions_ * config_->invocation_configs_->size());
+    invoke_requests->reserve(config_->repetition_count_ * config_->invocation_configs_->size());
 
     for (const auto& invocation_config : *config_->invocation_configs_) {
       invoke_requests->emplace(
@@ -389,14 +389,14 @@ BenchmarkRunner::CreateWarmupInvokeRequests() {
 }
 
 std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> BenchmarkRunner::CollectSqsMessages(
-    const size_t num_invocations) {
+    const size_t invocation_count) {
   auto sqs_messages = std::make_shared<std::unordered_map<Aws::String, Aws::String>>();
-  sqs_messages->reserve(num_invocations);
+  sqs_messages->reserve(invocation_count);
 
   const auto& sqs_client = client_aws_->GetSQSClient();
   size_t receive_message_requests = 0;
 
-  while (sqs_messages->size() < num_invocations && receive_message_requests < config_->timeout_) {
+  while (sqs_messages->size() < invocation_count && receive_message_requests < config_->timeout_) {
     receive_message_requests++;
     const auto receive_message_outcome = sqs_client.ReceiveMessage(Aws::SQS::Model::ReceiveMessageRequest()
                                                                        .WithQueueUrl(*sqs_queue_url_)
@@ -442,10 +442,10 @@ Aws::Utils::CryptoBuffer BenchmarkRunner::OpenFunctionZip(const Aws::String& fun
   return Aws::Utils::CryptoBuffer(reinterpret_cast<const unsigned char*>(ret.c_str()), ret.size());
 }
 
-std::vector<Aws::Lambda::Model::CreateFunctionOutcome> BenchmarkRunner::UploadFunctions(const size_t num_threads,
+std::vector<Aws::Lambda::Model::CreateFunctionOutcome> BenchmarkRunner::UploadFunctions(const size_t thread_count,
                                                                                         const size_t thread_index) {
-  size_t num_functions = config_->function_configs_->size();
-  const double block_size = num_functions / static_cast<double>(num_threads);
+  size_t function_count = config_->function_configs_->size();
+  const double block_size = function_count / static_cast<double>(thread_count);
   const auto lower_bound = static_cast<size_t>(thread_index * block_size);
   const auto upper_bound = static_cast<size_t>(static_cast<double>(thread_index + 1) * block_size);
 

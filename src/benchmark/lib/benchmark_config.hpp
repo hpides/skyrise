@@ -29,21 +29,21 @@ enum class ExecuteMode { kColdSequential, kColdParallel, kColdAsync, kWarmSequen
 
 class BenchmarkConfig {
  public:
-  BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size, const size_t num_invocations,
+  BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size, const size_t invocation_count,
                   const ExecuteMode execute_mode);
-  BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size, const size_t num_invocations,
-                  const ExecuteMode execute_mode, const size_t num_repetitions,
+  BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size, const size_t invocation_count,
+                  const ExecuteMode execute_mode, const size_t repetition_count,
                   const std::vector<std::function<void()>>& after_repetitions_callbacks);
   BenchmarkConfig(const std::vector<Aws::String>& function_zip_names, const std::vector<size_t>& memory_sizes,
-                  const size_t num_invocations, const ExecuteMode execute_mode, const size_t num_repetitions,
+                  const size_t invocation_count, const ExecuteMode execute_mode, const size_t repetition_count,
                   const std::vector<std::function<void()>>& after_repetition_callbacks, const size_t timeout);
 
   void SetPayloads(const std::vector<std::shared_ptr<Aws::IOStream>>& payloads);
   void SetOnePayloadForAllFunctions(const std::shared_ptr<Aws::IOStream>& payload);
 
-  const size_t num_invocations_;
+  const size_t invocation_count_;
   const ExecuteMode execute_mode_;
-  const size_t num_repetitions_;
+  const size_t repetition_count_;
   const std::vector<std::function<void()>> after_repetition_callbacks_;
   const size_t timeout_;
 

@@ -17,7 +17,7 @@ namespace skyrise {
 IdleAvailabilityBenchmark::IdleAvailabilityBenchmark(const std::vector<size_t>& function_instance_mb_sizes,
                                                      const std::vector<size_t>& invocation_counts,
                                                      const size_t sleep_min_duration, const size_t repetition_count)
-    : sleep_min_duration_(sleep_min_duration), repetition_count_(repetition_count) {
+    : sleep_min_duration_(sleep_min_duration) {
   std::vector<std::function<void()>> after_repetition_callbacks;
   after_repetition_callbacks.reserve(repetition_count + 1);
 
@@ -58,20 +58,21 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> IdleAvailabilityBenchmark::Run(
 
 Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
     const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
-    const BenchmarkConfig& benchmark_config) {
+    const BenchmarkConfig& benchmark_config) const {
   Aws::StringStream benchmark_name;
   benchmark_name << "IdleAvailabilityBenchmark/" << benchmark_config.function_configs_->front().memory_size << "/"
-                 << benchmark_config.num_invocations_ << "/" << sleep_min_duration_ << "/" << repetition_count_;
+                 << benchmark_config.invocation_count_ << "/" << sleep_min_duration_ << "/"
+                 << benchmark_config.repetition_count_;
 
   std::map<std::string, std::vector<bool>> vm_ids_to_availability_flags;
 
-  for (size_t i = 0; i < benchmark_config.num_repetitions_; ++i) {
-    for (size_t j = 0; j < benchmark_config.num_invocations_; ++j) {
+  for (size_t i = 0; i < benchmark_config.repetition_count_; ++i) {
+    for (size_t j = 0; j < benchmark_config.invocation_count_; ++j) {
       const std::string vm_id =
-          StreamToString(&(*benchmark_result)[i * benchmark_config.num_invocations_ + j].invoke_result->GetPayload());
+          StreamToString(&(*benchmark_result)[i * benchmark_config.invocation_count_ + j].invoke_result->GetPayload());
 
       if (i == 0) {
-        vm_ids_to_availability_flags.try_emplace(vm_id, repetition_count_, false);
+        vm_ids_to_availability_flags.try_emplace(vm_id, benchmark_config.repetition_count_, false);
       } else if (vm_ids_to_availability_flags.count(vm_id) > 0) {
         vm_ids_to_availability_flags[vm_id][i] = true;
       }
@@ -117,7 +118,8 @@ Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
       }
     }
 
-    availability_percentages.emplace_back(available_repetition_count / static_cast<double>(repetition_count_));
+    availability_percentages.emplace_back(available_repetition_count /
+                                          static_cast<double>(benchmark_config.repetition_count_));
     unavailable_phases_counts.emplace_back(static_cast<double>(unavailable_phases_count));
   }
 
