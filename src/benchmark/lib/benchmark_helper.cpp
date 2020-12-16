@@ -46,6 +46,9 @@ BenchmarkAggregates BenchmarkHelper::CalculateAggregates(std::vector<double> met
   const double maximum = metrics.back();
 
   const double average = std::accumulate(metrics.cbegin(), metrics.cend(), 0.0) / metrics.size();
+
+  // The median and the other percentiles are calculated according to the nearest-rank, exclusive definition
+  // (cf. https://en.wikipedia.org/wiki/Percentile).
   const double median = metrics[static_cast<size_t>(metrics.size() * 0.5)];
 
   const double percentile_0_01 = metrics[static_cast<size_t>(metrics.size() * 0.001)];
