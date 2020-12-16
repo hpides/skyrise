@@ -44,10 +44,9 @@ BenchmarkAggregates BenchmarkHelper::CalculateAggregates(std::vector<double> met
 
   const double minimum = metrics.front();
   const double maximum = metrics.back();
-  const double average = std::accumulate(metrics.cbegin(), metrics.cend(), 0.0) / metrics.size();
 
-  const double median = metrics.size() % 2 == 0 ? (metrics[metrics.size() / 2 - 1] + metrics[metrics.size() / 2]) / 2
-                                                : metrics[(metrics.size() / 2)];
+  const double average = std::accumulate(metrics.cbegin(), metrics.cend(), 0.0) / metrics.size();
+  const double median = metrics[static_cast<size_t>(metrics.size() * 0.5)];
 
   const double percentile_0_01 = metrics[static_cast<size_t>(metrics.size() * 0.001)];
   const double percentile_0_1 = metrics[static_cast<size_t>(metrics.size() * 0.0001)];

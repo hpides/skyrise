@@ -51,7 +51,7 @@ TEST_F(BenchmarkHelperTest, CalculateAggregates) {
     EXPECT_EQ(aggregates.minimum, 0.0);
     EXPECT_EQ(aggregates.maximum, 99'999.0);
     EXPECT_EQ(aggregates.average, 49'999.5);
-    EXPECT_EQ(aggregates.median, 49'999.5);
+    EXPECT_EQ(aggregates.median, 50'000.0);
     EXPECT_EQ(aggregates.percentile_90, 90'000.0);
     EXPECT_EQ(aggregates.percentile_99, 99'000.0);
     EXPECT_EQ(aggregates.percentile_99_9, 99'900.0);
