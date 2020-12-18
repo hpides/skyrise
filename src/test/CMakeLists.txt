@@ -10,11 +10,15 @@ set(
 
     lib/storage/backend/abstract_provider.hpp
     lib/storage/backend/filesystem_provider.hpp
+    lib/storage/backend/mock_storage.cpp
+    lib/storage/backend/mock_storage.hpp
     lib/storage/backend/s3_provider.hpp
     lib/storage/backend/storage_test.cpp
     
     lib/storage/formats/csv_test.cpp
     lib/storage/formats/orc_test.cpp
+    
+    lib/storage/table/table_test.cpp
 
     lib/storage/types/chunk_test.cpp
     lib/storage/types/table_column_definition_test.cpp

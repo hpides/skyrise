@@ -6,6 +6,7 @@ set(
     SHARED_SOURCES
     utils/array.hpp
     utils/assert.hpp
+    utils/concurrent/queue.hpp
     utils/filesystem.cpp
     utils/filesystem.hpp
     utils/git_metadata.cpp
@@ -75,6 +76,8 @@ set(
     storage/formats/csv.hpp
     storage/formats/orc.cpp
     storage/formats/orc.hpp
+    storage/table/writer.cpp
+    storage/table/writer.hpp
     storage/types/abstract_segment.hpp
     storage/types/all_variants.hpp
     storage/types/base_value_segment.hpp

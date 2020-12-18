@@ -15,7 +15,7 @@ namespace skyrise {
 // `Configuration`. Concrete implementations are not thread-safe.
 class AbstractFormatter {
  public:
-  ~AbstractFormatter() = default;
+  virtual ~AbstractFormatter() = default;
 
   // Initialize the formatter with a given schema. must be called exactly once before any calls to ProcessChunk() or
   // Finalize(). Initialize may already write data to the output.
