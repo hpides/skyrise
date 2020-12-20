@@ -146,26 +146,53 @@ std::shared_ptr<Aws::IOStream> BenchmarkHelper::GenerateRandomObject(const size_
   return std::make_shared<Aws::StringStream>(RandomString(num_bytes));
 }
 
-long double BenchmarkHelper::UploadObjectToS3Bucket(const Aws::String& bucket_name, const Aws::String& object_key,
-                                                    const std::shared_ptr<Aws::IOStream>& object,
-                                                    const size_t num_bytes) const {
-  AWS_LOGSTREAM_INFO(kTag.c_str(), "Uploading " << ByteToMb(num_bytes) << " MB file to S3...");
+long double BenchmarkHelper::UploadObjectToS3(const Aws::String& bucket_name, const Aws::String& object_key,
+                                              const std::shared_ptr<Aws::IOStream>& object,
+                                              const size_t num_bytes) const {
+  return UploadObjectToS3Parallel({{object_key, object, num_bytes}}, bucket_name);
+}
 
-  auto put_object_request = Aws::S3::Model::PutObjectRequest().WithBucket(bucket_name).WithKey(object_key);
-  put_object_request.SetBody(object);
+long double BenchmarkHelper::UploadObjectToS3Parallel(
+    const std::vector<std::tuple<Aws::String, std::shared_ptr<Aws::IOStream>, size_t>>& objects,
+    const Aws::String& bucket_name) const {
+  AWS_LOGSTREAM_INFO(kTag.c_str(), "Uploading objects to S3...");
 
-  const auto put_object_outcome = client_aws_->GetS3Client().PutObject(put_object_request);
+  const auto& s3_client = client_aws_->GetS3Client();
 
-  if (!put_object_outcome.IsSuccess()) {
-    Fail(put_object_outcome.GetError().GetMessage());
+  std::vector<Aws::S3::Model::PutObjectOutcomeCallable> callables;
+  callables.reserve(objects.size());
+
+  size_t num_bytes_total = 0;
+
+  for (const auto& [object_key, object, num_bytes] : objects) {
+    auto put_object_request = Aws::S3::Model::PutObjectRequest().WithBucket(bucket_name).WithKey(object_key);
+    put_object_request.SetBody(object);
+    callables.emplace_back(s3_client.PutObjectCallable(put_object_request));
+    num_bytes_total += num_bytes;
   }
 
-  AWS_LOGSTREAM_INFO(kTag.c_str(), "File uploaded.");
+  size_t num_errors = 0;
+
+  for (size_t i = 0; i < callables.size(); i++) {
+    const auto& outcome = callables[i].get();
+
+    if (!outcome.IsSuccess()) {
+      AWS_LOGSTREAM_ERROR(kTag.c_str(), outcome.GetError().GetExceptionName()
+                                            << ": " << outcome.GetError().GetMessage());
+      num_errors++;
+    } else {
+      AWS_LOGSTREAM_INFO(kTag.c_str(), std::get<0>(objects[i]) << " was uploaded successfully to S3.");
+    }
+  }
+
+  if (num_errors > 0) {
+    Fail(std::to_string(num_errors) + " errors during multi-threaded upload to S3.");
+  }
 
   // TODO(d-justen): Find a way to track actual hours. For now, we assume that S3 objects will be deleted within an
   // hour.
-  const long double storage_cost = cost_calculator_.CalculateCostS3StorageMonthly(num_bytes, 1);
-  const long double request_cost = cost_calculator_.CalculateCostS3Requests(1, 0);
+  const long double storage_cost = cost_calculator_.CalculateCostS3StorageMonthly(num_bytes_total, 1);
+  const long double request_cost = cost_calculator_.CalculateCostS3Requests(callables.size(), 0);
 
   return storage_cost + request_cost;
 }

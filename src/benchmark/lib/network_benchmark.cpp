@@ -53,23 +53,27 @@ void NetworkBenchmark::Setup() {
   const bool is_parallel =
       execute_mode_ != ExecuteMode::kColdSequential && execute_mode_ != ExecuteMode::kWarmSequential;
 
-  for (const auto& [config, parameters] : configs_) {
+  std::vector<std::tuple<Aws::String, std::shared_ptr<Aws::IOStream>, size_t>> objects;
+
+  for (auto [config, parameters] : configs_) {
     if (parameters.operation_type_ == S3OperationType::kRead) {
       for (size_t i = 0; i < parameters.thread_count_; i++) {
         if (is_parallel) {
           for (size_t j = 0; j < repetition_count_; j++) {
-            cost_overhead_ += helper_->UploadObjectToS3Bucket(
-                kReadBucket, GenerateObjectKey(true, parameters.object_byte_size_, i, j),
-                BenchmarkHelper::GenerateRandomObject(parameters.object_byte_size_), parameters.object_byte_size_);
+            objects.emplace_back(GenerateObjectKey(true, parameters.object_byte_size_, i, j),
+                                 BenchmarkHelper::GenerateRandomObject(parameters.object_byte_size_),
+                                 parameters.object_byte_size_);
           }
         } else {
-          cost_overhead_ += helper_->UploadObjectToS3Bucket(
-              kReadBucket, GenerateObjectKey(false, parameters.object_byte_size_, i),
-              BenchmarkHelper::GenerateRandomObject(parameters.object_byte_size_), parameters.object_byte_size_);
+          objects.emplace_back(GenerateObjectKey(false, parameters.object_byte_size_, i),
+                               BenchmarkHelper::GenerateRandomObject(parameters.object_byte_size_),
+                               parameters.object_byte_size_);
         }
       }
     }
   }
+
+  cost_overhead_ += helper_->UploadObjectToS3Parallel(objects, kReadBucket);
 }
 
 void NetworkBenchmark::Teardown() {
@@ -83,8 +87,8 @@ Aws::String NetworkBenchmark::GenerateObjectKey(const bool is_parallel, const si
   // https://docs.aws.amazon.com/AmazonS3/latest/dev/optimizing-performance.html
 
   Aws::StringStream object_key;
-  object_key << thread_index << "-" << (is_parallel ? std::to_string(iteration_index) : "") << objects_byte_size << "B-"
-             << kObjectKeySuffix;
+  object_key << thread_index << "-" << (is_parallel ? std::to_string(iteration_index) + "-" : "") << objects_byte_size
+             << "B-" << kObjectKeySuffix;
   return object_key.str();
 }
 
