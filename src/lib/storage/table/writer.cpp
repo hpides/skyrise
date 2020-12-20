@@ -79,7 +79,7 @@ void TableWriter::ProcessChunkLoop() {
 
   std::shared_ptr<Chunk> chunk;
   while (true) {
-    queue_.Pop(chunk);
+    queue_.Pop(&chunk);
 
     // A `nullptr` in the queue is the *only* way how a worker can be stopped.
     if (!chunk) {

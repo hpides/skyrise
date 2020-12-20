@@ -20,6 +20,7 @@ class Queue {
   // Returns the number of elements inside the queue.
   size_t Size() const {
     std::lock_guard<std::mutex> guard(queue_mutex_);
+
     return queue_.size();
   }
 
@@ -27,9 +28,11 @@ class Queue {
   // closed. If the queue has been closed, this call will do nothing and return `false`. It returns `true` otherwise.
   bool Push(const T& value) {
     std::unique_lock<std::mutex> guard = AssureCanWrite();
+
     if (closed_) {
       return false;
     }
+
     queue_.push(value);
     guard.unlock();
     queue_can_read_.notify_one();
@@ -39,9 +42,11 @@ class Queue {
   // closed. If the queue has been closed, this call will do nothing and return `false`. It returns `true` otherwise.
   bool Push(T&& value) {
     std::unique_lock<std::mutex> guard = AssureCanWrite();
+
     if (closed_) {
       return false;
     }
+
     queue_.push(std::move(value));
     guard.unlock();
     queue_can_read_.notify_one();
@@ -50,20 +55,19 @@ class Queue {
 
   // Moves the front value of the queue to `result` and returns `true`. If the queue is empty, this call blocks until a
   // value is available. If the queue is closed this call does not block and it returns `false`.
-  bool Pop(T& result) {
+  bool Pop(T* result) {
     std::unique_lock<std::mutex> guard = AssureCanRead();
 
     // Having no value available means that the queue has been closed.
-    if (queue_.size() == 0) {
+    if (queue_.empty()) {
       return false;
     }
 
-    result = std::move(queue_.front());
+    *result = std::move(queue_.front());
     queue_.pop();
 
     guard.unlock();
     queue_can_write_.notify_one();
-
     return true;
   }
 
@@ -71,6 +75,7 @@ class Queue {
   // be inserted in the queue.
   void Close() {
     std::unique_lock<std::mutex> guard(queue_mutex_);
+
     closed_ = true;
     guard.unlock();
     queue_can_write_.notify_all();
@@ -80,11 +85,11 @@ class Queue {
   std::unique_lock<std::mutex> AssureCanRead() {
     std::unique_lock<std::mutex> guard(queue_mutex_);
 
-    if (queue_.size() > 0 || closed_) {
+    if (!queue_.empty() || closed_) {
       return guard;
     }
 
-    queue_can_read_.wait(guard, [&] { return queue_.size() > 0 || closed_; });
+    queue_can_read_.wait(guard, [&] { return !queue_.empty() || closed_; });
     return guard;
   }
 
