@@ -5,6 +5,7 @@
 
 #include <magic_enum.hpp>
 
+#include "benchmark_result_aggregate.hpp"
 #include "utils/costs/pricing.hpp"
 #include "utils/literal.hpp"
 #include "utils/string.hpp"
@@ -53,20 +54,19 @@ Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
       GenerateBatchedSubResultOutput(result, benchmark_name.str(), parameters.function_instance_mb_size_,
                                      "ms_latencies", [](const double value) { return value; });
 
-  const auto aggregates =
-      BenchmarkHelper::CalculateAggregates(ExtractValuesFromBatchedSubResults(batched_runs, "ms_latencies"));
+  const BenchmarkResultAggregate aggregates(ExtractValuesFromBatchedSubResults(batched_runs, "ms_latencies"));
 
   auto output_json = BenchmarkHelper::GenerateJsonOutput(
       benchmark_name.str(),
-      {{"latency_ms_minimum", aggregates.minimum},
-       {"latency_ms_maximum", aggregates.maximum},
-       {"latency_ms_average", aggregates.average},
-       {"latency_ms_median", aggregates.median},
-       {"latency_ms_percentile_90", aggregates.percentile_90},
-       {"latency_ms_percentile_99", aggregates.percentile_99},
-       {"latency_ms_percentile_99.9", aggregates.percentile_99_9},
-       {"latency_ms_percentile_99.99", aggregates.percentile_99_99},
-       {"latency_ms_std_dev", aggregates.standard_deviation},
+      {{"latency_ms_minimum", aggregates.GetMinimum()},
+       {"latency_ms_maximum", aggregates.GetMaximum()},
+       {"latency_ms_average", aggregates.GetAverage()},
+       {"latency_ms_median", aggregates.GetMedian()},
+       {"latency_ms_percentile_90", aggregates.GetPercentile(90)},
+       {"latency_ms_percentile_99", aggregates.GetPercentile(99)},
+       {"latency_ms_percentile_99.9", aggregates.GetPercentile(99.9)},
+       {"latency_ms_percentile_99.99", aggregates.GetPercentile(99.99)},
+       {"latency_ms_std_dev", aggregates.GetStandardDeviation()},
        {"benchmark_cost_usd", CalculateBenchmarkCost(result, parameters.function_instance_mb_size_)},
        {"benchmark_cost_overhead_usd", cost_overhead_ / configs_.size()}},
       {/*aggregated string metrics*/}, std::make_shared<std::vector<BenchmarkItemResult>>(), {},

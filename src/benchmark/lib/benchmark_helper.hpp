@@ -12,29 +12,10 @@
 
 namespace skyrise {
 
-struct BenchmarkAggregates {
-  double minimum;
-  double maximum;
-  double average;
-  double median;
-  double percentile_0_01;
-  double percentile_0_1;
-  double percentile_1;
-  double percentile_10;
-  double percentile_90;
-  double percentile_99;
-  double percentile_99_9;
-  double percentile_99_99;
-  double standard_deviation;
-};
-
 class BenchmarkHelper {
  public:
   BenchmarkHelper(std::shared_ptr<ClientAws> client_aws) : client_aws_(client_aws), cost_calculator_(client_aws) {}
-  static BenchmarkAggregates CalculateAggregates(
-      const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
-      const std::function<double(const BenchmarkItemResult&)>& extract_metric);
-  static BenchmarkAggregates CalculateAggregates(std::vector<double> metrics);
+
   static Aws::Utils::Json::JsonValue GenerateJsonOutput(
       const Aws::String& benchmark_name, const std::vector<std::tuple<Aws::String, double>>& aggregated_numeric_metrics,
       const std::vector<std::tuple<Aws::String, Aws::String>>& aggregated_alphabetic_metrics,
@@ -53,6 +34,8 @@ class BenchmarkHelper {
       const Aws::String& bucket_name) const;
   long double EmptyS3Bucket(const Aws::String& bucket_name) const;
 
+  static std::vector<double> ExtractMetrics(const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
+                                            const std::function<double(const BenchmarkItemResult&)>& extract_metric);
   static double ExtractMetric(const BenchmarkItemResult& result, const Aws::String& key);
   static double ExtractBilledLambdaDuration(const BenchmarkItemResult& result);
 

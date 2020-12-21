@@ -6,6 +6,7 @@
 
 #include <magic_enum.hpp>
 
+#include "benchmark_result_aggregate.hpp"
 #include "utils/string.hpp"
 #include "utils/unit_conversion.hpp"
 
@@ -64,18 +65,19 @@ Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
                    return ByteToMb(parameters.object_byte_size_) * parameters.thread_count_ / seconds_duration;
                  });
 
-  const auto aggregates = BenchmarkHelper::CalculateAggregates(throughputs);
+  const BenchmarkResultAggregate aggregates(throughputs);
 
   auto output_json = BenchmarkHelper::GenerateJsonOutput(
       benchmark_name.str(),
-      {{"throughput_mb_per_s_minimum", aggregates.maximum},
-       {"throughput_mb_per_s_maximum", aggregates.minimum},
-       {"throughput_mb_per_s_average", aggregates.average},
-       {"throughput_mb_per_s_median", aggregates.median},
-       {"throughput_mb_per_s_percentile_0.01", aggregates.percentile_0_01},
-       {"throughput_mb_per_s_percentile_0.1", aggregates.percentile_0_1},
-       {"throughput_mb_per_s_percentile_1", aggregates.percentile_1},
-       {"throughput_mb_per_s_percentile_10", aggregates.percentile_10},
+      {{"throughput_mb_per_s_minimum", aggregates.GetMinimum()},
+       {"throughput_mb_per_s_maximum", aggregates.GetMaximum()},
+       {"throughput_mb_per_s_average", aggregates.GetAverage()},
+       {"throughput_mb_per_s_median", aggregates.GetMedian()},
+       {"throughput_mb_per_s_percentile_0.01", aggregates.GetPercentile(0.01)},
+       {"throughput_mb_per_s_percentile_0.1", aggregates.GetPercentile(0.1)},
+       {"throughput_mb_per_s_percentile_1", aggregates.GetPercentile(1)},
+       {"throughput_mb_per_s_percentile_10", aggregates.GetPercentile(10)},
+       {"throughput_mb_per_s_std_dev", aggregates.GetStandardDeviation()},
        {"benchmark_cost_usd",
         static_cast<double>(CalculateBenchmarkCost(result, parameters.function_instance_mb_size_))},
        {"benchmark_cost_overhead_usd", cost_overhead_ / configs_.size()}},

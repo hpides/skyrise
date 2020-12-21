@@ -22,53 +22,8 @@
 
 namespace skyrise {
 
-// TODO(anyone): Add commit hash to logging tag
+// TODO(anyone): Add Git commit hash to logging tag
 const std::string kTag = "SKYRISE/BENCHMARK/BENCHMARK_HELPER";
-
-BenchmarkAggregates BenchmarkHelper::CalculateAggregates(
-    const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
-    const std::function<double(const BenchmarkItemResult&)>& extract_metric) {
-  std::vector<double> metrics;
-  std::transform(benchmark_result->cbegin(), benchmark_result->cend(), std::back_inserter(metrics),
-                 [&](const BenchmarkItemResult& result) { return extract_metric(result); });
-
-  return CalculateAggregates(metrics);
-}
-
-BenchmarkAggregates BenchmarkHelper::CalculateAggregates(std::vector<double> metrics) {
-  if (metrics.empty()) {
-    return {};
-  }
-
-  std::sort(metrics.begin(), metrics.end());
-
-  const double minimum = metrics.front();
-  const double maximum = metrics.back();
-
-  const double average = std::accumulate(metrics.cbegin(), metrics.cend(), 0.0) / metrics.size();
-
-  // The median and the other percentiles are calculated according to the nearest-rank, exclusive definition
-  // (cf. https://en.wikipedia.org/wiki/Percentile).
-  const double median = metrics[static_cast<size_t>(metrics.size() * 0.5)];
-
-  const double percentile_0_01 = metrics[static_cast<size_t>(metrics.size() * 0.001)];
-  const double percentile_0_1 = metrics[static_cast<size_t>(metrics.size() * 0.0001)];
-  const double percentile_1 = metrics[static_cast<size_t>(metrics.size() * 0.01)];
-  const double percentile_10 = metrics[static_cast<size_t>(metrics.size() * 0.1)];
-  const double percentile_90 = metrics[static_cast<size_t>(metrics.size() * 0.9)];
-  const double percentile_99 = metrics[static_cast<size_t>(metrics.size() * 0.99)];
-  const double percentile_99_9 = metrics[static_cast<size_t>(metrics.size() * 0.999)];
-  const double percentile_99_99 = metrics[static_cast<size_t>(metrics.size() * 0.9999)];
-
-  const double variance = std::accumulate(metrics.cbegin(), metrics.cend(), 0.0,
-                                          [&](double a, double b) { return a + std::pow(b - average, 2); }) /
-                          static_cast<double>(metrics.size());
-  const double standard_deviation = std::sqrt(variance);
-
-  return {minimum,         maximum,          average,           median,        percentile_0_01,
-          percentile_0_1,  percentile_1,     percentile_10,     percentile_90, percentile_99,
-          percentile_99_9, percentile_99_99, standard_deviation};
-}
 
 // TODO(anyone): Split this into a) CreateJsonOutput, b) AddDoubleMetrics, and c) AddStringMetrics once it gets moved to
 // the abstract Benchmark class
@@ -228,6 +183,18 @@ long double BenchmarkHelper::EmptyS3Bucket(const Aws::String& bucket_name) const
   }
 
   return cost;
+}
+
+std::vector<double> BenchmarkHelper::ExtractMetrics(
+    const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
+    const std::function<double(const BenchmarkItemResult&)>& extract_metric) {
+  std::vector<double> metrics;
+  metrics.reserve(benchmark_result->size());
+
+  std::transform(benchmark_result->cbegin(), benchmark_result->cend(), std::back_inserter(metrics),
+                 [&](const BenchmarkItemResult& result) { return extract_metric(result); });
+
+  return metrics;
 }
 
 double BenchmarkHelper::ExtractMetric(const BenchmarkItemResult& result, const Aws::String& key) {

@@ -8,6 +8,7 @@
 
 #include <magic_enum.hpp>
 
+#include "benchmark_result_aggregate.hpp"
 #include "utils/assert.hpp"
 #include "utils/map.hpp"
 #include "utils/string.hpp"
@@ -123,39 +124,39 @@ Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
     unavailable_phases_counts.emplace_back(static_cast<double>(unavailable_phases_count));
   }
 
-  const auto availability_percentages_aggregates = BenchmarkHelper::CalculateAggregates(availability_percentages);
-  const auto unavailable_phases_counts_aggregates = BenchmarkHelper::CalculateAggregates(unavailable_phases_counts);
-  const auto unavailable_phases_lengths_aggregates = BenchmarkHelper::CalculateAggregates(unavailable_phases_lengths);
+  const BenchmarkResultAggregate availability_percentages_aggregates(availability_percentages);
+  const BenchmarkResultAggregate unavailable_phases_counts_aggregates(unavailable_phases_counts);
+  const BenchmarkResultAggregate unavailable_phases_lengths_aggregates(unavailable_phases_lengths);
 
   return BenchmarkHelper::GenerateJsonOutput(
       benchmark_name.str(),
-      {{"availability_percentage_minimum", availability_percentages_aggregates.minimum},
-       {"availability_percentage_maximum", availability_percentages_aggregates.maximum},
-       {"availability_percentage_average", availability_percentages_aggregates.average},
-       {"availability_percentage_median", availability_percentages_aggregates.median},
-       {"availability_percentage_percentile_0.01", availability_percentages_aggregates.percentile_0_01},
-       {"availability_percentage_percentile_0.1", availability_percentages_aggregates.percentile_0_1},
-       {"availability_percentage_percentile_1", availability_percentages_aggregates.percentile_1},
-       {"availability_percentage_percentile_10", availability_percentages_aggregates.percentile_10},
-       {"availability_percentage_std_dev", availability_percentages_aggregates.standard_deviation},
-       {"unavailable_phases_count_minimum", unavailable_phases_counts_aggregates.minimum},
-       {"unavailable_phases_count_maximum", unavailable_phases_counts_aggregates.maximum},
-       {"unavailable_phases_count_average", unavailable_phases_counts_aggregates.average},
-       {"unavailable_phases_count_median", unavailable_phases_counts_aggregates.median},
-       {"unavailable_phases_count_percentile_90", unavailable_phases_counts_aggregates.percentile_90},
-       {"unavailable_phases_count_percentile_99", unavailable_phases_counts_aggregates.percentile_99},
-       {"unavailable_phases_count_percentile_99.9", unavailable_phases_counts_aggregates.percentile_99_9},
-       {"unavailable_phases_count_percentile_99.99", unavailable_phases_counts_aggregates.percentile_99_99},
-       {"unavailable_phases_count_std_dev", unavailable_phases_counts_aggregates.standard_deviation},
-       {"unavailable_phases_length_minimum", unavailable_phases_lengths_aggregates.minimum},
-       {"unavailable_phases_length_maximum", unavailable_phases_lengths_aggregates.maximum},
-       {"unavailable_phases_length_average", unavailable_phases_lengths_aggregates.average},
-       {"unavailable_phases_length_median", unavailable_phases_lengths_aggregates.median},
-       {"unavailable_phases_length_percentile_90", unavailable_phases_lengths_aggregates.percentile_90},
-       {"unavailable_phases_length_percentile_99", unavailable_phases_lengths_aggregates.percentile_99},
-       {"unavailable_phases_length_percentile_99.9", unavailable_phases_lengths_aggregates.percentile_99_9},
-       {"unavailable_phases_length_percentile_99.99", unavailable_phases_lengths_aggregates.percentile_99_99},
-       {"unavailable_phases_length_std_dev", unavailable_phases_lengths_aggregates.standard_deviation}},
+      {{"availability_percentage_minimum", availability_percentages_aggregates.GetMinimum()},
+       {"availability_percentage_maximum", availability_percentages_aggregates.GetMaximum()},
+       {"availability_percentage_average", availability_percentages_aggregates.GetAverage()},
+       {"availability_percentage_median", availability_percentages_aggregates.GetMedian()},
+       {"availability_percentage_percentile_0.01", availability_percentages_aggregates.GetPercentile(0.01)},
+       {"availability_percentage_percentile_0.1", availability_percentages_aggregates.GetPercentile(0.1)},
+       {"availability_percentage_percentile_1", availability_percentages_aggregates.GetPercentile(1)},
+       {"availability_percentage_percentile_10", availability_percentages_aggregates.GetPercentile(10)},
+       {"availability_percentage_std_dev", availability_percentages_aggregates.GetStandardDeviation()},
+       {"unavailable_phases_count_minimum", unavailable_phases_counts_aggregates.GetMinimum()},
+       {"unavailable_phases_count_maximum", unavailable_phases_counts_aggregates.GetMaximum()},
+       {"unavailable_phases_count_average", unavailable_phases_counts_aggregates.GetAverage()},
+       {"unavailable_phases_count_median", unavailable_phases_counts_aggregates.GetMedian()},
+       {"unavailable_phases_count_percentile_90", unavailable_phases_counts_aggregates.GetPercentile(90)},
+       {"unavailable_phases_count_percentile_99", unavailable_phases_counts_aggregates.GetPercentile(99)},
+       {"unavailable_phases_count_percentile_99.9", unavailable_phases_counts_aggregates.GetPercentile(99.9)},
+       {"unavailable_phases_count_percentile_99.99", unavailable_phases_counts_aggregates.GetPercentile(99.99)},
+       {"unavailable_phases_count_std_dev", unavailable_phases_counts_aggregates.GetStandardDeviation()},
+       {"unavailable_phases_length_minimum", unavailable_phases_lengths_aggregates.GetMinimum()},
+       {"unavailable_phases_length_maximum", unavailable_phases_lengths_aggregates.GetMaximum()},
+       {"unavailable_phases_length_average", unavailable_phases_lengths_aggregates.GetAverage()},
+       {"unavailable_phases_length_median", unavailable_phases_lengths_aggregates.GetMedian()},
+       {"unavailable_phases_length_percentile_90", unavailable_phases_lengths_aggregates.GetPercentile(90)},
+       {"unavailable_phases_length_percentile_99", unavailable_phases_lengths_aggregates.GetPercentile(99)},
+       {"unavailable_phases_length_percentile_99.9", unavailable_phases_lengths_aggregates.GetPercentile(99.9)},
+       {"unavailable_phases_length_percentile_99.99", unavailable_phases_lengths_aggregates.GetPercentile(99.99)},
+       {"unavailable_phases_length_std_dev", unavailable_phases_lengths_aggregates.GetStandardDeviation()}},
       {/*aggregated string metrics*/}, benchmark_result, {/*extract double metric functions*/},
       {[&](const BenchmarkItemResult& item_result) {
         return std::make_tuple("vm_id", StreamToString(&item_result.invoke_result->GetPayload()));

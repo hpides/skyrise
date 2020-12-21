@@ -6,7 +6,8 @@ include_directories(
 # Sources
 set(
     TEST_SOURCES
-    benchmark/lib/utils/benchmark_helper_test.cpp
+    benchmark/lib/benchmark_helper_test.cpp
+    benchmark/lib/benchmark_result_aggregate_test.cpp
 
     lib/storage/backend/abstract_provider.hpp
     lib/storage/backend/filesystem_provider.hpp

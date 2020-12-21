@@ -7,6 +7,7 @@
 
 #include <magic_enum.hpp>
 
+#include "benchmark_result_aggregate.hpp"
 #include "utils/assert.hpp"
 #include "utils/map.hpp"
 #include "utils/string.hpp"
@@ -81,19 +82,19 @@ Aws::Utils::Json::JsonValue IdleLifetimeBenchmark::GenerateResultOutput(
     }
   }
 
-  const auto aggregates = BenchmarkHelper::CalculateAggregates(ExtractMapValues(vm_ids_to_idle_lifetimes));
+  const BenchmarkResultAggregate aggregates(ExtractMapValues(vm_ids_to_idle_lifetimes));
 
   return BenchmarkHelper::GenerateJsonOutput(
       benchmark_name.str(),
-      {{"idle_lifetime_min_minimum", aggregates.minimum},
-       {"idle_lifetime_min_maximum", aggregates.maximum},
-       {"idle_lifetime_min_average", aggregates.average},
-       {"idle_lifetime_min_median", aggregates.median},
-       {"idle_lifetime_min_percentile_0.01", aggregates.percentile_0_01},
-       {"idle_lifetime_min_percentile_0.1", aggregates.percentile_0_1},
-       {"idle_lifetime_min_percentile_1", aggregates.percentile_1},
-       {"idle_lifetime_min_percentile_10", aggregates.percentile_10},
-       {"idle_lifetime_min_std_dev", aggregates.standard_deviation}},
+      {{"idle_lifetime_min_minimum", aggregates.GetMinimum()},
+       {"idle_lifetime_min_maximum", aggregates.GetMaximum()},
+       {"idle_lifetime_min_average", aggregates.GetAverage()},
+       {"idle_lifetime_min_median", aggregates.GetMedian()},
+       {"idle_lifetime_min_percentile_0.01", aggregates.GetPercentile(0.01)},
+       {"idle_lifetime_min_percentile_0.1", aggregates.GetPercentile(0.1)},
+       {"idle_lifetime_min_percentile_1", aggregates.GetPercentile(1)},
+       {"idle_lifetime_min_percentile_10", aggregates.GetPercentile(10)},
+       {"idle_lifetime_min_std_dev", aggregates.GetStandardDeviation()}},
       {/*aggregated string metrics*/}, benchmark_result, {/*extract double metric functions*/},
       {[&](const BenchmarkItemResult& item_result) {
         return std::make_tuple("vm_id", StreamToString(&item_result.invoke_result->GetPayload()));

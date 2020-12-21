@@ -18,49 +18,6 @@ namespace skyrise {
 
 class BenchmarkHelperTest : public ::testing::Test {};
 
-TEST_F(BenchmarkHelperTest, CalculateAggregates) {
-  Aws::SDKOptions options;
-
-  Aws::InitAPI(options);
-  {
-    const auto begin = std::chrono::steady_clock::now();
-    const auto benchmark_results = std::make_shared<std::vector<BenchmarkItemResult>>();
-    const Aws::Lambda::Model::InvokeRequest invoke_request;
-    const auto end = std::chrono::steady_clock::now();
-
-    const size_t num_benchmark_item_results = 100'000;
-    const double average = (num_benchmark_item_results - 1) / 2.0;
-
-    for (size_t i = 0; i < num_benchmark_item_results; i++) {
-      benchmark_results->emplace_back(
-          // Instead of creating a shared_ptr<InvokeResult>, we set it to nullptr and use the SQS message instead
-          BenchmarkItemResult{"", invoke_request, true, begin, end, nullptr, std::to_string(i)});
-    }
-
-    const auto aggregates = BenchmarkHelper::CalculateAggregates(
-        benchmark_results, [](const BenchmarkItemResult& b) { return std::stod(b.sqs_message_body); });
-
-    double variance = 0;
-    for (size_t i = 0; i < num_benchmark_item_results; i++) {
-      variance += std::pow(i - average, 2);
-    }
-
-    variance /= num_benchmark_item_results;
-    const double std_dev = std::sqrt(variance);
-
-    EXPECT_EQ(aggregates.minimum, 0.0);
-    EXPECT_EQ(aggregates.maximum, 99'999.0);
-    EXPECT_EQ(aggregates.average, 49'999.5);
-    EXPECT_EQ(aggregates.median, 50'000.0);
-    EXPECT_EQ(aggregates.percentile_90, 90'000.0);
-    EXPECT_EQ(aggregates.percentile_99, 99'000.0);
-    EXPECT_EQ(aggregates.percentile_99_9, 99'900.0);
-    EXPECT_EQ(aggregates.percentile_99_99, 99'990.0);
-    EXPECT_EQ(aggregates.standard_deviation, std_dev);
-  }
-  Aws::ShutdownAPI(options);
-}
-
 TEST_F(BenchmarkHelperTest, GenerateJsonOutput) {
   Aws::SDKOptions options;
 

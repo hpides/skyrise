@@ -5,6 +5,8 @@ set(
     benchmark_config.hpp
     benchmark_helper.cpp
     benchmark_helper.hpp
+    benchmark_result_aggregate.cpp
+    benchmark_result_aggregate.hpp
     benchmark_runner.cpp
     benchmark_runner.hpp
     idle_availability_benchmark.cpp
