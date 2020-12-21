@@ -73,7 +73,7 @@ void NetworkBenchmark::Setup() {
     }
   }
 
-  cost_overhead_ += helper_->UploadObjectToS3Parallel(objects, kReadBucket);
+  cost_overhead_ += helper_->UploadObjectsToS3Parallel(objects, kReadBucket);
 }
 
 void NetworkBenchmark::Teardown() {

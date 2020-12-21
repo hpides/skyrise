@@ -101,13 +101,13 @@ std::shared_ptr<Aws::IOStream> BenchmarkHelper::GenerateRandomObject(const size_
   return std::make_shared<Aws::StringStream>(RandomString(num_bytes));
 }
 
-long double BenchmarkHelper::UploadObjectToS3(const Aws::String& bucket_name, const Aws::String& object_key,
-                                              const std::shared_ptr<Aws::IOStream>& object,
-                                              const size_t num_bytes) const {
-  return UploadObjectToS3Parallel({{object_key, object, num_bytes}}, bucket_name);
+long double BenchmarkHelper::UploadObjectToS3(const Aws::String& object_key,
+                                              const std::shared_ptr<Aws::IOStream>& object_value,
+                                              const size_t object_byte_size, const Aws::String& bucket_name) const {
+  return UploadObjectsToS3Parallel({{object_key, object_value, object_byte_size}}, bucket_name);
 }
 
-long double BenchmarkHelper::UploadObjectToS3Parallel(
+long double BenchmarkHelper::UploadObjectsToS3Parallel(
     const std::vector<std::tuple<Aws::String, std::shared_ptr<Aws::IOStream>, size_t>>& objects,
     const Aws::String& bucket_name) const {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Uploading objects to S3...");
@@ -119,6 +119,7 @@ long double BenchmarkHelper::UploadObjectToS3Parallel(
 
   size_t num_bytes_total = 0;
 
+  // TODO(anyone): Introduce a client-side thread pool
   for (const auto& [object_key, object, num_bytes] : objects) {
     auto put_object_request = Aws::S3::Model::PutObjectRequest().WithBucket(bucket_name).WithKey(object_key);
     put_object_request.SetBody(object);

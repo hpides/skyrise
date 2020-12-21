@@ -27,9 +27,9 @@ class BenchmarkHelper {
 
   long double CreateS3BucketIfNotExists(const Aws::String& bucket_name) const;
   static std::shared_ptr<Aws::IOStream> GenerateRandomObject(const size_t num_bytes);
-  long double UploadObjectToS3(const Aws::String& bucket_name, const Aws::String& object_key,
-                               const std::shared_ptr<Aws::IOStream>& object, const size_t num_bytes) const;
-  long double UploadObjectToS3Parallel(
+  long double UploadObjectToS3(const Aws::String& object_key, const std::shared_ptr<Aws::IOStream>& object_value,
+                               const size_t object_byte_size, const Aws::String& bucket_name) const;
+  long double UploadObjectsToS3Parallel(
       const std::vector<std::tuple<Aws::String, std::shared_ptr<Aws::IOStream>, size_t>>& objects,
       const Aws::String& bucket_name) const;
   long double EmptyS3Bucket(const Aws::String& bucket_name) const;
