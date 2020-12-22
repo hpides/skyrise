@@ -15,6 +15,7 @@
 #include "benchmark_helper.hpp"
 #include "benchmark_runner.hpp"
 #include "client/client_aws.hpp"
+#include "function_colocation_benchmark.hpp"
 #include "idle_availability_benchmark.hpp"
 #include "idle_lifetime_benchmark.hpp"
 #include "invocation_throughput_benchmark.hpp"
@@ -111,6 +112,11 @@ int main(int argc, char* argv[]) {
 
     // Register the benchmarks
     BenchmarkRegistry benchmark_registry;
+
+    // Register FunctionColocationBenchmark
+    benchmark_registry.RegisterBenchmark("FunctionColocationBenchmark",
+                                         std::make_unique<skyrise::FunctionColocationBenchmark>(
+                                             std::vector<size_t>{128, 2048}, std::vector<size_t>{512}, 1, 2));
 
     // Register IdleLifetimeBenchmark
     benchmark_registry.RegisterBenchmark(

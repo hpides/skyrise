@@ -9,6 +9,8 @@ set(
     benchmark_result_aggregate.hpp
     benchmark_runner.cpp
     benchmark_runner.hpp
+    function_colocation_benchmark.cpp
+    function_colocation_benchmark.hpp
     idle_availability_benchmark.cpp
     idle_availability_benchmark.hpp
     idle_lifetime_benchmark.cpp

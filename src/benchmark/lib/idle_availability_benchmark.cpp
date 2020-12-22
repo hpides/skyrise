@@ -63,7 +63,7 @@ Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
   Aws::StringStream benchmark_name;
   benchmark_name << "IdleAvailabilityBenchmark/" << benchmark_config.function_configs_->front().memory_size << "/"
                  << benchmark_config.invocation_count_ << "/" << sleep_min_duration_ << "/"
-                 << benchmark_config.repetition_count_;
+                 << (benchmark_config.repetition_count_ - 1);
 
   std::map<std::string, std::vector<bool>> vm_ids_to_availability_flags;
 
