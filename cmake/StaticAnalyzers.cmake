@@ -45,3 +45,18 @@ if(SKYRISE_ENABLE_CPPLINT)
         message(FATAL_ERROR "Cpplint requested but executable not found")
     endif()
 endif()
+
+# LLVM-Cov
+if(SKYRISE_ENABLE_LLVM_COV)
+    find_program(LLVM_COV_PATH llvm-cov)
+    find_program(LLVM_PROFDATA_PATH llvm-profdata)
+
+    if(NOT LLVM_COV_PATH OR NOT LLVM_PROFDATA_PATH)
+        message(STATUS "llvm-cov not found")
+    else()
+        add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
+        add_link_options(-fprofile-instr-generate -fcoverage-mapping)
+
+        message(STATUS "LLVM-Cov enabled")
+    endif()
+endif()

@@ -41,13 +41,13 @@ pipeline {
                                 stage("Build") {
                                     sh 'mkdir cmake-build-debug'
                                     dir('cmake-build-debug') {
-                                        sh 'cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=Debug -DSKYRISE_ENABLE_CCACHE=OFF -DSKYRISE_ENABLE_CLANG_TIDY=ON'
+                                        sh 'cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=Debug -DSKYRISE_ENABLE_CCACHE=OFF -DSKYRISE_ENABLE_CLANG_TIDY=ON -DSKYRISE_ENABLE_LLVM_COV=ON'
                                         sh 'ninja-build all -j$(nproc)'
                                     }
                                 }
                                 stage("Test") {
                                     dir('cmake-build-debug') {
-                                        sh 'bin/skyriseTest --gtest_output="xml:test-results.xml"'
+                                        sh 'LLVM_PROFILE_FILE=skyriseTest.profraw bin/skyriseTest --gtest_output="xml:test-results.xml"'
                                     }
                                     xunit(
                                         thresholds: [
@@ -58,6 +58,19 @@ pipeline {
                                             GoogleTest(pattern: 'cmake-build-debug/test-results.xml')
                                         ]
                                     )
+                                }
+                                stage("LLVM-Cov") {
+                                    dir('cmake-build-debug') {
+                                        sh '''llvm-profdata merge -sparse skyriseTest.profraw -o skyriseTest.profdata &&
+                                              llvm-cov show -format=html -ignore-filename-regex="(third_party|test)" -output-dir=coverage -instr-profile=skyriseTest.profdata bin/skyriseTest'''
+                                        
+                                        publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: true, reportDir: 'coverage', reportFiles: 'index.html', reportName: 'LLVM-Coverage-Report', reportTitles: ''])
+                                        
+                                        sh 'llvm-cov report -summary-only -ignore-filename-regex="(third_party|test)" -instr-profile=skyriseTest.profdata bin/skyriseTest | tail -n1 -c7 > coverage_percentage.txt'
+                                        archiveArtifacts 'coverage_percentage.txt'
+                                        (coverage_status, coverage_message) = getShellOutput('../script/compare_coverage.sh').tokenize(';')
+                                        githubNotify context: 'llvm-cov', description: "$coverage_message", status: coverage_status, targetUrl: "${env.BUILD_URL}LLVM-Coverage-Report/index.html"
+                                    }
                                 }
                             }
                         },
