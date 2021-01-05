@@ -19,11 +19,13 @@ pipeline {
                 docker {
                     image 'hpiepic/skyrise:build'
                     alwaysPull true
+                    args '--dns=192.168.30.50'
                 }
             }
             environment {
                 AWS_ACCESS_KEY_ID = credentials('skyrise-ci-aws-access-key-id')
                 AWS_SECRET_ACCESS_KEY = credentials('skyrise-ci-aws-secret-access-key')
+                JENKINS_HTTPS_AUTH = credentials('skyrise-ci-https-auth')
                 CCACHE_DISABLE = 'true'
             }
             steps {
@@ -68,8 +70,9 @@ pipeline {
                                         
                                         sh 'llvm-cov report -summary-only -ignore-filename-regex="(third_party|test)" -instr-profile=skyriseTest.profdata bin/skyriseTest | tail -n1 -c7 > coverage_percentage.txt'
                                         archiveArtifacts 'coverage_percentage.txt'
-                                        (coverage_status, coverage_message) = getShellOutput('../script/compare_coverage.sh').tokenize(';')
-                                        githubNotify context: 'llvm-cov', description: "$coverage_message", status: coverage_status, targetUrl: "${env.BUILD_URL}LLVM-Coverage-Report/index.html"
+                                        output = sh script: '../script/compare_coverage.sh', returnStdout: true
+                                        (coverage_status, coverage_message) = output.trim().tokenize(';')
+                                        githubNotify context: 'llvm-cov', description: "$coverage_message", status: "$coverage_status", targetUrl: "${env.BUILD_URL}LLVM-Coverage-Report/index.html"
                                     }
                                 }
                             }
