@@ -52,6 +52,8 @@ class ClientAws {
   const size_t kMaxConnections = 20'000;
   const Aws::String kPricingEndpoint = Aws::Region::US_EAST_1;
   const size_t kRequestTimeoutMs = 900'000;
+  // TODO(anyone): Base the pool size on the underlying number of cores available
+  const size_t kS3ExecutorPoolSize = 32;
 };
 
 }  // namespace skyrise

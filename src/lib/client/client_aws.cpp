@@ -2,6 +2,8 @@
 
 #include <future>
 
+#include <aws/core/utils/threading/Executor.h>
+
 #include "utils/assert.hpp"
 
 namespace skyrise {
@@ -16,9 +18,13 @@ ClientAws::ClientAws() {
   const auto client_configuration = GenerateClientConfig();
   client_region_ = client_configuration.region;
 
-  // The Pricing API does not have endpoints in every region and is therefore always initialized with us-east-1
+  // The Pricing API does not have endpoints in every region and is therefore always initialized with us-east-1.
   auto client_configuration_pricing = GenerateClientConfig();
   client_configuration_pricing.region = kPricingEndpoint;
+
+  // We restrict the request rate for S3 via a PooledThreadExecutor in order to comply with AWS request limits.
+  auto client_configuration_s3 = GenerateClientConfig();
+  client_configuration_s3.executor = std::make_shared<Aws::Utils::Threading::PooledThreadExecutor>(kS3ExecutorPoolSize);
 
   std::vector<std::function<void()>> initializers{
       [&]() {
@@ -33,7 +39,7 @@ ClientAws::ClientAws() {
         pricing_client_ =
             std::make_unique<Aws::Pricing::PricingClient>(credentials_provider, client_configuration_pricing);
       },
-      [&]() { s3_client_ = std::make_unique<Aws::S3::S3Client>(credentials_provider, client_configuration); },
+      [&]() { s3_client_ = std::make_unique<Aws::S3::S3Client>(credentials_provider, client_configuration_s3); },
       [&]() { sqs_client_ = std::make_unique<Aws::SQS::SQSClient>(credentials_provider, client_configuration); },
       [&]() { xray_client_ = std::make_unique<Aws::XRay::XRayClient>(credentials_provider, client_configuration); }};
 
