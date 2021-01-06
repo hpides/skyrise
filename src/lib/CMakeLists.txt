@@ -3,67 +3,6 @@ set(POST_CONFIGURE_FILE "utils/git_metadata.cpp")
 include(${PROJECT_SOURCE_DIR}/third_party/cmake-git-version-tracking/git_watcher.cmake)
 
 set(
-    SHARED_SOURCES
-    utils/array.hpp
-    utils/assert.hpp
-    utils/concurrent/queue.hpp
-    utils/filesystem.cpp
-    utils/filesystem.hpp
-    utils/git_metadata.cpp
-    utils/git_metadata.hpp
-    utils/invalid_input_exception.hpp
-    utils/literal.hpp
-    utils/map.hpp
-    utils/random.hpp
-    utils/string.cpp
-    utils/string.hpp
-    utils/time.cpp
-    utils/time.hpp
-    utils/unit_conversion.hpp
-    utils/vector.hpp
-)
-
-set(
-    SHARED_LIBRARIES
-    aws-cpp-sdk-core
-)
-
-add_library(skyriseShared STATIC ${SHARED_SOURCES})
-
-add_dependencies(skyriseShared check_git)
-
-target_link_libraries(skyriseShared PUBLIC ${SHARED_LIBRARIES})
-
-set(
-    COORDINATOR_SOURCES
-    client/client_aws.cpp
-    client/client_aws.hpp
-    configuration.hpp
-    limits.hpp
-    utils/costs/cost_calculator.cpp
-    utils/costs/cost_calculator.hpp
-    utils/costs/pricing.cpp
-    utils/costs/pricing.hpp
-#   utils/profiling/function_coldstart.(cpp|hpp)
-)
-
-set(
-    COORDINATOR_LIBRARIES
-    aws-cpp-sdk-iam
-    aws-cpp-sdk-lambda
-    aws-cpp-sdk-monitoring
-    aws-cpp-sdk-pricing
-    aws-cpp-sdk-s3
-    aws-cpp-sdk-sqs
-    aws-cpp-sdk-xray
-    skyriseShared
-)
-
-add_library(skyriseCoordinator STATIC ${COORDINATOR_SOURCES})
-
-target_link_libraries(skyriseCoordinator PUBLIC ${COORDINATOR_LIBRARIES})
-
-set(
     STORAGE_SOURCES
     storage/backend/abstract_storage.hpp
     storage/backend/storage_filesystem.cpp
@@ -91,27 +30,86 @@ set(
 )
 
 set(
-    WORKER_SOURCES
-    utils/profiling/function_host_information.cpp
-    utils/profiling/function_host_information.hpp
-    ${SHARED_SOURCES}
+    SHARED_SOURCES
+    utils/array.hpp
+    utils/assert.hpp
+    utils/concurrent/queue.hpp
+    utils/filesystem.cpp
+    utils/filesystem.hpp
+    utils/git_metadata.cpp
+    utils/git_metadata.hpp
+    utils/invalid_input_exception.hpp
+    utils/literal.hpp
+    utils/map.hpp
+    utils/random.hpp
+    utils/string.cpp
+    utils/string.hpp
+    utils/time.cpp
+    utils/time.hpp
+    utils/unit_conversion.hpp
+    utils/vector.hpp
     ${STORAGE_SOURCES}
 )
 
 set(
-    WORKER_LIBRARIES
+    SHARED_LIBRARIES
+    aws-cpp-sdk-core
     aws-cpp-sdk-s3
+)
+
+add_library(skyriseSharedLibrary STATIC ${SHARED_SOURCES})
+
+add_dependencies(skyriseSharedLibrary check_git)
+
+target_link_libraries(skyriseSharedLibrary PUBLIC ${SHARED_LIBRARIES})
+
+add_library(skyriseShared INTERFACE)
+target_link_libraries(skyriseShared
+    INTERFACE
+    skyriseSharedLibrary
+    orcWithDependencies
+)
+
+set(
+    COORDINATOR_SOURCES
+    client/client_aws.cpp
+    client/client_aws.hpp
+    configuration.hpp
+    limits.hpp
+    utils/costs/cost_calculator.cpp
+    utils/costs/cost_calculator.hpp
+    utils/costs/pricing.cpp
+    utils/costs/pricing.hpp
+)
+
+set(
+    COORDINATOR_LIBRARIES
+    aws-cpp-sdk-iam
+    aws-cpp-sdk-lambda
+    aws-cpp-sdk-monitoring
+    aws-cpp-sdk-pricing
+    aws-cpp-sdk-sqs
+    aws-cpp-sdk-xray
+    skyriseShared
+)
+
+add_library(skyriseCoordinator STATIC ${COORDINATOR_SOURCES})
+
+target_link_libraries(skyriseCoordinator PUBLIC ${COORDINATOR_LIBRARIES})
+
+set(
+    WORKER_SOURCES
+    utils/profiling/function_host_information.cpp
+    utils/profiling/function_host_information.hpp
+    ${SHARED_SOURCES}
+)
+
+set(
+    WORKER_LIBRARIES
     aws-lambda-runtime
     skyriseShared
 )
 
-add_library(skyriseWorkerLibrary STATIC ${WORKER_SOURCES})
+add_library(skyriseWorker STATIC ${WORKER_SOURCES})
 
-target_link_libraries(skyriseWorkerLibrary PUBLIC ${WORKER_LIBRARIES})
-
-add_library(skyriseWorker INTERFACE)
-target_link_libraries(skyriseWorker
-    INTERFACE
-    skyriseWorkerLibrary
-    orcWithDependencies
-)
+target_link_libraries(skyriseWorker PUBLIC ${WORKER_LIBRARIES})
