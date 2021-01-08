@@ -324,7 +324,7 @@ std::pair<Aws::String, Aws::Lambda::Model::InvokeRequest> BenchmarkRunner::Creat
     Aws::Utils::Json::JsonValue value;
 
     if (payload) {
-      value = Aws::Utils::Json::JsonValue(StreamToString(&*payload));
+      value = Aws::Utils::Json::JsonValue(StreamToString(payload.get()));
     }
 
     return value.WithString("invocation_id", supplemented_id.str()).WithBool("is_warmup", is_warmup);

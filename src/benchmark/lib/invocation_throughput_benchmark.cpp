@@ -4,17 +4,28 @@
 
 #include <magic_enum.hpp>
 
+#include "utils/string.hpp"
+
 namespace skyrise {
 
 InvocationThroughputBenchmark::InvocationThroughputBenchmark(const std::vector<size_t>& function_instance_mb_sizes,
                                                              const std::vector<size_t>& invocation_counts,
-                                                             const std::vector<ExecuteMode>& execute_modes) {
+                                                             const std::vector<ExecuteMode>& execute_modes,
+                                                             const std::vector<size_t>& function_payload_byte_sizes) {
   benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size() * execute_modes.size());
 
   for (const auto& function_instance_mb_size : function_instance_mb_sizes) {
     for (const auto& invocation_count : invocation_counts) {
       for (const auto& execute_mode : execute_modes) {
-        benchmark_configs_.emplace_back(kFunctionName, function_instance_mb_size, invocation_count, execute_mode);
+        for (const auto& function_payload_byte_size : function_payload_byte_sizes) {
+          BenchmarkConfig config(kFunctionName, function_instance_mb_size, invocation_count, execute_mode);
+
+          if (function_payload_byte_size > 0) {
+            config.SetOnePayloadForAllFunctions(BenchmarkHelper::GenerateRandomObject(function_payload_byte_size));
+          }
+
+          benchmark_configs_.emplace_back(config);
+        }
       }
     }
   }
@@ -44,7 +55,8 @@ Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
     const BenchmarkConfig& benchmark_config) {
   Aws::StringStream benchmark_name;
   benchmark_name << "InvocationThroughputBenchmark/" << benchmark_config.function_configs_->front().memory_size << "/"
-                 << benchmark_config.invocation_count_ << "/" << magic_enum::enum_name(benchmark_config.execute_mode_);
+                 << benchmark_config.invocation_count_ << "/" << magic_enum::enum_name(benchmark_config.execute_mode_)
+                 << "/" << StreamToString(benchmark_config.invocation_configs_->front().payload.get()).size();
 
   auto min_start_time = benchmark_result->front().start_time;
   auto max_end_time = benchmark_result->front().end_time;

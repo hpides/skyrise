@@ -133,9 +133,9 @@ int main(int argc, char* argv[]) {
     benchmark_registry.RegisterBenchmark(
         "InvocationThroughputBenchmark",
         std::make_unique<skyrise::InvocationThroughputBenchmark>(
-            std::vector<size_t>{128}, std::vector<size_t>{128, 256, 512, 1024, 2048, 4096, 8192, 16384},
-            std::vector<skyrise::ExecuteMode>{skyrise::ExecuteMode::kWarmSequential,
-                                              skyrise::ExecuteMode::kWarmParallel, skyrise::ExecuteMode::kWarmAsync}));
+            std::vector<size_t>{128}, std::vector<size_t>{8192},
+            std::vector<skyrise::ExecuteMode>{skyrise::ExecuteMode::kWarmParallel, skyrise::ExecuteMode::kWarmAsync},
+            std::vector<size_t>{skyrise::MbToByte(0)}));
 
     // Register NetworkLatencyBenchmark
     benchmark_registry.RegisterBenchmark(
