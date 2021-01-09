@@ -8,18 +8,18 @@
 
 namespace skyrise {
 
-class CSVFormatterTest : public FormatterTest {};
+class CsvFormatterTest : public FormatterTest {};
 
-TEST_F(CSVFormatterTest, FormatChunkAsCSV) {
+TEST_F(CsvFormatterTest, FormatChunkAsCSV) {
   std::stringstream output;
   std::shared_ptr<std::stringstream> output_ptr(&output, [](auto /*unused*/) {});
 
-  CSVFormatterOptions options;
+  CsvFormatterOptions options;
   options.include_headers = true;
   options.field_separator = ",";
   options.record_separator = "\n";
 
-  CSVFormatter formatter(options);
+  CsvFormatter formatter(options);
   formatter.SetOutput(output_ptr);
 
   formatter.Initialize(schema_);

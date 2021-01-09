@@ -16,10 +16,10 @@ TEST_F(OrcFormatterTest, FormatChunkAsOrc) {
   std::stringstream output;
   std::shared_ptr<std::stringstream> output_ptr(&output, [](auto /*unused*/) {});
 
-  ORCFormatterOptions options;
+  OrcFormatterOptions options;
   options.compression_kind = orc::CompressionKind_NONE;
 
-  ORCFormatter formatter(options);
+  OrcFormatter formatter(options);
   formatter.SetOutput(output_ptr);
 
   formatter.Initialize(schema_);

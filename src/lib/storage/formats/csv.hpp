@@ -13,24 +13,24 @@ namespace skyrise {
 // not be included in the data itself. Keep in mind that TPC-H data can contain "," which is why we chose
 // ";" to be the default field separator.
 
-struct CSVFormatterOptions {
+struct CsvFormatterOptions {
   std::string field_separator = ";";
   std::string record_separator = "\n";
   bool include_headers = true;
 };
 
-class CSVFormatter : public AbstractFormatter {
+class CsvFormatter : public AbstractFormatter {
  public:
-  using Configuration = CSVFormatterOptions;
+  using Configuration = CsvFormatterOptions;
 
-  CSVFormatter(CSVFormatterOptions options = CSVFormatterOptions());
+  CsvFormatter(CsvFormatterOptions options = CsvFormatterOptions());
 
   void Initialize(const TableColumnDefinitions& schema) override;
   void ProcessChunk(const Chunk& chunk) override;
   void Finalize() override;
 
  private:
-  CSVFormatterOptions options_;
+  CsvFormatterOptions options_;
   size_t num_fields_ = 0;
 };
 }  // namespace skyrise

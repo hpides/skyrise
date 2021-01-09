@@ -32,7 +32,7 @@ class TableWriterTest : public ::testing::Test {
     options_.include_headers = false;
     options_.field_separator = ",";
     options_.record_separator = "\n";
-    csv_factory_ = std::make_shared<FormatterFactory<CSVFormatter>>(options_);
+    csv_factory_ = std::make_shared<FormatterFactory<CsvFormatter>>(options_);
 
     config_.format_factory = csv_factory_;
     config_.num_threads = 4;
@@ -58,8 +58,8 @@ class TableWriterTest : public ::testing::Test {
   std::shared_ptr<BaseValueSegment> value_segment_int_;
   std::shared_ptr<BaseValueSegment> value_segment_str_;
   TableColumnDefinitions schema_;
-  CSVFormatterOptions options_;
-  std::shared_ptr<FormatterFactory<CSVFormatter>> csv_factory_;
+  CsvFormatterOptions options_;
+  std::shared_ptr<FormatterFactory<CsvFormatter>> csv_factory_;
   TableWriterConfig config_;
 };
 

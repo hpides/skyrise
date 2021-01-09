@@ -2,9 +2,9 @@
 
 namespace skyrise {
 
-CSVFormatter::CSVFormatter(CSVFormatterOptions options) : options_(std::move(options)) {}
+CsvFormatter::CsvFormatter(CsvFormatterOptions options) : options_(std::move(options)) {}
 
-void CSVFormatter::Initialize(const TableColumnDefinitions& schema) {
+void CsvFormatter::Initialize(const TableColumnDefinitions& schema) {
   num_fields_ = schema.size();
 
   if (options_.include_headers) {
@@ -23,7 +23,7 @@ void CSVFormatter::Initialize(const TableColumnDefinitions& schema) {
   }
 }
 
-void CSVFormatter::ProcessChunk(const Chunk& chunk) {
+void CsvFormatter::ProcessChunk(const Chunk& chunk) {
   if (num_fields_ == 0) {
     return;
   }
@@ -49,7 +49,7 @@ void CSVFormatter::ProcessChunk(const Chunk& chunk) {
   }
 }
 
-void CSVFormatter::Finalize() {
+void CsvFormatter::Finalize() {
   // Nothing to do here.
 }
 

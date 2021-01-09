@@ -2,11 +2,11 @@
 
 namespace skyrise {
 
-ORCFormatter::ORCFormatter(ORCFormatterOptions config)
+OrcFormatter::OrcFormatter(OrcFormatterOptions config)
     : output_proxy_([this](const char* data, size_t length) { WriteToOutput(data, length); }),
       config_(std::move(config)) {}
 
-std::unique_ptr<orc::Type> ORCFormatter::SkyriseTypeToOrcType(DataType type) {
+std::unique_ptr<orc::Type> OrcFormatter::SkyriseTypeToOrcType(DataType type) {
   switch (type) {
     case DataType::kFloat:
       return orc::createPrimitiveType(orc::FLOAT);
@@ -25,7 +25,7 @@ std::unique_ptr<orc::Type> ORCFormatter::SkyriseTypeToOrcType(DataType type) {
   }
 }
 
-void ORCFormatter::Initialize(const TableColumnDefinitions& schema) {
+void OrcFormatter::Initialize(const TableColumnDefinitions& schema) {
   type_ = orc::createStructType();
   for (const TableColumnDefinition& column : schema) {
     type_->addStructField(column.name, SkyriseTypeToOrcType(column.data_type));
@@ -39,7 +39,7 @@ void ORCFormatter::Initialize(const TableColumnDefinitions& schema) {
   writer_ = orc::createWriter(*type_, &output_proxy_, options);
 }
 
-void ORCFormatter::ProcessChunk(const Chunk& chunk) {
+void OrcFormatter::ProcessChunk(const Chunk& chunk) {
   if (!batch_ || batch_->capacity < chunk.Size()) {
     batch_ = writer_->createRowBatch(chunk.Size());
   }
@@ -53,12 +53,12 @@ void ORCFormatter::ProcessChunk(const Chunk& chunk) {
   writer_->add(*batch_);
 }
 
-void ORCFormatter::Finalize() {
+void OrcFormatter::Finalize() {
   writer_->close();
   writer_.reset();
 }
 
-void ORCFormatter::CopySegmentToOrcColumn(const std::shared_ptr<AbstractSegment>& segment,
+void OrcFormatter::CopySegmentToOrcColumn(const std::shared_ptr<AbstractSegment>& segment,
                                           orc::ColumnVectorBatch* orc_column) {
   orc_column->numElements = segment->Size();
   switch (segment->GetDataType()) {
@@ -88,7 +88,7 @@ void ORCFormatter::CopySegmentToOrcColumn(const std::shared_ptr<AbstractSegment>
 }
 
 template <typename SegmentType, typename VectorBatchType>
-void ORCFormatter::GenericCopySegmentToOrcColumn(SegmentType* segment, VectorBatchType* batch) {
+void OrcFormatter::GenericCopySegmentToOrcColumn(SegmentType* segment, VectorBatchType* batch) {
   auto& segment_values = segment->Values();
 
   batch->hasNulls = segment->IsNullable();
@@ -101,7 +101,7 @@ void ORCFormatter::GenericCopySegmentToOrcColumn(SegmentType* segment, VectorBat
 }
 
 template <>
-void ORCFormatter::GenericCopySegmentToOrcColumn(ValueSegment<std::string>* segment, orc::StringVectorBatch* batch) {
+void OrcFormatter::GenericCopySegmentToOrcColumn(ValueSegment<std::string>* segment, orc::StringVectorBatch* batch) {
   // String is special, because we need to store all strings concatenated inside `batch->blob`.
   // In `batch->data` we store pointers to the first character of the string.
   // Finally `batch->length` holds the number of bytes for every string.
