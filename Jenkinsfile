@@ -25,19 +25,12 @@ pipeline {
       environment {
         AWS_ACCESS_KEY_ID = credentials('skyrise-ci-aws-access-key-id')
         AWS_SECRET_ACCESS_KEY = credentials('skyrise-ci-aws-secret-access-key')
-        JENKINS_HTTPS_AUTH = credentials('skyrise-ci-https-auth')
         CCACHE_DISABLE = 'true'
+        JENKINS_HTTPS_AUTH = credentials('skyrise-ci-https-auth')
       }
       steps {
         script {
           parallel(
-            "ClangFormat": {
-              stage("ClangFormat") {
-                stage("clang-format") {
-                  sh 'python3 script/run_clang_format.py --clang_format_binary clang-format --source_dir src --quiet'
-                }
-              }
-            },
             "ClangDebug": {
               stage("ClangDebug") {
                 stage("Build") {
@@ -67,7 +60,7 @@ pipeline {
                     ]
                   )
                 }
-                stage("LLVM-Cov") {
+                stage("Coverage") {
                   dir('cmake-build-debug') {
                     sh '''llvm-profdata merge -sparse skyriseTest.profraw -o skyriseTest.profdata &&
                         llvm-cov show -format=html -ignore-filename-regex="(third_party|test)" -output-dir=coverage \
@@ -111,6 +104,13 @@ pipeline {
                   } else {
                     Utils.markStageSkippedForConditional("ClangRelease")
                   }
+                }
+              }
+            },
+            "ClangFormat": {
+              stage("ClangFormat") {
+                stage("Format") {
+                  sh 'python3 script/run_clang_format.py --clang_format_binary clang-format --source_dir src --quiet'
                 }
               }
             }
@@ -207,7 +207,10 @@ String getCommitterSlackUserId() {
     "engelfa": "U014UBW46AU",
     "jansiebert": "U0142D6U51T",
     "jkhlr": "U0149F0BZPW",
+    "julianmenzler": "U01FTU7BEP3",
     "maltenbergert": "U014GG68EDP",
+    "mweisgut": "U01G1P36TEF",
+    "pscls": "U01DC9KJJ0N",
     "tobodner": "U014FR9CNRF"
   ]
   return gitHubToSlack.containsKey(committerName) ?
