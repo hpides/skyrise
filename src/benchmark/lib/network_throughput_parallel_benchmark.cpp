@@ -16,6 +16,7 @@
 namespace skyrise {
 
 const size_t kBatchSize = 1;
+const ExecuteMode kExecuteMode = ExecuteMode::kWarmParallel;
 // TODO(d-justen): Change to the best performing parameters found by NetworkThroughputBenchmark
 const size_t kFunctionInstanceMbSize = 3008;
 const size_t kObjectByteSize = 16_MB;
@@ -25,17 +26,17 @@ NetworkThroughputParallelBenchmark::NetworkThroughputParallelBenchmark(std::shar
                                                                        std::shared_ptr<CostCalculator> cost_calculator,
                                                                        const std::vector<size_t>& invocation_counts,
                                                                        const size_t repetition_count)
-    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), ExecuteMode::kWarmParallel,
-                       *std::max_element(invocation_counts.cbegin(), invocation_counts.cend()), kBatchSize) {
+    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), repetition_count, kBatchSize, {kObjectByteSize},
+                       {kThreadCount}, invocation_counts) {
   for (const auto operation_type : {S3OperationType::kRead, S3OperationType::kWrite}) {
     Aws::StringStream function_name;
     function_name << "skyriseFunction" << (operation_type == S3OperationType::kRead ? "Read" : "Write") << "S3";
 
-    for (const auto invocation_count : invocation_counts) {
-      BenchmarkConfig config(function_name.str(), kFunctionInstanceMbSize, invocation_count, execute_mode_,
+    for (const auto invocation_count : concurrent_invocation_counts_) {
+      BenchmarkConfig config(function_name.str(), kFunctionInstanceMbSize, invocation_count, kExecuteMode,
                              repetition_count, std::vector<std::function<void()>>(repetition_count, [] {}));
-      config.SetPayloads(
-          GeneratePayloads(kFunctionInstanceMbSize, kObjectByteSize, kThreadCount, operation_type, invocation_count));
+      config.SetPayloads(GeneratePayloads(kFunctionInstanceMbSize, kObjectByteSize, kThreadCount,
+                                          config.invocation_count_, operation_type));
       configs_.emplace_back(
           config, NetworkBenchmarkParameters{kFunctionInstanceMbSize, kObjectByteSize, kThreadCount, operation_type});
     }

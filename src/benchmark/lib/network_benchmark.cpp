@@ -2,22 +2,32 @@
 
 #include <algorithm>
 #include <numeric>
+#include <unordered_map>
+
+#include <magic_enum.hpp>
 
 #include "utils/assert.hpp"
 #include "utils/string.hpp"
-#include "utils/unit_conversion.hpp"
 
 namespace skyrise {
 
 NetworkBenchmark::NetworkBenchmark(std::shared_ptr<BenchmarkHelper> helper,
-                                   std::shared_ptr<CostCalculator> cost_calculator, const ExecuteMode execute_mode,
-                                   const size_t repetition_count, const size_t batch_size)
+                                   std::shared_ptr<CostCalculator> cost_calculator, const size_t repetition_count,
+                                   const size_t batch_size, const std::vector<size_t>& object_byte_sizes,
+                                   const std::vector<size_t>& thread_counts,
+                                   const std::vector<size_t>& concurrent_invocation_counts)
     : helper_(std::move(helper)),
       cost_calculator_(std::move(cost_calculator)),
-      execute_mode_(execute_mode),
       repetition_count_(repetition_count),
       batch_size_(batch_size),
-      cost_overhead_(0) {}
+      object_byte_sizes_(object_byte_sizes),
+      thread_counts_(thread_counts),
+      concurrent_invocation_counts_(concurrent_invocation_counts),
+      cost_overhead_(0) {
+  Assert(!object_byte_sizes_.empty(), "Object byte sizes must not be empty.");
+  Assert(!thread_counts_.empty(), "Thread counts must not be empty.");
+  Assert(!concurrent_invocation_counts_.empty(), "Concurrent invocation counts must not be empty.");
+}
 
 Aws::Utils::Array<Aws::Utils::Json::JsonValue> NetworkBenchmark::Run(
     const std::shared_ptr<BenchmarkRunner>& benchmark_runner) {
@@ -50,30 +60,37 @@ void NetworkBenchmark::Setup() {
   cost_overhead_ += helper_->EmptyS3Bucket(kReadBucket);
   cost_overhead_ += helper_->EmptyS3Bucket(kWriteBucket);
 
-  const bool is_parallel =
-      execute_mode_ != ExecuteMode::kColdSequential && execute_mode_ != ExecuteMode::kWarmSequential;
+  std::unordered_map<size_t, std::shared_ptr<Aws::IOStream>> s3_objects;
+  s3_objects.reserve(object_byte_sizes_.size());
 
-  std::vector<std::tuple<Aws::String, std::shared_ptr<Aws::IOStream>, size_t>> objects;
+  for (const size_t object_byte_size : object_byte_sizes_) {
+    s3_objects.emplace(object_byte_size, BenchmarkHelper::GenerateRandomObject(object_byte_size));
+  }
 
-  for (auto [config, parameters] : configs_) {
-    if (parameters.operation_type_ == S3OperationType::kRead) {
-      for (size_t i = 0; i < parameters.thread_count_; i++) {
-        if (is_parallel) {
-          for (size_t j = 0; j < repetition_count_; j++) {
-            objects.emplace_back(GenerateObjectKey(true, parameters.object_byte_size_, i, j),
-                                 BenchmarkHelper::GenerateRandomObject(parameters.object_byte_size_),
-                                 parameters.object_byte_size_);
-          }
-        } else {
-          objects.emplace_back(GenerateObjectKey(false, parameters.object_byte_size_, i),
-                               BenchmarkHelper::GenerateRandomObject(parameters.object_byte_size_),
-                               parameters.object_byte_size_);
+  const size_t concurrency_maximum =
+      *std::max_element(concurrent_invocation_counts_.cbegin(), concurrent_invocation_counts_.cend());
+  const size_t thread_count_maximum = *std::max_element(thread_counts_.cbegin(), thread_counts_.cend());
+
+  std::vector<std::tuple<Aws::String, std::shared_ptr<Aws::IOStream>, size_t>> objects_to_upload;
+
+  size_t bytes_uploading = 0;
+
+  for (const size_t object_byte_size : object_byte_sizes_) {
+    for (size_t i = 0; i < concurrency_maximum; i++) {
+      for (size_t j = 0; j < thread_count_maximum; j++) {
+        objects_to_upload.emplace_back(GenerateObjectKey(object_byte_size, i, j),
+                                       BenchmarkHelper::GenerateRandomObject(object_byte_size), object_byte_size);
+        bytes_uploading += object_byte_size;
+
+        if (bytes_uploading >= kMaxMemoryUsageBytes) {
+          cost_overhead_ += helper_->UploadObjectsToS3Parallel(objects_to_upload, kReadBucket);
+          objects_to_upload.clear();
         }
       }
     }
   }
 
-  cost_overhead_ += helper_->UploadObjectsToS3Parallel(objects, kReadBucket);
+  cost_overhead_ += helper_->UploadObjectsToS3Parallel(objects_to_upload, kReadBucket);
 }
 
 void NetworkBenchmark::Teardown() {
@@ -81,34 +98,32 @@ void NetworkBenchmark::Teardown() {
   cost_overhead_ += helper_->EmptyS3Bucket(kWriteBucket);
 }
 
-Aws::String NetworkBenchmark::GenerateObjectKey(const bool is_parallel, const size_t objects_byte_size,
-                                                const size_t thread_index, const size_t iteration_index) {
-  // TODO(d-justen): Employ objext key prefixes as described in
-  // https://docs.aws.amazon.com/AmazonS3/latest/dev/optimizing-performance.html
-
+Aws::String NetworkBenchmark::GenerateObjectKey(const size_t object_byte_size, const size_t invocation_index,
+                                                const size_t thread_index) const {
   Aws::StringStream object_key;
-  object_key << thread_index << "-" << (is_parallel ? std::to_string(iteration_index) + "-" : "") << objects_byte_size
-             << "B-" << kObjectKeySuffix;
+  object_key << thread_index << "-" << invocation_index / kMaxObjectsPerPrefix << "/" << object_byte_size << "B-"
+             << invocation_index;
   return object_key.str();
 }
 
 std::vector<std::shared_ptr<Aws::IOStream>> NetworkBenchmark::GeneratePayloads(const size_t function_instance_mb_size,
                                                                                const size_t object_byte_size,
                                                                                const size_t thread_count,
-                                                                               const S3OperationType operation_type,
-                                                                               const size_t payload_count) {
-  const bool is_parallel =
-      execute_mode_ != ExecuteMode::kColdSequential && execute_mode_ != ExecuteMode::kWarmSequential;
-
+                                                                               const size_t invocation_count,
+                                                                               const S3OperationType operation_type) {
   std::vector<std::shared_ptr<Aws::IOStream>> payloads;
-  payloads.reserve(payload_count);
+  payloads.reserve(invocation_count);
 
-  for (size_t i = 0; i < payload_count; i++) {
+  const bool is_parallel =
+      std::any_of(concurrent_invocation_counts_.cbegin(), concurrent_invocation_counts_.cend(),
+                  [](const size_t concurrent_invocation_count) { return concurrent_invocation_count > 1; });
+
+  for (size_t i = 0; i < invocation_count; i++) {
     Aws::Utils::Array<Aws::String> object_keys(thread_count);
 
     for (size_t j = 0; j < thread_count; j++) {
       Aws::StringStream object_key;
-      object_key << GenerateObjectKey(is_parallel, object_byte_size, j, i);
+      object_key << GenerateObjectKey(object_byte_size, is_parallel ? i : 0, j);
 
       if (operation_type == S3OperationType::kWrite) {
         object_key << "-" << function_instance_mb_size << "MB";

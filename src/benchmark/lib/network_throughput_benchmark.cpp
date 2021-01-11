@@ -13,6 +13,7 @@
 namespace skyrise {
 
 const size_t kBatchSize = 100;
+const ExecuteMode kExecuteMode = ExecuteMode::kWarmSequential;
 
 NetworkThroughputBenchmark::NetworkThroughputBenchmark(std::shared_ptr<BenchmarkHelper> helper,
                                                        std::shared_ptr<CostCalculator> cost_calculator,
@@ -20,8 +21,8 @@ NetworkThroughputBenchmark::NetworkThroughputBenchmark(std::shared_ptr<Benchmark
                                                        const std::vector<size_t>& object_byte_sizes,
                                                        const std::vector<size_t>& thread_counts,
                                                        const size_t repetition_count)
-    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), ExecuteMode::kWarmSequential, repetition_count,
-                       kBatchSize) {
+    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), repetition_count, kBatchSize, object_byte_sizes,
+                       thread_counts, {1}) {
   for (const auto function_instance_mb_size : function_instance_mb_sizes) {
     for (const auto object_byte_size : object_byte_sizes) {
       for (const auto thread_count : thread_counts) {
@@ -31,9 +32,9 @@ NetworkThroughputBenchmark::NetworkThroughputBenchmark(std::shared_ptr<Benchmark
             function_name << "skyriseFunction" << (operation_type == S3OperationType::kRead ? "Read" : "Write") << "S3";
 
             BenchmarkConfig config(function_name.str(), function_instance_mb_size, repetition_count_ / batch_size_,
-                                   execute_mode_);
+                                   kExecuteMode);
             config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size, thread_count,
-                                                operation_type, repetition_count_ / batch_size_));
+                                                config.invocation_count_, operation_type));
             configs_.emplace_back(config, NetworkBenchmarkParameters{function_instance_mb_size, object_byte_size,
                                                                      thread_count, operation_type});
           }
