@@ -21,9 +21,8 @@ class IdleAvailabilityBenchmark : public Benchmark {
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> Run(const std::shared_ptr<BenchmarkRunner>& benchmark_runner);
 
  private:
-  Aws::Utils::Json::JsonValue GenerateResultOutput(
-      const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
-      const BenchmarkConfig& benchmark_config) const;
+  Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<BenchmarkResult>& benchmark_result,
+                                                   const BenchmarkConfig& benchmark_config) const;
 
   std::vector<BenchmarkConfig> benchmark_configs_;
 

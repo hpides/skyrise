@@ -43,7 +43,7 @@ IdleLifetimeBenchmark::IdleLifetimeBenchmark(const std::vector<size_t>& function
 
 Aws::Utils::Array<Aws::Utils::Json::JsonValue> IdleLifetimeBenchmark::Run(
     const std::shared_ptr<BenchmarkRunner>& benchmark_runner) {
-  std::vector<std::shared_ptr<std::vector<BenchmarkItemResult>>> benchmark_results;
+  std::vector<std::shared_ptr<BenchmarkResult>> benchmark_results;
   benchmark_results.reserve(benchmark_configs_.size());
 
   for (const auto& benchmark_config : benchmark_configs_) {
@@ -60,19 +60,19 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> IdleLifetimeBenchmark::Run(
 }
 
 Aws::Utils::Json::JsonValue IdleLifetimeBenchmark::GenerateResultOutput(
-    const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
-    const BenchmarkConfig& benchmark_config) const {
+    const std::shared_ptr<BenchmarkResult>& benchmark_result, const BenchmarkConfig& benchmark_config) const {
   // TODO(maltenbergert): Move this into a CreateBenchmarkName helper when extending the abstract Benchmark class
   Aws::StringStream benchmark_name;
   benchmark_name << "IdleLifetimeBenchmark/" << benchmark_config.function_configs_->front().memory_size << "/"
                  << benchmark_config.invocation_count_ << "/" << VectorToString(sleep_min_durations_, ",");
 
+  const auto& invocation_results = benchmark_result->GetInvocationResults();
+
   std::map<Aws::String, double> vm_ids_to_idle_lifetimes;
 
-  for (size_t i = 0; i < benchmark_config.repetition_count_; ++i) {
-    for (size_t j = 0; j < benchmark_config.invocation_count_; ++j) {
-      const Aws::String vm_id =
-          StreamToString(&(*benchmark_result)[i * benchmark_config.invocation_count_ + j].invoke_result->GetPayload());
+  for (size_t i = 0; i < invocation_results.size(); i++) {
+    for (const auto& invocation : invocation_results[i]) {
+      const Aws::String vm_id = StreamToString(&invocation.second.invoke_result_->GetPayload());
 
       if (i == 0) {
         vm_ids_to_idle_lifetimes.emplace(vm_id, 0);
@@ -96,8 +96,8 @@ Aws::Utils::Json::JsonValue IdleLifetimeBenchmark::GenerateResultOutput(
        {"idle_lifetime_min_percentile_10", aggregates.GetPercentile(10)},
        {"idle_lifetime_min_std_dev", aggregates.GetStandardDeviation()}},
       {/*aggregated string metrics*/}, benchmark_result, {/*extract double metric functions*/},
-      {[&](const BenchmarkItemResult& item_result) {
-        return std::make_tuple("vm_id", StreamToString(&item_result.invoke_result->GetPayload()));
+      {[&](const InvocationResult& item_result) {
+        return std::make_tuple("vm_id", StreamToString(&item_result.invoke_result_->GetPayload()));
       }});
 }
 

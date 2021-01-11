@@ -20,7 +20,7 @@ class NetworkLatencyBenchmark : public NetworkBenchmark {
                           const std::vector<size_t>& object_byte_sizes_write, const size_t repetition_count);
 
  private:
-  Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<std::vector<BenchmarkItemResult>>& result,
+  Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<BenchmarkResult>& result,
                                                    const NetworkBenchmarkParameters& parameters) override;
 
   const size_t kObjectBytesSize = 1_KB;

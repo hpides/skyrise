@@ -45,14 +45,16 @@ NetworkLatencyBenchmark::NetworkLatencyBenchmark(std::shared_ptr<BenchmarkHelper
 }
 
 Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
-    const std::shared_ptr<std::vector<BenchmarkItemResult>>& result, const NetworkBenchmarkParameters& parameters) {
+    const std::shared_ptr<BenchmarkResult>& result, const NetworkBenchmarkParameters& parameters) {
   Aws::StringStream benchmark_name;
   benchmark_name << "NetworkLatencyBenchmark/" << parameters.function_instance_mb_size_ << "FunctionInstanceMB/"
                  << std::string(magic_enum::enum_name(parameters.operation_type_)) << "/"
                  << parameters.object_byte_size_ << "ObjectByteSize";
 
+  const auto invocation_results = result->GetInvocationResults().front();
+
   const auto batched_runs =
-      GenerateBatchedSubResultOutput(result, benchmark_name.str(), parameters.function_instance_mb_size_,
+      GenerateBatchedSubResultOutput(invocation_results, benchmark_name.str(), parameters.function_instance_mb_size_,
                                      "ms_latencies", [](const double value) { return value; });
 
   const BenchmarkResultAggregate aggregates(ExtractValuesFromBatchedSubResults(batched_runs, "ms_latencies"));
@@ -70,7 +72,8 @@ Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
        {"latency_ms_std_dev", aggregates.GetStandardDeviation()},
        {"benchmark_cost_usd", CalculateBenchmarkCost(result, parameters.function_instance_mb_size_)},
        {"benchmark_cost_overhead_usd", cost_overhead_ / configs_.size()}},
-      {/*aggregated string metrics*/}, std::make_shared<std::vector<BenchmarkItemResult>>(), {},
+      {/*aggregated string metrics*/}, std::make_shared<BenchmarkResult>(0, 0),
+      {},  // TODO(d-justen): Make this less hacky
       {/*extract string metric functions*/});
 
   return output_json.WithArray("runs", batched_runs);

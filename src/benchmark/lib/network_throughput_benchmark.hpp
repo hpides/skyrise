@@ -16,7 +16,7 @@ class NetworkThroughputBenchmark : public NetworkBenchmark {
                              const size_t repetition_count);
 
  private:
-  Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<std::vector<BenchmarkItemResult>>& result,
+  Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<BenchmarkResult>& result,
                                                    const NetworkBenchmarkParameters& parameters) override;
 };
 

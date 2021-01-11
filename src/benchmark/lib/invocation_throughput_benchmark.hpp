@@ -24,9 +24,8 @@ class InvocationThroughputBenchmark : public Benchmark {
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> Run(const std::shared_ptr<BenchmarkRunner>& benchmark_runner);
 
  private:
-  static Aws::Utils::Json::JsonValue GenerateResultOutput(
-      const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
-      const BenchmarkConfig& benchmark_config);
+  static Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<BenchmarkResult>& benchmark_result,
+                                                          const BenchmarkConfig& benchmark_config);
 
   std::vector<BenchmarkConfig> benchmark_configs_;
 

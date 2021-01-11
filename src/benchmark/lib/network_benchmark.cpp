@@ -33,7 +33,7 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> NetworkBenchmark::Run(
     const std::shared_ptr<BenchmarkRunner>& benchmark_runner) {
   Setup();
 
-  std::vector<std::tuple<std::shared_ptr<std::vector<BenchmarkItemResult>>, NetworkBenchmarkParameters>> results;
+  std::vector<std::tuple<std::shared_ptr<BenchmarkResult>, NetworkBenchmarkParameters>> results;
 
   for (const auto& [config, parameters] : configs_) {
     results.emplace_back(benchmark_runner->RunConfig(config), parameters);
@@ -44,7 +44,6 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> NetworkBenchmark::Run(
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> results_array(results.size());
 
   for (size_t i = 0; i < results.size(); i++) {
-    Assert(!std::get<0>(results[i])->empty(), "The benchmark results must never be empty.");
     results_array[i] = GenerateResultOutput(std::get<0>(results[i]), std::get<1>(results[i]));
   }
 
@@ -148,13 +147,13 @@ std::vector<std::shared_ptr<Aws::IOStream>> NetworkBenchmark::GeneratePayloads(c
   return payloads;
 }
 
-long double NetworkBenchmark::ExtractFunctionCost(const BenchmarkItemResult& result,
+long double NetworkBenchmark::ExtractFunctionCost(const InvocationResult& result,
                                                   const size_t function_instance_mb_size) {
   const double billed_duration = BenchmarkHelper::ExtractBilledLambdaDuration(result);
   const long double function_instance_cost =
       cost_calculator_->CalculateCostLambda(billed_duration, function_instance_mb_size);
 
-  const auto payload_value = Aws::Utils::Json::JsonValue(StreamToString(&result.invoke_result->GetPayload()));
+  const auto payload_value = Aws::Utils::Json::JsonValue(StreamToString(&result.invoke_result_->GetPayload()));
   const auto payload_view = payload_value.View();
 
   const size_t num_s3_requests_tier_1 = payload_view.GetInteger("num_s3_requests_tier_1");
@@ -171,27 +170,34 @@ long double NetworkBenchmark::ExtractFunctionCost(const BenchmarkItemResult& res
   return function_instance_cost + s3_request_cost + s3_storage_cost;
 }
 
-long double NetworkBenchmark::CalculateBenchmarkCost(const std::shared_ptr<std::vector<BenchmarkItemResult>>& result,
+long double NetworkBenchmark::CalculateBenchmarkCost(const std::shared_ptr<BenchmarkResult>& result,
                                                      const size_t function_instance_mb_size) {
-  std::vector<long double> function_costs;
-  function_costs.reserve(result->size());
+  const auto invocation_results = result->GetInvocationResults();
 
-  std::transform(
-      result->cbegin(), result->cend(), std::back_inserter(function_costs),
-      [&](const BenchmarkItemResult& result) { return ExtractFunctionCost(result, function_instance_mb_size); });
+  std::vector<long double> function_costs;
+  function_costs.reserve(invocation_results.size() * invocation_results.front().size());
+
+  for (const auto& repetition : invocation_results) {
+    std::transform(repetition.cbegin(), repetition.cend(), std::back_inserter(function_costs),
+                   [&](const std::pair<Aws::String, InvocationResult>& map_entry) {
+                     return ExtractFunctionCost(map_entry.second, function_instance_mb_size);
+                   });
+  }
+
   const long double benchmark_cost = std::accumulate(function_costs.cbegin(), function_costs.cend(), 0.0l);
 
   return benchmark_cost;
 }
 
 Aws::Utils::Array<Aws::Utils::Json::JsonValue> NetworkBenchmark::GenerateBatchedSubResultOutput(
-    const std::shared_ptr<std::vector<BenchmarkItemResult>>& result, const Aws::String& benchmark_name,
+    const std::map<Aws::String, InvocationResult>& sub_result, const Aws::String& benchmark_name,
     const size_t function_instance_mb_size, const Aws::String& metric_name,
     const std::function<double(const double)>& process_value) {
-  Aws::Utils::Array<Aws::Utils::Json::JsonValue> batched_runs(result->size());
+  Aws::Utils::Array<Aws::Utils::Json::JsonValue> batched_runs(sub_result.size());
 
-  for (size_t i = 0; i < result->size(); i++) {
-    Aws::Utils::Json::JsonValue result_value(StreamToString(&(*result)[i].invoke_result->GetPayload()));
+  size_t i = 0;
+  for (const auto& invocation_result : sub_result) {
+    Aws::Utils::Json::JsonValue result_value(StreamToString(&invocation_result.second.invoke_result_->GetPayload()));
     const auto duration_views = result_value.View().GetArray("ms_durations");
 
     Aws::Utils::Array<Aws::Utils::Json::JsonValue> duration_values(duration_views.GetLength());
@@ -205,9 +211,11 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> NetworkBenchmark::GenerateBatched
         Aws::Utils::Json::JsonValue()
             .WithString("name", benchmark_name + "/" + std::to_string(i))
             .WithArray(metric_name, duration_values)
-            .WithDouble("billed_lambda_duration_ms", BenchmarkHelper::ExtractBilledLambdaDuration((*result)[i]))
+            .WithDouble("billed_lambda_duration_ms",
+                        BenchmarkHelper::ExtractBilledLambdaDuration(invocation_result.second))
             .WithDouble("function_cost_usd",
-                        static_cast<double>(ExtractFunctionCost((*result)[i], function_instance_mb_size)));
+                        static_cast<double>(ExtractFunctionCost(invocation_result.second, function_instance_mb_size)));
+    i++;
   }
 
   return batched_runs;

@@ -7,6 +7,8 @@ set(
     benchmark_helper.hpp
     benchmark_result_aggregate.cpp
     benchmark_result_aggregate.hpp
+    benchmark_result.cpp
+    benchmark_result.hpp
     benchmark_runner.cpp
     benchmark_runner.hpp
     function_colocation_benchmark.cpp

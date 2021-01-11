@@ -45,14 +45,17 @@ NetworkThroughputBenchmark::NetworkThroughputBenchmark(std::shared_ptr<Benchmark
 }
 
 Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
-    const std::shared_ptr<std::vector<BenchmarkItemResult>>& result, const NetworkBenchmarkParameters& parameters) {
+    const std::shared_ptr<BenchmarkResult>& result, const NetworkBenchmarkParameters& parameters) {
   Aws::StringStream benchmark_name;
   benchmark_name << "NetworkThroughputBenchmark/" << parameters.function_instance_mb_size_ << "FunctionInstanceMB/"
                  << ByteToMb(parameters.object_byte_size_) << "ObjectMB/" << parameters.thread_count_ << "Threads/"
                  << magic_enum::enum_name(parameters.operation_type_);
 
+  const auto invocation_results = result->GetInvocationResults().front();
+
   const auto batched_runs = GenerateBatchedSubResultOutput(
-      result, benchmark_name.str(), parameters.function_instance_mb_size_, "duration_seconds", [&](const double value) {
+      invocation_results, benchmark_name.str(), parameters.function_instance_mb_size_, "duration_seconds",
+      [&](const double value) {
         return std::chrono::duration<double>(std::chrono::duration<double, std::milli>(value)).count();
       });
 
@@ -82,7 +85,8 @@ Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
        {"benchmark_cost_usd",
         static_cast<double>(CalculateBenchmarkCost(result, parameters.function_instance_mb_size_))},
        {"benchmark_cost_overhead_usd", cost_overhead_ / configs_.size()}},
-      {/*aggregated string metrics*/}, std::make_shared<std::vector<BenchmarkItemResult>>(), {},
+      {/*aggregated string metrics*/}, std::make_shared<BenchmarkResult>(0, 0),
+      {},  // TODO(d-justen): Make this less hacky
       {/*extract string metric functions*/});
 
   return output_json.WithArray("runs", batched_runs);

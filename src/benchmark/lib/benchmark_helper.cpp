@@ -30,10 +30,10 @@ const std::string kTag = "SKYRISE/BENCHMARK/BENCHMARK_HELPER";
 Aws::Utils::Json::JsonValue BenchmarkHelper::GenerateJsonOutput(
     const Aws::String& benchmark_name, const std::vector<std::tuple<Aws::String, double>>& aggregated_numeric_metrics,
     const std::vector<std::tuple<Aws::String, Aws::String>>& aggregated_alphabetic_metrics,
-    const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
-    const std::vector<std::function<std::tuple<Aws::String, double>(const BenchmarkItemResult&)>>&
+    const std::shared_ptr<BenchmarkResult>& benchmark_result,
+    const std::vector<std::function<std::tuple<Aws::String, double>(const InvocationResult&)>>&
         extract_numeric_metric_functions,
-    const std::vector<std::function<std::tuple<Aws::String, Aws::String>(const BenchmarkItemResult&)>>&
+    const std::vector<std::function<std::tuple<Aws::String, Aws::String>(const InvocationResult&)>>&
         extract_alphabetic_metric_functions) {
   auto json_output = Aws::Utils::Json::JsonValue().WithString("name", benchmark_name);
 
@@ -45,26 +45,39 @@ Aws::Utils::Json::JsonValue BenchmarkHelper::GenerateJsonOutput(
     json_output = json_output.WithString(metric_name, aggregated_alphabetic_metric);
   }
 
-  Aws::Utils::Array<Aws::Utils::Json::JsonValue> benchmark_runs(benchmark_result->size());
+  const auto& invocation_results = benchmark_result->GetInvocationResults();
 
-  for (size_t i = 0; i < benchmark_result->size(); i++) {
-    auto benchmark_run_value =
-        Aws::Utils::Json::JsonValue().WithString("name", benchmark_name + "/" + std::to_string(i));
+  Aws::Utils::Array<Aws::Utils::Json::JsonValue> repetitions(invocation_results.size());
 
-    for (const auto& extract_numeric_metric_function : extract_numeric_metric_functions) {
-      const auto& [metric_name, numeric_metric] = extract_numeric_metric_function(benchmark_result->at(i));
-      benchmark_run_value = benchmark_run_value.WithDouble(metric_name, numeric_metric);
+  for (size_t i = 0; i < invocation_results.size(); i++) {
+    auto repetition_value = Aws::Utils::Json::JsonValue()
+                                .WithInteger("repetition", i)
+                                .WithDouble("duration_seconds", benchmark_result->GetRepetitionDuration(i).count());
+
+    Aws::Utils::Array<Aws::Utils::Json::JsonValue> invocations(invocation_results[i].size());
+
+    size_t j = 0;
+    for (const auto& [invocation_id, benchmark_item_result] : invocation_results[i]) {
+      auto invocation_value = Aws::Utils::Json::JsonValue().WithString("name", invocation_id);
+
+      for (const auto& extract_numeric_metric_function : extract_numeric_metric_functions) {
+        const auto& [metric_name, numeric_metric] = extract_numeric_metric_function(benchmark_item_result);
+        invocation_value = invocation_value.WithDouble(metric_name, numeric_metric);
+      }
+
+      for (const auto& extract_alphabetic_metric_function : extract_alphabetic_metric_functions) {
+        const auto& [metric_name, alphabetic_metric] = extract_alphabetic_metric_function(benchmark_item_result);
+        invocation_value = invocation_value.WithString(metric_name, alphabetic_metric);
+      }
+
+      invocations[j] = invocation_value;
+      j++;
     }
 
-    for (const auto& extract_alphabetic_metric_function : extract_alphabetic_metric_functions) {
-      const auto& [metric_name, alphabetic_metric] = extract_alphabetic_metric_function(benchmark_result->at(i));
-      benchmark_run_value = benchmark_run_value.WithString(metric_name, alphabetic_metric);
-    }
-
-    benchmark_runs[i] = benchmark_run_value;
+    repetitions[i] = repetition_value.WithArray("invocations", invocations);
   }
 
-  json_output = json_output.WithArray("runs", benchmark_runs);
+  json_output = json_output.WithArray("repetitions", repetitions);
 
   return json_output;
 }
@@ -187,27 +200,48 @@ long double BenchmarkHelper::EmptyS3Bucket(const Aws::String& bucket_name) const
 }
 
 std::vector<double> BenchmarkHelper::ExtractMetrics(
-    const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
-    const std::function<double(const BenchmarkItemResult&)>& extract_metric) {
-  std::vector<double> metrics;
-  metrics.reserve(benchmark_result->size());
+    const std::shared_ptr<BenchmarkResult>& benchmark_result,
+    const std::function<double(const InvocationResult&)>& extract_metric) {
+  const auto& invocation_results = benchmark_result->GetInvocationResults();
 
-  std::transform(benchmark_result->cbegin(), benchmark_result->cend(), std::back_inserter(metrics),
-                 [&](const BenchmarkItemResult& result) { return extract_metric(result); });
+  if (invocation_results.empty()) {
+    return {};
+  }
+
+  std::vector<double> metrics;
+  metrics.reserve(invocation_results.size() * invocation_results.front().size());
+
+  for (const auto& repetition_results : invocation_results) {
+    const auto repetition_metrics = ExtractMetrics(repetition_results, extract_metric);
+    metrics.insert(metrics.cend(), repetition_metrics.cbegin(), repetition_metrics.cend());
+  }
 
   return metrics;
 }
 
-double BenchmarkHelper::ExtractMetric(const BenchmarkItemResult& result, const Aws::String& key) {
-  const auto payload_value = Aws::Utils::Json::JsonValue(StreamToString(&result.invoke_result->GetPayload()));
+std::vector<double> BenchmarkHelper::ExtractMetrics(
+    const std::map<Aws::String, InvocationResult>& repetition_results,
+    const std::function<double(const InvocationResult&)>& extract_metric) {
+  std::vector<double> metrics;
+  metrics.reserve(repetition_results.size());
+  std::transform(repetition_results.cbegin(), repetition_results.cend(), std::back_inserter(metrics),
+                 [&](const std::pair<const Aws::String, skyrise::InvocationResult>& map_entry) {
+                   return extract_metric(map_entry.second);
+                 });
+
+  return metrics;
+}
+
+double BenchmarkHelper::ExtractMetric(const InvocationResult& result, const Aws::String& key) {
+  const auto payload_value = Aws::Utils::Json::JsonValue(StreamToString(&result.invoke_result_->GetPayload()));
   const auto payload_view = payload_value.View();
 
   return payload_view.GetDouble(key);
 }
 
-double BenchmarkHelper::ExtractBilledLambdaDuration(const BenchmarkItemResult& result) {
+double BenchmarkHelper::ExtractBilledLambdaDuration(const InvocationResult& result) {
   Aws::Utils::Base64::Base64 base64;
-  const Aws::Utils::ByteBuffer log_result_chars = base64.Decode(result.invoke_result->GetLogResult());
+  const Aws::Utils::ByteBuffer log_result_chars = base64.Decode(result.invoke_result_->GetLogResult());
 
   const unsigned char* data = log_result_chars.GetUnderlyingData();
   std::string log_result(reinterpret_cast<char const*>(data), log_result_chars.GetLength());

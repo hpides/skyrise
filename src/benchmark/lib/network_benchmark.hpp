@@ -32,9 +32,8 @@ class NetworkBenchmark : public Benchmark {
                    const size_t repetition_count, const size_t batch_size, const std::vector<size_t>& object_byte_sizes,
                    const std::vector<size_t>& thread_counts, const std::vector<size_t>& concurrent_invocation_counts);
 
-  virtual Aws::Utils::Json::JsonValue GenerateResultOutput(
-      const std::shared_ptr<std::vector<BenchmarkItemResult>>& result,
-      const NetworkBenchmarkParameters& parameters) = 0;
+  virtual Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<BenchmarkResult>& result,
+                                                           const NetworkBenchmarkParameters& parameters) = 0;
 
   void Setup();
   void Teardown();
@@ -46,12 +45,12 @@ class NetworkBenchmark : public Benchmark {
                                                                const size_t invocation_count,
                                                                const S3OperationType operation_type);
 
-  long double ExtractFunctionCost(const BenchmarkItemResult& result, const size_t function_instance_mb_size);
-  long double CalculateBenchmarkCost(const std::shared_ptr<std::vector<BenchmarkItemResult>>& result,
+  long double ExtractFunctionCost(const InvocationResult& result, const size_t function_instance_mb_size);
+  long double CalculateBenchmarkCost(const std::shared_ptr<BenchmarkResult>& result,
                                      const size_t function_instance_mb_size);
 
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> GenerateBatchedSubResultOutput(
-      const std::shared_ptr<std::vector<BenchmarkItemResult>>& result, const Aws::String& benchmark_name,
+      const std::map<Aws::String, InvocationResult>& sub_result, const Aws::String& benchmark_name,
       const size_t function_instance_mb_size, const Aws::String& metric_name,
       const std::function<double(const double)>& process_value);
   std::vector<double> ExtractValuesFromBatchedSubResults(

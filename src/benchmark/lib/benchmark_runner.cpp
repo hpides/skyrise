@@ -4,6 +4,7 @@
 #include <functional>
 #include <future>
 #include <iostream>
+#include <mutex>
 #include <string>
 #include <utility>
 
@@ -44,7 +45,7 @@ BenchmarkRunner::BenchmarkRunner(std::shared_ptr<ClientAws> client_aws) : client
   function_role_arn_ = get_role_outcome.GetResult().GetRole().GetArn();
 }
 
-std::shared_ptr<std::vector<BenchmarkItemResult>> BenchmarkRunner::RunConfig(const BenchmarkConfig& config) {
+std::shared_ptr<BenchmarkResult> BenchmarkRunner::RunConfig(const BenchmarkConfig& config) {
   try {
     SetConfig(config);
 
@@ -68,7 +69,7 @@ std::shared_ptr<std::vector<BenchmarkItemResult>> BenchmarkRunner::RunConfig(con
 
   Teardown();
 
-  return std::move(result_);
+  return std::move(benchmark_result_);
 }
 
 void BenchmarkRunner::SetConfig(const BenchmarkConfig& config) {
@@ -114,10 +115,10 @@ void BenchmarkRunner::Setup() {
   }
 
   if (IsWarmStartBenchmark()) {
-    invoke_warmup_requests_ = CreateWarmupInvokeRequests();
+    CreateWarmupInvokeRequests();
   }
 
-  invoke_requests_ = CreateInvokeRequests();
+  CreateInvokeRequests();
 }
 
 void BenchmarkRunner::SetupAsync() {
@@ -211,101 +212,116 @@ void BenchmarkRunner::Teardown() {
 void BenchmarkRunner::RunSequential() {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Invoking functions sequentially...");
 
-  const auto benchmark_item_results = std::make_shared<std::vector<BenchmarkItemResult>>();
-  benchmark_item_results->reserve(invoke_requests_->size());
+  const auto& lambda_client = client_aws_->GetLambdaClient();
+
+  benchmark_result_ = std::make_shared<BenchmarkResult>(config_->repetition_count_, config_->invocation_count_);
 
   // BENCHMARK STARTS
-  const auto benchmark_start = std::chrono::steady_clock::now();
 
-  size_t invocation_index = 0;
-  for (const auto& [invocation_id, invoke_request] : *invoke_requests_) {
-    benchmark_item_results->emplace_back(RunBenchmarkItem(invocation_id, invoke_request));
+  for (size_t i = 0; i < config_->repetition_count_; i++) {
+    AWS_LOGSTREAM_INFO(kTag.c_str(), "Repetition " << i << " started.");
 
-    const auto is_last_invocation_of_repetition = (invocation_index + 1) % config_->invocation_count_ == 0;
-    if (config_->repetition_count_ > 1 && is_last_invocation_of_repetition) {
-      const size_t current_repetition = (invocation_index / config_->invocation_count_);
-      AWS_LOGSTREAM_INFO(kTag.c_str(), "Repetition " << current_repetition << " completed.");
-      config_->after_repetition_callbacks_[current_repetition]();
+    for (const auto& [invocation_id, invoke_request] : invoke_requests_[i]) {
+      benchmark_result_->RegisterInvocation(i, invocation_id);
+      auto outcome = lambda_client.Invoke(invoke_request);
+
+      const auto result = std::make_shared<Aws::Lambda::Model::InvokeResult>(outcome.GetResultWithOwnership());
+      benchmark_result_->FinishInvocation(i, invocation_id, result, outcome.IsSuccess());
     }
-    invocation_index++;
+    AWS_LOGSTREAM_INFO(kTag.c_str(), "Repetition " << i << " finished in "
+                                                   << benchmark_result_->GetRepetitionDuration(i).count()
+                                                   << " seconds.");
   }
 
   // BENCHMARK ENDS
-  const auto benchmark_end = std::chrono::steady_clock::now();
-  const auto benchmark_run_duration =
-      std::chrono::duration_cast<std::chrono::milliseconds>(benchmark_end - benchmark_start);
 
-  AWS_LOGSTREAM_INFO(kTag.c_str(), "Functions invoked sequentially.");
-
-  WriteResult(benchmark_item_results, benchmark_run_duration);
+  AWS_LOGSTREAM_INFO(kTag.c_str(), "Sequential benchmark finished in "
+                                       << benchmark_result_->GetBenchmarkDuration().count() << " seconds.");
 }
 
 void BenchmarkRunner::RunParallel() {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Invoking functions concurrently...");
 
-  std::vector<std::future<BenchmarkItemResult>> future_results;
-  future_results.reserve(invoke_requests_->size());
+  const auto& lambda_client = client_aws_->GetLambdaClient();
 
-  const auto benchmark_item_results = std::make_shared<std::vector<BenchmarkItemResult>>();
-  benchmark_item_results->reserve(invoke_requests_->size());
+  size_t invocations_finished = 0;
+  std::mutex invocations_finished_mutex;
+
+  const auto increment_invocations_finished = [&]() {
+    std::lock_guard<std::mutex> lock(invocations_finished_mutex);
+    invocations_finished++;
+  };
+
+  benchmark_result_ = std::make_shared<BenchmarkResult>(config_->repetition_count_, config_->invocation_count_);
 
   // BENCHMARK STARTS
-  const auto benchmark_start = std::chrono::steady_clock::now();
 
-  size_t invocation_index = 0;
-  for (const auto& [invocation_id, invoke_request] : *invoke_requests_) {
-    future_results.emplace_back(std::async(&BenchmarkRunner::RunBenchmarkItem, this, invocation_id, invoke_request));
+  for (size_t i = 0; i < config_->repetition_count_; i++) {
+    AWS_LOGSTREAM_INFO(kTag.c_str(), "Repetition " << i << " started.");
 
-    const auto is_last_invocation_of_repetition = (invocation_index + 1) % config_->invocation_count_ == 0;
+    for (const auto& [invocation_id, invoke_request] : invoke_requests_[i]) {
+      benchmark_result_->RegisterInvocation(i, invocation_id);
 
-    // TODO(anyone): Extend repetition framework to enable invocation in a nested for-loop
-    if (config_->repetition_count_ > 1 && is_last_invocation_of_repetition) {
-      const auto current_repetition = (invocation_index / config_->invocation_count_);
-
-      auto future_results_it = future_results.cbegin() + current_repetition * config_->invocation_count_;
-      auto future_results_end = future_results.cbegin() + (current_repetition + 1) * config_->invocation_count_;
-
-      while (future_results_it != future_results_end) {
-        future_results_it->wait();
-        future_results_it++;
-      }
-
-      AWS_LOGSTREAM_INFO(kTag.c_str(), "Repetition " << current_repetition << " finished.");
-      config_->after_repetition_callbacks_[current_repetition]();
+      lambda_client.InvokeAsync(
+          invoke_request,
+          [&](const Aws::Lambda::LambdaClient* /*unused*/, const Aws::Lambda::Model::InvokeRequest& /*unused*/,
+              Aws::Lambda::Model::InvokeOutcome outcome,
+              const std::shared_ptr<const Aws::Client::AsyncCallerContext>& context) {
+            const auto context_function_invocation =
+                std::dynamic_pointer_cast<const ContextFunctionInvocation>(context);
+            const auto invoke_result =
+                std::make_shared<Aws::Lambda::Model::InvokeResult>(outcome.GetResultWithOwnership());
+            benchmark_result_->FinishInvocation(context_function_invocation->GetRepetition(),
+                                                context_function_invocation->GetUUID(), invoke_result,
+                                                outcome.IsSuccess());
+            increment_invocations_finished();
+          },
+          std::make_shared<const ContextFunctionInvocation>(i, invocation_id));
     }
-    invocation_index++;
-  }
 
-  for (auto& result : future_results) {
-    benchmark_item_results->emplace_back(result.get());
+    while (invocations_finished < config_->invocation_count_) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    invocations_finished = 0;
+
+    if (IsAsyncBenchmark()) {
+      const auto sqs_messages = CollectSqsMessages(invoke_requests_[i].size());
+
+      for (const auto& sqs_message : *sqs_messages) {
+        benchmark_result_->UpdateSQSMessageBody(i, sqs_message.first, sqs_message.second);
+      }
+    }
+
+    AWS_LOGSTREAM_INFO(kTag.c_str(), "Repetition " << i << " finished in "
+                                                   << benchmark_result_->GetRepetitionDuration(i).count()
+                                                   << " seconds.");
   }
 
   // BENCHMARK ENDS
-  const auto benchmark_end = std::chrono::steady_clock::now();
-  const auto benchmark_run_duration =
-      std::chrono::duration_cast<std::chrono::milliseconds>(benchmark_end - benchmark_start);
-
-  AWS_LOGSTREAM_INFO(kTag.c_str(), "Functions invoked concurrently.");
-
-  WriteResult(benchmark_item_results, benchmark_run_duration);
+  AWS_LOGSTREAM_INFO(kTag.c_str(), "Parallel benchmark finished in "
+                                       << benchmark_result_->GetBenchmarkDuration().count() << " seconds.");
 }
 
 void BenchmarkRunner::WarmUpFunctions() {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Warming up functions...");
 
-  std::vector<std::future<BenchmarkItemResult>> future_results;
-  future_results.reserve(invoke_warmup_requests_->size());
+  // TODO(d-justen): WarmupFunctions(repetition) -> before every invocation
 
-  for (const auto& [invocation_id, invoke_request] : *invoke_warmup_requests_) {
-    future_results.emplace_back(std::async(&BenchmarkRunner::RunBenchmarkItem, this, invocation_id, invoke_request));
+  const auto& lambda_client = client_aws_->GetLambdaClient();
+  std::vector<Aws::Lambda::Model::InvokeOutcomeCallable> outcome_futures;
+  outcome_futures.reserve(invoke_warmup_requests_.front().size());
+
+  for (const auto& [invocation_id, invoke_request] : invoke_warmup_requests_.front()) {
+    outcome_futures.emplace_back(lambda_client.InvokeCallable(invoke_request));
   }
 
-  for (auto& result : future_results) {
-    result.get();
+  for (const auto& outcome_future : outcome_futures) {
+    outcome_future.wait();
   }
 
   if (IsAsyncBenchmark()) {
-    CollectSqsMessages(future_results.size());
+    CollectSqsMessages(outcome_futures.size());
   }
 
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Functions warmed up.");
@@ -342,50 +358,49 @@ std::pair<Aws::String, Aws::Lambda::Model::InvokeRequest> BenchmarkRunner::Creat
   return {supplemented_id.str(), invoke_request};
 }
 
-std::shared_ptr<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>>
-BenchmarkRunner::CreateInvokeRequests() {
+void BenchmarkRunner::CreateInvokeRequests() {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Creating invoke requests...");
 
-  auto invoke_requests = std::make_shared<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>>();
-  invoke_requests->reserve(config_->repetition_count_ * config_->invocation_configs_->size());
+  invoke_requests_ =
+      std::vector<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>>(config_->repetition_count_);
 
   for (size_t i = 0; i < config_->repetition_count_; i++) {
+    invoke_requests_[i].reserve(config_->invocation_count_);
+
     for (const auto& config : *(config_->invocation_configs_)) {
-      invoke_requests->emplace(
+      invoke_requests_[i].emplace(
           CreateInvokeRequest(config.function_name, config.invocation_id, i, false, config.payload));
     }
   }
 
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Invoke requests created.");
-
-  return invoke_requests;
 }
 
-std::shared_ptr<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>>
-BenchmarkRunner::CreateWarmupInvokeRequests() {
+void BenchmarkRunner::CreateWarmupInvokeRequests() {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Creating invoke requests for function warm-up...");
 
-  auto invoke_requests = std::make_shared<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>>();
+  invoke_warmup_requests_ =
+      std::vector<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>>(config_->repetition_count_);
 
   if (config_->execute_mode_ == ExecuteMode::kWarmSequential) {
-    invoke_requests->reserve(config_->repetition_count_ * config_->function_configs_->size());
+    invoke_warmup_requests_.front().reserve(config_->function_configs_->size());
 
     for (const auto& function_config : *config_->function_configs_) {
-      invoke_requests->emplace(
+      invoke_warmup_requests_.front().emplace(
           CreateInvokeRequest(function_config.function_name, function_config.function_name, 0, true));
     }
   } else {
-    invoke_requests->reserve(config_->repetition_count_ * config_->invocation_configs_->size());
+    for (size_t i = 0; i < config_->repetition_count_; i++) {
+      invoke_warmup_requests_[i].reserve(config_->invocation_count_);
 
-    for (const auto& invocation_config : *config_->invocation_configs_) {
-      invoke_requests->emplace(
-          CreateInvokeRequest(invocation_config.function_name, invocation_config.invocation_id, 0, true));
+      for (const auto& invocation_config : *config_->invocation_configs_) {
+        invoke_warmup_requests_[i].emplace(
+            CreateInvokeRequest(invocation_config.function_name, invocation_config.invocation_id, 0, true));
+      }
     }
   }
 
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Invoke requests for function warm-up created.");
-
-  return invoke_requests;
 }
 
 std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> BenchmarkRunner::CollectSqsMessages(
@@ -472,41 +487,6 @@ std::vector<Aws::Lambda::Model::CreateFunctionOutcome> BenchmarkRunner::UploadFu
     outcomes.emplace_back(lambda_client.CreateFunction(create_function_request));
   }
   return outcomes;
-}
-
-BenchmarkItemResult BenchmarkRunner::RunBenchmarkItem(const Aws::String& invocation_id,
-                                                      const Aws::Lambda::Model::InvokeRequest& invoke_request) {
-  const auto benchmark_item_start = std::chrono::steady_clock::now();
-
-  auto lambda_outcome = client_aws_->GetLambdaClient().Invoke(invoke_request);
-
-  const auto benchmark_item_end = std::chrono::steady_clock::now();
-
-  const auto lambda_result =
-      std::make_shared<Aws::Lambda::Model::InvokeResult>(lambda_outcome.GetResultWithOwnership());
-
-  return BenchmarkItemResult{invocation_id,
-                             invoke_request,
-                             lambda_outcome.IsSuccess(),
-                             benchmark_item_start,
-                             benchmark_item_end,
-                             lambda_result,
-                             {}};
-}
-
-void BenchmarkRunner::WriteResult(const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_item_results,
-                                  const std::chrono::duration<size_t, std::milli> benchmark_run_duration) {
-  if (IsAsyncBenchmark()) {
-    sqs_messages_ = CollectSqsMessages(benchmark_item_results->size());
-
-    for (auto& result : *benchmark_item_results) {
-      result.sqs_message_body = sqs_messages_->at(result.invocation_id);
-    }
-  }
-
-  AWS_LOGSTREAM_INFO(kTag.c_str(), "Total benchmark run duration: " << benchmark_run_duration.count() << " ms");
-
-  result_ = benchmark_item_results;
 }
 
 bool BenchmarkRunner::IsWarmStartBenchmark() {

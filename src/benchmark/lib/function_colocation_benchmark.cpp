@@ -41,7 +41,7 @@ FunctionColocationBenchmark::FunctionColocationBenchmark(const std::vector<size_
 
 Aws::Utils::Array<Aws::Utils::Json::JsonValue> FunctionColocationBenchmark::Run(
     const std::shared_ptr<BenchmarkRunner>& benchmark_runner) {
-  std::vector<std::shared_ptr<std::vector<BenchmarkItemResult>>> benchmark_results;
+  std::vector<std::shared_ptr<BenchmarkResult>> benchmark_results;
   benchmark_results.reserve(benchmark_configs_.size());
 
   for (const auto& benchmark_config : benchmark_configs_) {
@@ -58,21 +58,21 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> FunctionColocationBenchmark::Run(
 }
 
 Aws::Utils::Json::JsonValue FunctionColocationBenchmark::GenerateResultOutput(
-    const std::shared_ptr<std::vector<BenchmarkItemResult>>& benchmark_result,
-    const BenchmarkConfig& benchmark_config) const {
+    const std::shared_ptr<BenchmarkResult>& benchmark_result, const BenchmarkConfig& benchmark_config) const {
   Aws::StringStream benchmark_name;
   benchmark_name << "ColocationBenchmark/" << benchmark_config.function_configs_->front().memory_size << "/"
                  << benchmark_config.invocation_count_ << "/" << sleep_min_duration_ << "/"
                  << (benchmark_config.repetition_count_ - 1);
+
+  const auto& benchmark_item_results = benchmark_result->GetInvocationResults();
 
   std::vector<double> colocation_counts;
 
   for (size_t i = 0; i < benchmark_config.repetition_count_; ++i) {
     std::map<std::string, size_t> vm_ids_to_colocation_counts;
 
-    for (size_t j = 0; j < benchmark_config.invocation_count_; ++j) {
-      const std::string vm_id =
-          StreamToString(&(*benchmark_result)[i * benchmark_config.invocation_count_ + j].invoke_result->GetPayload());
+    for (const auto& benchmark_item_result : benchmark_item_results[i]) {
+      const std::string vm_id = StreamToString(&benchmark_item_result.second.invoke_result_->GetPayload());
 
       if (vm_ids_to_colocation_counts.count(vm_id) == 0) {
         vm_ids_to_colocation_counts.emplace(vm_id, 1);
@@ -100,8 +100,8 @@ Aws::Utils::Json::JsonValue FunctionColocationBenchmark::GenerateResultOutput(
        {"colocation_counts_99.99", aggregates.GetPercentile(99.99)},
        {"colocation_counts_std_dev", aggregates.GetStandardDeviation()}},
       {/*aggregated string metrics*/}, benchmark_result, {/*extract double metric functions*/},
-      {[&](const BenchmarkItemResult& item_result) {
-        return std::make_tuple("vm_id", StreamToString(&item_result.invoke_result->GetPayload()));
+      {[&](const InvocationResult& item_result) {
+        return std::make_tuple("vm_id", StreamToString(&item_result.invoke_result_->GetPayload()));
       }});
 }
 

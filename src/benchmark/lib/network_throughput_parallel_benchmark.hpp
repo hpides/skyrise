@@ -15,11 +15,8 @@ class NetworkThroughputParallelBenchmark : public NetworkBenchmark {
                                      const std::vector<size_t>& invocation_counts, const size_t repetition_count);
 
  private:
-  Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<std::vector<BenchmarkItemResult>>& result,
+  Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<BenchmarkResult>& result,
                                                    const NetworkBenchmarkParameters& parameters) override;
-  Aws::Utils::Json::JsonValue GenerateSubResultOutput(const Aws::String& benchmark_name, const size_t repetition,
-                                                      const std::shared_ptr<std::vector<BenchmarkItemResult>>& result,
-                                                      const NetworkBenchmarkParameters& parameters);
 };
 
 }  // namespace skyrise
