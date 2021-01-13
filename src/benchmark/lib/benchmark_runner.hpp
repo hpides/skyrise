@@ -30,15 +30,13 @@ class BenchmarkRunner {
   void SetupAsync();
   void Teardown();
 
-  void RunSequential();
   void RunParallel();
 
-  void WarmUpFunctions();
+  void WarmUpFunctions(const size_t repetition);
   std::pair<Aws::String, Aws::Lambda::Model::InvokeRequest> CreateInvokeRequest(
       const Aws::String& function_name, const Aws::String& invocation_id, const size_t repetition, const bool is_warmup,
       const std::shared_ptr<Aws::IOStream>& payload = nullptr);
-  void CreateInvokeRequests();
-  void CreateWarmupInvokeRequests();
+  void CreateInvokeRequests(const bool is_warmup);
   std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> CollectSqsMessages(const size_t invocation_count);
 
   static Aws::Utils::CryptoBuffer OpenFunctionZip(const Aws::String& function_path);

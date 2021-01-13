@@ -12,86 +12,73 @@
 namespace skyrise {
 
 BenchmarkConfig::BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size,
-                                 const size_t invocation_count, const ExecuteMode execute_mode)
-    : BenchmarkConfig(std::vector<Aws::String>(1, function_zip_name), std::vector<size_t>(1, memory_size),
-                      invocation_count, execute_mode, 1, std::vector<std::function<void()>>(),
-                      kLambdaFunctionTimeoutSeconds) {}
-
-BenchmarkConfig::BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size,
-                                 const size_t invocation_count, const ExecuteMode execute_mode,
-                                 const size_t repetition_count,
-                                 const std::vector<std::function<void()>>& after_repetitions_callbacks)
-    : BenchmarkConfig(std::vector<Aws::String>(1, function_zip_name), std::vector<size_t>(1, memory_size),
-                      invocation_count, execute_mode, repetition_count, after_repetitions_callbacks,
-                      kLambdaFunctionTimeoutSeconds) {}
-
-BenchmarkConfig::BenchmarkConfig(const std::vector<Aws::String>& function_zip_names,
-                                 const std::vector<size_t>& memory_sizes, const size_t invocation_count,
-                                 const ExecuteMode execute_mode, const size_t repetition_count,
-                                 const std::vector<std::function<void()>>& after_repetition_callbacks,
-                                 const size_t timeout)
-    : invocation_count_(invocation_count),
-      execute_mode_(execute_mode),
-      repetition_count_(repetition_count),
-      after_repetition_callbacks_(after_repetition_callbacks),
-      timeout_(timeout),
+                                 const size_t repetition_count, const size_t concurrent_invocation_count,
+                                 const WarmUpStrategy warm_up_strategy,
+                                 const UseOneFunctionPerRepetition use_one_function_per_repetition,
+                                 const UseEventQueue use_event_queue,
+                                 const std::vector<std::function<void()>>& after_repetition_callbacks)
+    : repetition_count_(repetition_count),
+      concurrent_invocation_count_(concurrent_invocation_count),
+      warm_up_strategy_(warm_up_strategy),
+      use_one_function_per_repetition_(use_one_function_per_repetition),
+      use_event_queue_(use_event_queue),
+      after_repetition_callbacks_(after_repetition_callbacks.empty()
+                                      ? std::vector<std::function<void()>>(repetition_count_, [] {})
+                                      : after_repetition_callbacks),
       benchmark_id_(RandomString(8)),
-      benchmark_timestamp_(GetFormattedTimestamp("%Y%m%dT%H%M%S")),
-      function_configs_(std::make_shared<std::vector<LambdaFunctionConfig>>()),
-      invocation_configs_(std::make_shared<std::vector<LambdaInvocationConfig>>()) {
-  const std::shared_ptr<Aws::IOStream> empty_payload = Aws::MakeShared<Aws::StringStream>("");
-  if (repetition_count > 1 && after_repetition_callbacks.size() != repetition_count) {
-    // TODO(anyone): Align with our new error-handling strategy
-    throw std::runtime_error("Number of after_repetition_callbacks must be equal to repetition_count");
+      benchmark_timestamp_(GetFormattedTimestamp("%Y%m%dT%H%M%S")) {
+  Assert(after_repetition_callbacks_.size() == repetition_count_,
+         "The number of repetition callbacks and the repetition count must be equal.");
+
+  // TODO(anyone): Make function discovery more flexible and robust
+  const Aws::String function_path = "./pkg/" + function_zip_name + ".zip";
+  Aws::StringStream function_name_base;
+  function_name_base << benchmark_id_ << "-" << benchmark_timestamp_ << "-" << function_zip_name;
+
+  if (use_one_function_per_repetition_ == UseOneFunctionPerRepetition::kYes) {
+    for (size_t i = 0; i < repetition_count_; i++) {
+      function_configs_.emplace_back(
+          LambdaFunctionConfig{function_path, function_name_base.str() + "-" + std::to_string(i), memory_size});
+    }
+  } else {
+    function_configs_.emplace_back(LambdaFunctionConfig{function_path, function_name_base.str(), memory_size});
   }
 
-  for (size_t function_names_index = 0; function_names_index < function_zip_names.size(); function_names_index++) {
-    // TODO(anyone): Make function discovery more flexible and robust
-    const Aws::String function_path = "./pkg/" + function_zip_names[function_names_index] + ".zip";
+  auto empty_payload = std::make_shared<Aws::StringStream>();
 
-    if (execute_mode == ExecuteMode::kColdAsync || execute_mode == ExecuteMode::kColdParallel ||
-        execute_mode == ExecuteMode::kColdSequential) {
-      // Add one function config and invocation config per zip and invocation if benchmarking coldstart
-      for (size_t invocation_index = 0; invocation_index < invocation_count; invocation_index++) {
-        const Aws::String function_name = benchmark_id_ + "-" + benchmark_timestamp_ + "-" +
-                                          function_zip_names[function_names_index] + "-" +
-                                          std::to_string(function_names_index) + "-" + std::to_string(invocation_index);
-        const LambdaFunctionConfig function_config{function_path, function_name, memory_sizes[function_names_index]};
-        function_configs_->emplace_back(function_config);
+  for (size_t i = 0; i < repetition_count_; i++) {
+    std::vector<LambdaInvocationConfig> invocation_configs;
+    invocation_configs.reserve(concurrent_invocation_count_);
 
-        // If there is one function per invocation, the function name is equal to the invocation ID
-        const LambdaInvocationConfig invocation_config{function_name, function_name, empty_payload};
-        invocation_configs_->emplace_back(invocation_config);
-      }
-    } else {
-      // Add one function config per zip and one invocation config per invocation if benchmarking warmstart
-      const Aws::String function_name =
-          benchmark_id_ + "-" + benchmark_timestamp_ + "-" + function_zip_names[function_names_index];
-      const LambdaFunctionConfig function_config{function_path, function_name, memory_sizes[function_names_index]};
-      function_configs_->emplace_back(function_config);
+    const Aws::String function_name = use_one_function_per_repetition_ == UseOneFunctionPerRepetition::kYes
+                                          ? function_configs_[i].function_name
+                                          : function_name_base.str();
 
-      for (size_t invocation_index = 0; invocation_index < invocation_count; invocation_index++) {
-        const Aws::String invocation_id = benchmark_id_ + "-" + benchmark_timestamp_ + "-" +
-                                          function_zip_names[function_names_index] + "-" +
-                                          std::to_string(invocation_index);
-        const LambdaInvocationConfig invocation_config{function_name, invocation_id, empty_payload};
-        invocation_configs_->emplace_back(invocation_config);
-      }
+    for (size_t j = 0; j < concurrent_invocation_count_; j++) {
+      invocation_configs.emplace_back(LambdaInvocationConfig{
+          function_name, function_name_base.str() + "-" + std::to_string(i) + "-" + std::to_string(j), empty_payload});
     }
+
+    repetition_configs_.emplace_back(invocation_configs);
   }
 }
 
 void BenchmarkConfig::SetPayloads(const std::vector<std::shared_ptr<Aws::IOStream>>& payloads) {
-  Assert(payloads.size() == invocation_configs_->size(), "Payloads must be the same size as invcations configs.");
+  Assert(payloads.size() == concurrent_invocation_count_,
+         "The number of payloads and the concurrent invocation count must be equal.");
 
-  for (size_t payload_index = 0; payload_index < payloads.size(); payload_index++) {
-    invocation_configs_->at(payload_index).payload = payloads[payload_index];
+  for (size_t i = 0; i < repetition_count_; i++) {
+    for (size_t j = 0; j < concurrent_invocation_count_; j++) {
+      repetition_configs_[i][j].payload = payloads[j];
+    }
   }
 }
 
 void BenchmarkConfig::SetOnePayloadForAllFunctions(const std::shared_ptr<Aws::IOStream>& payload) {
-  for (auto& config : *invocation_configs_) {
-    config.payload = payload;
+  for (auto& repetition_config : repetition_configs_) {
+    for (auto& invocation_config : repetition_config) {
+      invocation_config.payload = payload;
+    }
   }
 }
 

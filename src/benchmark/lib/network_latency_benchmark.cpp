@@ -13,7 +13,6 @@
 namespace skyrise {
 
 const size_t kBatchSize = 100;
-const ExecuteMode kExecuteMode = ExecuteMode::kWarmSequential;
 
 NetworkLatencyBenchmark::NetworkLatencyBenchmark(std::shared_ptr<BenchmarkHelper> helper,
                                                  std::shared_ptr<CostCalculator> cost_calculator,
@@ -25,19 +24,19 @@ NetworkLatencyBenchmark::NetworkLatencyBenchmark(std::shared_ptr<BenchmarkHelper
                        object_byte_sizes_read, {1}, {1}) {
   for (const auto function_instance_mb_size : function_instance_mb_sizes) {
     for (const size_t object_byte_size_read : object_byte_sizes_read) {
-      BenchmarkConfig config("skyriseFunctionReadS3", function_instance_mb_size, repetition_count_ / batch_size_,
-                             kExecuteMode);
-      config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size_read, 1, config.invocation_count_,
-                                          S3OperationType::kRead));
+      BenchmarkConfig config("skyriseFunctionReadS3", function_instance_mb_size, repetition_count_ / batch_size_, 1,
+                             WarmUpStrategy::kNone);
+      config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size_read, 1,
+                                          config.concurrent_invocation_count_, S3OperationType::kRead));
       configs_.emplace_back(config, NetworkBenchmarkParameters{function_instance_mb_size, object_byte_size_read, 1,
                                                                S3OperationType::kRead});
     }
 
     for (const size_t object_byte_size_write : object_byte_sizes_write) {
-      BenchmarkConfig config("skyriseFunctionWriteS3", function_instance_mb_size, repetition_count_ / batch_size_,
-                             kExecuteMode);
+      BenchmarkConfig config("skyriseFunctionWriteS3", function_instance_mb_size, repetition_count_ / batch_size_, 1,
+                             WarmUpStrategy::kNone);
       config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size_write, 1,
-                                          repetition_count_ / batch_size_, S3OperationType::kWrite));
+                                          config.concurrent_invocation_count_, S3OperationType::kWrite));
       configs_.emplace_back(config, NetworkBenchmarkParameters{function_instance_mb_size, object_byte_size_write, 1,
                                                                S3OperationType::kWrite});
     }

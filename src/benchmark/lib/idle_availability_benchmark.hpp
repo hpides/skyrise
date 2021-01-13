@@ -29,7 +29,6 @@ class IdleAvailabilityBenchmark : public Benchmark {
   const size_t sleep_min_duration_;
 
   const Aws::String kFunctionName = "skyriseFunctionHostId";
-  const ExecuteMode kExecuteMode = ExecuteMode::kColdParallel;
 };
 
 }  // namespace skyrise

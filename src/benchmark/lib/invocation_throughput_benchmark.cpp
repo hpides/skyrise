@@ -10,15 +10,16 @@ namespace skyrise {
 
 InvocationThroughputBenchmark::InvocationThroughputBenchmark(const std::vector<size_t>& function_instance_mb_sizes,
                                                              const std::vector<size_t>& invocation_counts,
-                                                             const std::vector<ExecuteMode>& execute_modes,
                                                              const std::vector<size_t>& function_payload_byte_sizes) {
-  benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size() * execute_modes.size());
+  benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size() * 2);
 
   for (const auto& function_instance_mb_size : function_instance_mb_sizes) {
     for (const auto& invocation_count : invocation_counts) {
-      for (const auto& execute_mode : execute_modes) {
+      for (const auto& use_event_queue : {UseEventQueue::kYes, UseEventQueue::kNo}) {
         for (const auto& function_payload_byte_size : function_payload_byte_sizes) {
-          BenchmarkConfig config(kFunctionName, function_instance_mb_size, invocation_count, execute_mode);
+          // TODO(anyone): Use repetition/invocation framework instead of multiple configs
+          BenchmarkConfig config(kFunctionName, function_instance_mb_size, 1, invocation_count,
+                                 WarmUpStrategy::kDefault, UseOneFunctionPerRepetition::kNo, use_event_queue);
 
           if (function_payload_byte_size > 0) {
             config.SetOnePayloadForAllFunctions(BenchmarkHelper::GenerateRandomObject(function_payload_byte_size));
@@ -53,9 +54,10 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> InvocationThroughputBenchmark::Ru
 Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
     const std::shared_ptr<BenchmarkResult>& benchmark_result, const BenchmarkConfig& benchmark_config) {
   Aws::StringStream benchmark_name;
-  benchmark_name << "InvocationThroughputBenchmark/" << benchmark_config.function_configs_->front().memory_size << "/"
-                 << benchmark_config.invocation_count_ << "/" << magic_enum::enum_name(benchmark_config.execute_mode_)
-                 << "/" << StreamToString(benchmark_config.invocation_configs_->front().payload.get()).size();
+  benchmark_name << "InvocationThroughputBenchmark/" << benchmark_config.function_configs_.front().memory_size << "/"
+                 << benchmark_config.concurrent_invocation_count_ << "/UseEventQueue"
+                 << (static_cast<bool>(benchmark_config.use_event_queue_) ? "Yes" : "No") << "/"
+                 << StreamToString(benchmark_config.repetition_configs_.front().front().payload.get()).size();
 
   const auto invocation_results = benchmark_result->GetInvocationResults().front();
 
@@ -68,7 +70,7 @@ Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
   }
 
   const double duration = std::chrono::duration<double>(max_end_time - min_start_time).count();
-  const double throughput = benchmark_config.invocation_count_ / duration;
+  const double throughput = benchmark_config.concurrent_invocation_count_ / duration;
 
   return BenchmarkHelper::GenerateJsonOutput(
       benchmark_name.str(), {{"throughput", throughput}}, {/*aggregated string metrics*/}, benchmark_result,

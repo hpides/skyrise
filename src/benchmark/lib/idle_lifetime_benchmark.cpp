@@ -35,8 +35,9 @@ IdleLifetimeBenchmark::IdleLifetimeBenchmark(const std::vector<size_t>& function
 
   for (const auto& function_instance_mb_size : function_instance_mb_sizes) {
     for (const auto& invocation_count : invocation_counts) {
-      benchmark_configs_.emplace_back(kFunctionName, function_instance_mb_size, invocation_count, kExecuteMode,
-                                      after_repetition_callbacks.size(), after_repetition_callbacks);
+      benchmark_configs_.emplace_back(kFunctionName, function_instance_mb_size, after_repetition_callbacks.size(),
+                                      invocation_count, WarmUpStrategy::kNone, UseOneFunctionPerRepetition::kNo,
+                                      UseEventQueue::kNo, after_repetition_callbacks);
     }
   }
 }
@@ -63,8 +64,8 @@ Aws::Utils::Json::JsonValue IdleLifetimeBenchmark::GenerateResultOutput(
     const std::shared_ptr<BenchmarkResult>& benchmark_result, const BenchmarkConfig& benchmark_config) const {
   // TODO(maltenbergert): Move this into a CreateBenchmarkName helper when extending the abstract Benchmark class
   Aws::StringStream benchmark_name;
-  benchmark_name << "IdleLifetimeBenchmark/" << benchmark_config.function_configs_->front().memory_size << "/"
-                 << benchmark_config.invocation_count_ << "/" << VectorToString(sleep_min_durations_, ",");
+  benchmark_name << "IdleLifetimeBenchmark/" << benchmark_config.function_configs_.front().memory_size << "/"
+                 << benchmark_config.concurrent_invocation_count_ << "/" << VectorToString(sleep_min_durations_, ",");
 
   const auto& invocation_results = benchmark_result->GetInvocationResults();
 

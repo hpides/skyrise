@@ -13,7 +13,6 @@
 namespace skyrise {
 
 const size_t kBatchSize = 100;
-const ExecuteMode kExecuteMode = ExecuteMode::kWarmSequential;
 
 NetworkThroughputBenchmark::NetworkThroughputBenchmark(std::shared_ptr<BenchmarkHelper> helper,
                                                        std::shared_ptr<CostCalculator> cost_calculator,
@@ -31,10 +30,10 @@ NetworkThroughputBenchmark::NetworkThroughputBenchmark(std::shared_ptr<Benchmark
             Aws::StringStream function_name;
             function_name << "skyriseFunction" << (operation_type == S3OperationType::kRead ? "Read" : "Write") << "S3";
 
-            BenchmarkConfig config(function_name.str(), function_instance_mb_size, repetition_count_ / batch_size_,
-                                   kExecuteMode);
+            BenchmarkConfig config(function_name.str(), function_instance_mb_size, repetition_count_ / batch_size_, 1,
+                                   WarmUpStrategy::kNone);
             config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size, thread_count,
-                                                config.invocation_count_, operation_type));
+                                                config.concurrent_invocation_count_, operation_type));
             configs_.emplace_back(config, NetworkBenchmarkParameters{function_instance_mb_size, object_byte_size,
                                                                      thread_count, operation_type});
           }

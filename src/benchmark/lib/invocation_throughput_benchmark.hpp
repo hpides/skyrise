@@ -18,7 +18,6 @@ class InvocationThroughputBenchmark : public Benchmark {
  public:
   InvocationThroughputBenchmark(const std::vector<size_t>& function_instance_mb_sizes,
                                 const std::vector<size_t>& invocation_counts,
-                                const std::vector<ExecuteMode>& execute_modes,
                                 const std::vector<size_t>& function_payload_byte_sizes);
 
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> Run(const std::shared_ptr<BenchmarkRunner>& benchmark_runner);

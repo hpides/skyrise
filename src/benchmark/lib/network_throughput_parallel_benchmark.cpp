@@ -16,7 +16,6 @@
 namespace skyrise {
 
 const size_t kBatchSize = 1;
-const ExecuteMode kExecuteMode = ExecuteMode::kWarmParallel;
 // TODO(d-justen): Change to the best performing parameters found by NetworkThroughputBenchmark
 const size_t kFunctionInstanceMbSize = 3008;
 const size_t kObjectByteSize = 16_MB;
@@ -33,10 +32,10 @@ NetworkThroughputParallelBenchmark::NetworkThroughputParallelBenchmark(std::shar
     function_name << "skyriseFunction" << (operation_type == S3OperationType::kRead ? "Read" : "Write") << "S3";
 
     for (const auto invocation_count : concurrent_invocation_counts_) {
-      BenchmarkConfig config(function_name.str(), kFunctionInstanceMbSize, invocation_count, kExecuteMode,
-                             repetition_count, std::vector<std::function<void()>>(repetition_count, [] {}));
+      BenchmarkConfig config(function_name.str(), kFunctionInstanceMbSize, repetition_count, invocation_count,
+                             WarmUpStrategy::kDefault);
       config.SetPayloads(GeneratePayloads(kFunctionInstanceMbSize, kObjectByteSize, kThreadCount,
-                                          config.invocation_count_, operation_type));
+                                          config.concurrent_invocation_count_, operation_type));
       configs_.emplace_back(
           config, NetworkBenchmarkParameters{kFunctionInstanceMbSize, kObjectByteSize, kThreadCount, operation_type});
     }

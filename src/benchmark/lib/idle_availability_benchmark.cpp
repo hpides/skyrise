@@ -33,8 +33,9 @@ IdleAvailabilityBenchmark::IdleAvailabilityBenchmark(const std::vector<size_t>& 
 
   for (const auto& function_instance_mb_size : function_instance_mb_sizes) {
     for (const auto& invocation_count : invocation_counts) {
-      benchmark_configs_.emplace_back(kFunctionName, function_instance_mb_size, invocation_count, kExecuteMode,
-                                      after_repetition_callbacks.size(), after_repetition_callbacks);
+      benchmark_configs_.emplace_back(kFunctionName, function_instance_mb_size, after_repetition_callbacks.size(),
+                                      invocation_count, WarmUpStrategy::kNone, UseOneFunctionPerRepetition::kNo,
+                                      UseEventQueue::kNo, after_repetition_callbacks);
     }
   }
 }
@@ -60,8 +61,8 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> IdleAvailabilityBenchmark::Run(
 Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
     const std::shared_ptr<BenchmarkResult>& benchmark_result, const BenchmarkConfig& benchmark_config) const {
   Aws::StringStream benchmark_name;
-  benchmark_name << "IdleAvailabilityBenchmark/" << benchmark_config.function_configs_->front().memory_size << "/"
-                 << benchmark_config.invocation_count_ << "/" << sleep_min_duration_ << "/"
+  benchmark_name << "IdleAvailabilityBenchmark/" << benchmark_config.function_configs_.front().memory_size << "/"
+                 << benchmark_config.concurrent_invocation_count_ << "/" << sleep_min_duration_ << "/"
                  << (benchmark_config.repetition_count_ - 1);
 
   const auto& invocation_results = benchmark_result->GetInvocationResults();

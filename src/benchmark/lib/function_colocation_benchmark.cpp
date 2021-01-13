@@ -20,7 +20,7 @@ FunctionColocationBenchmark::FunctionColocationBenchmark(const std::vector<size_
                                                          const size_t sleep_min_duration, const size_t repetition_count)
     : sleep_min_duration_(sleep_min_duration) {
   std::vector<std::function<void()>> after_repetition_callbacks;
-  after_repetition_callbacks.reserve(repetition_count + 1);
+  after_repetition_callbacks.reserve(repetition_count - 1);
 
   for (size_t i = 0; i < repetition_count; ++i) {
     after_repetition_callbacks.emplace_back(
@@ -33,8 +33,9 @@ FunctionColocationBenchmark::FunctionColocationBenchmark(const std::vector<size_
 
   for (const auto& function_instance_mb_size : function_instance_mb_sizes) {
     for (const auto& invocation_count : invocation_counts) {
-      benchmark_configs_.emplace_back(kFunctionName, function_instance_mb_size, invocation_count, kExecuteMode,
-                                      after_repetition_callbacks.size(), after_repetition_callbacks);
+      benchmark_configs_.emplace_back(kFunctionName, function_instance_mb_size, after_repetition_callbacks.size(),
+                                      invocation_count, WarmUpStrategy::kNone, UseOneFunctionPerRepetition::kNo,
+                                      UseEventQueue::kNo, after_repetition_callbacks);
     }
   }
 }
@@ -60,8 +61,8 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> FunctionColocationBenchmark::Run(
 Aws::Utils::Json::JsonValue FunctionColocationBenchmark::GenerateResultOutput(
     const std::shared_ptr<BenchmarkResult>& benchmark_result, const BenchmarkConfig& benchmark_config) const {
   Aws::StringStream benchmark_name;
-  benchmark_name << "ColocationBenchmark/" << benchmark_config.function_configs_->front().memory_size << "/"
-                 << benchmark_config.invocation_count_ << "/" << sleep_min_duration_ << "/"
+  benchmark_name << "ColocationBenchmark/" << benchmark_config.function_configs_.front().memory_size << "/"
+                 << benchmark_config.concurrent_invocation_count_ << "/" << sleep_min_duration_ << "/"
                  << (benchmark_config.repetition_count_ - 1);
 
   const auto& benchmark_item_results = benchmark_result->GetInvocationResults();

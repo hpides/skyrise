@@ -18,39 +18,35 @@ struct LambdaInvocationConfig {
   std::shared_ptr<Aws::IOStream> payload;
 };
 
-/*
- * Cold-*: Create individual function per invocation to measure coldstart latency
- * Warm-*: Warm up functions by running them before measurement
- * *-Sequential: RequestResponse-Functions, invoked sequentially
- * *-Parallel: RequestResponse-Functions, invoked in parallel
- * *-Async: Event-Function, invoked in parallel
- */
-enum class ExecuteMode { kColdSequential, kColdParallel, kColdAsync, kWarmSequential, kWarmParallel, kWarmAsync };
+enum class WarmUpStrategy { kNone, kDefault };
+
+enum class UseOneFunctionPerRepetition : bool { kYes = true, kNo = false };
+
+enum class UseEventQueue : bool { kYes = true, kNo = false };
 
 class BenchmarkConfig {
  public:
-  BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size, const size_t invocation_count,
-                  const ExecuteMode execute_mode);
-  BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size, const size_t invocation_count,
-                  const ExecuteMode execute_mode, const size_t repetition_count,
-                  const std::vector<std::function<void()>>& after_repetitions_callbacks);
-  BenchmarkConfig(const std::vector<Aws::String>& function_zip_names, const std::vector<size_t>& memory_sizes,
-                  const size_t invocation_count, const ExecuteMode execute_mode, const size_t repetition_count,
-                  const std::vector<std::function<void()>>& after_repetition_callbacks, const size_t timeout);
+  BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size, const size_t repetition_count,
+                  const size_t concurrent_invocation_count = 1,
+                  const WarmUpStrategy warm_up_strategy = WarmUpStrategy::kNone,
+                  const UseOneFunctionPerRepetition use_one_function_per_repetition = UseOneFunctionPerRepetition::kNo,
+                  const UseEventQueue use_event_queue = UseEventQueue::kNo,
+                  const std::vector<std::function<void()>>& after_repetition_callbacks = {});
 
   void SetPayloads(const std::vector<std::shared_ptr<Aws::IOStream>>& payloads);
   void SetOnePayloadForAllFunctions(const std::shared_ptr<Aws::IOStream>& payload);
 
-  const size_t invocation_count_;
-  const ExecuteMode execute_mode_;
   const size_t repetition_count_;
+  const size_t concurrent_invocation_count_;
+  const WarmUpStrategy warm_up_strategy_;
+  const UseOneFunctionPerRepetition use_one_function_per_repetition_;
+  const UseEventQueue use_event_queue_;
   const std::vector<std::function<void()>> after_repetition_callbacks_;
-  const size_t timeout_;
 
   const Aws::String benchmark_id_;
   const Aws::String benchmark_timestamp_;
-  const std::shared_ptr<std::vector<LambdaFunctionConfig>> function_configs_;
-  const std::shared_ptr<std::vector<LambdaInvocationConfig>> invocation_configs_;
+  std::vector<LambdaFunctionConfig> function_configs_;
+  std::vector<std::vector<LambdaInvocationConfig>> repetition_configs_;
 };
 
 }  // namespace skyrise
