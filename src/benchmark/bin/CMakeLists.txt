@@ -14,6 +14,7 @@ add_executable(
     skyriseFunctionHostId
 
     function_host_id.cpp
+    function_host_id.hpp
 )
 
 target_link_libraries(
@@ -29,6 +30,7 @@ add_executable(
     skyriseFunctionMinimal
 
     function_minimal.cpp
+    function_minimal.hpp
 )
 
 target_link_libraries(
@@ -44,6 +46,7 @@ add_executable(
     skyriseFunctionReadS3
 
     function_read_s3.cpp
+    function_read_s3.hpp
 )
 
 target_link_libraries(
@@ -60,6 +63,7 @@ add_executable(
     skyriseFunctionWriteS3
 
     function_write_s3.cpp
+    function_write_s3.hpp
 )
 
 target_link_libraries(

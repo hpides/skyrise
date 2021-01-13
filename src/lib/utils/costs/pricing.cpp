@@ -12,7 +12,7 @@
 
 namespace skyrise {
 
-Pricing::Pricing(std::shared_ptr<ClientAws> client_aws) : client_aws_(std::move(client_aws)) {
+Pricing::Pricing(std::shared_ptr<Client> client) : client_(std::move(client)) {
   const auto pricing_lambda_map = FetchPricing("AWSLambda");
   pricing_lambda_ = std::make_shared<PricingLambda>(PricingLambda{
       pricing_lambda_map.at(UsageTypeLambda::Request), pricing_lambda_map.at(UsageTypeLambda::LambdaGBSecond),
@@ -31,7 +31,7 @@ const std::shared_ptr<PricingLambda>& Pricing::GetLambdaPricing() { return prici
 const std::shared_ptr<PricingS3>& Pricing::GetS3Pricing() { return pricing_s3_; }
 
 std::map<Aws::String, long double> Pricing::FetchPricing(const Aws::String& service_code) const {
-  const auto location = TranslateRegionToLocation(client_aws_->GetClientRegion());
+  const auto location = TranslateRegionToLocation(client_->GetClientRegion());
 
   // Create filters for Price List Service API
   Aws::Vector<Aws::Pricing::Model::Filter> filters = {Aws::Pricing::Model::Filter()
@@ -43,7 +43,7 @@ std::map<Aws::String, long double> Pricing::FetchPricing(const Aws::String& serv
   request.SetServiceCode(service_code);
   request.SetFilters(filters);
 
-  const auto outcome = client_aws_->GetPricingClient().GetProducts(request);
+  const auto outcome = client_->GetPricingClient().GetProducts(request);
   Assert(outcome.IsSuccess(), "Price List API call was unsuccessful: " + outcome.GetError().GetMessage());
 
   std::map<Aws::String, long double> prices_map;

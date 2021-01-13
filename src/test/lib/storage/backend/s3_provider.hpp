@@ -5,7 +5,6 @@
 
 #include "../test/lib/testing/aws_test.hpp"
 #include "abstract_provider.hpp"
-#include "client/client_aws.hpp"
 #include "storage/backend/storage_s3.hpp"
 #include "utils/assert.hpp"
 

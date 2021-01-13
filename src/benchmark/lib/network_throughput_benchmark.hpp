@@ -3,7 +3,6 @@
 #include <aws/core/Aws.h>
 #include <aws/core/utils/json/JsonSerializer.h>
 
-#include "client/client_aws.hpp"
 #include "network_benchmark.hpp"
 
 namespace skyrise {

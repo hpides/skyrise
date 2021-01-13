@@ -4,7 +4,7 @@
 
 #include <aws/core/Region.h>
 
-#include "client/client_aws.hpp"
+#include "client/client.hpp"
 #include "costs_test_utils.hpp"
 #include "gtest/gtest.h"
 
@@ -14,7 +14,7 @@ class PricingTest : public ::testing::Test {};
 
 TEST_F(PricingTest, PricingLambda) {
   const std::function<void()> func = []() {
-    const auto clients = std::make_shared<ClientAws>();
+    const auto clients = std::make_shared<Client>();
     Pricing pricing(clients);
 
     const auto& lambda_pricing1 = pricing.GetLambdaPricing();
@@ -38,7 +38,7 @@ TEST_F(PricingTest, PricingLambda) {
 
 TEST_F(PricingTest, PricingS3) {
   const std::function<void()> func = []() {
-    const auto clients = std::make_shared<ClientAws>();
+    const auto clients = std::make_shared<Client>();
     Pricing pricing(clients);
 
     const auto& s3_pricing1 = pricing.GetS3Pricing();

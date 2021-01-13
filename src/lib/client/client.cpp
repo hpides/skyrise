@@ -1,4 +1,4 @@
-#include "client_aws.hpp"
+#include "client.hpp"
 
 #include <future>
 
@@ -8,7 +8,7 @@
 
 namespace skyrise {
 
-ClientAws::ClientAws() {
+Client::Client() {
   const auto credentials_provider = std::make_shared<Aws::Auth::EnvironmentAWSCredentialsProvider>();
 
   if (!credentials_provider || (*credentials_provider).GetAWSCredentials().IsExpiredOrEmpty()) {
@@ -55,23 +55,23 @@ ClientAws::ClientAws() {
   }
 }
 
-const Aws::CloudWatch::CloudWatchClient& ClientAws::GetCloudWatchClient() const { return *cloudwatch_client_; }
+const Aws::CloudWatch::CloudWatchClient& Client::GetCloudWatchClient() const { return *cloudwatch_client_; }
 
-const Aws::IAM::IAMClient& ClientAws::GetIAMClient() const { return *iam_client_; }
+const Aws::IAM::IAMClient& Client::GetIAMClient() const { return *iam_client_; }
 
-const Aws::Lambda::LambdaClient& ClientAws::GetLambdaClient() const { return *lambda_client_; }
+const Aws::Lambda::LambdaClient& Client::GetLambdaClient() const { return *lambda_client_; }
 
-const Aws::Pricing::PricingClient& ClientAws::GetPricingClient() const { return *pricing_client_; }
+const Aws::Pricing::PricingClient& Client::GetPricingClient() const { return *pricing_client_; }
 
-const Aws::S3::S3Client& ClientAws::GetS3Client() const { return *s3_client_; }
+const Aws::S3::S3Client& Client::GetS3Client() const { return *s3_client_; }
 
-const Aws::SQS::SQSClient& ClientAws::GetSQSClient() const { return *sqs_client_; }
+const Aws::SQS::SQSClient& Client::GetSQSClient() const { return *sqs_client_; }
 
-const Aws::XRay::XRayClient& ClientAws::GetXRayClient() const { return *xray_client_; }
+const Aws::XRay::XRayClient& Client::GetXRayClient() const { return *xray_client_; }
 
-const Aws::String& ClientAws::GetClientRegion() const { return client_region_; }
+const Aws::String& Client::GetClientRegion() const { return client_region_; }
 
-Aws::Client::ClientConfiguration ClientAws::GenerateClientConfig() const {
+Aws::Client::ClientConfiguration Client::GenerateClientConfig() const {
   Aws::Client::ClientConfiguration client_configuration;
   client_configuration.caFile = kCaFile;
   client_configuration.connectTimeoutMs = kConnectTimeoutMs;

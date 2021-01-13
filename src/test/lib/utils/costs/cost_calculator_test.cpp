@@ -5,7 +5,7 @@
 
 #include <aws/core/Region.h>
 
-#include "client/client_aws.hpp"
+#include "client/client.hpp"
 #include "costs_test_utils.hpp"
 #include "gtest/gtest.h"
 #include "utils/costs/pricing.hpp"
@@ -17,7 +17,7 @@ class CostCalculatorTest : public ::testing::Test {};
 
 TEST_F(CostCalculatorTest, CalculateCostLambda) {
   const std::function<void()> func = []() {
-    const auto clients = std::make_shared<ClientAws>();
+    const auto clients = std::make_shared<Client>();
     Pricing pricing(clients);
     const CostCalculator cost_calculator(clients);
     const auto& lambda_pricing = pricing.GetLambdaPricing();
@@ -46,7 +46,7 @@ TEST_F(CostCalculatorTest, CalculateCostLambda) {
 
 TEST_F(CostCalculatorTest, CalculateCostS3Storage) {
   const std::function<void()> func = []() {
-    const auto clients = std::make_shared<ClientAws>();
+    const auto clients = std::make_shared<Client>();
     Pricing pricing(clients);
     const CostCalculator cost_calculator(clients);
     const auto& s3_pricing = pricing.GetS3Pricing();
@@ -67,7 +67,7 @@ TEST_F(CostCalculatorTest, CalculateCostS3Storage) {
 
 TEST_F(CostCalculatorTest, CalculateCostS3Requests) {
   const std::function<void()> func = []() {
-    const auto clients = std::make_shared<ClientAws>();
+    const auto clients = std::make_shared<Client>();
     Pricing pricing(clients);
     const CostCalculator cost_calculator(clients);
     const auto& s3_pricing = pricing.GetS3Pricing();
@@ -82,7 +82,7 @@ TEST_F(CostCalculatorTest, CalculateCostS3Requests) {
 
 TEST_F(CostCalculatorTest, CalculateCostS3Select) {
   const std::function<void()> func = []() {
-    const auto clients = std::make_shared<ClientAws>();
+    const auto clients = std::make_shared<Client>();
     Pricing pricing(clients);
     const CostCalculator cost_calculator(clients);
     const auto& s3_pricing = pricing.GetS3Pricing();

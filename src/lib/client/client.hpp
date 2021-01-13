@@ -16,11 +16,11 @@
 
 namespace skyrise {
 
-class ClientAws {
+class Client {
  public:
-  ClientAws();
-  ClientAws(const ClientAws&) = delete;
-  const ClientAws& operator=(const ClientAws&) = delete;
+  Client();
+  Client(const Client&) = delete;
+  const Client& operator=(const Client&) = delete;
 
   const Aws::CloudWatch::CloudWatchClient& GetCloudWatchClient() const;
   const Aws::IAM::IAMClient& GetIAMClient() const;

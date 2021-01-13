@@ -7,14 +7,14 @@
 #include <aws/core/utils/json/JsonSerializer.h>
 
 #include "benchmark_runner.hpp"
-#include "client/client_aws.hpp"
+#include "client/client.hpp"
 #include "utils/costs/cost_calculator.hpp"
 
 namespace skyrise {
 
 class BenchmarkHelper {
  public:
-  BenchmarkHelper(std::shared_ptr<ClientAws> client_aws) : client_aws_(client_aws), cost_calculator_(client_aws) {}
+  BenchmarkHelper(std::shared_ptr<Client> client) : client_(client), cost_calculator_(client) {}
 
   static Aws::Utils::Json::JsonValue GenerateJsonOutput(
       const Aws::String& benchmark_name, const std::vector<std::tuple<Aws::String, double>>& aggregated_numeric_metrics,
@@ -42,7 +42,7 @@ class BenchmarkHelper {
   static double ExtractBilledLambdaDuration(const InvocationResult& result);
 
  private:
-  const std::shared_ptr<ClientAws> client_aws_;
+  const std::shared_ptr<Client> client_;
   const CostCalculator cost_calculator_;
 };
 

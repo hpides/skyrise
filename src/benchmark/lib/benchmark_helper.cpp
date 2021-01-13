@@ -83,7 +83,7 @@ Aws::Utils::Json::JsonValue BenchmarkHelper::GenerateJsonOutput(
 }
 
 long double BenchmarkHelper::CreateS3BucketIfNotExists(const Aws::String& bucket_name) const {
-  const auto& s3_client = client_aws_->GetS3Client();
+  const auto& s3_client = client_->GetS3Client();
 
   const auto list_buckets_outcome = s3_client.ListBuckets();
 
@@ -125,7 +125,7 @@ long double BenchmarkHelper::UploadObjectsToS3Parallel(
     const Aws::String& bucket_name) const {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Uploading objects to S3...");
 
-  const auto& s3_client = client_aws_->GetS3Client();
+  const auto& s3_client = client_->GetS3Client();
 
   std::vector<Aws::S3::Model::PutObjectOutcomeCallable> callables;
   callables.reserve(objects.size());
@@ -167,7 +167,7 @@ long double BenchmarkHelper::UploadObjectsToS3Parallel(
 }
 
 long double BenchmarkHelper::EmptyS3Bucket(const Aws::String& bucket_name) const {
-  const auto& s3_client = client_aws_->GetS3Client();
+  const auto& s3_client = client_->GetS3Client();
 
   const auto list_objects_outcome = s3_client.ListObjects(Aws::S3::Model::ListObjectsRequest().WithBucket(bucket_name));
 

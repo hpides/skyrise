@@ -72,8 +72,8 @@ target_link_libraries(skyriseShared
 
 set(
     COORDINATOR_SOURCES
-    client/client_aws.cpp
-    client/client_aws.hpp
+    client/client.cpp
+    client/client.hpp
     configuration.hpp
     limits.hpp
     utils/costs/cost_calculator.cpp
@@ -99,6 +99,8 @@ target_link_libraries(skyriseCoordinator PUBLIC ${COORDINATOR_LIBRARIES})
 
 set(
     WORKER_SOURCES
+    cloud_function/function.cpp
+    cloud_function/function.hpp
     utils/profiling/function_host_information.cpp
     utils/profiling/function_host_information.hpp
     ${SHARED_SOURCES}

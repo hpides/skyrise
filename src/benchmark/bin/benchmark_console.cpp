@@ -14,7 +14,7 @@
 #include "benchmark_config.hpp"
 #include "benchmark_helper.hpp"
 #include "benchmark_runner.hpp"
-#include "client/client_aws.hpp"
+#include "client/client.hpp"
 #include "function_colocation_benchmark.hpp"
 #include "idle_availability_benchmark.hpp"
 #include "idle_lifetime_benchmark.hpp"
@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
     Aws::InitAPI(sdk_options);
 
     // Initialize the clients
-    const auto aws_client = std::make_shared<skyrise::ClientAws>();
+    const auto aws_client = std::make_shared<skyrise::Client>();
     const auto benchmark_runner = std::make_shared<skyrise::BenchmarkRunner>(aws_client);
     const auto benchmark_helper = std::make_shared<skyrise::BenchmarkHelper>(aws_client);
     const auto cost_calculator = std::make_shared<skyrise::CostCalculator>(aws_client);

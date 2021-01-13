@@ -35,9 +35,9 @@ namespace skyrise {
 // TODO(anyone): Add commit hash to logging tag
 const std::string kTag = "SKYRISE/BENCHMARK/BENCHMARK_RUNNER";
 
-BenchmarkRunner::BenchmarkRunner(std::shared_ptr<ClientAws> client_aws) : client_aws_(std::move(client_aws)) {
+BenchmarkRunner::BenchmarkRunner(std::shared_ptr<Client> client) : client_(std::move(client)) {
   const auto get_role_outcome =
-      client_aws_->GetIAMClient().GetRole(Aws::IAM::Model::GetRoleRequest().WithRoleName(kFunctionRoleName));
+      client_->GetIAMClient().GetRole(Aws::IAM::Model::GetRoleRequest().WithRoleName(kFunctionRoleName));
 
   if (!get_role_outcome.IsSuccess()) {
     Fail(get_role_outcome.GetError().GetMessage());
@@ -119,8 +119,8 @@ void BenchmarkRunner::SetupAsync() {
 
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Creating queue " << queue_name << "...");
 
-  const auto& sqs_client = client_aws_->GetSQSClient();
-  const auto& lambda_client = client_aws_->GetLambdaClient();
+  const auto& sqs_client = client_->GetSQSClient();
+  const auto& lambda_client = client_->GetLambdaClient();
 
   const auto create_queue_outcome =
       sqs_client.CreateQueue(Aws::SQS::Model::CreateQueueRequest().WithQueueName(queue_name));
@@ -161,7 +161,7 @@ void BenchmarkRunner::Teardown() {
   std::vector<std::pair<Aws::String, std::future<Aws::Lambda::Model::DeleteFunctionOutcome>>> delete_function_outcomes;
   delete_function_outcomes.reserve(config_->function_configs_.size());
 
-  const auto& lambda_client = client_aws_->GetLambdaClient();
+  const auto& lambda_client = client_->GetLambdaClient();
 
   for (const auto& function_config : config_->function_configs_) {
     AWS_LOGSTREAM_INFO(kTag.c_str(), "Deleting function " << function_config.function_name << "...")
@@ -191,7 +191,7 @@ void BenchmarkRunner::Teardown() {
     AWS_LOGSTREAM_INFO(kTag.c_str(), "Deleting queue " << *sqs_queue_url_ << "...");
 
     const auto outcome =
-        client_aws_->GetSQSClient().DeleteQueue(Aws::SQS::Model::DeleteQueueRequest().WithQueueUrl(*sqs_queue_url_));
+        client_->GetSQSClient().DeleteQueue(Aws::SQS::Model::DeleteQueueRequest().WithQueueUrl(*sqs_queue_url_));
     if (outcome.IsSuccess()) {
       AWS_LOGSTREAM_INFO(kTag.c_str(), "Queue " << *sqs_queue_url_ << " deleted.");
     } else {
@@ -205,7 +205,7 @@ void BenchmarkRunner::Teardown() {
 void BenchmarkRunner::RunParallel() {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Invoking functions concurrently...");
 
-  const auto& lambda_client = client_aws_->GetLambdaClient();
+  const auto& lambda_client = client_->GetLambdaClient();
 
   size_t invocations_finished = 0;
   std::mutex invocations_finished_mutex;
@@ -274,7 +274,7 @@ void BenchmarkRunner::RunParallel() {
 void BenchmarkRunner::WarmUpFunctions(const size_t repetition) {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Warming up functions for repetition " << repetition << "...");
 
-  const auto& lambda_client = client_aws_->GetLambdaClient();
+  const auto& lambda_client = client_->GetLambdaClient();
   std::vector<Aws::Lambda::Model::InvokeOutcomeCallable> outcome_futures;
   outcome_futures.reserve(invoke_warmup_requests_.front().size());
 
@@ -352,7 +352,7 @@ std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> BenchmarkRunner::C
   auto sqs_messages = std::make_shared<std::unordered_map<Aws::String, Aws::String>>();
   sqs_messages->reserve(invocation_count);
 
-  const auto& sqs_client = client_aws_->GetSQSClient();
+  const auto& sqs_client = client_->GetSQSClient();
   size_t receive_message_requests = 0;
 
   while (sqs_messages->size() < invocation_count && receive_message_requests < kLambdaFunctionTimeoutSeconds) {
@@ -411,7 +411,7 @@ std::vector<Aws::Lambda::Model::CreateFunctionOutcome> BenchmarkRunner::UploadFu
   std::vector<Aws::Lambda::Model::CreateFunctionOutcome> outcomes;
   outcomes.reserve(upper_bound - lower_bound);
 
-  const auto& lambda_client = client_aws_->GetLambdaClient();
+  const auto& lambda_client = client_->GetLambdaClient();
 
   for (size_t i = lower_bound; i < upper_bound; i++) {
     const auto& function_config = config_->function_configs_[i];

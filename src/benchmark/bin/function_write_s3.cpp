@@ -1,3 +1,5 @@
+#include "function_write_s3.hpp"
+
 #include <chrono>
 #include <memory>
 #include <tuple>
@@ -5,10 +7,7 @@
 #include <aws/core/Aws.h>
 #include <aws/core/auth/AWSCredentialsProvider.h>
 #include <aws/core/client/ClientConfiguration.h>
-#include <aws/core/platform/Environment.h>
 #include <aws/core/utils/json/JsonSerializer.h>
-#include <aws/core/utils/logging/ConsoleLogSystem.h>
-#include <aws/core/utils/logging/LogLevel.h>
 #include <aws/core/utils/logging/LogMacros.h>
 #include <aws/lambda-runtime/runtime.h>
 #include <aws/s3/S3Client.h>
@@ -21,9 +20,18 @@ namespace skyrise {
 
 const std::string kTag = "SKYRISE/BENCHMARK/WORKER/WRITE_S3";
 
-std::tuple<StorageError, Aws::Utils::Array<Aws::Utils::Json::JsonValue>> PutObjectsS3(
-    const std::shared_ptr<Aws::S3::S3Client>& client, const Aws::String& bucket,
-    const Aws::Utils::Array<Aws::Utils::Json::JsonView>& keys, const size_t num_bytes, const size_t batch_size) {
+aws::lambda_runtime::invocation_response FunctionWriteS3::OnHandleRequest(
+    const Aws::Utils::Json::JsonView& request) const {
+  const Aws::String bucket = request.GetString("s3_bucket");
+  const auto keys = request.GetArray("s3_keys");
+  const size_t num_bytes = request.GetInteger("object_byte_size");
+  const size_t batch_size = request.GetInteger("batch_size");
+
+  Aws::Client::ClientConfiguration client_config;
+  client_config.caFile = "/etc/pki/tls/certs/ca-bundle.crt";
+  const auto credentials_provider = std::make_shared<Aws::Auth::EnvironmentAWSCredentialsProvider>();
+  const auto client = std::make_shared<Aws::S3::S3Client>(credentials_provider, client_config);
+
   const std::string s3_object = RandomString(num_bytes);
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> ms_durations(batch_size);
 
@@ -49,7 +57,8 @@ std::tuple<StorageError, Aws::Utils::Array<Aws::Utils::Json::JsonValue>> PutObje
 
       if (write_object_result.GetType() != StorageErrorType::kNoError) {
         AWS_LOGSTREAM_ERROR(kTag.c_str(), write_object_result.GetMessage());
-        return {write_object_result, 0.0};
+        return aws::lambda_runtime::invocation_response::failure(
+            write_object_result.GetMessage(), std::string(magic_enum::enum_name(write_object_result.GetType())));
       }
     }
 
@@ -59,72 +68,21 @@ std::tuple<StorageError, Aws::Utils::Array<Aws::Utils::Json::JsonValue>> PutObje
         Aws::Utils::Json::JsonValue().AsDouble(std::chrono::duration<double, std::milli>(end - start).count());
   }
 
-  return {StorageError::Success(), ms_durations};
-}
-
-}  // namespace skyrise
-
-aws::lambda_runtime::invocation_response HandlerFunction(const aws::lambda_runtime::invocation_request& request,
-                                                         const std::shared_ptr<Aws::S3::S3Client>& s3_client) {
-  const auto json_value = Aws::Utils::Json::JsonValue(request.payload);
-  const auto json_view = json_value.View();
-
-  const bool is_warmup = json_view.GetBool("is_warmup");
-
-  if (is_warmup) {
-    const auto response = Aws::Utils::Json::JsonValue().WithBool("is_warmup", true).View();
-    return aws::lambda_runtime::invocation_response::success(response.WriteCompact(), "application/json");
-  }
-
-  const Aws::String s3_bucket = json_view.GetString("s3_bucket");
-  const auto s3_keys = json_view.GetArray("s3_keys");
-  const size_t num_bytes = json_view.GetInteger("object_byte_size");
-  const size_t batch_size = json_view.GetInteger("batch_size");
-
-  const auto& [error, ms_durations] = skyrise::PutObjectsS3(s3_client, s3_bucket, s3_keys, num_bytes, batch_size);
-
-  if (error.GetType() != skyrise::StorageErrorType::kNoError) {
-    // TODO(d-justen): Make magic enum work here
-    return aws::lambda_runtime::invocation_response::failure(error.GetMessage(),
-                                                             std::string(magic_enum::enum_name(error.GetType())));
-  }
-
   const auto response_value =
       Aws::Utils::Json::JsonValue()
           .WithArray("ms_durations", ms_durations)
-          .WithInteger("num_s3_requests_tier_1", static_cast<size_t>(s3_keys.GetLength() * batch_size))
+          .WithInteger("num_s3_requests_tier_1", static_cast<size_t>(keys.GetLength() * batch_size))
           .WithInteger("num_s3_requests_tier_2", 0)
-          .WithInt64("s3_storage_used_bytes", static_cast<int64_t>(num_bytes * s3_keys.GetLength() * batch_size));
+          .WithInt64("s3_storage_used_bytes", static_cast<int64_t>(num_bytes * keys.GetLength() * batch_size));
 
   return aws::lambda_runtime::invocation_response::success(response_value.View().WriteCompact(), "application/json");
 }
 
+}  // namespace skyrise
+
 int main() {
-  Aws::SDKOptions options;
-  options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Info;
-  options.loggingOptions.logger_create_fn = [] {
-    return Aws::MakeShared<Aws::Utils::Logging::ConsoleLogSystem>("console_logger",
-                                                                  Aws::Utils::Logging::LogLevel::Info);
-  };
-
-  Aws::InitAPI(options);
-  {
-    Aws::Client::ClientConfiguration client_config;
-    client_config.region = Aws::Environment::GetEnv("AWS_REGION");
-    client_config.caFile = "/etc/pki/tls/certs/ca-bundle.crt";
-
-    const auto credentials_provider = std::make_shared<Aws::Auth::EnvironmentAWSCredentialsProvider>();
-
-    const auto s3_client = std::make_shared<Aws::S3::S3Client>(
-        credentials_provider, client_config, Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Always, false);
-
-    const auto handler_function = [&s3_client](const aws::lambda_runtime::invocation_request& request) {
-      return HandlerFunction(request, s3_client);
-    };
-
-    aws::lambda_runtime::run_handler(handler_function);
-  }
-  Aws::ShutdownAPI(options);
+  skyrise::FunctionWriteS3 function_write_s3;
+  function_write_s3.HandleRequest();
 
   return 0;
 }

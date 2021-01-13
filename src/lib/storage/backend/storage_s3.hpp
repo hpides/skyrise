@@ -23,7 +23,6 @@
 #include <aws/s3/model/UploadPartRequest.h>
 
 #include "abstract_storage.hpp"
-#include "client/client_aws.hpp"
 #include "utils/literal.hpp"
 #include "utils/string.hpp"
 

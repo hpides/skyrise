@@ -12,7 +12,7 @@ namespace skyrise {
 
 class CostCalculator {
  public:
-  CostCalculator(std::shared_ptr<ClientAws> client_aws) : pricing_(std::make_unique<Pricing>(client_aws)) {}
+  CostCalculator(std::shared_ptr<Client> client) : pricing_(std::make_unique<Pricing>(client)) {}
 
   // AWS rounds up the compute duration to the nearest 100ms
   long double CalculateCostLambda(const size_t compute_duration_ms, const size_t lambda_size_mb) const;

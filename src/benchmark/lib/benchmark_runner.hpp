@@ -11,13 +11,13 @@
 
 #include "benchmark_config.hpp"
 #include "benchmark_result.hpp"
-#include "client/client_aws.hpp"
+#include "client/client.hpp"
 
 namespace skyrise {
 
 class BenchmarkRunner {
  public:
-  BenchmarkRunner(std::shared_ptr<ClientAws> client_aws);
+  BenchmarkRunner(std::shared_ptr<Client> client);
 
   std::shared_ptr<BenchmarkResult> RunConfig(const BenchmarkConfig& config);
 
@@ -53,7 +53,7 @@ class BenchmarkRunner {
   std::vector<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>> invoke_requests_;
   std::vector<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>> invoke_warmup_requests_;
 
-  const std::shared_ptr<ClientAws> client_aws_;
+  const std::shared_ptr<Client> client_;
 
   std::shared_ptr<Aws::String> sqs_queue_url_;
   std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> sqs_messages_;
