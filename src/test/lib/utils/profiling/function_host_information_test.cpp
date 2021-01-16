@@ -9,7 +9,6 @@ namespace skyrise {
 class FunctionHostInformationTest : public ::testing::Test {
  public:
   FunctionHostInformationCollectorConfiguration config{"/tmp/exampleCgroupFile.txt",
-                                                       "echo \"1.2.3.4\"",
                                                        "echo \"5.6.7.8\"",
                                                        false,
                                                        "echo \"OSDetails\"",
@@ -60,7 +59,8 @@ TEST_F(FunctionHostInformationTest, FunctionHostInformationTestIdentificationWit
   FunctionHostInformationCollector collector(config);
   FunctionHostInformationIdentification information_identification = collector.CollectInformationIdentification();
   EXPECT_EQ(information_identification.id, "pQEzKi");
-  EXPECT_EQ(information_identification.ip_private, "1.2.3.4");
+  // We don't know the real private ip address, but at least, it should not be empty.
+  EXPECT_NE(information_identification.ip_private, "");
   EXPECT_EQ(information_identification.ip_public, "");
 
   tear_down();
@@ -127,7 +127,15 @@ TEST_F(FunctionHostInformationTest, FunctionHostInformationTestJson) {
 })""";
 
   FunctionHostInformationCollector collector(config);
-  auto json = collector.CollectJson();
+  const std::string collected_json = collector.CollectJson();
+  ASSERT_TRUE(collected_json.find("pQEzKi") != collected_json.npos);
+
+  const auto information_identification = collector.CollectInformationIdentification();
+  const auto information_environment = collector.CollectInformationEnvironment();
+  const auto information_resources = collector.CollectInformationResources();
+  FunctionHostInformationIdentification mocked_information_identification{information_identification.id, "1.2.3.4",
+                                                                          information_identification.ip_public};
+  auto json = collector.AsJson(mocked_information_identification, information_environment, information_resources);
   EXPECT_EQ(json, expected_json);
 
   tear_down();

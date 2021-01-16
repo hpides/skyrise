@@ -8,6 +8,35 @@
 #include "utils/unit_conversion.hpp"
 
 namespace skyrise {
+
+NetworkInterface NetworkInterface::GetFirstInterface() {
+  ifaddrs* interface_addresses = nullptr;
+  if (getifaddrs(&interface_addresses) == 0) {
+    return NetworkInterface(std::shared_ptr<ifaddrs>(interface_addresses, [](ifaddrs* p) { freeifaddrs(p); }));
+  }
+  return NetworkInterface(nullptr);
+}
+
+NetworkInterface NetworkInterface::Next() {
+  return NetworkInterface(interface_address_list_head_, current_interface_address_->ifa_next);
+}
+
+bool NetworkInterface::IsIpv6LinkLocalAddress() {
+  auto* inet6_address = reinterpret_cast<sockaddr_in6*>(current_interface_address_->ifa_addr);
+  return IN6_IS_ADDR_LINKLOCAL(&inet6_address->sin6_addr) ||   // NOLINT
+         IN6_IS_ADDR_MC_LINKLOCAL(&inet6_address->sin6_addr);  // NOLINT
+}
+
+std::string NetworkInterface::GetNumericHostname() {
+  std::array<char, 255> name_buffer{};
+  int address_struct_length = IsIpv4() ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
+  int get_name_result = getnameinfo(current_interface_address_->ifa_addr, address_struct_length, name_buffer.data(),
+                                    sizeof(name_buffer), nullptr, 0, NI_NUMERICHOST);
+
+  // getnameinfo will return 0 for success
+  return get_name_result == 0 ? name_buffer.data() : std::string();
+}
+
 FunctionHostInformationCollector::FunctionHostInformationCollector(
     const FunctionHostInformationCollectorConfiguration& config)
     : config_(config) {}
@@ -71,11 +100,17 @@ std::string FunctionHostInformationCollector::Id() const {
   return match.empty() ? "" : match.front();
 }
 
-std::string FunctionHostInformationCollector::IpPrivate() const {
-  constexpr auto kRegex = "([0-9]+.[0-9]+.[0-9]+.[0-9]+)";
-  const auto command_output = ReadStdout(config_.ip_private_command);
-  const auto match = FindFirst(kRegex, command_output);
-  return match.empty() ? "" : match.front();
+std::string FunctionHostInformationCollector::IpPrivate() {
+  NetworkInterface interface = NetworkInterface::GetFirstInterface();
+  while (interface.IsValid()) {
+    if (interface.HasAddress() && interface.IsUp() && !interface.IsLoopback() &&
+        (interface.IsIpv4() || (interface.IsIpv6() && !interface.IsIpv6LinkLocalAddress()))) {
+      return interface.GetNumericHostname();
+    }
+    interface = interface.Next();
+  }
+
+  return "";
 }
 
 std::string FunctionHostInformationCollector::IpPublic() const {
