@@ -84,4 +84,7 @@ class TableWriter {
   std::mutex error_mutex_;
 };
 
+using TableWriterFactory =
+    std::function<std::shared_ptr<TableWriter>(const std::string& name, const TableColumnDefinitions& schema)>;
+
 }  // namespace skyrise

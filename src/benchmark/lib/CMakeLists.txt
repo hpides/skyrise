@@ -11,6 +11,10 @@ set(
     benchmark_result.hpp
     benchmark_runner.cpp
     benchmark_runner.hpp
+    data_generation/abstract_generator.hpp
+    data_generation/table_builder.hpp
+    data_generation/tpch/tpch_generator.hpp
+    data_generation/tpch/tpch_generator.cpp
     function_colocation_benchmark.cpp
     function_colocation_benchmark.hpp
     idle_availability_benchmark.cpp
@@ -36,6 +40,7 @@ set(
     aws-cpp-sdk-lambda
     aws-cpp-sdk-s3
     aws-cpp-sdk-sqs
+    tpch-dbgen
     skyriseShared
 )
 

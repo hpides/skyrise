@@ -9,6 +9,7 @@ set(
     benchmark/lib/benchmark_helper_test.cpp
     benchmark/lib/benchmark_result_aggregate_test.cpp
     benchmark/lib/benchmark_result_test.cpp
+    benchmark/lib/data_generation/tpch_test.cpp
 
     lib/storage/backend/abstract_provider.hpp
     lib/storage/backend/filesystem_provider.hpp
