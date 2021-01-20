@@ -31,8 +31,8 @@ FunctionColocationBenchmark::FunctionColocationBenchmark(const std::vector<size_
 
   benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size());
 
-  for (const auto& function_instance_mb_size : function_instance_mb_sizes) {
-    for (const auto& invocation_count : invocation_counts) {
+  for (const auto function_instance_mb_size : function_instance_mb_sizes) {
+    for (const auto invocation_count : invocation_counts) {
       benchmark_configs_.emplace_back(kFunctionName, function_instance_mb_size, after_repetition_callbacks.size(),
                                       invocation_count, WarmUpStrategy::kNone, UseOneFunctionPerRepetition::kNo,
                                       UseEventQueue::kNo, after_repetition_callbacks);

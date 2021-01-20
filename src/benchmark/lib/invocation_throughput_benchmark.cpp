@@ -13,10 +13,10 @@ InvocationThroughputBenchmark::InvocationThroughputBenchmark(const std::vector<s
                                                              const std::vector<size_t>& function_payload_byte_sizes) {
   benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size() * 2);
 
-  for (const auto& function_instance_mb_size : function_instance_mb_sizes) {
-    for (const auto& invocation_count : invocation_counts) {
-      for (const auto& use_event_queue : {UseEventQueue::kYes, UseEventQueue::kNo}) {
-        for (const auto& function_payload_byte_size : function_payload_byte_sizes) {
+  for (const auto function_instance_mb_size : function_instance_mb_sizes) {
+    for (const auto invocation_count : invocation_counts) {
+      for (const auto use_event_queue : {UseEventQueue::kYes, UseEventQueue::kNo}) {
+        for (const auto function_payload_byte_size : function_payload_byte_sizes) {
           // TODO(anyone): Use repetition/invocation framework instead of multiple configs
           BenchmarkConfig config(kFunctionName, function_instance_mb_size, 1, invocation_count,
                                  WarmUpStrategy::kDefault, UseOneFunctionPerRepetition::kNo, use_event_queue);

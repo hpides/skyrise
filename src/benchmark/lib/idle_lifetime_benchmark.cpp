@@ -24,7 +24,7 @@ IdleLifetimeBenchmark::IdleLifetimeBenchmark(const std::vector<size_t>& function
   std::vector<std::function<void()>> after_repetition_callbacks;
   after_repetition_callbacks.reserve(sleep_min_durations.size() + 1);
 
-  for (const auto& sleep_min_duration : sleep_min_durations) {
+  for (const auto sleep_min_duration : sleep_min_durations) {
     after_repetition_callbacks.emplace_back(
         [sleep_min_duration]() { std::this_thread::sleep_for(std::chrono::minutes(sleep_min_duration)); });
   }
@@ -33,8 +33,8 @@ IdleLifetimeBenchmark::IdleLifetimeBenchmark(const std::vector<size_t>& function
 
   benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size());
 
-  for (const auto& function_instance_mb_size : function_instance_mb_sizes) {
-    for (const auto& invocation_count : invocation_counts) {
+  for (const auto function_instance_mb_size : function_instance_mb_sizes) {
+    for (const auto invocation_count : invocation_counts) {
       benchmark_configs_.emplace_back(kFunctionName, function_instance_mb_size, after_repetition_callbacks.size(),
                                       invocation_count, WarmUpStrategy::kNone, UseOneFunctionPerRepetition::kNo,
                                       UseEventQueue::kNo, after_repetition_callbacks);
@@ -71,7 +71,7 @@ Aws::Utils::Json::JsonValue IdleLifetimeBenchmark::GenerateResultOutput(
 
   std::map<Aws::String, double> vm_ids_to_idle_lifetimes;
 
-  for (size_t i = 0; i < invocation_results.size(); i++) {
+  for (size_t i = 0; i < invocation_results.size(); ++i) {
     for (const auto& invocation : invocation_results[i]) {
       const Aws::String vm_id = StreamToString(&invocation.second.invoke_result_->GetPayload());
 

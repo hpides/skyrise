@@ -31,8 +31,8 @@ IdleAvailabilityBenchmark::IdleAvailabilityBenchmark(const std::vector<size_t>& 
 
   benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size());
 
-  for (const auto& function_instance_mb_size : function_instance_mb_sizes) {
-    for (const auto& invocation_count : invocation_counts) {
+  for (const auto function_instance_mb_size : function_instance_mb_sizes) {
+    for (const auto invocation_count : invocation_counts) {
       benchmark_configs_.emplace_back(kFunctionName, function_instance_mb_size, after_repetition_callbacks.size(),
                                       invocation_count, WarmUpStrategy::kNone, UseOneFunctionPerRepetition::kNo,
                                       UseEventQueue::kNo, after_repetition_callbacks);
@@ -69,7 +69,7 @@ Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
 
   std::map<std::string, std::vector<bool>> vm_ids_to_availability_flags;
 
-  for (size_t i = 0; i < invocation_results.size(); i++) {
+  for (size_t i = 0; i < invocation_results.size(); ++i) {
     for (const auto& invocation : invocation_results[i]) {
       const std::string vm_id = StreamToString(&invocation.second.invoke_result_->GetPayload());
 
