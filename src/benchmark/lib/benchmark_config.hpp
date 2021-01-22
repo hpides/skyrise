@@ -47,6 +47,9 @@ class BenchmarkConfig {
   const Aws::String benchmark_timestamp_;
   std::vector<LambdaFunctionConfig> function_configs_;
   std::vector<std::vector<LambdaInvocationConfig>> repetition_configs_;
+
+ private:
+  static Aws::String GetProjectDirPath();
 };
 
 }  // namespace skyrise

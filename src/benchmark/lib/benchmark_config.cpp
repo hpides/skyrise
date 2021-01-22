@@ -1,8 +1,11 @@
 #include "benchmark_config.hpp"
 
 #include <algorithm>
+#include <climits>
 #include <memory>
 #include <string>
+
+#include <unistd.h>
 
 #include "limits.hpp"
 #include "utils/assert.hpp"
@@ -30,8 +33,7 @@ BenchmarkConfig::BenchmarkConfig(const Aws::String& function_zip_name, const siz
   Assert(after_repetition_callbacks_.size() == repetition_count_,
          "The number of repetition callbacks and the repetition count must be equal.");
 
-  // TODO(anyone): Make function discovery more flexible and robust
-  const Aws::String function_path = "./pkg/" + function_zip_name + ".zip";
+  const Aws::String function_path = GetProjectDirPath() + "pkg/" + function_zip_name + ".zip";
   Aws::StringStream function_name_base;
   function_name_base << benchmark_id_ << "-" << benchmark_timestamp_ << "-" << function_zip_name;
 
@@ -61,6 +63,23 @@ BenchmarkConfig::BenchmarkConfig(const Aws::String& function_zip_name, const siz
 
     repetition_configs_.emplace_back(invocation_configs);
   }
+}
+
+Aws::String BenchmarkConfig::GetProjectDirPath() {
+  std::array<char, PATH_MAX> executable_path_buffer{};
+  const auto path_name_length =
+      readlink("/proc/self/exe", executable_path_buffer.data(), sizeof(executable_path_buffer) - 1);
+
+  if (path_name_length == -1) {
+    Fail("Unable to read project directory path.");
+  }
+
+  executable_path_buffer[path_name_length] = '\0';
+
+  const Aws::String path_name(executable_path_buffer.data());
+
+  // Return the absolute project directory path by removing the path to the executable
+  return path_name.substr(0, path_name.rfind("bin"));
 }
 
 void BenchmarkConfig::SetPayloads(const std::vector<std::shared_ptr<Aws::IOStream>>& payloads) {
