@@ -2,18 +2,18 @@
 ARG CCACHE_VERSION=4.1
 ARG CCACHE_DIR=/opt/ccache-${CCACHE_VERSION}
 ARG CMAKE_VERSION=3.19
-ARG CMAKE_PATCH=2
+ARG CMAKE_PATCH=3
 ARG CMAKE_DIR=/opt/cmake-${CMAKE_VERSION}.${CMAKE_PATCH}
 ARG CPPCHECK_VERSION=2.3
 ARG CPPCHECK_DIR=/opt/cppcheck-${CPPCHECK_VERSION}
-ARG CPPLINT_COMMIT=d5b5104
+ARG CPPLINT_COMMIT=87c5406
 ARG CPPLINT_DIR=/opt/cpplint-${CPPLINT_COMMIT}
 ARG DOCKER_LAMBDA_COMMIT=b25f269
 ARG DOCKER_LAMBDA_DIR=/opt/docker-lambda-${DOCKER_LAMBDA_COMMIT}
 ARG GCC_VERSION=7.5.0
 ARG GCC_SUFFIX=75
 ARG GCC_DIR=/opt/gcc-${GCC_VERSION}
-ARG LLVM_VERSION=11.0.0
+ARG LLVM_VERSION=11.0.1
 ARG LLVM_DIR=/opt/llvm-${LLVM_VERSION}
 
 
@@ -131,7 +131,7 @@ ARG LLVM_VERSION
 ARG LLVM_DIR
 
 WORKDIR ${LLVM_DIR}/src
-RUN wget -nv https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/llvm-project-${LLVM_VERSION}.tar.xz -O - \
+RUN wget -nv https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/llvm-project-${LLVM_VERSION}.src.tar.xz -O - \
         | tar -xJ --strip-components=1 && \
     mkdir build && \
     cd build && \
@@ -186,8 +186,12 @@ RUN yum install -y \
     yum clean all && \
     rm -rf /var/cache/yum && \
     # Default commands
-    alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 1000 && \
-    alternatives --set ld /usr/bin/ld.lld
+    alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 1101 && \
+    alternatives --set ld /usr/bin/ld.lld && \
+    # Python packages
+    pip install --no-input --quiet \
+    pytictoc \
+    termcolor
 
 COPY --from=base /opt /opt
 

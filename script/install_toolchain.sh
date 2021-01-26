@@ -28,12 +28,16 @@ if [[ "$unamestr" == 'Linux' ]]; then
                 uuid-dev \
                 zip \
                 zlib1g-dev
-                pip3 install cpplint
                 
                 sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-11 110 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-11
                 sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-11 110
                 sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-11 110
                 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 102 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+
+                pip install --no-input --quiet \
+                cpplint \
+                pytictoc \
+                termcolor
 
                 # Symlink to default Amazon Linux certificate file
                 sudo mkdir -p /etc/pki/tls/certs
