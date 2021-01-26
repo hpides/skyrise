@@ -157,7 +157,7 @@ int main(int argc, char* argv[]) {
     benchmark_registry.RegisterBenchmark(
         "NetworkThroughputParallelBenchmark",
         std::make_unique<skyrise::NetworkThroughputParallelBenchmark>(
-            benchmark_helper, cost_calculator, std::vector<size_t>{1, 10, 100, 1000, 10000}, 100));
+            benchmark_helper, cost_calculator, std::vector<size_t>{1, 10, 100, 1000, 10000}, 100, 1));
 
     // Filter the benchmarks (optional)
     std::vector<std::string> benchmark_names = benchmark_registry.GetRegisteredBenchmarkNames();

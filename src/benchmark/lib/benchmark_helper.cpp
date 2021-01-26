@@ -34,7 +34,9 @@ Aws::Utils::Json::JsonValue BenchmarkHelper::GenerateJsonOutput(
     const std::vector<std::function<std::tuple<Aws::String, double>(const InvocationResult&)>>&
         extract_numeric_metric_functions,
     const std::vector<std::function<std::tuple<Aws::String, Aws::String>(const InvocationResult&)>>&
-        extract_alphabetic_metric_functions) {
+        extract_alphabetic_metric_functions,
+    const std::vector<std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const InvocationResult&)>>&
+        extract_object_metric_functions) {
   auto json_output = Aws::Utils::Json::JsonValue().WithString("name", benchmark_name);
 
   for (const auto& [metric_name, aggregated_numeric_metric] : aggregated_numeric_metrics) {
@@ -68,6 +70,11 @@ Aws::Utils::Json::JsonValue BenchmarkHelper::GenerateJsonOutput(
       for (const auto& extract_alphabetic_metric_function : extract_alphabetic_metric_functions) {
         const auto& [metric_name, alphabetic_metric] = extract_alphabetic_metric_function(benchmark_item_result);
         invocation_value = invocation_value.WithString(metric_name, alphabetic_metric);
+      }
+
+      for (const auto& extract_object_metric_function : extract_object_metric_functions) {
+        const auto& [metric_name, object_metric] = extract_object_metric_function(benchmark_item_result);
+        invocation_value = invocation_value.WithObject(metric_name, object_metric);
       }
 
       invocations[j] = invocation_value;

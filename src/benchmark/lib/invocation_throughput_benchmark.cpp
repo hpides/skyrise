@@ -78,7 +78,7 @@ Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
         return std::make_tuple(
             "duration", std::chrono::duration<double>(item_result.end_point_ - item_result.start_point_).count());
       }},
-      {/*extract string metric functions*/});
+      {/*extract string metric functions*/}, {/*extract object metric functions*/});
 }
 
 }  // namespace skyrise

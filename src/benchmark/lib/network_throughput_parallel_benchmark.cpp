@@ -15,7 +15,6 @@
 
 namespace skyrise {
 
-const size_t kBatchSize = 1;
 // TODO(d-justen): Change to the best performing parameters found by NetworkThroughputBenchmark
 const size_t kFunctionInstanceMbSize = 3008;
 const size_t kObjectByteSize = 16_MB;
@@ -24,8 +23,9 @@ const size_t kThreadCount = 4;
 NetworkThroughputParallelBenchmark::NetworkThroughputParallelBenchmark(std::shared_ptr<BenchmarkHelper> helper,
                                                                        std::shared_ptr<CostCalculator> cost_calculator,
                                                                        const std::vector<size_t>& invocation_counts,
-                                                                       const size_t repetition_count)
-    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), repetition_count, kBatchSize, {kObjectByteSize},
+                                                                       const size_t repetition_count,
+                                                                       const size_t batch_size)
+    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), repetition_count, batch_size, {kObjectByteSize},
                        {kThreadCount}, invocation_counts) {
   for (const auto operation_type : {S3OperationType::kRead, S3OperationType::kWrite}) {
     Aws::StringStream function_name;
@@ -56,7 +56,7 @@ Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateResultOu
 
   for (size_t i = 0; i < invocation_results.size(); i++) {
     const double duration_seconds = result->GetRepetitionDuration(i).count();
-    throughputs.emplace_back(ByteToMb(parameters.object_byte_size_) * parameters.thread_count_ *
+    throughputs.emplace_back(ByteToMb(parameters.object_byte_size_) * parameters.thread_count_ * batch_size_ *
                              invocation_results.front().size() / duration_seconds);
   }
 
@@ -78,15 +78,6 @@ Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateResultOu
        {"benchmark_cost_overhead_usd", cost_overhead_ / configs_.size()}},
       {/*aggregated string metrics*/}, result,
       {[&](const InvocationResult& single_result) {
-         Aws::Utils::Json::JsonValue result_value(StreamToString(&single_result.invoke_result_->GetPayload()));
-         const auto duration_views = result_value.View().GetArray("ms_durations");
-         const double duration_seconds =
-             std::chrono::duration<double>(std::chrono::duration<double, std::milli>(duration_views[0].AsDouble()))
-                 .count();
-         return std::make_tuple("throughput_mb_per_s",
-                                ByteToMb(parameters.object_byte_size_) / duration_seconds * parameters.thread_count_);
-       },
-       [&](const InvocationResult& single_result) {
          return std::make_tuple("billed_lambda_duration_ms",
                                 BenchmarkHelper::ExtractBilledLambdaDuration(single_result));
        },
@@ -94,7 +85,20 @@ Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateResultOu
          return std::make_tuple("function_cost_usd", static_cast<double>(ExtractFunctionCost(
                                                          single_result, parameters.function_instance_mb_size_)));
        }},
-      {/*extract string metric functions*/});
+      {/*extract string metric functions*/}, {[&](const InvocationResult& single_result) {
+        const Aws::Utils::Json::JsonValue payload_value(StreamToString(&single_result.invoke_result_->GetPayload()));
+        const auto ms_durations = payload_value.View().GetArray("ms_durations");
+
+        Aws::Utils::Array<Aws::Utils::Json::JsonValue> duration_seconds(ms_durations.GetLength());
+
+        for (size_t i = 0; i < ms_durations.GetLength(); i++) {
+          duration_seconds[i] = Aws::Utils::Json::JsonValue().AsDouble(
+              std::chrono::duration<double>(std::chrono::duration<double, std::milli>(ms_durations[i].AsDouble()))
+                  .count());
+        }
+
+        return std::make_tuple("duration_seconds", Aws::Utils::Json::JsonValue().AsArray(duration_seconds));
+      }});
 }
 
 }  // namespace skyrise

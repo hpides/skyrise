@@ -70,7 +70,7 @@ Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
 
   const BenchmarkResultAggregate aggregates(throughputs);
 
-  auto output_json = BenchmarkHelper::GenerateJsonOutput(
+  return BenchmarkHelper::GenerateJsonOutput(
       benchmark_name.str(),
       {{"throughput_mb_per_s_minimum", aggregates.GetMinimum()},
        {"throughput_mb_per_s_maximum", aggregates.GetMaximum()},
@@ -84,11 +84,29 @@ Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
        {"benchmark_cost_usd",
         static_cast<double>(CalculateBenchmarkCost(result, parameters.function_instance_mb_size_))},
        {"benchmark_cost_overhead_usd", cost_overhead_ / configs_.size()}},
-      {/*aggregated string metrics*/}, std::make_shared<BenchmarkResult>(0, 0),
-      {},  // TODO(d-justen): Make this less hacky
-      {/*extract string metric functions*/});
+      {/*aggregated string metrics*/}, result,
+      {[&](const InvocationResult& single_result) {
+         return std::make_tuple("billed_lambda_duration_ms",
+                                BenchmarkHelper::ExtractBilledLambdaDuration(single_result));
+       },
+       [&](const InvocationResult& single_result) {
+         return std::make_tuple("function_cost_usd", static_cast<double>(ExtractFunctionCost(
+                                                         single_result, parameters.function_instance_mb_size_)));
+       }},
+      {/*extract string metric functions*/}, {[&](const InvocationResult& single_result) {
+        const Aws::Utils::Json::JsonValue payload_value(StreamToString(&single_result.invoke_result_->GetPayload()));
+        const auto ms_durations = payload_value.View().GetArray("ms_durations");
 
-  return output_json.WithArray("runs", batched_runs);
+        Aws::Utils::Array<Aws::Utils::Json::JsonValue> duration_seconds(ms_durations.GetLength());
+
+        for (size_t i = 0; i < ms_durations.GetLength(); i++) {
+          duration_seconds[i] = Aws::Utils::Json::JsonValue().AsDouble(
+              std::chrono::duration<double>(std::chrono::duration<double, std::milli>(ms_durations[i].AsDouble()))
+                  .count());
+        }
+
+        return std::make_tuple("duration_seconds", Aws::Utils::Json::JsonValue().AsArray(duration_seconds));
+      }});
 }
 
 }  // namespace skyrise

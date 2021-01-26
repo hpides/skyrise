@@ -53,9 +53,18 @@ TEST_F(BenchmarkHelperTest, GenerateJsonOutput) {
               return std::make_tuple("alphabetic_metric_2", b.success_ ? "true" : "false");
             }};
 
+    std::vector<std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const InvocationResult&)>>
+        extract_object_metric_functions{
+            [](const InvocationResult& b) {
+              return std::make_tuple("object_metric_1", Aws::Utils::Json::JsonValue().AsString(b.sqs_message_body_));
+            },
+            [](const InvocationResult& b) {
+              return std::make_tuple("object_metric_2", Aws::Utils::Json::JsonValue().AsBool(b.success_));
+            }};
+
     const auto json_value = BenchmarkHelper::GenerateJsonOutput(
         "benchmark", aggregated_numeric_metrics, aggregated_alphabetic_metrics, benchmark_result,
-        extract_numeric_metric_functions, extract_alphabetic_metric_functions);
+        extract_numeric_metric_functions, extract_alphabetic_metric_functions, extract_object_metric_functions);
     const auto json_view = json_value.View();
 
     EXPECT_TRUE(json_view.ValueExists("name"));
@@ -79,6 +88,8 @@ TEST_F(BenchmarkHelperTest, GenerateJsonOutput) {
       EXPECT_TRUE(invocations[i].ValueExists("numeric_metric_2"));
       EXPECT_TRUE(invocations[i].ValueExists("alphabetic_metric_1"));
       EXPECT_TRUE(invocations[i].ValueExists("alphabetic_metric_2"));
+      EXPECT_TRUE(invocations[i].ValueExists("object_metric_1"));
+      EXPECT_TRUE(invocations[i].ValueExists("object_metric_2"));
     }
   }
   Aws::ShutdownAPI(options);

@@ -23,7 +23,9 @@ class BenchmarkHelper {
       const std::vector<std::function<std::tuple<Aws::String, double>(const InvocationResult&)>>&
           extract_numeric_metric_functions,
       const std::vector<std::function<std::tuple<Aws::String, Aws::String>(const InvocationResult&)>>&
-          extract_alphabetic_metric_functions);
+          extract_alphabetic_metric_functions,
+      const std::vector<std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const InvocationResult&)>>&
+          extract_object_metric_functions);
 
   long double CreateS3BucketIfNotExists(const Aws::String& bucket_name) const;
   static std::shared_ptr<Aws::IOStream> GenerateRandomObject(const size_t num_bytes);

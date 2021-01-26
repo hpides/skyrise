@@ -103,7 +103,8 @@ Aws::Utils::Json::JsonValue FunctionColocationBenchmark::GenerateResultOutput(
       {/*aggregated string metrics*/}, benchmark_result, {/*extract double metric functions*/},
       {[&](const InvocationResult& item_result) {
         return std::make_tuple("vm_id", StreamToString(&item_result.invoke_result_->GetPayload()));
-      }});
+      }},
+      {/*extract object metric functions*/});
 }
 
 }  // namespace skyrise
