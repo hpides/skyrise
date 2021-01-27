@@ -14,8 +14,8 @@ aws::lambda_runtime::invocation_response Function::HandlerFunction(
   const bool is_warmup = json_view.KeyExists("is_warmup") ? json_view.GetBool("is_warmup") : false;
 
   if (is_warmup) {
-    const auto response = Aws::Utils::Json::JsonValue().WithBool("is_warmup", true).View();
-    return aws::lambda_runtime::invocation_response::success(response.WriteCompact(), "application/json");
+    const auto response = Aws::Utils::Json::JsonValue().WithBool("is_warmup", true);
+    return aws::lambda_runtime::invocation_response::success(response.View().WriteCompact(), "application/json");
   }
 
   return OnHandleRequest(json_view);
