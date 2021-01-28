@@ -18,7 +18,7 @@ ARG LLVM_DIR=/opt/llvm-${LLVM_VERSION}
 
 
 # Packages
-FROM lambci/lambda-base-2:build AS base-install
+FROM amazon/aws-sam-cli-build-image-provided.al2 AS base-install
 
 RUN yum install -y \
     # General
@@ -143,7 +143,7 @@ RUN wget -nv https://github.com/llvm/llvm-project/releases/download/llvmorg-${LL
 
 
 # Base stage combining all tools
-FROM lambci/lambda-base-2:build AS base
+FROM amazon/aws-sam-cli-build-image-provided.al2 AS base
 ARG CCACHE_DIR
 ARG CMAKE_DIR
 ARG CPPCHECK_DIR
@@ -162,7 +162,7 @@ COPY --from=base-llvm-clang ${LLVM_DIR} ${LLVM_DIR}
 
 
 # Build stage
-FROM lambci/lambda-base-2:build AS build
+FROM amazon/aws-sam-cli-build-image-provided.al2 AS build
 ARG GCC_DIR
 
 # Packages
@@ -179,15 +179,11 @@ RUN yum install -y \
     openssl-devel \
     system-lsb-core && \
     # Cleanup
-    yum remove -y \
-    clang \
-    cmake \
-    llvm && \
     yum clean all && \
     rm -rf /var/cache/yum && \
     # Default commands
-    alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 1101 && \
-    alternatives --set ld /usr/bin/ld.lld && \
+    /usr/sbin/alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 1101 && \
+    /usr/sbin/alternatives --set ld /usr/bin/ld.lld && \
     # Python packages
     pip install --no-input --quiet \
     pytictoc \
@@ -208,7 +204,7 @@ ENV CC=clang \
     CXX=clang++
 
 # Run stage
-FROM lambci/lambda-base-2 AS run
+FROM amazon/aws-sam-cli-emulation-image-provided.al2 AS run
 ARG DOCKER_LAMBDA_DIR
 ARG LLVM_DIR
 
