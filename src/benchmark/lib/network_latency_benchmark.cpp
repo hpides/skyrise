@@ -12,15 +12,13 @@
 
 namespace skyrise {
 
-const size_t kBatchSize = 100;
-
 NetworkLatencyBenchmark::NetworkLatencyBenchmark(std::shared_ptr<BenchmarkHelper> helper,
                                                  std::shared_ptr<CostCalculator> cost_calculator,
                                                  const std::vector<size_t>& function_instance_mb_sizes,
                                                  const std::vector<size_t>& object_byte_sizes_read,
                                                  const std::vector<size_t>& object_byte_sizes_write,
-                                                 const size_t repetition_count)
-    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), repetition_count, kBatchSize,
+                                                 const size_t repetition_count, const size_t batch_size)
+    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), repetition_count, batch_size,
                        object_byte_sizes_read, {1}, {1}) {
   for (const auto function_instance_mb_size : function_instance_mb_sizes) {
     for (const size_t object_byte_size_read : object_byte_sizes_read) {
