@@ -1,20 +1,24 @@
 # Tool versions and locations
 ARG CCACHE_VERSION=4.1
-ARG CCACHE_DIR=/opt/ccache-${CCACHE_VERSION}
+ARG CCACHE_DIR=/opt/build/ccache-${CCACHE_VERSION}
 ARG CMAKE_VERSION=3.19
-ARG CMAKE_PATCH=3
-ARG CMAKE_DIR=/opt/cmake-${CMAKE_VERSION}.${CMAKE_PATCH}
+ARG CMAKE_PATCH=4
+ARG CMAKE_DIR=/opt/build/cmake-${CMAKE_VERSION}.${CMAKE_PATCH}
 ARG CPPCHECK_VERSION=2.3
-ARG CPPCHECK_DIR=/opt/cppcheck-${CPPCHECK_VERSION}
-ARG CPPLINT_COMMIT=87c5406
-ARG CPPLINT_DIR=/opt/cpplint-${CPPLINT_COMMIT}
-ARG DOCKER_LAMBDA_COMMIT=b25f269
-ARG DOCKER_LAMBDA_DIR=/opt/docker-lambda-${DOCKER_LAMBDA_COMMIT}
+ARG CPPCHECK_DIR=/opt/build/cppcheck-${CPPCHECK_VERSION}
+ARG CPPLINT_COMMIT=6e239d7
+ARG CPPLINT_DIR=/opt/build/cpplint-${CPPLINT_COMMIT}
+ARG DOCKER_LAMBDA_COMMIT=f6b4765
+ARG DOCKER_LAMBDA_DIR=/opt/run/docker-lambda-${DOCKER_LAMBDA_COMMIT}
 ARG GCC_VERSION=7.5.0
 ARG GCC_SUFFIX=75
-ARG GCC_DIR=/opt/gcc-${GCC_VERSION}
+ARG GCC_DIR=/opt/build/gcc-${GCC_VERSION}
+ARG HEAPTRACK_VERSION=1.2.0
+ARG HEAPTRACK_DIR=/opt/run/heaptrack-${HEAPTRACK_VERSION}
 ARG LLVM_VERSION=11.0.1
-ARG LLVM_DIR=/opt/llvm-${LLVM_VERSION}
+ARG LLVM_DIR=/opt/build/llvm-${LLVM_VERSION}
+ARG VALGRIND_VERSION=3.16.1
+ARG VALGRIND_DIR=/opt/run/valgrind-${VALGRIND_VERSION}
 
 
 # Packages
@@ -25,8 +29,12 @@ RUN yum install -y \
     wget \
     # Ccache dependency
     libzstd-devel \
-    # Lambda bootstrap wrapper dependency
-    golang.x86_64 \
+    # Docker Lambda bootstrap wrapper dependency
+    golang \
+    # Heaptrack dependency
+    boost-devel \
+    libdwarf-devel \
+    libunwind-devel \
     # LLDB dependency
     libedit-devel && \
     # Cleanup
@@ -44,7 +52,7 @@ ARG CMAKE_DIR
 WORKDIR ${CMAKE_DIR}
 RUN wget -nv https://cmake.org/files/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.${CMAKE_PATCH}-Linux-x86_64.tar.gz -O - \
         | tar -xz --strip-components=1 && \
-    for file in /opt/*/bin/*; \
+    for file in ${CMAKE_DIR}/bin/*; \
         do \
             ln -s $file /usr/bin/$(basename $file); \
         done
@@ -76,7 +84,7 @@ RUN wget -nv https://github.com/danmar/cppcheck/archive/${CPPCHECK_VERSION}.tar.
         | tar -xz --strip-components=1 && \
     mkdir build && \
     cd build && \
-    cmake .. -DCMAKE_INSTALL_PREFIX=${CPPCHECK_DIR} -DFILESDIR=${CPPCHECK_DIR}/share && \
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CPPCHECK_DIR} -DFILESDIR=${CPPCHECK_DIR}/share && \
     make -j$(nproc) && \
     make install && \
     rm -rf ${CPPCHECK_DIR}/src
@@ -92,10 +100,10 @@ RUN wget -nv  https://raw.githubusercontent.com/google/styleguide/${CPPLINT_COMM
     chmod +x cpplint.py
 
 
-# Lambda bootstrap wrapper (init.go)
+# Docker Lambda bootstrap wrapper (init.go)
 FROM base-install AS base-docker-lambda
-ARG DOCKER_LAMBDA_DIR
 ARG DOCKER_LAMBDA_COMMIT
+ARG DOCKER_LAMBDA_DIR
 
 WORKDIR ${DOCKER_LAMBDA_DIR}/src
 RUN wget -nv https://raw.githubusercontent.com/lambci/docker-lambda/${DOCKER_LAMBDA_COMMIT}/provided/run/go.mod && \
@@ -125,6 +133,22 @@ RUN wget -nv https://mirrors.kernel.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VER
     rm -rf ${GCC_DIR}/src
 
 
+# Heaptrack
+FROM base-cmake AS base-heaptrack
+ARG HEAPTRACK_VERSION
+ARG HEAPTRACK_DIR
+
+WORKDIR ${HEAPTRACK_DIR}/src
+RUN wget -nv https://github.com/KDE/heaptrack/archive/v${HEAPTRACK_VERSION}.tar.gz -O - \
+        | tar -xz --strip-components=1 && \
+    mkdir build && \
+    cd build && \
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${HEAPTRACK_DIR} && \
+    make -j$(nproc) && \
+    make install && \
+    rm -rf ${HEAPTRACK_DIR}/src
+
+
 # LLVM & Clang
 FROM base-cmake AS base-llvm-clang
 ARG LLVM_VERSION
@@ -142,6 +166,21 @@ RUN wget -nv https://github.com/llvm/llvm-project/releases/download/llvmorg-${LL
     rm -rf ${LLVM_DIR}/src
 
 
+# Valgrind
+FROM base-install AS base-valgrind
+ARG VALGRIND_VERSION
+ARG VALGRIND_DIR
+
+WORKDIR ${VALGRIND_DIR}/src
+RUN wget -nv https://sourceware.org/pub/valgrind/valgrind-${VALGRIND_VERSION}.tar.bz2 -O - \
+    | tar -xj --strip-components=1 && \
+    ./autogen.sh  && \
+    ./configure --prefix=${VALGRIND_DIR} && \
+    make -j$(nproc) && \
+    make install && \
+    rm -rf ${VALGRIND_DIR}/src
+
+
 # Base stage combining all tools
 FROM amazon/aws-sam-cli-build-image-provided.al2 AS base
 ARG CCACHE_DIR
@@ -150,7 +189,9 @@ ARG CPPCHECK_DIR
 ARG CPPLINT_DIR
 ARG DOCKER_LAMBDA_DIR
 ARG GCC_DIR
+ARG HEAPTRACK_DIR
 ARG LLVM_DIR
+ARG VALGRIND_DIR
 
 COPY --from=base-ccache ${CCACHE_DIR} ${CCACHE_DIR}
 COPY --from=base-cmake ${CMAKE_DIR} ${CMAKE_DIR}
@@ -158,7 +199,9 @@ COPY --from=base-cppcheck ${CPPCHECK_DIR} ${CPPCHECK_DIR}
 COPY --from=base-cpplint ${CPPLINT_DIR} ${CPPLINT_DIR}
 COPY --from=base-docker-lambda ${DOCKER_LAMBDA_DIR} ${DOCKER_LAMBDA_DIR}
 COPY --from=base-gcc ${GCC_DIR} ${GCC_DIR}
+COPY --from=base-heaptrack ${HEAPTRACK_DIR} ${HEAPTRACK_DIR}
 COPY --from=base-llvm-clang ${LLVM_DIR} ${LLVM_DIR}
+COPY --from=base-valgrind ${VALGRIND_DIR} ${VALGRIND_DIR}
 
 
 # Build stage
@@ -171,13 +214,18 @@ RUN yum install -y \
     ninja-build \
     # Ccache dependency
     libzstd-devel \
-    # Stack traces
-    binutils-devel \
     # AWS SDK dependency
     libcurl-devel \
     libuuid-devel \
     openssl-devel \
-    system-lsb-core && \
+    system-lsb-core \
+    # Stack traces
+    binutils-devel \
+    # Heaptrack dependency
+    libunwind-devel \
+    which \
+    # Perf
+    perf && \
     # Cleanup
     yum clean all && \
     rm -rf /var/cache/yum && \
@@ -191,11 +239,11 @@ RUN yum install -y \
 
 COPY --from=base /opt /opt
 
-RUN for file in /opt/*/bin/*; \
+RUN for file in /opt/*/*/bin/*; \
     do \
         ln -s $file /usr/bin/$(basename $file); \
     done && \
-    cp -r ${GCC_DIR}/{lib,lib64,include} /usr && \
+    cp -r ${GCC_DIR}/{include,lib,lib64} /usr && \
     mv /usr/bin/ccache /usr/local/bin/ccache && \
     ln -s /usr/local/bin/ccache /usr/local/bin/clang && \
     ln -s /usr/local/bin/ccache /usr/local/bin/clang++
