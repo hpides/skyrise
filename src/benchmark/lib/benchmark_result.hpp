@@ -18,8 +18,8 @@ struct InvocationResult {
   bool finished_;
   Aws::String sqs_message_body_;
   std::shared_ptr<Aws::Lambda::Model::InvokeResult> invoke_result_;
-  std::chrono::time_point<std::chrono::steady_clock> start_point_;
-  std::chrono::time_point<std::chrono::steady_clock> end_point_;
+  std::chrono::time_point<std::chrono::system_clock> start_point_;
+  std::chrono::time_point<std::chrono::system_clock> end_point_;
 };
 
 class BenchmarkResult {
@@ -39,13 +39,13 @@ class BenchmarkResult {
  private:
   std::vector<std::map<Aws::String, InvocationResult>> invocation_results_;
   std::vector<size_t> invocations_finished_;
-  std::vector<std::tuple<std::chrono::time_point<std::chrono::steady_clock>,
-                         std::chrono::time_point<std::chrono::steady_clock>>>
+  std::vector<std::tuple<std::chrono::time_point<std::chrono::system_clock>,
+                         std::chrono::time_point<std::chrono::system_clock>>>
       repetition_durations_;
   size_t invocation_count_;
 
-  std::chrono::time_point<std::chrono::steady_clock> benchmark_start_point_;
-  std::chrono::time_point<std::chrono::steady_clock> benchmark_end_point_;
+  std::chrono::time_point<std::chrono::system_clock> benchmark_start_point_;
+  std::chrono::time_point<std::chrono::system_clock> benchmark_end_point_;
 
   std::mutex mutex_register_invocation_;
   std::mutex mutex_finish_invocation_;

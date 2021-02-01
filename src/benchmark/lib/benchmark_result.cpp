@@ -7,11 +7,11 @@ BenchmarkResult::BenchmarkResult(const size_t repetition_count, const size_t inv
       invocations_finished_(repetition_count),
       invocation_count_(invocation_count) {
   repetition_durations_.reserve(repetition_count);
-  benchmark_start_point_ = std::chrono::steady_clock::now();
+  benchmark_start_point_ = std::chrono::system_clock::now();
 }
 
 void BenchmarkResult::RegisterInvocation(const size_t repetition, const Aws::String& invocation_id) {
-  const auto now = std::chrono::steady_clock::now();
+  const auto now = std::chrono::system_clock::now();
 
   std::lock_guard<std::mutex> lock(mutex_register_invocation_);
 
@@ -25,7 +25,7 @@ void BenchmarkResult::RegisterInvocation(const size_t repetition, const Aws::Str
 void BenchmarkResult::FinishInvocation(const size_t repetition, const Aws::String& invocation_id,
                                        const std::shared_ptr<Aws::Lambda::Model::InvokeResult>& result,
                                        const bool success) {
-  const auto now = std::chrono::steady_clock::now();
+  const auto now = std::chrono::system_clock::now();
 
   auto& benchmark_item_result = invocation_results_[repetition][invocation_id];
 

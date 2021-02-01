@@ -1,13 +1,16 @@
 #pragma once
 
 #include <chrono>
+#include <mutex>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 #include <aws/core/Aws.h>
+#include <aws/lambda/model/FunctionCode.h>
 #include <aws/lambda/model/InvokeRequest.h>
 #include <aws/lambda/model/InvokeResult.h>
+#include <aws/lambda/model/TracingConfig.h>
 
 #include "benchmark_config.hpp"
 #include "benchmark_result.hpp"
@@ -40,8 +43,10 @@ class BenchmarkRunner {
   std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> CollectSqsMessages(const size_t invocation_count);
 
   static Aws::Utils::CryptoBuffer OpenFunctionZip(const Aws::String& function_path);
-  std::vector<Aws::Lambda::Model::CreateFunctionOutcome> UploadFunctions(const size_t thread_count,
-                                                                         const size_t thread_index);
+  Aws::Lambda::Model::FunctionCode SetFunctionCode(const Aws::String& function_path, const Aws::String& function_name,
+                                                   const bool is_local);
+  std::vector<Aws::Lambda::Model::CreateFunctionOutcome> UploadFunctions(
+      const size_t thread_count, const size_t thread_index, const Aws::Lambda::Model::TracingConfig& tracing_config);
 
   bool IsWarmStartBenchmark();
   bool IsAsyncBenchmark();
@@ -59,6 +64,8 @@ class BenchmarkRunner {
   std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> sqs_messages_;
 
   std::shared_ptr<BenchmarkResult> benchmark_result_;
+  std::unordered_map<std::string, Aws::Utils::CryptoBuffer> package_files_;
+  std::mutex package_files_mutex_;
 
   const Aws::String kFunctionRoleName = "AWSLambda";
   Aws::String function_role_arn_;

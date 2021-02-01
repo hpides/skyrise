@@ -101,4 +101,23 @@ TEST_F(CostCalculatorTest, CalculateCostS3Select) {
   InitAndShutDownAPI(func);
 }
 
+TEST_F(CostCalculatorTest, CalculateCostXray) {
+  const std::function<void()> func = []() {
+    const auto clients = std::make_shared<Client>();
+
+    const CostCalculator cost_calculator(clients);
+    Pricing pricing(clients);
+
+    const auto xray_pricing = pricing.GetXrayPricing();
+
+    const long double traces_cost = cost_calculator.CalculateCostXray(1000, 10000, 1000);
+    const long double expected_cost =
+        1000 * xray_pricing->price_per_stored_trace + 11000 * xray_pricing->price_per_accessed_trace;
+
+    EXPECT_EQ(traces_cost, expected_cost);
+  };
+
+  InitAndShutDownAPI(func);
+}
+
 }  // namespace skyrise

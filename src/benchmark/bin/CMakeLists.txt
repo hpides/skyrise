@@ -75,3 +75,25 @@ target_link_libraries(
 )
 
 aws_lambda_package_target(skyriseFunctionWriteS3)
+
+add_executable(
+    skyriseFuncInvocLat
+
+    function_invocation_latency.cpp
+)
+
+target_link_libraries(
+    skyriseFuncInvocLat
+
+    PRIVATE
+    aws-lambda-runtime
+)
+
+aws_lambda_package_target(skyriseFuncInvocLat)
+
+
+add_custom_target(
+    sized-functions ALL
+    COMMAND ${CMAKE_SOURCE_DIR}/script/benchmark/sized_function_packager.sh ${CMAKE_PACKAGE_OUTPUT_DIRECTORY}
+    DEPENDS aws-lambda-package-skyriseFuncInvocLat
+)

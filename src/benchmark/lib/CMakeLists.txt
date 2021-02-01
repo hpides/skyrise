@@ -17,10 +17,14 @@ set(
     data_generation/tpch/tpch_generator.cpp
     function_colocation_benchmark.cpp
     function_colocation_benchmark.hpp
+    function_segments.cpp
+    function_segments.hpp
     idle_availability_benchmark.cpp
     idle_availability_benchmark.hpp
     idle_lifetime_benchmark.cpp
     idle_lifetime_benchmark.hpp
+    invocation_latency_benchmark.hpp
+    invocation_latency_benchmark.cpp
     invocation_throughput_benchmark.cpp
     invocation_throughput_benchmark.hpp
     network_benchmark.cpp
@@ -40,6 +44,7 @@ set(
     aws-cpp-sdk-lambda
     aws-cpp-sdk-s3
     aws-cpp-sdk-sqs
+    aws-cpp-sdk-xray
     tpch-dbgen
     skyriseShared
 )

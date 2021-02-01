@@ -4,7 +4,7 @@
 #include <functional>
 #include <future>
 #include <iostream>
-#include <mutex>
+#include <regex>
 #include <string>
 #include <utility>
 
@@ -57,7 +57,7 @@ std::shared_ptr<BenchmarkResult> BenchmarkRunner::RunConfig(const BenchmarkConfi
   } catch (const std::exception& e) {
     AWS_LOGSTREAM_ERROR(kTag.c_str(), e.what());
     Teardown();
-    return nullptr;
+    return std::make_shared<BenchmarkResult>(0, 0);
   }
 
   Teardown();
@@ -81,8 +81,15 @@ void BenchmarkRunner::Setup() {
   std::vector<std::future<std::vector<Aws::Lambda::Model::CreateFunctionOutcome>>> outcome_vec_futures;
   outcome_vec_futures.reserve(thread_count);
 
+  Aws::Lambda::Model::TracingConfig tracing_config;
+
+  if (config_->enable_tracing_) {
+    tracing_config.WithMode(Aws::Lambda::Model::TracingMode::Active);
+  }
+
   for (size_t i = 0; i < thread_count; i++) {
-    outcome_vec_futures.emplace_back(std::async(&BenchmarkRunner::UploadFunctions, this, thread_count, i));
+    outcome_vec_futures.emplace_back(
+        std::async(&BenchmarkRunner::UploadFunctions, this, thread_count, i, tracing_config));
   }
 
   // We first wait for all threads to finish so that we do not tear down functions that are still uploading in case of
@@ -383,50 +390,73 @@ std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> BenchmarkRunner::C
 }
 
 Aws::Utils::CryptoBuffer BenchmarkRunner::OpenFunctionZip(const Aws::String& function_path) {
-  std::ifstream infile;
-  infile.open(function_path, std::ios::binary);
+  std::ifstream infile(function_path, std::ios::in | std::ios::binary);
 
-  if (!infile.is_open()) {
+  if (!infile) {
     Fail(function_path + " could not be opened.");
   }
 
-  std::vector<char> buffer;
+  const std::string file_buffer = StreamToString(&infile);
 
-  while (!infile.eof()) {
-    buffer.emplace_back(static_cast<char>(infile.get()));
-  }
-  infile.close();
-  std::string ret(buffer.begin(), buffer.end() - 1);
-
-  return Aws::Utils::CryptoBuffer(reinterpret_cast<const unsigned char*>(ret.c_str()), ret.size());
+  return Aws::Utils::ByteBuffer(reinterpret_cast<const unsigned char*>(file_buffer.c_str()), file_buffer.length());
 }
 
-std::vector<Aws::Lambda::Model::CreateFunctionOutcome> BenchmarkRunner::UploadFunctions(const size_t thread_count,
-                                                                                        const size_t thread_index) {
-  size_t function_count = config_->function_configs_.size();
-  const double block_size = function_count / static_cast<double>(thread_count);
-  const auto lower_bound = static_cast<size_t>(thread_index * block_size);
-  const auto upper_bound = static_cast<size_t>(static_cast<double>(thread_index + 1) * block_size);
+Aws::Lambda::Model::FunctionCode BenchmarkRunner::SetFunctionCode(const Aws::String& function_path,
+                                                                  const Aws::String& function_name,
+                                                                  const bool is_local) {
+  Aws::Lambda::Model::FunctionCode code;
+
+  if (is_local) {
+    const std::lock_guard<std::mutex> lock(package_files_mutex_);
+
+    if (package_files_.find(function_path) == package_files_.cend()) {
+      package_files_[function_path] = OpenFunctionZip(function_path);
+    }
+
+    code.WithZipFile(package_files_[function_path]);
+  } else {
+    // Extract function name after S3_
+    std::regex function_name_regex("S3_([^-]*)");
+    std::smatch matches;
+
+    const auto function_name_found = std::regex_search(function_name, matches, function_name_regex);
+
+    if (!function_name_found) {
+      Fail("S3 key could not be extracted from function name " + function_name + ".");
+    }
+
+    code.WithS3Bucket(function_path).WithS3Key(matches[1]);
+  }
+
+  return code;
+}
+
+std::vector<Aws::Lambda::Model::CreateFunctionOutcome> BenchmarkRunner::UploadFunctions(
+    const size_t thread_count, const size_t thread_index, const Aws::Lambda::Model::TracingConfig& tracing_config) {
+  const size_t function_count = config_->function_configs_.size();
+  const size_t block_size = (function_count / thread_count) + (function_count % thread_count != 0 ? 1 : 0);
 
   std::vector<Aws::Lambda::Model::CreateFunctionOutcome> outcomes;
-  outcomes.reserve(upper_bound - lower_bound);
+  outcomes.reserve(block_size);
 
   const auto& lambda_client = client_->GetLambdaClient();
 
-  for (size_t i = lower_bound; i < upper_bound; i++) {
+  for (size_t i = thread_index; i < config_->function_configs_.size(); i += thread_count) {
     const auto& function_config = config_->function_configs_[i];
+    const auto code =
+        SetFunctionCode(function_config.function_path, function_config.function_name, function_config.is_local);
 
     AWS_LOGSTREAM_INFO(kTag.c_str(), "Creating function " << function_config.function_name << "...");
 
-    const auto create_function_request =
-        Aws::Lambda::Model::CreateFunctionRequest()
-            .WithFunctionName(function_config.function_name)
-            .WithRuntime(Aws::Lambda::Model::Runtime::provided_al2)
-            .WithRole(function_role_arn_)
-            .WithHandler("HandlerFunction")
-            .WithCode(Aws::Lambda::Model::FunctionCode().WithZipFile(OpenFunctionZip(function_config.function_path)))
-            .WithTimeout(kLambdaFunctionTimeoutSeconds)
-            .WithMemorySize(function_config.memory_size);
+    const auto create_function_request = Aws::Lambda::Model::CreateFunctionRequest()
+                                             .WithFunctionName(function_config.function_name)
+                                             .WithRuntime(Aws::Lambda::Model::Runtime::provided_al2)
+                                             .WithRole(function_role_arn_)
+                                             .WithHandler("HandlerFunction")
+                                             .WithCode(code)
+                                             .WithTimeout(kLambdaFunctionTimeoutSeconds)
+                                             .WithTracingConfig(tracing_config)
+                                             .WithMemorySize(function_config.memory_size);
 
     outcomes.emplace_back(lambda_client.CreateFunction(create_function_request));
   }

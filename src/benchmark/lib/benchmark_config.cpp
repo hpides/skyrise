@@ -19,7 +19,8 @@ BenchmarkConfig::BenchmarkConfig(const Aws::String& function_zip_name, const siz
                                  const WarmUpStrategy warm_up_strategy,
                                  const UseOneFunctionPerRepetition use_one_function_per_repetition,
                                  const UseEventQueue use_event_queue,
-                                 const std::vector<std::function<void()>>& after_repetition_callbacks)
+                                 const std::vector<std::function<void()>>& after_repetition_callbacks,
+                                 const Aws::String& function_bucket, const bool enable_tracing)
     : repetition_count_(repetition_count),
       concurrent_invocation_count_(concurrent_invocation_count),
       warm_up_strategy_(warm_up_strategy),
@@ -28,22 +29,26 @@ BenchmarkConfig::BenchmarkConfig(const Aws::String& function_zip_name, const siz
       after_repetition_callbacks_(after_repetition_callbacks.empty()
                                       ? std::vector<std::function<void()>>(repetition_count_, [] {})
                                       : after_repetition_callbacks),
+      enable_tracing_(enable_tracing),
       benchmark_id_(RandomString(8)),
       benchmark_timestamp_(GetFormattedTimestamp("%Y%m%dT%H%M%S")) {
   Assert(after_repetition_callbacks_.size() == repetition_count_,
          "The number of repetition callbacks and the repetition count must be equal.");
 
-  const Aws::String function_path = GetProjectDirPath() + "pkg/" + function_zip_name + ".zip";
+  const auto is_local = function_zip_name.find("S3_") != 0;
+  const Aws::String function_location =
+      is_local ? GetProjectDirPath() + "pkg/" + function_zip_name + ".zip" : function_bucket;
   Aws::StringStream function_name_base;
   function_name_base << benchmark_id_ << "-" << benchmark_timestamp_ << "-" << function_zip_name;
 
   if (use_one_function_per_repetition_ == UseOneFunctionPerRepetition::kYes) {
     for (size_t i = 0; i < repetition_count_; i++) {
-      function_configs_.emplace_back(
-          LambdaFunctionConfig{function_path, function_name_base.str() + "-" + std::to_string(i), memory_size});
+      function_configs_.emplace_back(LambdaFunctionConfig{
+          function_location, function_name_base.str() + "-" + std::to_string(i), memory_size, is_local});
     }
   } else {
-    function_configs_.emplace_back(LambdaFunctionConfig{function_path, function_name_base.str(), memory_size});
+    function_configs_.emplace_back(
+        LambdaFunctionConfig{function_location, function_name_base.str(), memory_size, is_local});
   }
 
   auto empty_payload = std::make_shared<Aws::StringStream>();

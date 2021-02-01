@@ -255,9 +255,9 @@ double BenchmarkHelper::ExtractBilledLambdaDuration(const InvocationResult& resu
 
   const std::regex billing_regex("REPORT.+Billed Duration: (\\d+)");
   std::smatch billing_match;
-  std::regex_search(log_result, billing_match, billing_regex);
+  const auto billing_found = std::regex_search(log_result, billing_match, billing_regex);
 
-  return std::stod(billing_match[1]);
+  return billing_found ? std::stod(billing_match[1]) : 0.0;
 }
 
 }  // namespace skyrise

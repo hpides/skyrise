@@ -61,8 +61,8 @@ Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
 
   const auto invocation_results = benchmark_result->GetInvocationResults().front();
 
-  auto min_start_time = std::chrono::steady_clock::time_point::max();
-  auto max_end_time = std::chrono::steady_clock::time_point::min();
+  auto min_start_time = std::chrono::system_clock::time_point::max();
+  auto max_end_time = std::chrono::system_clock::time_point::min();
 
   for (const auto& item_result : invocation_results) {
     min_start_time = std::min(min_start_time, item_result.second.start_point_);

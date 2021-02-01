@@ -16,6 +16,8 @@ class CostCalculator {
 
   // AWS rounds up the compute duration to the nearest 100ms
   long double CalculateCostLambda(const size_t compute_duration_ms, const size_t lambda_size_mb) const;
+  long double CalculateCostXray(const size_t stored_functions, const size_t scanned_functions,
+                                const size_t accessed_functions) const;
 
   /*
    * Any storage capacity that is being used on S3 is billed for at least a whole month - even if it's only stored for a

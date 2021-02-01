@@ -63,4 +63,23 @@ TEST_F(PricingTest, PricingS3) {
   InitAndShutDownAPI(func);
 }
 
+TEST_F(PricingTest, PricingXray) {
+  const std::function<void()> func = []() {
+    const auto clients = std::make_shared<Client>();
+    Pricing pricing(clients);
+
+    const auto xray_pricing_1 = pricing.GetXrayPricing();
+
+    EXPECT_GT(xray_pricing_1->price_per_stored_trace, 0);
+    EXPECT_GT(xray_pricing_1->price_per_accessed_trace, 0);
+
+    const auto xray_pricing_2 = pricing.GetXrayPricing();
+
+    EXPECT_EQ(xray_pricing_1->price_per_stored_trace, xray_pricing_2->price_per_stored_trace);
+    EXPECT_EQ(xray_pricing_1->price_per_accessed_trace, xray_pricing_2->price_per_accessed_trace);
+  };
+
+  InitAndShutDownAPI(func);
+}
+
 }  // namespace skyrise

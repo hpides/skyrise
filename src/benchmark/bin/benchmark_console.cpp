@@ -18,6 +18,7 @@
 #include "function_colocation_benchmark.hpp"
 #include "idle_availability_benchmark.hpp"
 #include "idle_lifetime_benchmark.hpp"
+#include "invocation_latency_benchmark.hpp"
 #include "invocation_throughput_benchmark.hpp"
 #include "network_latency_benchmark.hpp"
 #include "network_throughput_benchmark.hpp"
@@ -128,6 +129,12 @@ int main(int argc, char* argv[]) {
     benchmark_registry.RegisterBenchmark("IdleAvailabilityBenchmark",
                                          std::make_unique<skyrise::IdleAvailabilityBenchmark>(
                                              std::vector<size_t>{128}, std::vector<size_t>{4096}, 1, 12));
+
+    // Register InvocationLatencyBenchmark
+    benchmark_registry.RegisterBenchmark(
+        "InvocationLatencyBenchmark",
+        std::make_unique<skyrise::InvocationLatencyBenchmark>(aws_client, benchmark_helper, cost_calculator,
+                                                              std::vector<size_t>{128}, 10, 100, false));
 
     // Register InvocationThroughputBenchmark
     benchmark_registry.RegisterBenchmark(

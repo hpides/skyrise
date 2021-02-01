@@ -22,6 +22,11 @@ struct PricingS3 {
   long double price_storage_gb_months_;  // This is the price for the first 50TB/month
 };
 
+struct PricingXray {
+  long double price_per_accessed_trace;
+  long double price_per_stored_trace;
+};
+
 namespace UsageTypeLambda {
 static const char* const Request = "Request";
 static const char* const LambdaGBSecond = "Lambda-GB-Second";
@@ -40,6 +45,11 @@ static const char* const TagStorage = "TagStorage-TagHrs";
 static const char* const TimedStorage = "TimedStorage-ByteHrs";
 }  // namespace UsageTypeS3
 
+namespace UsageTypeXray {
+static const char* const XrayTracesAccessed = "XRay-TracesAccessed";
+static const char* const XrayTracesStored = "XRay-TracesStored";
+}  // namespace UsageTypeXray
+
 /*
  * The Pricing class fetches and stores pricing information for the AWS services that Skyrise is built on using the AWS
  * Pricing SDK. The ClientConfiguration contains the region of the Price List endpoint to speak to. From the currently
@@ -52,6 +62,7 @@ class Pricing {
 
   const std::shared_ptr<PricingLambda>& GetLambdaPricing();
   const std::shared_ptr<PricingS3>& GetS3Pricing();
+  const std::shared_ptr<PricingXray>& GetXrayPricing();
 
  private:
   std::map<Aws::String, long double> FetchPricing(const Aws::String& service_code) const;
@@ -62,6 +73,7 @@ class Pricing {
 
   std::shared_ptr<PricingLambda> pricing_lambda_;
   std::shared_ptr<PricingS3> pricing_s3_;
+  std::shared_ptr<PricingXray> pricing_xray_;
 };
 
 }  // namespace skyrise

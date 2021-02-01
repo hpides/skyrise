@@ -24,11 +24,17 @@ Pricing::Pricing(std::shared_ptr<Client> client) : client_(std::move(client)) {
       PricingS3{pricing_s3_map.at(UsageTypeS3::RequestTier1), pricing_s3_map.at(UsageTypeS3::RequestTier2),
                 pricing_s3_map.at(UsageTypeS3::SelectReturnedBytes), pricing_s3_map.at(UsageTypeS3::SelectScannedBytes),
                 pricing_s3_map.at(UsageTypeS3::TagStorage), pricing_s3_map.at(UsageTypeS3::TimedStorage)});
+
+  const auto pricing_xray_map = FetchPricing("AWSXRay");
+  pricing_xray_ = std::make_shared<PricingXray>(PricingXray{pricing_xray_map.at(UsageTypeXray::XrayTracesAccessed),
+                                                            pricing_xray_map.at(UsageTypeXray::XrayTracesStored)});
 }
 
 const std::shared_ptr<PricingLambda>& Pricing::GetLambdaPricing() { return pricing_lambda_; }
 
 const std::shared_ptr<PricingS3>& Pricing::GetS3Pricing() { return pricing_s3_; }
+
+const std::shared_ptr<PricingXray>& Pricing::GetXrayPricing() { return pricing_xray_; }
 
 std::map<Aws::String, long double> Pricing::FetchPricing(const Aws::String& service_code) const {
   const auto location = TranslateRegionToLocation(client_->GetClientRegion());
@@ -55,7 +61,15 @@ std::map<Aws::String, long double> Pricing::FetchPricing(const Aws::String& serv
     const auto price_view = price_value.View();
 
     // Retrieve and return price
-    const auto usage_type = price_view.GetObject("product").GetObject("attributes").GetString("usagetype");
+    auto usage_type = price_view.GetObject("product").GetObject("attributes").GetString("usagetype");
+
+    // TODO(anyone): Complete this list by adding all possible region prefixes
+    // Remove prefix if present
+    if (service_code == "AWSXRay" &&
+        (usage_type.find("USE1-") == 0 || usage_type.find("EUW1-") == 0 || usage_type.find("APN1-") == 0)) {
+      usage_type = usage_type.substr(5);
+    }
+
     const auto price_dimensions_view = price_view.GetObject("terms")
                                            .GetObject("OnDemand")
                                            .GetAllObjects()
@@ -93,13 +107,13 @@ Aws::String Pricing::TranslateRegionToLocation(const Aws::String& region) {
   else if (region == Aws::Region::US_WEST_2)
     return "US West (Oregon)";
   else if (region == Aws::Region::EU_WEST_1)
-    return "Europe (Ireland)";
+    return "EU (Ireland)";
   else if (region == Aws::Region::EU_WEST_2)
-    return "Europe (London)";
+    return "EU (London)";
   else if (region == Aws::Region::EU_WEST_3)
-    return "Europe (Paris)";
+    return "EU (Paris)";
   else if (region == Aws::Region::EU_CENTRAL_1)
-    return "Europe (Frankfurt)";
+    return "EU (Frankfurt)";
   else if (region == Aws::Region::AP_SOUTHEAST_1)
     return "Asia Pacific (Singapore)";
   else if (region == Aws::Region::AP_SOUTHEAST_2)

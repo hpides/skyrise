@@ -36,4 +36,14 @@ long double CostCalculator::CalculateCostS3Select(const size_t returned_bytes, c
   return returned_bytes_cost + scanned_bytes_cost;
 }
 
+long double CostCalculator::CalculateCostXray(const size_t stored_functions, const size_t scanned_functions,
+                                              const size_t accessed_functions) const {
+  const auto pricing = pricing_->GetXrayPricing();
+  const long double stored_traces_price = pricing->price_per_stored_trace * stored_functions;
+  const long double scanned_traces_price = pricing->price_per_accessed_trace * scanned_functions;
+  const long double accessed_traces_price = pricing->price_per_accessed_trace * accessed_functions;
+
+  return stored_traces_price + scanned_traces_price + accessed_traces_price;
+}
+
 }  // namespace skyrise
