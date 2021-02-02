@@ -233,7 +233,7 @@ RUN yum install -y \
     /usr/sbin/alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 1101 && \
     /usr/sbin/alternatives --set ld /usr/bin/ld.lld && \
     # Python packages
-    pip install --no-input --quiet \
+    pip3 install --no-input --quiet \
     pytictoc \
     termcolor
 

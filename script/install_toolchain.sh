@@ -34,7 +34,7 @@ if [[ "$unamestr" == 'Linux' ]]; then
                 sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-11 110
                 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 102 --slave /usr/bin/g++ g++ /usr/bin/g++-10
 
-                pip install --no-input --quiet \
+                pip3 install --no-input --quiet \
                 cpplint \
                 pytictoc \
                 termcolor
