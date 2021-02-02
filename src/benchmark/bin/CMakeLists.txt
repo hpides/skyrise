@@ -97,3 +97,15 @@ add_custom_target(
     COMMAND ${CMAKE_SOURCE_DIR}/script/benchmark/sized_function_packager.sh ${CMAKE_PACKAGE_OUTPUT_DIRECTORY}
     DEPENDS aws-lambda-package-skyriseFuncInvocLat
 )
+
+add_executable(
+    skyriseBenchmarkInvocationThroughput
+
+    benchmark_invocation_throughput.cpp
+)
+
+target_link_libraries(
+    skyriseBenchmarkInvocationThroughput
+
+    skyriseBenchmark
+)
