@@ -1,19 +1,19 @@
-#include "function_minimal.hpp"
+#include <thread>
 
 #include <aws/lambda-runtime/runtime.h>
 
-namespace skyrise {
+const size_t kSleep = 2000;
 
-aws::lambda_runtime::invocation_response FunctionMinimal::OnHandleRequest(
-    const Aws::Utils::Json::JsonView& /*request*/) const {
-  return aws::lambda_runtime::invocation_response::success("success", "application/json");
+// This function does not inherit from the abstract Function class to keep its size at a minimum.
+aws::lambda_runtime::invocation_response HandlerFunction(const aws::lambda_runtime::invocation_request& request) {
+  // TODO(anyone): Increase sleep time if there are too many function warmstarts
+  std::this_thread::sleep_for(std::chrono::milliseconds(kSleep));
+
+  return aws::lambda_runtime::invocation_response::success(request.payload, "application/json");
 }
 
-}  // namespace skyrise
-
 int main() {
-  skyrise::FunctionMinimal function_minimal;
-  function_minimal.HandleRequest();
+  aws::lambda_runtime::run_handler(HandlerFunction);
 
   return 0;
 }

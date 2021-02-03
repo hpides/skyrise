@@ -5,13 +5,13 @@ set -euo pipefail
 _10_MB=10240
 
 PACKAGE_DIR=$1
-PACKAGE_SIZE=$(du $PACKAGE_DIR/skyriseFuncInvocLat.zip 2> /dev/null | cut -f1)
+PACKAGE_SIZE=$(du $PACKAGE_DIR/skyriseFunctionMinimal.zip 2> /dev/null | cut -f1)
 MINIMAL_SIZE=$((_10_MB - PACKAGE_SIZE))
 IS_CHANGED=false
 
 if [ $((_10_MB - MINIMAL_SIZE)) = $PACKAGE_SIZE ]; then
   for SIZE in {10,20,30,40,50,100}; do
-    if [ ! -f $PACKAGE_DIR/skyriseFuncInvocLat${SIZE}MB.zip ]; then
+    if [ ! -f $PACKAGE_DIR/skyriseFunctionSized${SIZE}MB.zip ]; then
       IS_CHANGED=true
     fi
   done
@@ -44,14 +44,14 @@ wait
 
 
 for SIZE in {10,20,30,40,50,100}; do
-  cp $PACKAGE_DIR/skyriseFuncInvocLat.zip $PACKAGE_DIR/skyriseFuncInvocLat${SIZE}MB.zip &
+  cp $PACKAGE_DIR/skyriseFunctionMinimal.zip $PACKAGE_DIR/skyriseFunctionSized${SIZE}MB.zip &
 done
 wait
 
-zip -q -u $PACKAGE_DIR/skyriseFuncInvocLat10MB.zip $PACKAGE_DIR/sized_blob_minimal &
+zip -q -u $PACKAGE_DIR/skyriseFunctionSized10MB.zip $PACKAGE_DIR/sized_blob_minimal &
 
 for SIZE in {20,30,40,50,100}; do
-zip -q -u $PACKAGE_DIR/skyriseFuncInvocLat${SIZE}MB.zip $PACKAGE_DIR/sized_blob_${SIZE}MB &
+zip -q -u $PACKAGE_DIR/skyriseFunctionSized${SIZE}MB.zip $PACKAGE_DIR/sized_blob_${SIZE}MB &
 done
 wait
 

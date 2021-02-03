@@ -4,7 +4,7 @@
 
 namespace skyrise {
 
-class FunctionMinimal : public Function {
+class FunctionSimple : public Function {
  protected:
   aws::lambda_runtime::invocation_response OnHandleRequest(const Aws::Utils::Json::JsonView& request) const override;
 };

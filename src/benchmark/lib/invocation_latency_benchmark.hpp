@@ -47,11 +47,11 @@ class InvocationLatencyBenchmark : public Benchmark {
   long double cost_overhead_;
 
   const std::vector<Aws::String> kPackageNames{
-      "skyriseFuncInvocLat",        "S3_skyriseFuncInvocLat",     "skyriseFuncInvocLat10MB",
-      "S3_skyriseFuncInvocLat10MB", "skyriseFuncInvocLat20MB",    "S3_skyriseFuncInvocLat20MB",
-      "skyriseFuncInvocLat30MB",    "S3_skyriseFuncInvocLat30MB", "skyriseFuncInvocLat40MB",
-      "S3_skyriseFuncInvocLat40MB", "skyriseFuncInvocLat50MB",    "S3_skyriseFuncInvocLat50MB",
-      "S3_skyriseFuncInvocLat100MB"};
+      "skyriseFunctionMinimal",      "S3_skyriseFunctionMinimal",   "skyriseFunctionSized10MB",
+      "S3_skyriseFunctionSized10MB", "skyriseFunctionSized20MB",    "S3_skyriseFunctionSized20MB",
+      "skyriseFunctionSized30MB",    "S3_skyriseFunctionSized30MB", "skyriseFunctionSized40MB",
+      "S3_skyriseFunctionSized40MB", "skyriseFunctionSized50MB",    "S3_skyriseFunctionSized50MB",
+      "S3_skyriseFunctionSized100MB"};
 
   const Aws::String kBenchmarkName = "invocation-latency-benchmark";
   const bool kEnableTracing = true;

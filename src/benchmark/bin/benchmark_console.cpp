@@ -134,7 +134,7 @@ int main(int argc, char* argv[]) {
     benchmark_registry.RegisterBenchmark(
         "InvocationLatencyBenchmark",
         std::make_unique<skyrise::InvocationLatencyBenchmark>(aws_client, benchmark_helper, cost_calculator,
-                                                              std::vector<size_t>{128}, 10, 100, false));
+                                                              std::vector<size_t>{128}, 10, 10, false));
 
     // Register InvocationThroughputBenchmark
     benchmark_registry.RegisterBenchmark(

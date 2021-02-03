@@ -1,5 +1,5 @@
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-# The AWS Lambda execution environment contains GCC 7.2, which supports most of C++17 (cf. https://en.cppreference.com/
+# The AWS Lambda execution environment contains GCC 7.3, which supports most of C++17 (cf. https://en.cppreference.com/
 # w/cpp/compiler_support)
 set(CMAKE_CXX_STANDARD 17)
 
