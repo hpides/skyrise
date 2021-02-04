@@ -17,25 +17,32 @@ namespace skyrise {
 
 IdleAvailabilityBenchmark::IdleAvailabilityBenchmark(const std::vector<size_t>& function_instance_mb_sizes,
                                                      const std::vector<size_t>& invocation_counts,
-                                                     const size_t sleep_min_duration, const size_t repetition_count)
-    : sleep_min_duration_(sleep_min_duration) {
-  std::vector<std::function<void()>> after_repetition_callbacks;
-  after_repetition_callbacks.reserve(repetition_count + 1);
+                                                     const std::vector<size_t>& sleep_min_durations,
+                                                     const size_t repetition_count) {
+  benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size() * sleep_min_durations.size());
 
-  for (size_t i = 0; i < repetition_count; ++i) {
-    after_repetition_callbacks.emplace_back(
-        [sleep_min_duration]() { std::this_thread::sleep_for(std::chrono::minutes(sleep_min_duration)); });
-  }
+  for (const auto sleep_min_duration : sleep_min_durations) {
+    std::vector<std::function<void()>> after_repetition_callbacks;
+    after_repetition_callbacks.reserve(repetition_count + 1);
 
-  after_repetition_callbacks.emplace_back([]() {});
+    for (size_t i = 0; i < repetition_count; ++i) {
+      after_repetition_callbacks.emplace_back(
+          [sleep_min_duration]() { std::this_thread::sleep_for(std::chrono::minutes(sleep_min_duration)); });
+    }
 
-  benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size());
+    after_repetition_callbacks.emplace_back([]() {});
 
-  for (const auto function_instance_mb_size : function_instance_mb_sizes) {
-    for (const auto invocation_count : invocation_counts) {
-      benchmark_configs_.emplace_back(kFunctionName, function_instance_mb_size, after_repetition_callbacks.size(),
-                                      invocation_count, WarmUpStrategy::kNone, UseOneFunctionPerRepetition::kNo,
-                                      UseEventQueue::kNo, after_repetition_callbacks);
+    benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size());
+
+    for (const auto function_instance_mb_size : function_instance_mb_sizes) {
+      for (const auto invocation_count : invocation_counts) {
+        benchmark_configs_.emplace_back(
+            IdleAvailabilityBenchmarkParameters{function_instance_mb_size, invocation_count, sleep_min_duration,
+                                                repetition_count},
+            BenchmarkConfig(kFunctionName, function_instance_mb_size, after_repetition_callbacks.size(),
+                            invocation_count, WarmUpStrategy::kNone, UseOneFunctionPerRepetition::kNo,
+                            UseEventQueue::kNo, after_repetition_callbacks));
+      }
     }
   }
 }
@@ -46,24 +53,26 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> IdleAvailabilityBenchmark::Run(
   benchmark_results.reserve(benchmark_configs_.size());
 
   for (const auto& benchmark_config : benchmark_configs_) {
-    benchmark_results.emplace_back(benchmark_runner->RunConfig(benchmark_config));
+    benchmark_results.emplace_back(benchmark_runner->RunConfig(benchmark_config.second));
   }
 
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> benchmark_outputs(benchmark_results.size());
 
   for (size_t i = 0; i < benchmark_results.size(); ++i) {
-    benchmark_outputs[i] = GenerateResultOutput(benchmark_results[i], benchmark_configs_[i]);
+    benchmark_outputs[i] =
+        IdleAvailabilityBenchmark::GenerateResultOutput(benchmark_results[i], benchmark_configs_[i].first);
   }
 
   return benchmark_outputs;
 }
 
 Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
-    const std::shared_ptr<BenchmarkResult>& benchmark_result, const BenchmarkConfig& benchmark_config) const {
+    const std::shared_ptr<BenchmarkResult>& benchmark_result,
+    const IdleAvailabilityBenchmarkParameters& benchmark_parameters) {
   Aws::StringStream benchmark_name;
-  benchmark_name << "IdleAvailabilityBenchmark/" << benchmark_config.function_configs_.front().memory_size << "/"
-                 << benchmark_config.concurrent_invocation_count_ << "/" << sleep_min_duration_ << "/"
-                 << (benchmark_config.repetition_count_ - 1);
+  benchmark_name << "IdleAvailabilityBenchmark/" << benchmark_parameters.function_instance_mb_size << "/"
+                 << benchmark_parameters.invocation_count << "/" << benchmark_parameters.sleep_min_duration << "/"
+                 << benchmark_parameters.repetition_count;
 
   const auto& invocation_results = benchmark_result->GetInvocationResults();
 
@@ -74,7 +83,7 @@ Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
       const std::string vm_id = StreamToString(&invocation.second.invoke_result_->GetPayload());
 
       if (i == 0) {
-        vm_ids_to_availability_flags.try_emplace(vm_id, benchmark_config.repetition_count_, false);
+        vm_ids_to_availability_flags.try_emplace(vm_id, benchmark_parameters.repetition_count, false);
       } else if (vm_ids_to_availability_flags.count(vm_id) > 0) {
         vm_ids_to_availability_flags[vm_id][i] = true;
       }
@@ -121,7 +130,7 @@ Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
     }
 
     availability_percentages.emplace_back(available_repetition_count /
-                                          static_cast<double>(benchmark_config.repetition_count_));
+                                          static_cast<double>(benchmark_parameters.repetition_count));
     unavailable_phases_counts.emplace_back(static_cast<double>(unavailable_phases_count));
   }
 

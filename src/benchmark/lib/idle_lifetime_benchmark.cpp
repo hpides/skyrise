@@ -16,28 +16,30 @@ namespace skyrise {
 
 IdleLifetimeBenchmark::IdleLifetimeBenchmark(const std::vector<size_t>& function_instance_mb_sizes,
                                              const std::vector<size_t>& invocation_counts,
-                                             const std::vector<size_t>& sleep_min_durations)
-    : sleep_min_durations_(sleep_min_durations) {
-  Assert(std::is_sorted(sleep_min_durations.cbegin(), sleep_min_durations.cend()),
-         "sleep_min_durations has to be sorted in ascending order.");
-
-  std::vector<std::function<void()>> after_repetition_callbacks;
-  after_repetition_callbacks.reserve(sleep_min_durations.size() + 1);
+                                             const std::vector<size_t>& sleep_min_durations,
+                                             const size_t repetition_count) {
+  benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size() * sleep_min_durations.size());
 
   for (const auto sleep_min_duration : sleep_min_durations) {
-    after_repetition_callbacks.emplace_back(
-        [sleep_min_duration]() { std::this_thread::sleep_for(std::chrono::minutes(sleep_min_duration)); });
-  }
+    std::vector<std::function<void()>> after_repetition_callbacks;
+    after_repetition_callbacks.reserve(repetition_count - 1);
 
-  after_repetition_callbacks.emplace_back([]() {});
+    for (size_t i = 0; i < repetition_count; ++i) {
+      after_repetition_callbacks.emplace_back(
+          [sleep_min_duration]() { std::this_thread::sleep_for(std::chrono::minutes(sleep_min_duration)); });
+    }
 
-  benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size());
+    after_repetition_callbacks.emplace_back([]() {});
 
-  for (const auto function_instance_mb_size : function_instance_mb_sizes) {
-    for (const auto invocation_count : invocation_counts) {
-      benchmark_configs_.emplace_back(kFunctionName, function_instance_mb_size, after_repetition_callbacks.size(),
-                                      invocation_count, WarmUpStrategy::kNone, UseOneFunctionPerRepetition::kNo,
-                                      UseEventQueue::kNo, after_repetition_callbacks);
+    for (const auto function_instance_mb_size : function_instance_mb_sizes) {
+      for (const auto invocation_count : invocation_counts) {
+        benchmark_configs_.emplace_back(
+            IdleLifetimeBenchmarkParameters{function_instance_mb_size, invocation_count, sleep_min_duration,
+                                            repetition_count},
+            BenchmarkConfig(kFunctionName, function_instance_mb_size, after_repetition_callbacks.size(),
+                            invocation_count, WarmUpStrategy::kNone, UseOneFunctionPerRepetition::kNo,
+                            UseEventQueue::kNo, after_repetition_callbacks));
+      }
     }
   }
 }
@@ -48,24 +50,26 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> IdleLifetimeBenchmark::Run(
   benchmark_results.reserve(benchmark_configs_.size());
 
   for (const auto& benchmark_config : benchmark_configs_) {
-    benchmark_results.emplace_back(benchmark_runner->RunConfig(benchmark_config));
+    benchmark_results.emplace_back(benchmark_runner->RunConfig(benchmark_config.second));
   }
 
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> benchmark_outputs(benchmark_results.size());
 
   for (size_t i = 0; i < benchmark_results.size(); ++i) {
-    benchmark_outputs[i] = IdleLifetimeBenchmark::GenerateResultOutput(benchmark_results[i], benchmark_configs_[i]);
+    benchmark_outputs[i] =
+        IdleLifetimeBenchmark::GenerateResultOutput(benchmark_results[i], benchmark_configs_[i].first);
   }
 
   return benchmark_outputs;
 }
 
 Aws::Utils::Json::JsonValue IdleLifetimeBenchmark::GenerateResultOutput(
-    const std::shared_ptr<BenchmarkResult>& benchmark_result, const BenchmarkConfig& benchmark_config) const {
-  // TODO(maltenbergert): Move this into a CreateBenchmarkName helper when extending the abstract Benchmark class
+    const std::shared_ptr<BenchmarkResult>& benchmark_result,
+    const IdleLifetimeBenchmarkParameters& benchmark_parameters) {
   Aws::StringStream benchmark_name;
-  benchmark_name << "IdleLifetimeBenchmark/" << benchmark_config.function_configs_.front().memory_size << "/"
-                 << benchmark_config.concurrent_invocation_count_ << "/" << VectorToString(sleep_min_durations_, ",");
+  benchmark_name << "IdleLifetimeBenchmark/" << benchmark_parameters.function_instance_mb_size << "/"
+                 << benchmark_parameters.invocation_count << "/" << benchmark_parameters.sleep_min_duration << "/"
+                 << benchmark_parameters.repetition_count;
 
   const auto& invocation_results = benchmark_result->GetInvocationResults();
 
@@ -78,7 +82,7 @@ Aws::Utils::Json::JsonValue IdleLifetimeBenchmark::GenerateResultOutput(
       if (i == 0) {
         vm_ids_to_idle_lifetimes.emplace(vm_id, 0);
       } else if (vm_ids_to_idle_lifetimes.count(vm_id) > 0) {
-        vm_ids_to_idle_lifetimes[vm_id] = static_cast<double>(sleep_min_durations_[i - 1]);
+        vm_ids_to_idle_lifetimes[vm_id] = static_cast<double>(benchmark_parameters.sleep_min_duration);
       }
     }
   }

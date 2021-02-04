@@ -17,25 +17,30 @@ namespace skyrise {
 
 FunctionColocationBenchmark::FunctionColocationBenchmark(const std::vector<size_t>& function_instance_mb_sizes,
                                                          const std::vector<size_t>& invocation_counts,
-                                                         const size_t sleep_min_duration, const size_t repetition_count)
-    : sleep_min_duration_(sleep_min_duration) {
-  std::vector<std::function<void()>> after_repetition_callbacks;
-  after_repetition_callbacks.reserve(repetition_count - 1);
+                                                         const std::vector<size_t>& sleep_min_durations,
+                                                         const size_t repetition_count) {
+  benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size() * sleep_min_durations.size());
 
-  for (size_t i = 0; i < repetition_count; ++i) {
-    after_repetition_callbacks.emplace_back(
-        [sleep_min_duration]() { std::this_thread::sleep_for(std::chrono::minutes(sleep_min_duration)); });
-  }
+  for (const auto sleep_min_duration : sleep_min_durations) {
+    std::vector<std::function<void()>> after_repetition_callbacks;
+    after_repetition_callbacks.reserve(repetition_count - 1);
 
-  after_repetition_callbacks.emplace_back([]() {});
+    for (size_t i = 0; i < repetition_count; ++i) {
+      after_repetition_callbacks.emplace_back(
+          [sleep_min_duration]() { std::this_thread::sleep_for(std::chrono::minutes(sleep_min_duration)); });
+    }
 
-  benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size());
+    after_repetition_callbacks.emplace_back([]() {});
 
-  for (const auto function_instance_mb_size : function_instance_mb_sizes) {
-    for (const auto invocation_count : invocation_counts) {
-      benchmark_configs_.emplace_back(kFunctionName, function_instance_mb_size, after_repetition_callbacks.size(),
-                                      invocation_count, WarmUpStrategy::kNone, UseOneFunctionPerRepetition::kNo,
-                                      UseEventQueue::kNo, after_repetition_callbacks);
+    for (const auto function_instance_mb_size : function_instance_mb_sizes) {
+      for (const auto invocation_count : invocation_counts) {
+        benchmark_configs_.emplace_back(
+            FunctionColocationBenchmarkParameters{function_instance_mb_size, invocation_count, sleep_min_duration,
+                                                  repetition_count},
+            BenchmarkConfig(kFunctionName, function_instance_mb_size, after_repetition_callbacks.size(),
+                            invocation_count, WarmUpStrategy::kNone, UseOneFunctionPerRepetition::kNo,
+                            UseEventQueue::kNo, after_repetition_callbacks));
+      }
     }
   }
 }
@@ -46,30 +51,32 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> FunctionColocationBenchmark::Run(
   benchmark_results.reserve(benchmark_configs_.size());
 
   for (const auto& benchmark_config : benchmark_configs_) {
-    benchmark_results.emplace_back(benchmark_runner->RunConfig(benchmark_config));
+    benchmark_results.emplace_back(benchmark_runner->RunConfig(benchmark_config.second));
   }
 
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> benchmark_outputs(benchmark_results.size());
 
   for (size_t i = 0; i < benchmark_results.size(); ++i) {
-    benchmark_outputs[i] = GenerateResultOutput(benchmark_results[i], benchmark_configs_[i]);
+    benchmark_outputs[i] =
+        FunctionColocationBenchmark::GenerateResultOutput(benchmark_results[i], benchmark_configs_[i].first);
   }
 
   return benchmark_outputs;
 }
 
 Aws::Utils::Json::JsonValue FunctionColocationBenchmark::GenerateResultOutput(
-    const std::shared_ptr<BenchmarkResult>& benchmark_result, const BenchmarkConfig& benchmark_config) const {
+    const std::shared_ptr<BenchmarkResult>& benchmark_result,
+    const FunctionColocationBenchmarkParameters& benchmark_parameters) {
   Aws::StringStream benchmark_name;
-  benchmark_name << "ColocationBenchmark/" << benchmark_config.function_configs_.front().memory_size << "/"
-                 << benchmark_config.concurrent_invocation_count_ << "/" << sleep_min_duration_ << "/"
-                 << (benchmark_config.repetition_count_ - 1);
+  benchmark_name << "ColocationBenchmark/" << benchmark_parameters.function_instance_mb_size << "/"
+                 << benchmark_parameters.invocation_count << "/" << benchmark_parameters.sleep_min_duration << "/"
+                 << benchmark_parameters.repetition_count;
 
   const auto& benchmark_item_results = benchmark_result->GetInvocationResults();
 
   std::vector<double> colocation_counts;
 
-  for (size_t i = 0; i < benchmark_config.repetition_count_; ++i) {
+  for (size_t i = 0; i < benchmark_parameters.repetition_count; ++i) {
     std::map<std::string, size_t> vm_ids_to_colocation_counts;
 
     for (const auto& benchmark_item_result : benchmark_item_results[i]) {

@@ -12,21 +12,28 @@
 
 namespace skyrise {
 
+// TODO(maltenbergert): Consolidate this benchmark with other HostBenchmarks
+struct FunctionColocationBenchmarkParameters {
+  size_t function_instance_mb_size;
+  size_t invocation_count;
+  size_t sleep_min_duration;
+  size_t repetition_count;
+};
+
 class FunctionColocationBenchmark : public Benchmark {
  public:
   FunctionColocationBenchmark(const std::vector<size_t>& function_instance_mb_sizes,
-                              const std::vector<size_t>& invocation_counts, const size_t sleep_min_duration,
-                              const size_t repetition_count);
+                              const std::vector<size_t>& invocation_counts,
+                              const std::vector<size_t>& sleep_min_durations, const size_t repetition_count);
 
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> Run(const std::shared_ptr<BenchmarkRunner>& benchmark_runner);
 
  private:
-  Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<BenchmarkResult>& benchmark_result,
-                                                   const BenchmarkConfig& benchmark_config) const;
+  static Aws::Utils::Json::JsonValue GenerateResultOutput(
+      const std::shared_ptr<BenchmarkResult>& benchmark_result,
+      const FunctionColocationBenchmarkParameters& benchmark_parameters);
 
-  std::vector<BenchmarkConfig> benchmark_configs_;
-
-  const size_t sleep_min_duration_;
+  std::vector<std::pair<FunctionColocationBenchmarkParameters, BenchmarkConfig>> benchmark_configs_;
 
   const Aws::String kFunctionName = "skyriseFunctionHostId";
 };
