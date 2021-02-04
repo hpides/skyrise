@@ -33,6 +33,7 @@ int main(int argc, char* argv[]) {
     cli_options_adder("invocation_counts", "The invocation counts", cxxopts::value<std::vector<size_t>>());
     cli_options_adder("function_payload_byte_sizes", "The function payload sizes [B]",
                       cxxopts::value<std::vector<size_t>>());
+    cli_options_adder("repetition_count", "The repetition count", cxxopts::value<size_t>());
 
     cli_options_adder("verbose", "Show the verbose status log", cxxopts::value<bool>());
     cli_options_adder("help", "Print the usage overview", cxxopts::value<bool>());
@@ -69,7 +70,8 @@ int main(int argc, char* argv[]) {
     skyrise::InvocationThroughputBenchmark benchmark(
         {cli_arguments["function_instance_mb_sizes"].as<std::vector<size_t>>()},
         {cli_arguments["invocation_counts"].as<std::vector<size_t>>()},
-        {cli_arguments["function_payload_byte_sizes"].as<std::vector<size_t>>()});
+        {cli_arguments["function_payload_byte_sizes"].as<std::vector<size_t>>()},
+        cli_arguments["repetition_count"].as<size_t>());
 
     // Run the benchmark
     const auto benchmark_result = benchmark.Run(benchmark_runner);

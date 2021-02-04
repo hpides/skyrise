@@ -141,7 +141,7 @@ int main(int argc, char* argv[]) {
     benchmark_registry.RegisterBenchmark(
         "InvocationThroughputBenchmark",
         std::make_unique<skyrise::InvocationThroughputBenchmark>(std::vector<size_t>{128}, std::vector<size_t>{8192},
-                                                                 std::vector<size_t>{skyrise::MbToByte(0)}));
+                                                                 std::vector<size_t>{skyrise::MbToByte(0)}, 10));
 
     // Register NetworkLatencyBenchmark
     benchmark_registry.RegisterBenchmark(

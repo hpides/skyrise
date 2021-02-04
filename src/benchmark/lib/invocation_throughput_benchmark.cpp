@@ -1,31 +1,37 @@
 #include "invocation_throughput_benchmark.hpp"
 
 #include <algorithm>
+#include <array>
 
-#include <magic_enum.hpp>
-
+#include "benchmark_result_aggregate.hpp"
 #include "utils/string.hpp"
 
 namespace skyrise {
 
 InvocationThroughputBenchmark::InvocationThroughputBenchmark(const std::vector<size_t>& function_instance_mb_sizes,
                                                              const std::vector<size_t>& invocation_counts,
-                                                             const std::vector<size_t>& function_payload_byte_sizes) {
-  benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size() * 2);
+                                                             const std::vector<size_t>& function_payload_byte_sizes,
+                                                             const size_t repetition_count) {
+  std::array<UseEventQueue, 2> use_event_queues{UseEventQueue::kYes, UseEventQueue::kNo};
+
+  benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size() *
+                             function_payload_byte_sizes.size() * use_event_queues.size());
 
   for (const auto function_instance_mb_size : function_instance_mb_sizes) {
     for (const auto invocation_count : invocation_counts) {
-      for (const auto use_event_queue : {UseEventQueue::kYes, UseEventQueue::kNo}) {
-        for (const auto function_payload_byte_size : function_payload_byte_sizes) {
-          // TODO(anyone): Use repetition/invocation framework instead of multiple configs
-          BenchmarkConfig config(kFunctionName, function_instance_mb_size, 1, invocation_count,
+      for (const auto function_payload_byte_size : function_payload_byte_sizes) {
+        for (const auto use_event_queue : use_event_queues) {
+          BenchmarkConfig config(kFunctionName, function_instance_mb_size, repetition_count, invocation_count,
                                  WarmUpStrategy::kDefault, UseOneFunctionPerRepetition::kNo, use_event_queue);
 
           if (function_payload_byte_size > 0) {
             config.SetOnePayloadForAllFunctions(BenchmarkHelper::GenerateRandomObject(function_payload_byte_size));
           }
 
-          benchmark_configs_.emplace_back(config);
+          benchmark_configs_.emplace_back(
+              InvocationThroughputBenchmarkParameters{function_instance_mb_size, invocation_count,
+                                                      function_payload_byte_size, repetition_count, use_event_queue},
+              config);
         }
       }
     }
@@ -38,43 +44,62 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> InvocationThroughputBenchmark::Ru
   benchmark_results.reserve(benchmark_configs_.size());
 
   for (const auto& benchmark_config : benchmark_configs_) {
-    benchmark_results.emplace_back(benchmark_runner->RunConfig(benchmark_config));
+    benchmark_results.emplace_back(benchmark_runner->RunConfig(benchmark_config.second));
   }
 
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> benchmark_outputs(benchmark_results.size());
 
   for (size_t i = 0; i < benchmark_results.size(); ++i) {
     benchmark_outputs[i] =
-        InvocationThroughputBenchmark::GenerateResultOutput(benchmark_results[i], benchmark_configs_[i]);
+        InvocationThroughputBenchmark::GenerateResultOutput(benchmark_results[i], benchmark_configs_[i].first);
   }
 
   return benchmark_outputs;
 }
 
 Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
-    const std::shared_ptr<BenchmarkResult>& benchmark_result, const BenchmarkConfig& benchmark_config) {
+    const std::shared_ptr<BenchmarkResult>& benchmark_result,
+    const InvocationThroughputBenchmarkParameters& benchmark_parameters) {
   Aws::StringStream benchmark_name;
-  benchmark_name << "InvocationThroughputBenchmark/" << benchmark_config.function_configs_.front().memory_size << "/"
-                 << benchmark_config.concurrent_invocation_count_ << "/UseEventQueue"
-                 << (static_cast<bool>(benchmark_config.use_event_queue_) ? "Yes" : "No") << "/"
-                 << StreamToString(benchmark_config.repetition_configs_.front().front().payload.get()).size();
+  benchmark_name << "InvocationThroughputBenchmark/" << benchmark_parameters.function_instance_mb_size << "/"
+                 << benchmark_parameters.invocation_count << "/" << benchmark_parameters.function_payload_byte_size
+                 << "/" << benchmark_parameters.repetition_count << "/"
+                 << (benchmark_parameters.use_event_queue == UseEventQueue::kYes ? "Yes" : "No");
 
-  const auto invocation_results = benchmark_result->GetInvocationResults().front();
+  const auto& invocation_results = benchmark_result->GetInvocationResults();
 
-  auto min_start_time = std::chrono::system_clock::time_point::max();
-  auto max_end_time = std::chrono::system_clock::time_point::min();
+  std::vector<double> invocation_throughputs;
+  invocation_throughputs.reserve(invocation_results.size());
 
-  for (const auto& item_result : invocation_results) {
-    min_start_time = std::min(min_start_time, item_result.second.start_point_);
-    max_end_time = std::max(max_end_time, item_result.second.end_point_);
+  for (const auto& invocation_result : invocation_results) {
+    auto min_start_time = std::chrono::system_clock::time_point::max();
+    auto max_end_time = std::chrono::system_clock::time_point::min();
+
+    for (const auto& item_result : invocation_result) {
+      min_start_time = std::min(min_start_time, item_result.second.start_point_);
+      max_end_time = std::max(max_end_time, item_result.second.end_point_);
+    }
+
+    const double duration = std::chrono::duration<double>(max_end_time - min_start_time).count();
+    const double throughput = benchmark_parameters.invocation_count / duration;
+
+    invocation_throughputs.emplace_back(throughput);
   }
 
-  const double duration = std::chrono::duration<double>(max_end_time - min_start_time).count();
-  const double throughput = benchmark_config.concurrent_invocation_count_ / duration;
+  const BenchmarkResultAggregate aggregates(invocation_throughputs);
 
   return BenchmarkHelper::GenerateJsonOutput(
-      benchmark_name.str(), {{"throughput", throughput}}, {/*aggregated string metrics*/}, benchmark_result,
-      {[&](const InvocationResult& item_result) {
+      benchmark_name.str(),
+      {{"invocation_throughput_functions_per_s_minimum", aggregates.GetMinimum()},
+       {"invocation_throughput_functions_per_s_maximum", aggregates.GetMaximum()},
+       {"invocation_throughput_functions_per_s_average", aggregates.GetAverage()},
+       {"invocation_throughput_functions_per_s_median", aggregates.GetMedian()},
+       {"invocation_throughput_functions_per_s_percentile_0.01", aggregates.GetPercentile(0.01)},
+       {"invocation_throughput_functions_per_s_percentile_0.1", aggregates.GetPercentile(0.1)},
+       {"invocation_throughput_functions_per_s_percentile_1", aggregates.GetPercentile(1)},
+       {"invocation_throughput_functions_per_s_percentile_10", aggregates.GetPercentile(10)},
+       {"invocation_throughput_functions_per_s_std_dev", aggregates.GetStandardDeviation()}},
+      {/*aggregated string metrics*/}, benchmark_result, {[&](const InvocationResult& item_result) {
         return std::make_tuple(
             "duration", std::chrono::duration<double>(item_result.end_point_ - item_result.start_point_).count());
       }},
