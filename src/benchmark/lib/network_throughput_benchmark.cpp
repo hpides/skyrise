@@ -17,9 +17,9 @@ NetworkThroughputBenchmark::NetworkThroughputBenchmark(std::shared_ptr<Benchmark
                                                        const std::vector<size_t>& function_instance_mb_sizes,
                                                        const std::vector<size_t>& object_byte_sizes,
                                                        const std::vector<size_t>& thread_counts,
-                                                       const size_t repetition_count, const size_t batch_size)
-    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), repetition_count, batch_size, object_byte_sizes,
-                       thread_counts, {1}) {
+                                                       const size_t batch_size, const size_t repetition_count)
+    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), object_byte_sizes, thread_counts, {1}, batch_size,
+                       repetition_count) {
   for (const auto function_instance_mb_size : function_instance_mb_sizes) {
     for (const auto object_byte_size : object_byte_sizes) {
       for (const auto thread_count : thread_counts) {
@@ -32,8 +32,9 @@ NetworkThroughputBenchmark::NetworkThroughputBenchmark(std::shared_ptr<Benchmark
                                    WarmUpStrategy::kNone);
             config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size, thread_count,
                                                 config.concurrent_invocation_count_, operation_type));
-            configs_.emplace_back(config, NetworkBenchmarkParameters{function_instance_mb_size, object_byte_size,
-                                                                     thread_count, operation_type});
+            benchmark_configs_.emplace_back(
+                NetworkBenchmarkParameters{function_instance_mb_size, object_byte_size, thread_count, operation_type},
+                config);
           }
         }
       }
@@ -42,16 +43,17 @@ NetworkThroughputBenchmark::NetworkThroughputBenchmark(std::shared_ptr<Benchmark
 }
 
 Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
-    const std::shared_ptr<BenchmarkResult>& result, const NetworkBenchmarkParameters& parameters) {
+    const std::shared_ptr<BenchmarkResult>& benchmark_result, const NetworkBenchmarkParameters& benchmark_parameters) {
   Aws::StringStream benchmark_name;
-  benchmark_name << "NetworkThroughputBenchmark/" << parameters.function_instance_mb_size_ << "FunctionInstanceMB/"
-                 << ByteToMb(parameters.object_byte_size_) << "ObjectMB/" << parameters.thread_count_ << "Threads/"
-                 << magic_enum::enum_name(parameters.operation_type_);
+  benchmark_name << "NetworkThroughputBenchmark/" << benchmark_parameters.function_instance_mb_size
+                 << "FunctionInstanceMB/" << ByteToMb(benchmark_parameters.object_byte_size) << "ObjectMB/"
+                 << benchmark_parameters.thread_count << "Threads/"
+                 << magic_enum::enum_name(benchmark_parameters.operation_type);
 
-  const auto invocation_results = result->GetInvocationResults().front();
+  const auto invocation_results = benchmark_result->GetInvocationResults().front();
 
   const auto batched_runs = GenerateBatchedSubResultOutput(
-      invocation_results, benchmark_name.str(), parameters.function_instance_mb_size_, "duration_seconds",
+      invocation_results, benchmark_name.str(), benchmark_parameters.function_instance_mb_size, "duration_seconds",
       [&](const double value) {
         return std::chrono::duration<double>(std::chrono::duration<double, std::milli>(value)).count();
       });
@@ -63,7 +65,8 @@ Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
 
   std::transform(seconds_durations.cbegin(), seconds_durations.cend(), std::back_inserter(throughputs),
                  [&](const double seconds_duration) {
-                   return ByteToMb(parameters.object_byte_size_) * parameters.thread_count_ / seconds_duration;
+                   return ByteToMb(benchmark_parameters.object_byte_size) * benchmark_parameters.thread_count /
+                          seconds_duration;
                  });
 
   const BenchmarkResultAggregate aggregates(throughputs);
@@ -80,16 +83,17 @@ Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
        {"throughput_mb_per_s_percentile_10", aggregates.GetPercentile(10)},
        {"throughput_mb_per_s_std_dev", aggregates.GetStandardDeviation()},
        {"benchmark_cost_usd",
-        static_cast<double>(CalculateBenchmarkCost(result, parameters.function_instance_mb_size_))},
-       {"benchmark_cost_overhead_usd", cost_overhead_ / configs_.size()}},
-      {/*aggregated string metrics*/}, result,
+        static_cast<double>(CalculateBenchmarkCost(benchmark_result, benchmark_parameters.function_instance_mb_size))},
+       {"benchmark_cost_overhead_usd", cost_overhead_ / benchmark_configs_.size()}},
+      {/*aggregated string metrics*/}, benchmark_result,
       {[&](const InvocationResult& single_result) {
          return std::make_tuple("billed_lambda_duration_ms",
                                 BenchmarkHelper::ExtractBilledLambdaDuration(single_result));
        },
        [&](const InvocationResult& single_result) {
-         return std::make_tuple("function_cost_usd", static_cast<double>(ExtractFunctionCost(
-                                                         single_result, parameters.function_instance_mb_size_)));
+         return std::make_tuple(
+             "function_cost_usd",
+             static_cast<double>(ExtractFunctionCost(single_result, benchmark_parameters.function_instance_mb_size)));
        }},
       {/*extract string metric functions*/}, {[&](const InvocationResult& single_result) {
         const Aws::Utils::Json::JsonValue payload_value(StreamToString(&single_result.invoke_result_->GetPayload()));

@@ -17,10 +17,10 @@ namespace skyrise {
 enum class S3OperationType { kRead, kWrite };
 
 struct NetworkBenchmarkParameters {
-  size_t function_instance_mb_size_;
-  size_t object_byte_size_;
-  size_t thread_count_;
-  S3OperationType operation_type_;
+  size_t function_instance_mb_size;
+  size_t object_byte_size;
+  size_t thread_count;
+  S3OperationType operation_type;
 };
 
 class NetworkBenchmark : public Benchmark {
@@ -29,8 +29,9 @@ class NetworkBenchmark : public Benchmark {
 
  protected:
   NetworkBenchmark(std::shared_ptr<BenchmarkHelper> helper, std::shared_ptr<CostCalculator> cost_calculator,
-                   const size_t repetition_count, const size_t batch_size, const std::vector<size_t>& object_byte_sizes,
-                   const std::vector<size_t>& thread_counts, const std::vector<size_t>& concurrent_invocation_counts);
+                   const std::vector<size_t>& object_byte_sizes, const std::vector<size_t>& thread_counts,
+                   const std::vector<size_t>& invocation_counts, const size_t batch_size,
+                   const size_t repetition_count);
 
   virtual Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<BenchmarkResult>& result,
                                                            const NetworkBenchmarkParameters& parameters) = 0;
@@ -59,14 +60,14 @@ class NetworkBenchmark : public Benchmark {
   const std::shared_ptr<BenchmarkHelper> helper_;
   const std::shared_ptr<CostCalculator> cost_calculator_;
 
-  const size_t repetition_count_;
-  const size_t batch_size_;
-
   std::vector<size_t> object_byte_sizes_;
   std::vector<size_t> thread_counts_;
-  std::vector<size_t> concurrent_invocation_counts_;
+  std::vector<size_t> invocation_counts_;
 
-  std::vector<std::tuple<BenchmarkConfig, NetworkBenchmarkParameters>> configs_;
+  const size_t batch_size_;
+  const size_t repetition_count_;
+
+  std::vector<std::pair<NetworkBenchmarkParameters, BenchmarkConfig>> benchmark_configs_;
 
   long double cost_overhead_;
 

@@ -12,31 +12,33 @@
 namespace skyrise {
 
 NetworkBenchmark::NetworkBenchmark(std::shared_ptr<BenchmarkHelper> helper,
-                                   std::shared_ptr<CostCalculator> cost_calculator, const size_t repetition_count,
-                                   const size_t batch_size, const std::vector<size_t>& object_byte_sizes,
+                                   std::shared_ptr<CostCalculator> cost_calculator,
+                                   const std::vector<size_t>& object_byte_sizes,
                                    const std::vector<size_t>& thread_counts,
-                                   const std::vector<size_t>& concurrent_invocation_counts)
+                                   const std::vector<size_t>& invocation_counts, const size_t batch_size,
+                                   const size_t repetition_count)
     : helper_(std::move(helper)),
       cost_calculator_(std::move(cost_calculator)),
-      repetition_count_(repetition_count),
-      batch_size_(batch_size),
       object_byte_sizes_(object_byte_sizes),
       thread_counts_(thread_counts),
-      concurrent_invocation_counts_(concurrent_invocation_counts),
+      invocation_counts_(invocation_counts),
+      batch_size_(batch_size),
+      repetition_count_(repetition_count),
       cost_overhead_(0) {
   Assert(!object_byte_sizes_.empty(), "Object byte sizes must not be empty.");
   Assert(!thread_counts_.empty(), "Thread counts must not be empty.");
-  Assert(!concurrent_invocation_counts_.empty(), "Concurrent invocation counts must not be empty.");
+  Assert(!invocation_counts_.empty(), "Invocation counts must not be empty.");
 }
 
 Aws::Utils::Array<Aws::Utils::Json::JsonValue> NetworkBenchmark::Run(
     const std::shared_ptr<BenchmarkRunner>& benchmark_runner) {
   Setup();
 
-  std::vector<std::tuple<std::shared_ptr<BenchmarkResult>, NetworkBenchmarkParameters>> results;
+  std::vector<std::shared_ptr<BenchmarkResult>> results;
+  results.reserve(benchmark_configs_.size());
 
-  for (const auto& [config, parameters] : configs_) {
-    results.emplace_back(benchmark_runner->RunConfig(config), parameters);
+  for (const auto& benchmark_config : benchmark_configs_) {
+    results.emplace_back(benchmark_runner->RunConfig(benchmark_config.second));
   }
 
   Teardown();
@@ -44,7 +46,7 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> NetworkBenchmark::Run(
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> results_array(results.size());
 
   for (size_t i = 0; i < results.size(); i++) {
-    results_array[i] = GenerateResultOutput(std::get<0>(results[i]), std::get<1>(results[i]));
+    results_array[i] = GenerateResultOutput(results[i], benchmark_configs_[i].first);
   }
 
   return results_array;
@@ -66,8 +68,7 @@ void NetworkBenchmark::Setup() {
     s3_objects.emplace(object_byte_size, BenchmarkHelper::GenerateRandomObject(object_byte_size));
   }
 
-  const size_t concurrency_maximum =
-      *std::max_element(concurrent_invocation_counts_.cbegin(), concurrent_invocation_counts_.cend());
+  const size_t concurrency_maximum = *std::max_element(invocation_counts_.cbegin(), invocation_counts_.cend());
   const size_t thread_count_maximum = *std::max_element(thread_counts_.cbegin(), thread_counts_.cend());
 
   std::vector<std::tuple<Aws::String, std::shared_ptr<Aws::IOStream>, size_t>> objects_to_upload;
@@ -113,9 +114,8 @@ std::vector<std::shared_ptr<Aws::IOStream>> NetworkBenchmark::GeneratePayloads(c
   std::vector<std::shared_ptr<Aws::IOStream>> payloads;
   payloads.reserve(invocation_count);
 
-  const bool is_parallel =
-      std::any_of(concurrent_invocation_counts_.cbegin(), concurrent_invocation_counts_.cend(),
-                  [](const size_t concurrent_invocation_count) { return concurrent_invocation_count > 1; });
+  const bool is_parallel = std::any_of(invocation_counts_.cbegin(), invocation_counts_.cend(),
+                                       [](const size_t invocation_count) { return invocation_count > 1; });
 
   for (size_t i = 0; i < invocation_count; i++) {
     Aws::Utils::Array<Aws::String> object_keys(thread_count);
@@ -172,7 +172,7 @@ long double NetworkBenchmark::ExtractFunctionCost(const InvocationResult& result
 
 long double NetworkBenchmark::CalculateBenchmarkCost(const std::shared_ptr<BenchmarkResult>& result,
                                                      const size_t function_instance_mb_size) {
-  const auto invocation_results = result->GetInvocationResults();
+  const auto& invocation_results = result->GetInvocationResults();
 
   std::vector<long double> function_costs;
   function_costs.reserve(invocation_results.size() * invocation_results.front().size());
