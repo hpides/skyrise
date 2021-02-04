@@ -12,15 +12,20 @@ namespace skyrise {
 
 struct InvocationLatencyBenchmarkParameters {
   Aws::String function_package_name;
-  size_t function_size;
+  size_t function_instance_mb_size;
+  size_t invocation_count;
+  bool warm_mode;
+  size_t repetition_count;
 };
 
 class InvocationLatencyBenchmark : public Benchmark {
  public:
   InvocationLatencyBenchmark(std::shared_ptr<Client> client, std::shared_ptr<BenchmarkHelper> helper,
                              std::shared_ptr<CostCalculator> cost_calculator_,
-                             const std::vector<size_t>& function_instance_mb_sizes, size_t repetition_count,
-                             size_t invocation_count, bool warm_mode);
+                             const std::vector<size_t>& function_instance_mb_sizes,
+                             const std::vector<size_t>& invocation_counts, const std::vector<bool>& warm_modes,
+                             const size_t repetition_count);
+
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> Run(const std::shared_ptr<BenchmarkRunner>& benchmark_runner) override;
 
  private:
@@ -37,14 +42,14 @@ class InvocationLatencyBenchmark : public Benchmark {
   const std::shared_ptr<BenchmarkHelper> helper_;
   const std::shared_ptr<CostCalculator> cost_calculator_;
   const std::vector<size_t> function_instance_mb_sizes_;
-  const size_t invocation_count_;
+  const std::vector<size_t>& invocation_counts_;
+  const std::vector<bool>& warm_modes_;
   const size_t repetition_count_;
-  const bool warm_mode_;
 
-  std::vector<std::pair<BenchmarkConfig, InvocationLatencyBenchmarkParameters>> configs_;
-  std::shared_ptr<FunctionSegmentsAnalyzer> function_segments_analyzer_;
   long double benchmark_cost_;
   long double cost_overhead_;
+  std::shared_ptr<FunctionSegmentsAnalyzer> function_segments_analyzer_;
+  std::vector<std::pair<InvocationLatencyBenchmarkParameters, BenchmarkConfig>> benchmark_configs_;
 
   const std::vector<Aws::String> kPackageNames{
       "skyriseFunctionMinimal",      "S3_skyriseFunctionMinimal",   "skyriseFunctionSized10MB",

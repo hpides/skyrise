@@ -132,10 +132,10 @@ int main(int argc, char* argv[]) {
                                      std::vector<size_t>{128}, std::vector<size_t>{4096}, std::vector<size_t>{1}, 12));
 
     // Register InvocationLatencyBenchmark
-    benchmark_registry.RegisterBenchmark(
-        "InvocationLatencyBenchmark",
-        std::make_unique<skyrise::InvocationLatencyBenchmark>(aws_client, benchmark_helper, cost_calculator,
-                                                              std::vector<size_t>{128}, 10, 10, false));
+    benchmark_registry.RegisterBenchmark("InvocationLatencyBenchmark",
+                                         std::make_unique<skyrise::InvocationLatencyBenchmark>(
+                                             aws_client, benchmark_helper, cost_calculator, std::vector<size_t>{128},
+                                             std::vector<size_t>{10}, std::vector<bool>{false}, 10));
 
     // Register InvocationThroughputBenchmark
     benchmark_registry.RegisterBenchmark(
