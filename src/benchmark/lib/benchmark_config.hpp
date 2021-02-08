@@ -4,6 +4,8 @@
 
 #include <aws/core/Aws.h>
 
+#include "warm_up_strategy.hpp"
+
 namespace skyrise {
 
 struct LambdaFunctionConfig {
@@ -19,7 +21,7 @@ struct LambdaInvocationConfig {
   std::shared_ptr<Aws::IOStream> payload;
 };
 
-enum class WarmUpStrategy { kNone, kDefault };
+enum class WarmUp { kNone, kDefault, kDefaultOncePerRepetition };
 
 enum class UseOneFunctionPerRepetition : bool { kYes = true, kNo = false };
 
@@ -28,8 +30,7 @@ enum class UseEventQueue : bool { kYes = true, kNo = false };
 class BenchmarkConfig {
  public:
   BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size, const size_t repetition_count,
-                  const size_t concurrent_invocation_count = 1,
-                  const WarmUpStrategy warm_up_strategy = WarmUpStrategy::kNone,
+                  const size_t concurrent_invocation_count = 1, const WarmUp warm_up = WarmUp::kNone,
                   const UseOneFunctionPerRepetition use_one_function_per_repetition = UseOneFunctionPerRepetition::kNo,
                   const UseEventQueue use_event_queue = UseEventQueue::kNo,
                   const std::vector<std::function<void()>>& after_repetition_callbacks = {},
@@ -41,7 +42,7 @@ class BenchmarkConfig {
 
   const size_t repetition_count_;
   const size_t concurrent_invocation_count_;
-  const WarmUpStrategy warm_up_strategy_;
+  const WarmUp warm_up_;
   const UseOneFunctionPerRepetition use_one_function_per_repetition_;
   const UseEventQueue use_event_queue_;
   const std::vector<std::function<void()>> after_repetition_callbacks_;
@@ -49,6 +50,7 @@ class BenchmarkConfig {
 
   const Aws::String benchmark_id_;
   const Aws::String benchmark_timestamp_;
+  std::shared_ptr<WarmUpStrategy> warm_up_strategy_;
   std::vector<LambdaFunctionConfig> function_configs_;
   std::vector<std::vector<LambdaInvocationConfig>> repetition_configs_;
 

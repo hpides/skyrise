@@ -16,6 +16,7 @@
 #include "benchmark_runner.hpp"
 #include "client/client.hpp"
 #include "function_colocation_benchmark.hpp"
+#include "function_temperature_benchmark.hpp"
 #include "idle_availability_benchmark.hpp"
 #include "idle_lifetime_benchmark.hpp"
 #include "invocation_latency_benchmark.hpp"
@@ -119,6 +120,11 @@ int main(int argc, char* argv[]) {
         "FunctionColocationBenchmark",
         std::make_unique<skyrise::FunctionColocationBenchmark>(std::vector<size_t>{128, 2048}, std::vector<size_t>{512},
                                                                std::vector<size_t>{1}, 2));
+
+    // Register FunctionTemperatureBenchmark
+    benchmark_registry.RegisterBenchmark(
+        "FunctionTemperatureBenchmark",
+        std::make_unique<skyrise::FunctionTemperatureBenchmark>(std::vector<size_t>{128}, std::vector<size_t>{512}, 2));
 
     // Register IdleAvailabilityBenchmark
     benchmark_registry.RegisterBenchmark(

@@ -157,7 +157,7 @@ void InvocationLatencyBenchmark::Setup() {
                               function_instance_mb_size,
                               repetition_count_,
                               static_cast<size_t>(invocation_count * kOverprovisioningCoefficient),
-                              warm_mode ? WarmUpStrategy::kDefault : WarmUpStrategy::kNone,
+                              warm_mode ? WarmUp::kDefault : WarmUp::kNone,
                               warm_mode ? UseOneFunctionPerRepetition::kNo : UseOneFunctionPerRepetition::kYes,
                               UseEventQueue::kNo,
                               {},
@@ -228,7 +228,7 @@ long double InvocationLatencyBenchmark::CalculateBenchmarkCost(
 }
 
 long double InvocationLatencyBenchmark::ExtractFunctionCost(const InvocationResult& result, const size_t lambda_size) {
-  const long double billed_duration = BenchmarkHelper::ExtractBilledLambdaDuration(result);
+  const long double billed_duration = BenchmarkHelper::ExtractLogResultMetric(result, "Billed Duration").value();
   const long double lambda_cost = cost_calculator_->CalculateCostLambda(billed_duration, lambda_size);
 
   return lambda_cost;

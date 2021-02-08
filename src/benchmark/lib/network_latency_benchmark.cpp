@@ -22,8 +22,7 @@ NetworkLatencyBenchmark::NetworkLatencyBenchmark(std::shared_ptr<BenchmarkHelper
                        repetition_count) {
   for (const auto function_instance_mb_size : function_instance_mb_sizes) {
     for (const size_t object_byte_size_read : object_byte_sizes_read) {
-      BenchmarkConfig config("skyriseFunctionReadS3", function_instance_mb_size, repetition_count_ / batch_size_, 1,
-                             WarmUpStrategy::kNone);
+      BenchmarkConfig config("skyriseFunctionReadS3", function_instance_mb_size, repetition_count_ / batch_size_, 1);
       config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size_read, 1,
                                           config.concurrent_invocation_count_, S3OperationType::kRead));
       benchmark_configs_.emplace_back(
@@ -33,7 +32,7 @@ NetworkLatencyBenchmark::NetworkLatencyBenchmark(std::shared_ptr<BenchmarkHelper
 
     for (const size_t object_byte_size_write : object_byte_sizes_write) {
       BenchmarkConfig config("skyriseFunctionWriteS3", function_instance_mb_size, repetition_count_ / batch_size_, 1,
-                             WarmUpStrategy::kNone);
+                             WarmUp::kNone);
       config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size_write, 1,
                                           config.concurrent_invocation_count_, S3OperationType::kWrite));
       benchmark_configs_.emplace_back(
@@ -73,8 +72,9 @@ Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
        {"benchmark_cost_overhead_usd", cost_overhead_ / benchmark_configs_.size()}},
       {/*aggregated string metrics*/}, benchmark_result,
       {[&](const InvocationResult& single_result) {
-         return std::make_tuple("billed_lambda_duration_ms",
-                                BenchmarkHelper::ExtractBilledLambdaDuration(single_result));
+         return std::make_tuple(
+             "billed_lambda_duration_ms",
+             BenchmarkHelper::ExtractLogResultMetric(single_result, "Billed Duration").value_or(0.0));
        },
        [&](const InvocationResult& single_result) {
          return std::make_tuple(

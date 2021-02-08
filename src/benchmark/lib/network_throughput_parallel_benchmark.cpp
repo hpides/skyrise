@@ -33,7 +33,7 @@ NetworkThroughputParallelBenchmark::NetworkThroughputParallelBenchmark(std::shar
 
     for (const auto invocation_count : invocation_counts_) {
       BenchmarkConfig config(function_name.str(), kFunctionInstanceMbSize, repetition_count, invocation_count,
-                             WarmUpStrategy::kDefault);
+                             WarmUp::kDefault);
       config.SetPayloads(GeneratePayloads(kFunctionInstanceMbSize, kObjectByteSize, kThreadCount,
                                           config.concurrent_invocation_count_, operation_type));
       benchmark_configs_.emplace_back(
@@ -79,8 +79,18 @@ Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateResultOu
        {"benchmark_cost_overhead_usd", cost_overhead_ / benchmark_configs_.size()}},
       {/*aggregated string metrics*/}, benchmark_result,
       {[&](const InvocationResult& single_result) {
-         return std::make_tuple("billed_lambda_duration_ms",
-                                BenchmarkHelper::ExtractBilledLambdaDuration(single_result));
+         Aws::Utils::Json::JsonValue result_value(StreamToString(&single_result.invoke_result_->GetPayload()));
+         const auto duration_views = result_value.View().GetArray("ms_durations");
+         const double duration_seconds =
+             std::chrono::duration<double>(std::chrono::duration<double, std::milli>(duration_views[0].AsDouble()))
+                 .count();
+         return std::make_tuple("throughput_mb_per_s", ByteToMb(benchmark_parameters.object_byte_size) /
+                                                           duration_seconds * benchmark_parameters.thread_count);
+       },
+       [&](const InvocationResult& single_result) {
+         return std::make_tuple(
+             "billed_lambda_duration_ms",
+             BenchmarkHelper::ExtractLogResultMetric(single_result, "Billed Duration").value_or(0.0));
        },
        [&](const InvocationResult& single_result) {
          return std::make_tuple(

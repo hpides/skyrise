@@ -19,6 +19,8 @@ set(
     function_colocation_benchmark.hpp
     function_segments.cpp
     function_segments.hpp
+    function_temperature_benchmark.cpp
+    function_temperature_benchmark.hpp
     idle_availability_benchmark.cpp
     idle_availability_benchmark.hpp
     idle_lifetime_benchmark.cpp
@@ -35,6 +37,8 @@ set(
     network_throughput_benchmark.hpp
     network_throughput_parallel_benchmark.cpp
     network_throughput_parallel_benchmark.hpp
+    warm_up_strategy.cpp
+    warm_up_strategy.hpp
 )
 
 set(

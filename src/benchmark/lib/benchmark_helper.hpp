@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <optional>
 #include <tuple>
 
 #include <aws/core/Aws.h>
@@ -41,7 +42,7 @@ class BenchmarkHelper {
   static std::vector<double> ExtractMetrics(const std::map<Aws::String, InvocationResult>& repetition_results,
                                             const std::function<double(const InvocationResult&)>& extract_metric);
   static double ExtractMetric(const InvocationResult& result, const Aws::String& key);
-  static double ExtractBilledLambdaDuration(const InvocationResult& result);
+  static std::optional<double> ExtractLogResultMetric(const InvocationResult& result, const std::string& metric_name);
 
  private:
   const std::shared_ptr<Client> client_;

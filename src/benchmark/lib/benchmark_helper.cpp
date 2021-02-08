@@ -18,7 +18,6 @@
 
 #include "utils/assert.hpp"
 #include "utils/string.hpp"
-#include "utils/unit_conversion.hpp"
 
 namespace skyrise {
 
@@ -246,18 +245,18 @@ double BenchmarkHelper::ExtractMetric(const InvocationResult& result, const Aws:
   return payload_view.GetDouble(key);
 }
 
-double BenchmarkHelper::ExtractBilledLambdaDuration(const InvocationResult& result) {
-  Aws::Utils::Base64::Base64 base64;
-  const Aws::Utils::ByteBuffer log_result_chars = base64.Decode(result.invoke_result_->GetLogResult());
+std::optional<double> BenchmarkHelper::ExtractLogResultMetric(const InvocationResult& result,
+                                                              const std::string& metric_name) {
+  const Aws::Utils::ByteBuffer log_result_chars =
+      Aws::Utils::Base64::Base64().Decode(result.invoke_result_->GetLogResult());
+  const std::string log_result(reinterpret_cast<char const*>(log_result_chars.GetUnderlyingData()),
+                               log_result_chars.GetLength());
 
-  const unsigned char* data = log_result_chars.GetUnderlyingData();
-  std::string log_result(reinterpret_cast<char const*>(data), log_result_chars.GetLength());
+  const std::regex metric_regex("REPORT.+?" + metric_name + ": ([\\d\\.]+)");
+  std::smatch metric_match;
+  const bool is_match = std::regex_search(log_result, metric_match, metric_regex);
 
-  const std::regex billing_regex("REPORT.+Billed Duration: (\\d+)");
-  std::smatch billing_match;
-  const auto billing_found = std::regex_search(log_result, billing_match, billing_regex);
-
-  return billing_found ? std::stod(billing_match[1]) : 0.0;
+  return is_match ? std::optional<double>(std::stod(metric_match[1])) : std::nullopt;
 }
 
 }  // namespace skyrise

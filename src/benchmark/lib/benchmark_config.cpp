@@ -16,14 +16,14 @@ namespace skyrise {
 
 BenchmarkConfig::BenchmarkConfig(const Aws::String& function_zip_name, const size_t memory_size,
                                  const size_t repetition_count, const size_t concurrent_invocation_count,
-                                 const WarmUpStrategy warm_up_strategy,
+                                 const WarmUp warm_up,
                                  const UseOneFunctionPerRepetition use_one_function_per_repetition,
                                  const UseEventQueue use_event_queue,
                                  const std::vector<std::function<void()>>& after_repetition_callbacks,
                                  const Aws::String& function_bucket, const bool enable_tracing)
     : repetition_count_(repetition_count),
       concurrent_invocation_count_(concurrent_invocation_count),
-      warm_up_strategy_(warm_up_strategy),
+      warm_up_(warm_up),
       use_one_function_per_repetition_(use_one_function_per_repetition),
       use_event_queue_(use_event_queue),
       after_repetition_callbacks_(after_repetition_callbacks.empty()
@@ -35,6 +35,25 @@ BenchmarkConfig::BenchmarkConfig(const Aws::String& function_zip_name, const siz
   Assert(after_repetition_callbacks_.size() == repetition_count_,
          "The number of repetition callbacks and the repetition count must be equal.");
 
+  switch (warm_up_) {
+    case WarmUp::kNone: {
+      warm_up_strategy_ = nullptr;
+      break;
+    }
+    case WarmUp::kDefault: {
+      warm_up_strategy_ = std::make_shared<SleepWarmUpStrategy>(true);
+      break;
+    }
+    case WarmUp::kDefaultOncePerRepetition: {
+      warm_up_strategy_ = std::make_shared<SleepWarmUpStrategy>(false);
+      break;
+    }
+    default:
+      warm_up_strategy_ = nullptr;
+      break;
+  }
+
+  const Aws::String function_path = GetProjectDirPath() + "pkg/" + function_zip_name + ".zip";
   const auto is_local = function_zip_name.find("S3_") != 0;
   const Aws::String function_location =
       is_local ? GetProjectDirPath() + "pkg/" + function_zip_name + ".zip" : function_bucket;

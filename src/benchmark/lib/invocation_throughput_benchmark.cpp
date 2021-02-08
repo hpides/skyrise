@@ -22,7 +22,7 @@ InvocationThroughputBenchmark::InvocationThroughputBenchmark(const std::vector<s
       for (const auto function_payload_byte_size : function_payload_byte_sizes) {
         for (const auto use_event_queue : use_event_queues) {
           BenchmarkConfig config(kFunctionName, function_instance_mb_size, repetition_count, invocation_count,
-                                 WarmUpStrategy::kDefault, UseOneFunctionPerRepetition::kNo, use_event_queue);
+                                 WarmUp::kDefault, UseOneFunctionPerRepetition::kNo, use_event_queue);
 
           if (function_payload_byte_size > 0) {
             config.SetOnePayloadForAllFunctions(BenchmarkHelper::GenerateRandomObject(function_payload_byte_size));

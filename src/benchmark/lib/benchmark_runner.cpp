@@ -281,21 +281,9 @@ void BenchmarkRunner::RunParallel() {
 void BenchmarkRunner::WarmUpFunctions(const size_t repetition) {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Warming up functions for repetition " << repetition << "...");
 
-  const auto& lambda_client = client_->GetLambdaClient();
-  std::vector<Aws::Lambda::Model::InvokeOutcomeCallable> outcome_futures;
-  outcome_futures.reserve(invoke_warmup_requests_.front().size());
-
-  for (const auto& [invocation_id, invoke_request] : invoke_warmup_requests_.front()) {
-    outcome_futures.emplace_back(lambda_client.InvokeCallable(invoke_request));
-  }
-
-  for (const auto& outcome_future : outcome_futures) {
-    outcome_future.wait();
-  }
-
-  if (IsAsyncBenchmark()) {
-    CollectSqsMessages(outcome_futures.size());
-  }
+  const size_t function_index = static_cast<bool>(config_->use_one_function_per_repetition_) ? repetition : 0;
+  config_->warm_up_strategy_->WarmUpFunctions(client_, config_->function_configs_[function_index].function_name,
+                                              config_->concurrent_invocation_count_);
 
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Functions warmed up.");
 }
@@ -463,7 +451,7 @@ std::vector<Aws::Lambda::Model::CreateFunctionOutcome> BenchmarkRunner::UploadFu
   return outcomes;
 }
 
-bool BenchmarkRunner::IsWarmStartBenchmark() { return config_->warm_up_strategy_ != WarmUpStrategy::kNone; }
+bool BenchmarkRunner::IsWarmStartBenchmark() { return config_->warm_up_ != WarmUp::kNone; }
 
 bool BenchmarkRunner::IsAsyncBenchmark() { return config_->use_event_queue_ != UseEventQueue::kNo; }
 

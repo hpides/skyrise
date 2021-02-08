@@ -40,8 +40,8 @@ IdleAvailabilityBenchmark::IdleAvailabilityBenchmark(const std::vector<size_t>& 
             IdleAvailabilityBenchmarkParameters{function_instance_mb_size, invocation_count, sleep_min_duration,
                                                 repetition_count},
             BenchmarkConfig(kFunctionName, function_instance_mb_size, after_repetition_callbacks.size(),
-                            invocation_count, WarmUpStrategy::kNone, UseOneFunctionPerRepetition::kNo,
-                            UseEventQueue::kNo, after_repetition_callbacks));
+                            invocation_count, WarmUp::kNone, UseOneFunctionPerRepetition::kNo, UseEventQueue::kNo,
+                            after_repetition_callbacks));
       }
     }
   }

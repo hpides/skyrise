@@ -1,5 +1,8 @@
 #include "function.hpp"
 
+#include <chrono>
+#include <thread>
+
 #ifdef SKYRISE_DEBUG
 #include <cstdlib>
 #include <iostream>
@@ -18,11 +21,15 @@ aws::lambda_runtime::invocation_response Function::HandlerFunction(
   const auto json_value = Aws::Utils::Json::JsonValue(request.payload);
   const auto json_view = json_value.View();
 
-  const bool is_warmup = json_view.KeyExists("is_warmup") ? json_view.GetBool("is_warmup") : false;
+  if (json_view.KeyExists("warmup")) {
+    const bool is_warmup = json_view.GetBool("warmup");
 
-  if (is_warmup) {
-    const auto response = Aws::Utils::Json::JsonValue().WithBool("is_warmup", true);
-    return aws::lambda_runtime::invocation_response::success(response.View().WriteCompact(), "application/json");
+    if (is_warmup) {
+      if (json_view.KeyExists("sleep_ms")) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(json_view.GetInteger("sleep_ms")));
+      }
+      return aws::lambda_runtime::invocation_response::success(json_view.WriteCompact(), "application/json");
+    }
   }
 
   return OnHandleRequest(json_view);

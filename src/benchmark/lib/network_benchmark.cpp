@@ -149,7 +149,7 @@ std::vector<std::shared_ptr<Aws::IOStream>> NetworkBenchmark::GeneratePayloads(c
 
 long double NetworkBenchmark::ExtractFunctionCost(const InvocationResult& result,
                                                   const size_t function_instance_mb_size) {
-  const double billed_duration = BenchmarkHelper::ExtractBilledLambdaDuration(result);
+  const double billed_duration = BenchmarkHelper::ExtractLogResultMetric(result, "Billed Duration").value_or(0.0);
   const long double function_instance_cost =
       cost_calculator_->CalculateCostLambda(billed_duration, function_instance_mb_size);
 
@@ -211,8 +211,9 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> NetworkBenchmark::GenerateBatched
         Aws::Utils::Json::JsonValue()
             .WithString("name", benchmark_name + "/" + std::to_string(i))
             .WithArray(metric_name, duration_values)
-            .WithDouble("billed_lambda_duration_ms",
-                        BenchmarkHelper::ExtractBilledLambdaDuration(invocation_result.second))
+            .WithDouble(
+                "billed_lambda_duration_ms",
+                BenchmarkHelper::ExtractLogResultMetric(invocation_result.second, "Billed Duration").value_or(0.0))
             .WithDouble("function_cost_usd",
                         static_cast<double>(ExtractFunctionCost(invocation_result.second, function_instance_mb_size)));
     i++;

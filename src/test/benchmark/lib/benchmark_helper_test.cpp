@@ -9,6 +9,7 @@
 #include <tuple>
 
 #include <aws/core/Aws.h>
+#include <aws/core/utils/base64/Base64.h>
 #include <aws/lambda/model/InvokeRequest.h>
 
 #include "benchmark_config.hpp"
@@ -91,6 +92,53 @@ TEST_F(BenchmarkHelperTest, GenerateJsonOutput) {
       EXPECT_TRUE(invocations[i].ValueExists("object_metric_1"));
       EXPECT_TRUE(invocations[i].ValueExists("object_metric_2"));
     }
+  }
+  Aws::ShutdownAPI(options);
+}
+
+TEST_F(BenchmarkHelperTest, ExtractLogResultMetric) {
+  Aws::SDKOptions options;
+
+  Aws::InitAPI(options);
+  {
+    const Aws::String log_result =
+        "REPORT RequestId: dc5e1ec9-c123-46ce-b72c-6ae7e629eb5a Duration: 238.83 ms Billed Duration: 261 ms Memory "
+        "Size: 3008 MB Max Memory Used: 44 MB Init Duration: 22.09 ms";
+    Aws::Utils::ByteBuffer log_result_buffer(log_result.size());
+
+    for (size_t i = 0; i < log_result.size(); i++) {
+      log_result_buffer[i] = log_result[i];
+    }
+
+    const auto log_result_encoded = Aws::Utils::Base64::Base64().Encode(log_result_buffer);
+
+    auto invoke_result = Aws::Lambda::Model::InvokeResult();
+    invoke_result.SetLogResult(log_result_encoded);
+    invoke_result.SetStatusCode(200);
+
+    const auto time_point = std::chrono::system_clock::now();
+
+    const InvocationResult invocation_result{
+        "0",        true,      true, {}, std::make_shared<Aws::Lambda::Model::InvokeResult>(std::move(invoke_result)),
+        time_point, time_point};
+
+    const auto init_duration = BenchmarkHelper::ExtractLogResultMetric(invocation_result, "Init Duration");
+    EXPECT_EQ(init_duration.value(), 22.09);
+
+    const auto duration = BenchmarkHelper::ExtractLogResultMetric(invocation_result, "Duration");
+    EXPECT_EQ(duration.value(), 238.83);
+
+    const auto billed_duration = BenchmarkHelper::ExtractLogResultMetric(invocation_result, "Billed Duration");
+    EXPECT_EQ(billed_duration.value(), 261);
+
+    const auto memory_mb_size = BenchmarkHelper::ExtractLogResultMetric(invocation_result, "Memory Size");
+    EXPECT_EQ(memory_mb_size.value(), 3008);
+
+    const auto max_memory_used = BenchmarkHelper::ExtractLogResultMetric(invocation_result, "Max Memory Used");
+    EXPECT_EQ(max_memory_used.value(), 44);
+
+    const auto xray_trace_id = BenchmarkHelper::ExtractLogResultMetric(invocation_result, "XRAY TraceId");
+    EXPECT_FALSE(xray_trace_id.has_value());
   }
   Aws::ShutdownAPI(options);
 }
