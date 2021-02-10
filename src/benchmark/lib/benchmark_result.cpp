@@ -1,10 +1,13 @@
 #include "benchmark_result.hpp"
 
+#include <numeric>
+
 namespace skyrise {
 
 BenchmarkResult::BenchmarkResult(const size_t repetition_count, const size_t invocation_count)
     : invocation_results_(repetition_count),
       invocations_finished_(repetition_count),
+      function_warm_up_costs_(repetition_count),
       invocation_count_(invocation_count) {
   repetition_durations_.reserve(repetition_count);
   benchmark_start_point_ = std::chrono::system_clock::now();
@@ -52,17 +55,27 @@ void BenchmarkResult::UpdateSQSMessageBody(const size_t repetition, const Aws::S
   invocation_results_[repetition][invocation_id].sqs_message_body_ = sqs_message_body;
 }
 
-const std::vector<std::map<Aws::String, InvocationResult>>& BenchmarkResult::GetInvocationResults() {
+void BenchmarkResult::SetFunctionWarmUpCost(const size_t repetition, const long double cost) {
+  function_warm_up_costs_[repetition] = cost;
+}
+
+const std::vector<std::map<Aws::String, InvocationResult>>& BenchmarkResult::GetInvocationResults() const {
   return invocation_results_;
 }
 
-std::chrono::duration<double> BenchmarkResult::GetRepetitionDuration(const size_t repetition) {
+std::chrono::duration<double> BenchmarkResult::GetRepetitionDuration(const size_t repetition) const {
   const auto& [start, end] = repetition_durations_[repetition];
   return std::chrono::duration<double>(end - start);
 }
 
-std::chrono::duration<double> BenchmarkResult::GetBenchmarkDuration() {
+std::chrono::duration<double> BenchmarkResult::GetBenchmarkDuration() const {
   return std::chrono::duration<double>(benchmark_end_point_ - benchmark_start_point_);
+}
+
+const std::vector<long double>& BenchmarkResult::GetFunctionWarmUpCosts() const { return function_warm_up_costs_; }
+
+long double BenchmarkResult::GetOverallFunctionWarmUpCost() const {
+  return std::accumulate(function_warm_up_costs_.cbegin(), function_warm_up_costs_.cend(), 0.0L);
 }
 
 }  // namespace skyrise

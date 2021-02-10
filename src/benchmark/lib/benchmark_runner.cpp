@@ -4,6 +4,7 @@
 #include <functional>
 #include <future>
 #include <iostream>
+#include <mutex>
 #include <regex>
 #include <string>
 #include <utility>
@@ -22,10 +23,8 @@
 #include <aws/sqs/model/DeleteMessageRequest.h>
 #include <aws/sqs/model/DeleteQueueRequest.h>
 #include <aws/sqs/model/GetQueueAttributesRequest.h>
-#include <aws/sqs/model/Message.h>
 #include <aws/sqs/model/QueueAttributeName.h>
 #include <aws/sqs/model/ReceiveMessageRequest.h>
-#include <aws/sqs/model/ReceiveMessageResult.h>
 
 #include "limits.hpp"
 #include "utils/assert.hpp"
@@ -110,8 +109,8 @@ void BenchmarkRunner::Setup() {
 
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Functions created.");
 
-  if (IsAsyncBenchmark()) {
-    SetupAsync();
+  if (config_->use_event_queue_ == UseEventQueue::kYes) {
+    SetupEventQueue();
   }
 
   if (IsWarmStartBenchmark()) {
@@ -121,7 +120,7 @@ void BenchmarkRunner::Setup() {
   CreateInvokeRequests(false);
 }
 
-void BenchmarkRunner::SetupAsync() {
+void BenchmarkRunner::SetupEventQueue() {
   const Aws::String queue_name = config_->benchmark_id_ + "-" + config_->benchmark_timestamp_;
 
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Creating queue " << queue_name << "...");
@@ -260,7 +259,7 @@ void BenchmarkRunner::RunParallel() {
 
     invocations_finished = 0;
 
-    if (IsAsyncBenchmark()) {
+    if (config_->use_event_queue_ == UseEventQueue::kYes) {
       const auto sqs_messages = CollectSqsMessages(invoke_requests_[i].size());
 
       for (const auto& sqs_message : *sqs_messages) {
@@ -281,9 +280,12 @@ void BenchmarkRunner::RunParallel() {
 void BenchmarkRunner::WarmUpFunctions(const size_t repetition) {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Warming up functions for repetition " << repetition << "...");
 
-  const size_t function_index = static_cast<bool>(config_->use_one_function_per_repetition_) ? repetition : 0;
-  config_->warm_up_strategy_->WarmUpFunctions(client_, config_->function_configs_[function_index].function_name,
-                                              config_->concurrent_invocation_count_);
+  const size_t function_index =
+      config_->use_one_function_per_repetition_ == UseOneFunctionPerRepetition::kYes ? repetition : 0;
+  long double function_warm_up_cost = config_->warm_up_strategy_->WarmUpFunctions(
+      client_, config_->function_configs_[function_index], config_->concurrent_invocation_count_);
+
+  benchmark_result_->SetFunctionWarmUpCost(repetition, function_warm_up_cost);
 
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Functions warmed up.");
 }
@@ -291,8 +293,9 @@ void BenchmarkRunner::WarmUpFunctions(const size_t repetition) {
 std::pair<Aws::String, Aws::Lambda::Model::InvokeRequest> BenchmarkRunner::CreateInvokeRequest(
     const Aws::String& function_name, const Aws::String& invocation_id, const size_t repetition, const bool is_warmup,
     const std::shared_ptr<Aws::IOStream>& payload) {
-  const auto invocation_type = IsAsyncBenchmark() ? Aws::Lambda::Model::InvocationType::Event
-                                                  : Aws::Lambda::Model::InvocationType::RequestResponse;
+  const auto invocation_type = config_->use_event_queue_ == UseEventQueue::kYes
+                                   ? Aws::Lambda::Model::InvocationType::Event
+                                   : Aws::Lambda::Model::InvocationType::RequestResponse;
   Aws::StringStream supplemented_id;
   supplemented_id << (config_->repetition_count_ > 1 ? "repetition-" + std::to_string(repetition) + "-" : "");
   supplemented_id << invocation_id << (is_warmup ? "-warmup" : "");
@@ -452,9 +455,5 @@ std::vector<Aws::Lambda::Model::CreateFunctionOutcome> BenchmarkRunner::UploadFu
 }
 
 bool BenchmarkRunner::IsWarmStartBenchmark() { return config_->warm_up_ != WarmUp::kNone; }
-
-bool BenchmarkRunner::IsAsyncBenchmark() { return config_->use_event_queue_ != UseEventQueue::kNo; }
-
-bool BenchmarkRunner::IsParallelBenchmark() { return config_->concurrent_invocation_count_ > 1; }
 
 }  // namespace skyrise

@@ -17,6 +17,8 @@ set(
     data_generation/tpch/tpch_generator.cpp
     function_colocation_benchmark.cpp
     function_colocation_benchmark.hpp
+    function_config.hpp
+    function_invocation_config.hpp
     function_segments.cpp
     function_segments.hpp
     function_temperature_benchmark.cpp

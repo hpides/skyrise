@@ -52,4 +52,25 @@ TEST_F(BenchmarkResultTest, ConcurrencyStressTest) {
   EXPECT_EQ(invocation_results[3].find("541")->second.sqs_message_body_, "abc");
 }
 
+TEST_F(BenchmarkResultTest, FunctionWarmingCost) {
+  BenchmarkResult result(10, 10);
+
+  for (size_t i = 0; i < 10; i++) {
+    for (size_t j = 0; j < 10; j++) {
+      result.RegisterInvocation(j, std::to_string(i));
+      result.FinishInvocation(j, std::to_string(i), nullptr, true);
+    }
+    result.SetFunctionWarmUpCost(i, 1);
+  }
+
+  const auto& function_warm_up_costs = result.GetFunctionWarmUpCosts();
+  EXPECT_EQ(function_warm_up_costs.size(), 10);
+
+  for (const auto function_warm_up_cost : function_warm_up_costs) {
+    EXPECT_EQ(function_warm_up_cost, 1.0L);
+  }
+
+  EXPECT_EQ(result.GetOverallFunctionWarmUpCost(), 10.0L);
+}
+
 }  // namespace skyrise

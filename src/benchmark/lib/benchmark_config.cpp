@@ -7,7 +7,6 @@
 
 #include <unistd.h>
 
-#include "limits.hpp"
 #include "utils/assert.hpp"
 #include "utils/string.hpp"
 #include "utils/time.hpp"
@@ -62,18 +61,17 @@ BenchmarkConfig::BenchmarkConfig(const Aws::String& function_zip_name, const siz
 
   if (use_one_function_per_repetition_ == UseOneFunctionPerRepetition::kYes) {
     for (size_t i = 0; i < repetition_count_; i++) {
-      function_configs_.emplace_back(LambdaFunctionConfig{
-          function_location, function_name_base.str() + "-" + std::to_string(i), memory_size, is_local});
+      function_configs_.emplace_back(
+          FunctionConfig{function_location, function_name_base.str() + "-" + std::to_string(i), memory_size, is_local});
     }
   } else {
-    function_configs_.emplace_back(
-        LambdaFunctionConfig{function_location, function_name_base.str(), memory_size, is_local});
+    function_configs_.emplace_back(FunctionConfig{function_location, function_name_base.str(), memory_size, is_local});
   }
 
   auto empty_payload = std::make_shared<Aws::StringStream>();
 
   for (size_t i = 0; i < repetition_count_; i++) {
-    std::vector<LambdaInvocationConfig> invocation_configs;
+    std::vector<FunctionInvocationConfig> invocation_configs;
     invocation_configs.reserve(concurrent_invocation_count_);
 
     const Aws::String function_name = use_one_function_per_repetition_ == UseOneFunctionPerRepetition::kYes
@@ -81,7 +79,7 @@ BenchmarkConfig::BenchmarkConfig(const Aws::String& function_zip_name, const siz
                                           : function_name_base.str();
 
     for (size_t j = 0; j < concurrent_invocation_count_; j++) {
-      invocation_configs.emplace_back(LambdaInvocationConfig{
+      invocation_configs.emplace_back(FunctionInvocationConfig{
           function_name, function_name_base.str() + "-" + std::to_string(i) + "-" + std::to_string(j), empty_payload});
     }
 

@@ -4,22 +4,11 @@
 
 #include <aws/core/Aws.h>
 
+#include "function_config.hpp"
+#include "function_invocation_config.hpp"
 #include "warm_up_strategy.hpp"
 
 namespace skyrise {
-
-struct LambdaFunctionConfig {
-  Aws::String function_path;
-  Aws::String function_name;
-  size_t memory_size;
-  bool is_local;
-};
-
-struct LambdaInvocationConfig {
-  Aws::String function_name;
-  Aws::String invocation_id;
-  std::shared_ptr<Aws::IOStream> payload;
-};
 
 enum class WarmUp { kNone, kDefault, kDefaultOncePerRepetition };
 
@@ -51,8 +40,8 @@ class BenchmarkConfig {
   const Aws::String benchmark_id_;
   const Aws::String benchmark_timestamp_;
   std::shared_ptr<WarmUpStrategy> warm_up_strategy_;
-  std::vector<LambdaFunctionConfig> function_configs_;
-  std::vector<std::vector<LambdaInvocationConfig>> repetition_configs_;
+  std::vector<FunctionConfig> function_configs_;
+  std::vector<std::vector<FunctionInvocationConfig>> repetition_configs_;
 
  private:
 };

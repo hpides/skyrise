@@ -30,7 +30,7 @@ class BenchmarkRunner {
   void SetConfig(const BenchmarkConfig& config);
 
   void Setup();
-  void SetupAsync();
+  void SetupEventQueue();
   void Teardown();
 
   void RunParallel();
@@ -49,8 +49,6 @@ class BenchmarkRunner {
       const size_t thread_count, const size_t thread_index, const Aws::Lambda::Model::TracingConfig& tracing_config);
 
   bool IsWarmStartBenchmark();
-  bool IsAsyncBenchmark();
-  bool IsParallelBenchmark();
 
   std::shared_ptr<BenchmarkConfig> config_;
   std::unordered_set<Aws::String> config_history_;

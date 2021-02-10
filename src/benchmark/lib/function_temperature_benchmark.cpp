@@ -1,5 +1,6 @@
 #include "function_temperature_benchmark.hpp"
 
+#include <algorithm>
 #include <chrono>
 
 #include "benchmark_helper.hpp"
@@ -92,7 +93,8 @@ Aws::Utils::Json::JsonValue FunctionTemperatureBenchmark::GenerateResultOutput(
        {"warm_function_percentages_percentile_0.1", warm_function_percentages_aggregates.GetPercentile(0.1)},
        {"warm_function_percentages_percentile_1", warm_function_percentages_aggregates.GetPercentile(1)},
        {"warm_function_percentages_percentile_10", warm_function_percentages_aggregates.GetPercentile(10)},
-       {"warm_function_percentages_std_dev", warm_function_percentages_aggregates.GetStandardDeviation()}},
+       {"warm_function_percentages_std_dev", warm_function_percentages_aggregates.GetStandardDeviation()},
+       {"warm_up_cost_usd_sum", benchmark_result->GetOverallFunctionWarmUpCost()}},
       {/*aggregated string metrics*/}, benchmark_result, {/*extract double metric functions*/},
       {[&](const InvocationResult& invocation_result) {
         return std::make_tuple(

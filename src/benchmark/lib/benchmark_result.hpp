@@ -31,14 +31,18 @@ class BenchmarkResult {
                         const std::shared_ptr<Aws::Lambda::Model::InvokeResult>& result, const bool success);
   void UpdateSQSMessageBody(const size_t repetition, const Aws::String& invocation_id,
                             const Aws::String& sqs_message_body);
+  void SetFunctionWarmUpCost(const size_t repetition, const long double cost);
 
-  const std::vector<std::map<Aws::String, InvocationResult>>& GetInvocationResults();
-  std::chrono::duration<double> GetRepetitionDuration(const size_t repetition);
-  std::chrono::duration<double> GetBenchmarkDuration();
+  const std::vector<std::map<Aws::String, InvocationResult>>& GetInvocationResults() const;
+  std::chrono::duration<double> GetRepetitionDuration(const size_t repetition) const;
+  std::chrono::duration<double> GetBenchmarkDuration() const;
+  const std::vector<long double>& GetFunctionWarmUpCosts() const;
+  long double GetOverallFunctionWarmUpCost() const;
 
  private:
   std::vector<std::map<Aws::String, InvocationResult>> invocation_results_;
   std::vector<size_t> invocations_finished_;
+  std::vector<long double> function_warm_up_costs_;
   std::vector<std::tuple<std::chrono::time_point<std::chrono::system_clock>,
                          std::chrono::time_point<std::chrono::system_clock>>>
       repetition_durations_;

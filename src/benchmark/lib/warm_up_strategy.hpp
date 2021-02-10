@@ -3,40 +3,49 @@
 #include <string>
 
 #include "client/client.hpp"
+#include "function_config.hpp"
+#include "utils/costs/cost_calculator.hpp"
 
 namespace skyrise {
 
 // TODO(anyone): Move the best strategy to src/lib/scheduler
-
 class WarmUpStrategy {
  public:
   explicit WarmUpStrategy(const bool warm_up_once);
   virtual ~WarmUpStrategy() {}
 
-  virtual void WarmUpFunctions(const std::shared_ptr<Client>& client, const std::string& function_name,
-                               const size_t function_count) = 0;
+  virtual long double WarmUpFunctions(const std::shared_ptr<Client>& client, const FunctionConfig& function_config,
+                                      const size_t function_count);
+  virtual long double CalculateWarmUpCost(
+      const std::shared_ptr<Client>& client, const FunctionConfig& function_config,
+      std::vector<Aws::Lambda::Model::InvokeOutcomeCallable>* invoke_outcome_callables);
+  virtual std::shared_ptr<Aws::IOStream> CreateInvokeRequestBody() const = 0;
   virtual std::string GetName() const = 0;
 
+ private:
   const bool warm_up_once_;
   bool was_warmed_up_;
+  std::unique_ptr<CostCalculator> cost_calculator_;
 };
 
 class SimpleWarmUpStrategy : public WarmUpStrategy {
  public:
+  std::shared_ptr<Aws::IOStream> CreateInvokeRequestBody() const override;
   explicit SimpleWarmUpStrategy(const bool warm_up_once);
-  void WarmUpFunctions(const std::shared_ptr<Client>& client, const std::string& function_name,
-                       const size_t function_count) override;
+
   std::string GetName() const override;
 };
 
 class SleepWarmUpStrategy : public WarmUpStrategy {
  public:
   explicit SleepWarmUpStrategy(const bool warm_up_once);
-
-  void WarmUpFunctions(const std::shared_ptr<Client>& client, const std::string& function_name,
-                       const size_t function_count) override;
+  std::shared_ptr<Aws::IOStream> CreateInvokeRequestBody() const override;
 
   std::string GetName() const override;
+
+ private:
+  // TODO(anyone): Eliminate magic number once we understand the parallel running lambda functions better
+  const size_t kSleepMs = 7000;
 };
 
 }  // namespace skyrise
