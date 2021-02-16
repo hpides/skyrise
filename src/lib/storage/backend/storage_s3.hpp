@@ -28,6 +28,8 @@
 
 namespace skyrise {
 
+StorageErrorType TranslateS3Error(const Aws::S3::S3Errors error);
+
 class S3MultipartUploader {
  public:
   S3MultipartUploader(std::shared_ptr<const Aws::S3::S3Client> client, std::string bucket, std::string object_id);

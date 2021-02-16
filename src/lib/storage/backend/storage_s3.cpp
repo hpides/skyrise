@@ -37,7 +37,7 @@ class ProxyStream : public std::iostream {
 
 }  // namespace detail
 
-static StorageErrorType TranslateS3Error(const Aws::S3::S3Errors error) {
+StorageErrorType TranslateS3Error(const Aws::S3::S3Errors error) {
   switch (error) {
     case Aws::S3::S3Errors::INCOMPLETE_SIGNATURE:
     case Aws::S3::S3Errors::INVALID_ACTION:
@@ -57,8 +57,10 @@ static StorageErrorType TranslateS3Error(const Aws::S3::S3Errors error) {
     case Aws::S3::S3Errors::SERVICE_UNAVAILABLE:
       return StorageErrorType::kInternalError;
 
-    case Aws::S3::S3Errors::ACCESS_DENIED:
     case Aws::S3::S3Errors::BUCKET_ALREADY_EXISTS:
+      return StorageErrorType::kAlreadyExist;
+
+    case Aws::S3::S3Errors::ACCESS_DENIED:
     case Aws::S3::S3Errors::BUCKET_ALREADY_OWNED_BY_YOU:
     case Aws::S3::S3Errors::INVALID_ACCESS_KEY_ID:
     case Aws::S3::S3Errors::INVALID_CLIENT_TOKEN_ID:

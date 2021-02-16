@@ -15,6 +15,15 @@
 
 namespace skyrise {
 
+class AbstractTableWriter {
+ public:
+  virtual ~AbstractTableWriter() = default;
+  virtual void Finalize() = 0;
+  virtual void WriteChunk(std::shared_ptr<Chunk> chunk) = 0;
+  virtual StorageError GetError() = 0;
+  virtual bool HasError() = 0;
+};
+
 struct TableWriterConfig {
   // Required object that provides configurations to create formatters.
   std::shared_ptr<AbstractFormatterFactory> format_factory;
@@ -43,7 +52,7 @@ struct TableWriterConfig {
 // TableWriter provides a high level interface to write chunks in a specified format to a given storage.
 // Once constructed the methods `WriteChunk`, `GetError` and `HasError` can be called concurrently from multiple
 // threads. Any other method is not thread-safe.
-class TableWriter {
+class TableWriter : public AbstractTableWriter {
  public:
   TableWriter(TableWriterConfig config, std::shared_ptr<Storage> storage);
   TableWriter(const TableWriter&) = delete;
@@ -71,6 +80,7 @@ class TableWriter {
   void ReportError(const StorageError& error);
   void StartWorkers(size_t n);
   void ProcessChunkLoop();
+  void NonVirtualFinalize();
 
  private:
   TableWriterConfig config_;
@@ -84,7 +94,20 @@ class TableWriter {
   std::mutex error_mutex_;
 };
 
+class MemoryTableWriter : public AbstractTableWriter {
+ public:
+  void Finalize() {}
+  void WriteChunk(std::shared_ptr<Chunk> chunk);
+  StorageError GetError() { return StorageError::Success(); }
+  bool HasError() { return false; }
+  const std::vector<std::shared_ptr<Chunk>>& GetChunks() { return chunks_; }
+
+ private:
+  std::mutex write_mutex_;
+  std::vector<std::shared_ptr<Chunk>> chunks_;
+};
+
 using TableWriterFactory =
-    std::function<std::shared_ptr<TableWriter>(const std::string& name, const TableColumnDefinitions& schema)>;
+    std::function<std::shared_ptr<AbstractTableWriter>(const std::string& name, const TableColumnDefinitions& schema)>;
 
 }  // namespace skyrise

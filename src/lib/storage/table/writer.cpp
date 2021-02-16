@@ -13,7 +13,7 @@ void TableWriter::StartWorkers(size_t n) {
   }
 }
 
-TableWriter::~TableWriter() { Finalize(); }
+TableWriter::~TableWriter() { NonVirtualFinalize(); }
 
 void TableWriter::ReportError(const StorageError& error) {
   if (has_error_ || !error) {
@@ -39,7 +39,7 @@ void TableWriter::WriteChunk(std::shared_ptr<Chunk> chunk) {
   }
 }
 
-void TableWriter::Finalize() {
+void TableWriter::NonVirtualFinalize() {
   for (size_t i = 0; i < threads_.size(); i++) {
     // `nullptr` will signal the worker to stop.
     queue_.Push(nullptr);
@@ -54,6 +54,8 @@ void TableWriter::Finalize() {
   queue_.Close();
   threads_.clear();
 }
+
+void TableWriter::Finalize() { NonVirtualFinalize(); }
 
 void TableWriter::ProcessChunkLoop() {
   size_t num_rows_written = 0;
@@ -117,6 +119,11 @@ void TableWriter::ProcessChunkLoop() {
   if (formatter) {
     flush();
   }
+}
+
+void MemoryTableWriter::WriteChunk(std::shared_ptr<Chunk> chunk) {
+  std::lock_guard<std::mutex> guard(write_mutex_);
+  chunks_.emplace_back(std::move(chunk));
 }
 
 }  // namespace skyrise

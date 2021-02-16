@@ -103,7 +103,6 @@ set(
     cloud_function/function.hpp
     utils/profiling/function_host_information.cpp
     utils/profiling/function_host_information.hpp
-    ${SHARED_SOURCES}
 )
 
 set(

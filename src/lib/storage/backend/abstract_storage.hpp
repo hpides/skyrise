@@ -10,6 +10,7 @@ namespace skyrise {
 
 enum class StorageErrorType {
   kNoError = 0,
+  kAlreadyExist,
   kNotFound,
   kNotReady,
   kInternalError,

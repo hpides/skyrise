@@ -11,6 +11,12 @@ set(
     benchmark_result.hpp
     benchmark_runner.cpp
     benchmark_runner.hpp
+    compression/compressor.cpp
+    compression/compressor.hpp
+    compression/decompressor.cpp
+    compression/decompressor.hpp
+    compression/processor.cpp
+    compression/processor.hpp
     data_generation/abstract_generator.hpp
     data_generation/table_builder.hpp
     data_generation/tpch/tpch_generator.hpp
@@ -56,6 +62,15 @@ set(
 )
 
 add_library(skyriseBenchmark STATIC ${BENCHMARK_SOURCES})
+
+target_include_directories(
+    skyriseBenchmark
+
+    PRIVATE
+    ${CMAKE_BINARY_DIR}/third_party/orc/c++/src
+    ${CMAKE_BINARY_DIR}/third_party/orc/protobuf_ep-prefix/src/protobuf_ep/src
+    ${PROJECT_SOURCE_DIR}/third_party/orc/c++/src
+)
 
 target_link_libraries(
     skyriseBenchmark

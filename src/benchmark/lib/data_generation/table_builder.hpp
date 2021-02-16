@@ -134,7 +134,7 @@ class TableBuilder {
   }
 
   std::tuple<std::vector<DataTypes>...> value_vectors_;
-  std::shared_ptr<TableWriter> writer_;
+  std::shared_ptr<AbstractTableWriter> writer_;
   size_t row_count_ = 0;
   bool has_error_ = false;
 };

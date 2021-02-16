@@ -9,6 +9,7 @@ set(
     benchmark/lib/benchmark_helper_test.cpp
     benchmark/lib/benchmark_result_aggregate_test.cpp
     benchmark/lib/benchmark_result_test.cpp
+    benchmark/lib/compression/compression_test.cpp
     benchmark/lib/data_generation/tpch_test.cpp
     benchmark/lib/function_segments_test.cpp
 
@@ -17,6 +18,7 @@ set(
     lib/storage/backend/mock_storage.cpp
     lib/storage/backend/mock_storage.hpp
     lib/storage/backend/s3_provider.hpp
+    lib/storage/backend/s3_test.cpp
     lib/storage/backend/storage_test.cpp
     
     lib/storage/formats/csv_test.cpp
