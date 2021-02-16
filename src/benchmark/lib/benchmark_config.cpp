@@ -51,8 +51,6 @@ BenchmarkConfig::BenchmarkConfig(const Aws::String& function_zip_name, const siz
       warm_up_strategy_ = nullptr;
       break;
   }
-
-  const Aws::String function_path = GetProjectDirPath() + "pkg/" + function_zip_name + ".zip";
   const auto is_local = function_zip_name.find("S3_") != 0;
   const Aws::String function_location =
       is_local ? GetProjectDirPath() + "pkg/" + function_zip_name + ".zip" : function_bucket;
