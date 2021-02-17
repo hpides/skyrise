@@ -3,7 +3,8 @@
  */
 #include "storage/types/chunk.hpp"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
+
 #include "storage/types/value_segment.hpp"
 
 namespace skyrise {

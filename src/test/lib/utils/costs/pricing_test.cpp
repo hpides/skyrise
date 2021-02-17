@@ -3,10 +3,10 @@
 #include <functional>
 
 #include <aws/core/Region.h>
+#include <gtest/gtest.h>
 
 #include "client/client.hpp"
 #include "costs_test_utils.hpp"
-#include "gtest/gtest.h"
 
 namespace skyrise {
 

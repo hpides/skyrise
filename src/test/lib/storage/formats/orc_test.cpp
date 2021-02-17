@@ -1,4 +1,3 @@
-
 #include "storage/formats/orc.hpp"
 
 #include <memory>

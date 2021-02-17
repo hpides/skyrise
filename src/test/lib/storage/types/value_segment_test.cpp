@@ -3,7 +3,7 @@
  */
 #include "storage/types/value_segment.hpp"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 namespace skyrise {
 

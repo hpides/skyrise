@@ -11,10 +11,10 @@
 #include <aws/core/Aws.h>
 #include <aws/core/utils/base64/Base64.h>
 #include <aws/lambda/model/InvokeRequest.h>
+#include <gtest/gtest.h>
 
 #include "benchmark_config.hpp"
 #include "benchmark_result.hpp"
-#include "gtest/gtest.h"
 
 namespace skyrise {
 

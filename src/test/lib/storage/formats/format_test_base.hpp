@@ -3,7 +3,8 @@
 #include <string>
 #include <string_view>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
+
 #include "storage/types/table_column_definition.hpp"
 #include "storage/types/value_segment.hpp"
 

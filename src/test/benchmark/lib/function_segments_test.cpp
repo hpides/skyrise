@@ -15,9 +15,9 @@
 #include <aws/lambda/model/DeleteFunctionRequest.h>
 #include <aws/lambda/model/FunctionCode.h>
 #include <aws/lambda/model/InvokeRequest.h>
+#include <gtest/gtest.h>
 
 #include "client/client.hpp"
-#include "gtest/gtest.h"
 #include "utils/assert.hpp"
 #include "utils/string.hpp"
 

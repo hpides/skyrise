@@ -1,5 +1,6 @@
+#include <gtest/gtest.h>
+
 #include "data_generation/tpch/tpch_generator.hpp"
-#include "gtest/gtest.h"
 #include "lib/storage/backend/mock_storage.hpp"
 #include "storage/formats/csv.hpp"
 #include "storage/table/writer.hpp"

@@ -3,7 +3,7 @@
  */
 #include "storage/types/table_column_definition.hpp"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 namespace skyrise {
 

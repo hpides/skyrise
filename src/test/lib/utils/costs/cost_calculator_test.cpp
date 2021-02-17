@@ -4,10 +4,10 @@
 #include <memory>
 
 #include <aws/core/Region.h>
+#include <gtest/gtest.h>
 
 #include "client/client.hpp"
 #include "costs_test_utils.hpp"
-#include "gtest/gtest.h"
 #include "utils/costs/pricing.hpp"
 #include "utils/unit_conversion.hpp"
 
