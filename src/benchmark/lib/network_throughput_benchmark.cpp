@@ -81,8 +81,8 @@ Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
        {"throughput_mb_per_s_percentile_1", aggregates.GetPercentile(1)},
        {"throughput_mb_per_s_percentile_10", aggregates.GetPercentile(10)},
        {"throughput_mb_per_s_std_dev", aggregates.GetStandardDeviation()},
-       {"benchmark_cost_usd",
-        static_cast<double>(CalculateBenchmarkCost(benchmark_result, benchmark_parameters.function_instance_mb_size))},
+       {"benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
+                                  benchmark_result, benchmark_parameters.function_instance_mb_size))},
        {"benchmark_cost_overhead_usd", cost_overhead_ / benchmark_configs_.size()}},
       {/*aggregated string metrics*/}, benchmark_result,
       {[&](const InvocationResult& single_result) {

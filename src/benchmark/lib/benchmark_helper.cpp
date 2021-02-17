@@ -247,6 +247,7 @@ double BenchmarkHelper::ExtractMetric(const InvocationResult& result, const Aws:
 
 std::optional<double> BenchmarkHelper::ExtractLogResultMetric(const InvocationResult& result,
                                                               const std::string& metric_name) {
+  // TODO(anyone): Make this compatible with Logs that are only in the SQS Message body
   const Aws::Utils::ByteBuffer log_result_chars =
       Aws::Utils::Base64::Base64().Decode(result.invoke_result_->GetLogResult());
   const std::string log_result(reinterpret_cast<char const*>(log_result_chars.GetUnderlyingData()),

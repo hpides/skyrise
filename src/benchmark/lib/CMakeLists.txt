@@ -1,5 +1,6 @@
 set(
     BENCHMARK_SOURCES
+    benchmark.cpp
     benchmark.hpp
     benchmark_config.cpp
     benchmark_config.hpp

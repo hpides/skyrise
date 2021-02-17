@@ -74,10 +74,12 @@ Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateResultOu
        {"throughput_parallel_mb_per_s_percentile_1", aggregates.GetPercentile(1)},
        {"throughput_parallel_mb_per_s_percentile_10", aggregates.GetPercentile(10)},
        {"throughput_parallel_mb_per_s_std_dev", aggregates.GetStandardDeviation()},
-       {"benchmark_cost_usd",
-        static_cast<double>(CalculateBenchmarkCost(benchmark_result, benchmark_parameters.function_instance_mb_size))},
+       {"benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
+                                  benchmark_result, benchmark_parameters.function_instance_mb_size))},
        {"benchmark_cost_overhead_usd",
-        (cost_overhead_ + benchmark_result->GetOverallFunctionWarmUpCost()) / benchmark_configs_.size()}},
+        static_cast<double>((cost_overhead_ + benchmark_result->GetOverallFunctionWarmUpCost()) /
+                            benchmark_configs_.size())},
+       {"warm_up_cost_usd", static_cast<double>(benchmark_result->GetOverallFunctionWarmUpCost())}},
       {/*aggregated string metrics*/}, benchmark_result,
       {[&](const InvocationResult& single_result) {
          Aws::Utils::Json::JsonValue result_value(StreamToString(&single_result.invoke_result_->GetPayload()));

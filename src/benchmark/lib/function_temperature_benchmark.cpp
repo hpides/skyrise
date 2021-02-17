@@ -9,9 +9,11 @@
 
 namespace skyrise {
 
-FunctionTemperatureBenchmark::FunctionTemperatureBenchmark(const std::vector<size_t>& function_instance_mb_sizes,
+FunctionTemperatureBenchmark::FunctionTemperatureBenchmark(std::shared_ptr<CostCalculator> cost_calculator,
+                                                           const std::vector<size_t>& function_instance_mb_sizes,
                                                            const std::vector<size_t>& invocation_counts,
-                                                           const size_t repetition_count) {
+                                                           const size_t repetition_count)
+    : Benchmark(std::move(cost_calculator)) {
   const auto payload_value = Aws::Utils::Json::JsonValue().WithBool("warmup", true).WithInteger("sleep_ms", kSleepMs);
 
   // TODO(anyone): Maybe move this into a constructor argument
@@ -56,7 +58,7 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> FunctionTemperatureBenchmark::Run
 
 Aws::Utils::Json::JsonValue FunctionTemperatureBenchmark::GenerateResultOutput(
     const std::shared_ptr<BenchmarkResult>& benchmark_result,
-    const FunctionTemperatureBenchmarkParameters& benchmark_parameters) {
+    const FunctionTemperatureBenchmarkParameters& benchmark_parameters) const {
   Aws::StringStream benchmark_name;
   benchmark_name << "FunctionTemperatureBenchmark/" << benchmark_parameters.function_instance_mb_size << "/"
                  << benchmark_parameters.invocation_count << "/" << benchmark_parameters.repetition_count;
@@ -94,7 +96,9 @@ Aws::Utils::Json::JsonValue FunctionTemperatureBenchmark::GenerateResultOutput(
        {"warm_function_percentages_percentile_1", warm_function_percentages_aggregates.GetPercentile(1)},
        {"warm_function_percentages_percentile_10", warm_function_percentages_aggregates.GetPercentile(10)},
        {"warm_function_percentages_std_dev", warm_function_percentages_aggregates.GetStandardDeviation()},
-       {"warm_up_cost_usd_sum", benchmark_result->GetOverallFunctionWarmUpCost()}},
+       {"warm_up_cost_usd", benchmark_result->GetOverallFunctionWarmUpCost()},
+       {"function_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
+                                 benchmark_result, benchmark_parameters.function_instance_mb_size))}},
       {/*aggregated string metrics*/}, benchmark_result, {/*extract double metric functions*/},
       {[&](const InvocationResult& invocation_result) {
         return std::make_tuple(

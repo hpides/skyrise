@@ -118,24 +118,25 @@ int main(int argc, char* argv[]) {
     // Register FunctionColocationBenchmark
     benchmark_registry.RegisterBenchmark(
         "FunctionColocationBenchmark",
-        std::make_unique<skyrise::FunctionColocationBenchmark>(std::vector<size_t>{128, 2048}, std::vector<size_t>{512},
-                                                               std::vector<size_t>{1}, 2));
+        std::make_unique<skyrise::FunctionColocationBenchmark>(cost_calculator, std::vector<size_t>{128, 2048},
+                                                               std::vector<size_t>{512}, std::vector<size_t>{1}, 2));
 
     // Register FunctionTemperatureBenchmark
-    benchmark_registry.RegisterBenchmark(
-        "FunctionTemperatureBenchmark",
-        std::make_unique<skyrise::FunctionTemperatureBenchmark>(std::vector<size_t>{128}, std::vector<size_t>{512}, 2));
+    benchmark_registry.RegisterBenchmark("FunctionTemperatureBenchmark",
+                                         std::make_unique<skyrise::FunctionTemperatureBenchmark>(
+                                             cost_calculator, std::vector<size_t>{128}, std::vector<size_t>{512}, 2));
 
     // Register IdleAvailabilityBenchmark
     benchmark_registry.RegisterBenchmark(
         "IdleAvailabilityBenchmark",
-        std::make_unique<skyrise::IdleAvailabilityBenchmark>(std::vector<size_t>{128}, std::vector<size_t>{4096},
-                                                             std::vector<size_t>{1}, 12));
+        std::make_unique<skyrise::IdleAvailabilityBenchmark>(cost_calculator, std::vector<size_t>{128},
+                                                             std::vector<size_t>{4096}, std::vector<size_t>{1}, 12));
 
     // Register IdleLifetimeBenchmark
     benchmark_registry.RegisterBenchmark(
-        "IdleLifetimeBenchmark", std::make_unique<skyrise::IdleLifetimeBenchmark>(
-                                     std::vector<size_t>{128}, std::vector<size_t>{4096}, std::vector<size_t>{1}, 12));
+        "IdleLifetimeBenchmark",
+        std::make_unique<skyrise::IdleLifetimeBenchmark>(cost_calculator, std::vector<size_t>{128},
+                                                         std::vector<size_t>{4096}, std::vector<size_t>{1}, 12));
 
     // Register InvocationLatencyBenchmark
     benchmark_registry.RegisterBenchmark("InvocationLatencyBenchmark",
@@ -144,10 +145,10 @@ int main(int argc, char* argv[]) {
                                              std::vector<size_t>{10}, std::vector<bool>{false}, 10));
 
     // Register InvocationThroughputBenchmark
-    benchmark_registry.RegisterBenchmark(
-        "InvocationThroughputBenchmark",
-        std::make_unique<skyrise::InvocationThroughputBenchmark>(std::vector<size_t>{128}, std::vector<size_t>{8192},
-                                                                 std::vector<size_t>{skyrise::MbToByte(0)}, 10));
+    benchmark_registry.RegisterBenchmark("InvocationThroughputBenchmark",
+                                         std::make_unique<skyrise::InvocationThroughputBenchmark>(
+                                             cost_calculator, std::vector<size_t>{128}, std::vector<size_t>{100},
+                                             std::vector<size_t>{skyrise::MbToByte(0)}, 2));
 
     // Register NetworkLatencyBenchmark
     benchmark_registry.RegisterBenchmark(

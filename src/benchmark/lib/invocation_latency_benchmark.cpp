@@ -21,7 +21,8 @@ InvocationLatencyBenchmark::InvocationLatencyBenchmark(
     std::shared_ptr<Client> client, std::shared_ptr<BenchmarkHelper> helper,
     std::shared_ptr<CostCalculator> cost_calculator, const std::vector<size_t>& function_instance_mb_sizes,
     const std::vector<size_t>& invocation_counts, const std::vector<bool>& warm_modes, const size_t repetition_count)
-    : client_(std::move(client)),
+    : Benchmark(cost_calculator),
+      client_(std::move(client)),
       helper_(std::move(helper)),
       cost_calculator_(std::move(cost_calculator)),
       function_instance_mb_sizes_(function_instance_mb_sizes),
@@ -203,18 +204,8 @@ long double InvocationLatencyBenchmark::CalculateBenchmarkCost(
   long double xray_cost = 0;
 
   for (size_t i = 0; i < benchmark_results.size(); ++i) {
-    const auto& benchmark_parameters = benchmark_configs_[i].first;
-
-    for (const auto& invocation_result : benchmark_results[i]->GetInvocationResults()) {
-      std::vector<long double> function_costs(invocation_result.size());
-
-      std::transform(invocation_result.cbegin(), invocation_result.cend(), std::back_inserter(function_costs),
-                     [&](const auto& result) {
-                       return ExtractFunctionCost(result.second, benchmark_parameters.function_instance_mb_size);
-                     });
-
-      lambda_cost += std::accumulate(function_costs.cbegin(), function_costs.cend(), 0.0L);
-    }
+    lambda_cost +=
+        CalculateOverallFunctionCost(benchmark_results[i], benchmark_configs_[i].first.function_instance_mb_size);
   }
 
   xray_cost += cost_calculator_->CalculateCostXray(
@@ -225,13 +216,6 @@ long double InvocationLatencyBenchmark::CalculateBenchmarkCost(
       function_segments_analyzer_->GetNumScannedTraces(), function_segments_analyzer_->GetNumAccessedTraces());
 
   return lambda_cost + xray_cost;
-}
-
-long double InvocationLatencyBenchmark::ExtractFunctionCost(const InvocationResult& result, const size_t lambda_size) {
-  const long double billed_duration = BenchmarkHelper::ExtractLogResultMetric(result, "Billed Duration").value();
-  const long double lambda_cost = cost_calculator_->CalculateCostLambda(billed_duration, lambda_size);
-
-  return lambda_cost;
 }
 
 Aws::String InvocationLatencyBenchmark::ExtractTraceId(const InvocationResult& result) {
@@ -260,7 +244,7 @@ Aws::Utils::Json::JsonValue InvocationLatencyBenchmark::GenerateResultOutput(
 
   const auto& segments = FunctionSegmentsAnalyzer::CreateLambdaSegmentDurations();
   std::vector<std::function<std::tuple<Aws::String, double>(const InvocationResult&)>> extract_metric_functions;
-  extract_metric_functions.reserve(segments.size());
+  extract_metric_functions.reserve(segments.size() + 1);
 
   for (const auto& segment : segments) {
     extract_metric_functions.emplace_back([&segment, &result_segments](const InvocationResult& single_result) {
@@ -269,6 +253,11 @@ Aws::Utils::Json::JsonValue InvocationLatencyBenchmark::GenerateResultOutput(
           std::chrono::duration<double>((*result_segments)[single_result.invocation_id_][segment.first]).count());
     });
   }
+
+  extract_metric_functions.emplace_back([&](const InvocationResult& item_result) {
+    return std::make_tuple("function_cost_usd",
+                           ExtractFunctionCost(item_result, benchmark_parameters.function_instance_mb_size));
+  });
 
   std::vector<std::tuple<Aws::String, double>> aggregated_metrics;
 
@@ -299,8 +288,10 @@ Aws::Utils::Json::JsonValue InvocationLatencyBenchmark::GenerateResultOutput(
     aggregated_metrics.emplace_back(segment.first + "_percentile_99_99", aggregates.GetPercentile(99.99));
     aggregated_metrics.emplace_back(segment.first + "_standard_deviation", aggregates.GetStandardDeviation());
   }
-
-  aggregated_metrics.emplace_back(std::make_tuple("benchmark_cost_in_usd", benchmark_cost_ + cost_overhead_));
+  aggregated_metrics.emplace_back("benchmark_cost_usd", static_cast<double>(benchmark_cost_));
+  aggregated_metrics.emplace_back("benchmark_cost_overhead_usd", static_cast<double>(cost_overhead_));
+  aggregated_metrics.emplace_back("warm_up_cost_usd",
+                                  static_cast<double>(benchmark_result->GetOverallFunctionWarmUpCost()));
 
   auto json_output = BenchmarkHelper::GenerateJsonOutput(benchmark_name.str(), aggregated_metrics, {}, benchmark_result,
                                                          extract_metric_functions, {}, {});

@@ -64,11 +64,12 @@ int main(int argc, char* argv[]) {
 
     // Initialize the clients
     const auto client = std::make_shared<skyrise::Client>();
+    const auto cost_calculator = std::make_shared<skyrise::CostCalculator>(client);
     const auto benchmark_runner = std::make_shared<skyrise::BenchmarkRunner>(client);
 
     // Initialize the benchmark
     skyrise::InvocationThroughputBenchmark benchmark(
-        {cli_arguments["function_instance_mb_sizes"].as<std::vector<size_t>>()},
+        cost_calculator, {cli_arguments["function_instance_mb_sizes"].as<std::vector<size_t>>()},
         {cli_arguments["invocation_counts"].as<std::vector<size_t>>()},
         {cli_arguments["function_payload_byte_sizes"].as<std::vector<size_t>>()},
         cli_arguments["repetition_count"].as<size_t>());

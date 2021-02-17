@@ -8,6 +8,7 @@
 #include "benchmark.hpp"
 #include "benchmark_config.hpp"
 #include "benchmark_runner.hpp"
+#include "utils/costs/cost_calculator.hpp"
 
 namespace skyrise {
 
@@ -19,15 +20,16 @@ struct FunctionTemperatureBenchmarkParameters {
 
 class FunctionTemperatureBenchmark : public Benchmark {
  public:
-  FunctionTemperatureBenchmark(const std::vector<size_t>& function_instance_mb_sizes,
+  FunctionTemperatureBenchmark(std::shared_ptr<CostCalculator> cost_calculator,
+                               const std::vector<size_t>& function_instance_mb_sizes,
                                const std::vector<size_t>& invocation_counts, const size_t repetition_count);
 
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> Run(const std::shared_ptr<BenchmarkRunner>& benchmark_runner);
 
  private:
-  static Aws::Utils::Json::JsonValue GenerateResultOutput(
+  Aws::Utils::Json::JsonValue GenerateResultOutput(
       const std::shared_ptr<BenchmarkResult>& benchmark_result,
-      const FunctionTemperatureBenchmarkParameters& benchmark_parameters);
+      const FunctionTemperatureBenchmarkParameters& benchmark_parameters) const;
 
   std::vector<std::pair<FunctionTemperatureBenchmarkParameters, BenchmarkConfig>> benchmark_configs_;
 

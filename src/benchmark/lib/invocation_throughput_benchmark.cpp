@@ -8,10 +8,12 @@
 
 namespace skyrise {
 
-InvocationThroughputBenchmark::InvocationThroughputBenchmark(const std::vector<size_t>& function_instance_mb_sizes,
+InvocationThroughputBenchmark::InvocationThroughputBenchmark(std::shared_ptr<CostCalculator> cost_calculator,
+                                                             const std::vector<size_t>& function_instance_mb_sizes,
                                                              const std::vector<size_t>& invocation_counts,
                                                              const std::vector<size_t>& function_payload_byte_sizes,
-                                                             const size_t repetition_count) {
+                                                             const size_t repetition_count)
+    : Benchmark(std::move(cost_calculator)) {
   std::array<UseEventQueue, 2> use_event_queues{UseEventQueue::kYes, UseEventQueue::kNo};
 
   benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size() *
@@ -59,7 +61,7 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> InvocationThroughputBenchmark::Ru
 
 Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
     const std::shared_ptr<BenchmarkResult>& benchmark_result,
-    const InvocationThroughputBenchmarkParameters& benchmark_parameters) {
+    const InvocationThroughputBenchmarkParameters& benchmark_parameters) const {
   Aws::StringStream benchmark_name;
   benchmark_name << "InvocationThroughputBenchmark/" << benchmark_parameters.function_instance_mb_size << "/"
                  << benchmark_parameters.invocation_count << "/" << benchmark_parameters.function_payload_byte_size
@@ -98,11 +100,19 @@ Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
        {"invocation_throughput_functions_per_s_percentile_0.1", aggregates.GetPercentile(0.1)},
        {"invocation_throughput_functions_per_s_percentile_1", aggregates.GetPercentile(1)},
        {"invocation_throughput_functions_per_s_percentile_10", aggregates.GetPercentile(10)},
-       {"invocation_throughput_functions_per_s_std_dev", aggregates.GetStandardDeviation()}},
-      {/*aggregated string metrics*/}, benchmark_result, {[&](const InvocationResult& item_result) {
-        return std::make_tuple(
-            "duration", std::chrono::duration<double>(item_result.end_point_ - item_result.start_point_).count());
-      }},
+       {"invocation_throughput_functions_per_s_std_dev", aggregates.GetStandardDeviation()},
+       {"benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
+                                  benchmark_result, benchmark_parameters.function_instance_mb_size))},
+       {"warm_up_cost_usd", static_cast<double>(benchmark_result->GetOverallFunctionWarmUpCost())}},
+      {/*aggregated string metrics*/}, benchmark_result,
+      {[&](const InvocationResult& item_result) {
+         return std::make_tuple(
+             "duration", std::chrono::duration<double>(item_result.end_point_ - item_result.start_point_).count());
+       },
+       [&](const InvocationResult& item_result) {
+         return std::make_tuple("function_cost_usd",
+                                ExtractFunctionCost(item_result, benchmark_parameters.function_instance_mb_size));
+       }},
       {/*extract string metric functions*/}, {/*extract object metric functions*/});
 }
 

@@ -15,10 +15,12 @@
 
 namespace skyrise {
 
-IdleAvailabilityBenchmark::IdleAvailabilityBenchmark(const std::vector<size_t>& function_instance_mb_sizes,
+IdleAvailabilityBenchmark::IdleAvailabilityBenchmark(std::shared_ptr<CostCalculator> cost_calculator,
+                                                     const std::vector<size_t>& function_instance_mb_sizes,
                                                      const std::vector<size_t>& invocation_counts,
                                                      const std::vector<size_t>& sleep_min_durations,
-                                                     const size_t repetition_count) {
+                                                     const size_t repetition_count)
+    : Benchmark(std::move(cost_calculator)) {
   benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size() * sleep_min_durations.size());
 
   for (const auto sleep_min_duration : sleep_min_durations) {
@@ -68,7 +70,7 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> IdleAvailabilityBenchmark::Run(
 
 Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
     const std::shared_ptr<BenchmarkResult>& benchmark_result,
-    const IdleAvailabilityBenchmarkParameters& benchmark_parameters) {
+    const IdleAvailabilityBenchmarkParameters& benchmark_parameters) const {
   Aws::StringStream benchmark_name;
   benchmark_name << "IdleAvailabilityBenchmark/" << benchmark_parameters.function_instance_mb_size << "/"
                  << benchmark_parameters.invocation_count << "/" << benchmark_parameters.sleep_min_duration << "/"
@@ -166,8 +168,13 @@ Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
        {"unavailable_phases_length_percentile_99", unavailable_phases_lengths_aggregates.GetPercentile(99)},
        {"unavailable_phases_length_percentile_99.9", unavailable_phases_lengths_aggregates.GetPercentile(99.9)},
        {"unavailable_phases_length_percentile_99.99", unavailable_phases_lengths_aggregates.GetPercentile(99.99)},
-       {"unavailable_phases_length_std_dev", unavailable_phases_lengths_aggregates.GetStandardDeviation()}},
-      {/*aggregated string metrics*/}, benchmark_result, {/*extract double metric functions*/},
+       {"unavailable_phases_length_std_dev", unavailable_phases_lengths_aggregates.GetStandardDeviation()},
+       {"benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
+                                  benchmark_result, benchmark_parameters.function_instance_mb_size))}},
+      {/*aggregated string metrics*/}, benchmark_result, {[&](const InvocationResult& item_result) {
+        return std::make_tuple("function_cost_usd",
+                               ExtractFunctionCost(item_result, benchmark_parameters.function_instance_mb_size));
+      }},
       {[&](const InvocationResult& item_result) {
         return std::make_tuple("vm_id", StreamToString(&item_result.invoke_result_->GetPayload()));
       }},
