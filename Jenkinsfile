@@ -161,7 +161,8 @@ pipeline {
             channel: '#ci',
             color: isSuccess ? '#5cb58a' : '#FF0000',
             message: """\
-            *[${currentBuild.currentResult}] <${env.RUN_DISPLAY_URL}|Build #${env.BUILD_NUMBER}>*
+            *[${currentBuild.currentResult}] <${env.RUN_DISPLAY_URL}|Build #${env.BUILD_NUMBER}>*\
+${buildWithFullCi() ? ' (with full-ci label)' : ''}
             ${getChangeType()}: <${getChangeUrl()}|${getChangeName()}>
             Commit: ${getCommitMessage()} (<${getCommitUrl()}|${getCommitSha().substring(0, 7)}>)
             Author: ${getSlackAuthorMention()}${isSuccess ? '' : ' (also looping in @channel)'}
