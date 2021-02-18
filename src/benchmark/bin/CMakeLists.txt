@@ -25,8 +25,8 @@ target_link_libraries(
 add_executable(
     skyriseFunctionHostId
 
-    function_host_id.cpp
-    function_host_id.hpp
+        function/function_host_id.cpp
+        function/function_host_id.hpp
 )
 
 target_link_libraries(
@@ -41,7 +41,7 @@ aws_lambda_package_target(skyriseFunctionHostId)
 add_executable(
     skyriseFunctionMinimal
 
-    function_minimal.cpp
+        function/function_minimal.cpp
 )
 
 target_link_libraries(
@@ -62,8 +62,8 @@ add_custom_target(
 add_executable(
     skyriseFunctionReadS3
 
-    function_read_s3.cpp
-    function_read_s3.hpp
+        function/function_read_s3.cpp
+        function/function_read_s3.hpp
 )
 
 target_link_libraries(
@@ -79,8 +79,8 @@ aws_lambda_package_target(skyriseFunctionReadS3)
 add_executable(
     skyriseFunctionSimple
 
-    function_simple.cpp
-    function_simple.hpp
+        function/function_simple.cpp
+        function/function_simple.hpp
 )
 
 target_link_libraries(
@@ -95,8 +95,8 @@ aws_lambda_package_target(skyriseFunctionSimple)
 add_executable(
     skyriseFunctionWriteS3
 
-    function_write_s3.cpp
-    function_write_s3.hpp
+        function/function_write_s3.cpp
+        function/function_write_s3.hpp
 )
 
 target_link_libraries(
