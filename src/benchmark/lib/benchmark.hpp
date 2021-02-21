@@ -22,12 +22,14 @@ class Benchmark {
 
  protected:
   long double CalculateOverallFunctionCost(const std::shared_ptr<BenchmarkResult>& result,
-                                           const size_t function_instance_mb_size) const;
-  long double ExtractFunctionCost(const InvocationResult& result, const size_t function_instance_mb_size) const;
+                                           const size_t function_instance_mb_size,
+                                           const bool is_provisioned_concurrency = false) const;
+  long double ExtractFunctionCost(const InvocationResult& result, const size_t function_instance_mb_size,
+                                  const bool is_provisioned_concurrency = false) const;
 
   // TODO(maltenbergert): Move parts of BenchmarkHelper here
 
-  std::shared_ptr<CostCalculator> cost_calculator_;
+  const std::shared_ptr<CostCalculator> cost_calculator_;
 };
 
 }  // namespace skyrise

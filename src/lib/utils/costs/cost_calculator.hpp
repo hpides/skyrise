@@ -15,7 +15,14 @@ class CostCalculator {
   CostCalculator(std::shared_ptr<Client> client) : pricing_(std::make_unique<Pricing>(client)) {}
 
   // AWS rounds up the compute duration to the nearest 100ms
-  long double CalculateCostLambda(const size_t compute_duration_ms, const size_t lambda_size_mb) const;
+  long double CalculateCostLambda(const size_t compute_ms_duration, const size_t function_instance_mb_size,
+                                  const bool is_provisioned_concurrency = false) const;
+  long double CalculateCostLambdaProvisionedConcurrency(const size_t provisioning_ms_duration,
+                                                        const size_t function_instance_mb_size,
+                                                        const size_t invocation_count) const;
+  long double CalculateCostLambdaProvisionedConcurrencyRounded(const size_t provisioning_ms_duration,
+                                                               const size_t function_instance_mb_size,
+                                                               const size_t invocation_count) const;
   long double CalculateCostXray(const size_t stored_functions, const size_t scanned_functions,
                                 const size_t accessed_functions) const;
 

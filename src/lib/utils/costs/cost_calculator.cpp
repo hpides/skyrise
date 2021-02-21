@@ -1,15 +1,44 @@
 #include "cost_calculator.hpp"
 
+#include <cmath>
+
 #include "utils/unit_conversion.hpp"
 
 namespace skyrise {
 
-long double CostCalculator::CalculateCostLambda(const size_t compute_duration_ms, const size_t lambda_size_mb) const {
+long double CostCalculator::CalculateCostLambda(const size_t compute_ms_duration,
+                                                const size_t function_instance_mb_size,
+                                                const bool is_provisioned_concurrency) const {
   const auto& pricing = pricing_->GetLambdaPricing();
+  const long double price_gb_second =
+      is_provisioned_concurrency ? pricing->price_provisioned_gb_second_ : pricing->price_gb_second_;
   const long double duration_cost =
-      pricing->price_gb_second_ * ByteToGb(MbToByte(lambda_size_mb)) * (compute_duration_ms / 1000.0L);
+      price_gb_second * ByteToGb(MbToByte(function_instance_mb_size)) * (compute_ms_duration / 1000.0L);
 
   return duration_cost + pricing->price_request_;
+}
+
+long double CostCalculator::CalculateCostLambdaProvisionedConcurrency(const size_t provisioning_ms_duration,
+                                                                      const size_t function_instance_mb_size,
+                                                                      const size_t invocation_count) const {
+  const auto& pricing = pricing_->GetLambdaPricing();
+  const long double cost = pricing->price_provisioned_concurrency_gb_second_ *
+                           ByteToGb(MbToByte(function_instance_mb_size)) * invocation_count *
+                           (provisioning_ms_duration / 1000.0L);
+
+  return cost;
+}
+
+long double CostCalculator::CalculateCostLambdaProvisionedConcurrencyRounded(const size_t provisioning_ms_duration,
+                                                                             const size_t function_instance_mb_size,
+                                                                             const size_t invocation_count) const {
+  const auto& pricing = pricing_->GetLambdaPricing();
+  const auto pricing_intervals = static_cast<size_t>(std::ceil(provisioning_ms_duration / 1000.0L / 60.0L / 5.0L));
+  const size_t duration_seconds = pricing_intervals * 5 * 60;
+  const long double cost = pricing->price_provisioned_concurrency_gb_second_ *
+                           ByteToGb(MbToByte(function_instance_mb_size)) * invocation_count * duration_seconds;
+
+  return cost;
 }
 
 long double CostCalculator::CalculateCostS3StorageMonthly(const size_t used_storage_bytes, const size_t hours) const {

@@ -53,7 +53,8 @@ Aws::Utils::Json::JsonValue BenchmarkHelper::GenerateJsonOutput(
   for (size_t i = 0; i < invocation_results.size(); i++) {
     auto repetition_value = Aws::Utils::Json::JsonValue()
                                 .WithInteger("repetition", i)
-                                .WithDouble("duration_seconds", benchmark_result->GetRepetitionDuration(i).count());
+                                .WithDouble("duration_seconds", benchmark_result->GetRepetitionDuration(i).count())
+                                .WithDouble("warmup_cost_usd", benchmark_result->GetFunctionWarmUpCosts()[i]);
 
     Aws::Utils::Array<Aws::Utils::Json::JsonValue> invocations(invocation_results[i].size());
 

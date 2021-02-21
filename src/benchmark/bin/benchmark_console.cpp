@@ -69,6 +69,7 @@ int main(int argc, char* argv[]) {
 
   cxxopts::ParseResult cli_arguments;
   Aws::SDKOptions sdk_options;
+  sdk_options.httpOptions.installSigPipeHandler = true;
 
   try {
     // Parse the command line arguments

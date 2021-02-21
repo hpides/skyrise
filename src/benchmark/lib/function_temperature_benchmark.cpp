@@ -17,8 +17,9 @@ FunctionTemperatureBenchmark::FunctionTemperatureBenchmark(std::shared_ptr<CostC
   const auto payload_value = Aws::Utils::Json::JsonValue().WithBool("warmup", true).WithInteger("sleep_ms", kSleepMs);
 
   // TODO(anyone): Maybe move this into a constructor argument
-  std::vector<std::shared_ptr<WarmUpStrategy>> warm_up_strategies{std::make_shared<SimpleWarmUpStrategy>(false),
-                                                                  std::make_shared<SleepWarmUpStrategy>(false)};
+  std::vector<std::shared_ptr<WarmUpStrategy>> warm_up_strategies{
+      std::make_shared<SimpleWarmUpStrategy>(false), std::make_shared<SleepWarmUpStrategy>(false),
+      std::make_shared<ProvisionedConcurrencyWarmUpStrategy>()};
 
   for (const auto function_instance_mb_size : function_instance_mb_sizes) {
     for (const auto invocation_count : invocation_counts) {
@@ -32,7 +33,8 @@ FunctionTemperatureBenchmark::FunctionTemperatureBenchmark(std::shared_ptr<CostC
         config.SetOnePayloadForAllFunctions(std::make_shared<Aws::StringStream>(payload_value.View().WriteCompact()));
 
         benchmark_configs_.emplace_back(
-            FunctionTemperatureBenchmarkParameters{function_instance_mb_size, invocation_count, repetition_count},
+            FunctionTemperatureBenchmarkParameters{function_instance_mb_size, invocation_count, repetition_count,
+                                                   warm_up_strategy},
             config);
       }
     }
@@ -61,7 +63,12 @@ Aws::Utils::Json::JsonValue FunctionTemperatureBenchmark::GenerateResultOutput(
     const FunctionTemperatureBenchmarkParameters& benchmark_parameters) const {
   Aws::StringStream benchmark_name;
   benchmark_name << "FunctionTemperatureBenchmark/" << benchmark_parameters.function_instance_mb_size << "/"
-                 << benchmark_parameters.invocation_count << "/" << benchmark_parameters.repetition_count;
+                 << benchmark_parameters.invocation_count << "/" << benchmark_parameters.warm_up_strategy->GetName();
+
+  const auto is_warm_function = [&](const InvocationResult& invocation_result) {
+    return !BenchmarkHelper::ExtractLogResultMetric(invocation_result, "Init Duration") ||
+           benchmark_parameters.warm_up_strategy->GetName() == "ProvisionedConcurrencyWarmUpStrategy";
+  };
 
   const auto& invocation_results = benchmark_result->GetInvocationResults();
 
@@ -72,9 +79,7 @@ Aws::Utils::Json::JsonValue FunctionTemperatureBenchmark::GenerateResultOutput(
     size_t warm_function_count = 0;
 
     for (const auto& invocation_result : repetition_results) {
-      const bool is_warm_function = !BenchmarkHelper::ExtractLogResultMetric(invocation_result.second, "Init Duration");
-
-      if (is_warm_function) {
+      if (is_warm_function(invocation_result.second)) {
         ++warm_function_count;
       }
     }
@@ -84,6 +89,11 @@ Aws::Utils::Json::JsonValue FunctionTemperatureBenchmark::GenerateResultOutput(
   }
 
   const BenchmarkResultAggregate warm_function_percentages_aggregates(warm_function_percentages);
+
+  std::vector<double> function_warm_up_cost(benchmark_result->GetFunctionWarmUpCosts().cbegin(),
+                                            benchmark_result->GetFunctionWarmUpCosts().cend());
+
+  const BenchmarkResultAggregate warm_up_cost_aggregates(function_warm_up_cost);
 
   return BenchmarkHelper::GenerateJsonOutput(
       benchmark_name.str(),
@@ -97,13 +107,13 @@ Aws::Utils::Json::JsonValue FunctionTemperatureBenchmark::GenerateResultOutput(
        {"warm_function_percentages_percentile_10", warm_function_percentages_aggregates.GetPercentile(10)},
        {"warm_function_percentages_std_dev", warm_function_percentages_aggregates.GetStandardDeviation()},
        {"warm_up_cost_usd", benchmark_result->GetOverallFunctionWarmUpCost()},
-       {"function_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
-                                 benchmark_result, benchmark_parameters.function_instance_mb_size))}},
+       {"function_cost_usd",
+        static_cast<double>(CalculateOverallFunctionCost(
+            benchmark_result, benchmark_parameters.function_instance_mb_size,
+            benchmark_parameters.warm_up_strategy->GetName() == "ProvisionedConcurrencyWarmUpStrategy"))}},
       {/*aggregated string metrics*/}, benchmark_result, {/*extract double metric functions*/},
       {[&](const InvocationResult& invocation_result) {
-        return std::make_tuple(
-            "is_warm_function",
-            !BenchmarkHelper::ExtractLogResultMetric(invocation_result, "Init Duration") ? "true" : "false");
+        return std::make_tuple("is_warm_function", is_warm_function(invocation_result) ? "true" : "false");
       }},
       {/*extract object metric functions*/});
 }

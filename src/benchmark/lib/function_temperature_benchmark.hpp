@@ -16,6 +16,7 @@ struct FunctionTemperatureBenchmarkParameters {
   size_t function_instance_mb_size;
   size_t invocation_count;
   size_t repetition_count;
+  std::shared_ptr<WarmUpStrategy> warm_up_strategy;
 };
 
 class FunctionTemperatureBenchmark : public Benchmark {

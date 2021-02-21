@@ -28,23 +28,37 @@ TEST_F(CostCalculatorTest, CalculateCostLambda) {
 
     EXPECT_EQ(lambda_cost1, expected_cost1);
 
-    const long double lambda_cost2 = cost_calculator.CalculateCostLambda(30, 128);
+    const long double lambda_cost2 = cost_calculator.CalculateCostLambda(30, 128, false);
     const long double expected_cost2 =
         lambda_pricing->price_gb_second_ * 0.125L * 0.030L + lambda_pricing->price_request_;
 
     EXPECT_EQ(lambda_cost2, expected_cost2);
 
-    const long double lambda_cost3 = cost_calculator.CalculateCostLambda(440, 256);
+    const long double lambda_cost3 = cost_calculator.CalculateCostLambda(440, 256, true);
     const long double expected_cost3 =
-        lambda_pricing->price_gb_second_ * 0.25L * 0.440L + lambda_pricing->price_request_;
+        lambda_pricing->price_provisioned_gb_second_ * 0.25L * 0.440L + lambda_pricing->price_request_;
 
     EXPECT_EQ(lambda_cost3, expected_cost3);
+
+    const long double provisioned_concurrency_cost =
+        cost_calculator.CalculateCostLambdaProvisionedConcurrency(60000, 1024, 100);
+    const long double expected_provisioned_concurrency_cost =
+        lambda_pricing->price_provisioned_concurrency_gb_second_ * 60.0L * 100.0L;
+
+    EXPECT_EQ(provisioned_concurrency_cost, expected_provisioned_concurrency_cost);
+
+    const long double provisioned_concurrency_cost_rounded =
+        cost_calculator.CalculateCostLambdaProvisionedConcurrencyRounded(60000, 1024, 100);
+    const long double expected_provisioned_concurrency_cost_rounded =
+        lambda_pricing->price_provisioned_concurrency_gb_second_ * 300.0L * 100.0L;
+
+    EXPECT_EQ(provisioned_concurrency_cost_rounded, expected_provisioned_concurrency_cost_rounded);
   };
 
   InitAndShutDownAPI(func);
 }
 
-TEST_F(CostCalculatorTest, CalculateCostS3Storage) {
+TEST_F(CostCalculatorTest, CalculateCostS3StorageMonthly) {
   const std::function<void()> func = []() {
     const auto clients = std::make_shared<Client>();
     Pricing pricing(clients);

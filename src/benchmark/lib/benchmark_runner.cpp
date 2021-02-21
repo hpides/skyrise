@@ -17,6 +17,7 @@
 #include <aws/lambda/model/DestinationConfig.h>
 #include <aws/lambda/model/OnFailure.h>
 #include <aws/lambda/model/OnSuccess.h>
+#include <aws/lambda/model/PublishVersionRequest.h>
 #include <aws/lambda/model/PutFunctionEventInvokeConfigRequest.h>
 #include <aws/sqs/model/CreateQueueRequest.h>
 #include <aws/sqs/model/CreateQueueResult.h>
@@ -270,6 +271,7 @@ void BenchmarkRunner::RunParallel() {
     AWS_LOGSTREAM_INFO(kTag.c_str(), "Repetition " << i << " finished in "
                                                    << benchmark_result_->GetRepetitionDuration(i).count()
                                                    << " seconds.");
+    // TODO(d-justen): If OneFunctionPerRepetition: delete function i instantly
   }
 
   // BENCHMARK ENDS
@@ -307,7 +309,7 @@ std::pair<Aws::String, Aws::Lambda::Model::InvokeRequest> BenchmarkRunner::Creat
       value = Aws::Utils::Json::JsonValue(StreamToString(payload.get()));
     }
 
-    return value.WithString("invocation_id", supplemented_id.str()).WithBool("is_warmup", is_warmup);
+    return value.WithString("invocation_id", supplemented_id.str());
   }();
 
   const auto body = std::make_shared<Aws::StringStream>(json_value.View().WriteCompact());
@@ -315,6 +317,7 @@ std::pair<Aws::String, Aws::Lambda::Model::InvokeRequest> BenchmarkRunner::Creat
   auto invoke_request = Aws::Lambda::Model::InvokeRequest()
                             .WithFunctionName(function_name)
                             .WithInvocationType(invocation_type)
+                            .WithQualifier("1")
                             .WithLogType(Aws::Lambda::Model::LogType::Tail);
   invoke_request.SetBody(body);
   invoke_request.SetContentType("application/json");
@@ -450,6 +453,10 @@ std::vector<Aws::Lambda::Model::CreateFunctionOutcome> BenchmarkRunner::UploadFu
                                              .WithMemorySize(function_config.memory_size);
 
     outcomes.emplace_back(lambda_client.CreateFunction(create_function_request));
+
+    const auto publish_version_outcome = lambda_client.PublishVersion(
+        Aws::Lambda::Model::PublishVersionRequest().WithFunctionName(function_config.function_name));
+    Assert(publish_version_outcome.IsSuccess(), publish_version_outcome.GetError().GetMessage());
   }
   return outcomes;
 }
