@@ -82,7 +82,7 @@ Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateResultOu
        {"warm_up_cost_usd", static_cast<double>(benchmark_result->GetOverallFunctionWarmUpCost())}},
       {/*aggregated string metrics*/}, benchmark_result,
       {[&](const InvocationResult& single_result) {
-         Aws::Utils::Json::JsonValue result_value(StreamToString(&single_result.invoke_result_->GetPayload()));
+         Aws::Utils::Json::JsonValue result_value(StreamToString(&single_result.invoke_result->GetPayload()));
          const auto duration_views = result_value.View().GetArray("ms_durations");
          const double duration_seconds =
              std::chrono::duration<double>(std::chrono::duration<double, std::milli>(duration_views[0].AsDouble()))
@@ -101,7 +101,7 @@ Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateResultOu
              static_cast<double>(ExtractFunctionCost(single_result, benchmark_parameters.function_instance_mb_size)));
        }},
       {/*extract string metric functions*/}, {[&](const InvocationResult& single_result) {
-        const Aws::Utils::Json::JsonValue payload_value(StreamToString(&single_result.invoke_result_->GetPayload()));
+        const Aws::Utils::Json::JsonValue payload_value(StreamToString(&single_result.invoke_result->GetPayload()));
         const auto ms_durations = payload_value.View().GetArray("ms_durations");
 
         Aws::Utils::Array<Aws::Utils::Json::JsonValue> duration_seconds(ms_durations.GetLength());

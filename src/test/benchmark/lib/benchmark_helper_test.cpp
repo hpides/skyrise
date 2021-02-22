@@ -29,7 +29,8 @@ TEST_F(BenchmarkHelperTest, GenerateJsonOutput) {
 
     for (size_t i = 0; i < 3; i++) {
       benchmark_result->RegisterInvocation(0, std::to_string(i));
-      benchmark_result->FinishInvocation(0, std::to_string(i), nullptr, true);
+      benchmark_result->FinishInvocation(0, std::to_string(i), std::make_shared<Aws::Lambda::Model::InvokeResult>(),
+                                         true);
       benchmark_result->UpdateSQSMessageBody(0, std::to_string(i), std::to_string(i));
     }
 
@@ -41,26 +42,26 @@ TEST_F(BenchmarkHelperTest, GenerateJsonOutput) {
 
     std::vector<std::function<std::tuple<Aws::String, double>(const InvocationResult&)>>
         extract_numeric_metric_functions{[](const InvocationResult& b) {
-                                           return std::make_tuple("numeric_metric_1", std::stod(b.sqs_message_body_));
+                                           return std::make_tuple("numeric_metric_1", std::stod(b.sqs_message_body));
                                          },
                                          [](const InvocationResult& b) {
-                                           return std::make_tuple("numeric_metric_2", static_cast<double>(b.success_));
+                                           return std::make_tuple("numeric_metric_2", static_cast<double>(b.success));
                                          }};
 
     std::vector<std::function<std::tuple<Aws::String, Aws::String>(const InvocationResult&)>>
         extract_alphabetic_metric_functions{
-            [](const InvocationResult& b) { return std::make_tuple("alphabetic_metric_1", b.sqs_message_body_); },
+            [](const InvocationResult& b) { return std::make_tuple("alphabetic_metric_1", b.sqs_message_body); },
             [](const InvocationResult& b) {
-              return std::make_tuple("alphabetic_metric_2", b.success_ ? "true" : "false");
+              return std::make_tuple("alphabetic_metric_2", b.success ? "true" : "false");
             }};
 
     std::vector<std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const InvocationResult&)>>
         extract_object_metric_functions{
             [](const InvocationResult& b) {
-              return std::make_tuple("object_metric_1", Aws::Utils::Json::JsonValue().AsString(b.sqs_message_body_));
+              return std::make_tuple("object_metric_1", Aws::Utils::Json::JsonValue().AsString(b.sqs_message_body));
             },
             [](const InvocationResult& b) {
-              return std::make_tuple("object_metric_2", Aws::Utils::Json::JsonValue().AsBool(b.success_));
+              return std::make_tuple("object_metric_2", Aws::Utils::Json::JsonValue().AsBool(b.success));
             }};
 
     const auto json_value = BenchmarkHelper::GenerateJsonOutput(

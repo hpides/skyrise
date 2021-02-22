@@ -58,12 +58,12 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> InvocationLatencyBenchmark::Run(
 
     for (const auto& repetition : benchmark_result->GetInvocationResults()) {
       for (const auto& invocation_result : repetition) {
-        if (!invocation_result.second.success_) {
+        if (!invocation_result.second.success) {
           continue;
         }
 
         config_result_segments_futures->emplace_back(
-            invocation_result.second.invocation_id_, std::async([&]() {
+            invocation_result.second.invocation_id, std::async([&]() {
               std::map<Aws::String, std::pair<std::chrono::duration<double>, std::chrono::duration<double>>> segments;
 
               try {
@@ -75,7 +75,7 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> InvocationLatencyBenchmark::Run(
               }
 
               return FunctionSegmentsAnalyzer::CalculateLambdaSegmentDurations(
-                  segments, invocation_result.second.start_point_, invocation_result.second.end_point_);
+                  segments, invocation_result.second.start_point, invocation_result.second.end_point);
             }));
 
         // Reduce throttled exceptions during trace retrieval
@@ -220,7 +220,7 @@ long double InvocationLatencyBenchmark::CalculateBenchmarkCost(
 
 Aws::String InvocationLatencyBenchmark::ExtractTraceId(const InvocationResult& result) {
   Aws::Utils::Base64::Base64 base64;
-  const Aws::Utils::ByteBuffer log_result_chars = base64.Decode(result.invoke_result_->GetLogResult());
+  const Aws::Utils::ByteBuffer log_result_chars = base64.Decode(result.invoke_result->GetLogResult());
 
   const unsigned char* data = log_result_chars.GetUnderlyingData();
   std::string log_result(reinterpret_cast<char const*>(data), log_result_chars.GetLength());
@@ -250,7 +250,7 @@ Aws::Utils::Json::JsonValue InvocationLatencyBenchmark::GenerateResultOutput(
     extract_metric_functions.emplace_back([&segment, &result_segments](const InvocationResult& single_result) {
       return std::make_tuple(
           segment.first,
-          std::chrono::duration<double>((*result_segments)[single_result.invocation_id_][segment.first]).count());
+          std::chrono::duration<double>((*result_segments)[single_result.invocation_id][segment.first]).count());
     });
   }
 

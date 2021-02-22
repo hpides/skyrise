@@ -13,13 +13,13 @@
 namespace skyrise {
 
 struct InvocationResult {
-  Aws::String invocation_id_;
-  bool success_;
-  bool finished_;
-  Aws::String sqs_message_body_;
-  std::shared_ptr<Aws::Lambda::Model::InvokeResult> invoke_result_;
-  std::chrono::time_point<std::chrono::system_clock> start_point_;
-  std::chrono::time_point<std::chrono::system_clock> end_point_;
+  Aws::String invocation_id;
+  bool success;
+  bool finished;
+  Aws::String sqs_message_body;
+  std::shared_ptr<Aws::Lambda::Model::InvokeResult> invoke_result;
+  std::chrono::time_point<std::chrono::system_clock> start_point;
+  std::chrono::time_point<std::chrono::system_clock> end_point;
 };
 
 class BenchmarkResult {

@@ -40,11 +40,11 @@ BenchmarkConfig::BenchmarkConfig(const Aws::String& function_zip_name, const siz
       break;
     }
     case WarmUp::kDefault: {
-      warm_up_strategy_ = std::make_shared<SleepWarmUpStrategy>(true);
+      warm_up_strategy_ = std::make_shared<ConfigurableWarmUpStrategy>();
       break;
     }
     case WarmUp::kDefaultOncePerRepetition: {
-      warm_up_strategy_ = std::make_shared<SleepWarmUpStrategy>(false);
+      warm_up_strategy_ = std::make_shared<ConfigurableWarmUpStrategy>(false);
       break;
     }
     default:

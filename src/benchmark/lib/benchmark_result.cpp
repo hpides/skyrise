@@ -32,10 +32,10 @@ void BenchmarkResult::FinishInvocation(const size_t repetition, const Aws::Strin
 
   auto& benchmark_item_result = invocation_results_[repetition][invocation_id];
 
-  benchmark_item_result.end_point_ = now;
-  benchmark_item_result.success_ = success;
-  benchmark_item_result.finished_ = true;
-  benchmark_item_result.invoke_result_ = result;
+  benchmark_item_result.end_point = now;
+  benchmark_item_result.success = success;
+  benchmark_item_result.finished = true;
+  benchmark_item_result.invoke_result = result;
 
   std::lock_guard<std::mutex> lock(mutex_finish_invocation_);
 
@@ -52,7 +52,7 @@ void BenchmarkResult::FinishInvocation(const size_t repetition, const Aws::Strin
 
 void BenchmarkResult::UpdateSQSMessageBody(const size_t repetition, const Aws::String& invocation_id,
                                            const Aws::String& sqs_message_body) {
-  invocation_results_[repetition][invocation_id].sqs_message_body_ = sqs_message_body;
+  invocation_results_[repetition][invocation_id].sqs_message_body = sqs_message_body;
 }
 
 void BenchmarkResult::SetFunctionWarmUpCost(const size_t repetition, const long double cost) {

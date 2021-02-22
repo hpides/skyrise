@@ -123,9 +123,11 @@ int main(int argc, char* argv[]) {
                                                                std::vector<size_t>{512}, std::vector<size_t>{1}, 2));
 
     // Register FunctionTemperatureBenchmark
-    benchmark_registry.RegisterBenchmark("FunctionTemperatureBenchmark",
-                                         std::make_unique<skyrise::FunctionTemperatureBenchmark>(
-                                             cost_calculator, std::vector<size_t>{128}, std::vector<size_t>{512}, 2));
+    benchmark_registry.RegisterBenchmark(
+        "FunctionTemperatureBenchmark",
+        std::make_unique<skyrise::FunctionTemperatureBenchmark>(
+            cost_calculator, std::vector<size_t>{128}, std::vector<size_t>{2048},
+            std::vector<size_t>{0, 1000, 2000, 4000}, std::vector<double>{0.7, 1.0, 1.3, 1.6}, 3));
 
     // Register IdleAvailabilityBenchmark
     benchmark_registry.RegisterBenchmark(

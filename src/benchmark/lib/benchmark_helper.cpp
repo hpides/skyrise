@@ -62,19 +62,25 @@ Aws::Utils::Json::JsonValue BenchmarkHelper::GenerateJsonOutput(
     for (const auto& [invocation_id, benchmark_item_result] : invocation_results[i]) {
       auto invocation_value = Aws::Utils::Json::JsonValue().WithString("name", invocation_id);
 
-      for (const auto& extract_numeric_metric_function : extract_numeric_metric_functions) {
-        const auto& [metric_name, numeric_metric] = extract_numeric_metric_function(benchmark_item_result);
-        invocation_value = invocation_value.WithDouble(metric_name, numeric_metric);
-      }
+      if (benchmark_item_result.invoke_result && benchmark_item_result.invoke_result->GetFunctionError().empty()) {
+        invocation_value = invocation_value.WithBool("success", true);
 
-      for (const auto& extract_alphabetic_metric_function : extract_alphabetic_metric_functions) {
-        const auto& [metric_name, alphabetic_metric] = extract_alphabetic_metric_function(benchmark_item_result);
-        invocation_value = invocation_value.WithString(metric_name, alphabetic_metric);
-      }
+        for (const auto& extract_numeric_metric_function : extract_numeric_metric_functions) {
+          const auto& [metric_name, numeric_metric] = extract_numeric_metric_function(benchmark_item_result);
+          invocation_value = invocation_value.WithDouble(metric_name, numeric_metric);
+        }
 
-      for (const auto& extract_object_metric_function : extract_object_metric_functions) {
-        const auto& [metric_name, object_metric] = extract_object_metric_function(benchmark_item_result);
-        invocation_value = invocation_value.WithObject(metric_name, object_metric);
+        for (const auto& extract_alphabetic_metric_function : extract_alphabetic_metric_functions) {
+          const auto& [metric_name, alphabetic_metric] = extract_alphabetic_metric_function(benchmark_item_result);
+          invocation_value = invocation_value.WithString(metric_name, alphabetic_metric);
+        }
+
+        for (const auto& extract_object_metric_function : extract_object_metric_functions) {
+          const auto& [metric_name, object_metric] = extract_object_metric_function(benchmark_item_result);
+          invocation_value = invocation_value.WithObject(metric_name, object_metric);
+        }
+      } else {
+        invocation_value = invocation_value.WithBool("success", false);
       }
 
       invocations[j] = invocation_value;
@@ -240,7 +246,7 @@ std::vector<double> BenchmarkHelper::ExtractMetrics(
 }
 
 double BenchmarkHelper::ExtractMetric(const InvocationResult& result, const Aws::String& key) {
-  const auto payload_value = Aws::Utils::Json::JsonValue(StreamToString(&result.invoke_result_->GetPayload()));
+  const auto payload_value = Aws::Utils::Json::JsonValue(StreamToString(&result.invoke_result->GetPayload()));
   const auto payload_view = payload_value.View();
 
   return payload_view.GetDouble(key);
@@ -250,7 +256,7 @@ std::optional<double> BenchmarkHelper::ExtractLogResultMetric(const InvocationRe
                                                               const std::string& metric_name) {
   // TODO(anyone): Make this compatible with Logs that are only in the SQS Message body
   const Aws::Utils::ByteBuffer log_result_chars =
-      Aws::Utils::Base64::Base64().Decode(result.invoke_result_->GetLogResult());
+      Aws::Utils::Base64::Base64().Decode(result.invoke_result->GetLogResult());
   const std::string log_result(reinterpret_cast<char const*>(log_result_chars.GetUnderlyingData()),
                                log_result_chars.GetLength());
 

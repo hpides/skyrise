@@ -12,49 +12,45 @@ namespace skyrise {
 // TODO(anyone): Move the best strategy to src/lib/scheduler
 class WarmUpStrategy {
  public:
-  explicit WarmUpStrategy(const bool warm_up_once);
   virtual ~WarmUpStrategy() {}
 
   virtual long double WarmUpFunctions(const std::shared_ptr<Client>& client, const FunctionConfig& function_config,
-                                      const size_t function_count);
-  virtual long double CalculateWarmUpCost(
-      const std::shared_ptr<Client>& client, const FunctionConfig& function_config,
-      std::vector<Aws::Lambda::Model::InvokeOutcomeCallable>* invoke_outcome_callables);
-  virtual std::shared_ptr<Aws::IOStream> CreateInvokeRequestBody() const = 0;
+                                      const size_t concurrency_count) = 0;
   virtual std::string GetName() const = 0;
 
  protected:
-  const bool warm_up_once_;
-  bool is_warmed_up_;
   std::unique_ptr<CostCalculator> cost_calculator_;
 };
 
-class SimpleWarmUpStrategy : public WarmUpStrategy {
+class ConfigurableWarmUpStrategy : public WarmUpStrategy {
  public:
-  explicit SimpleWarmUpStrategy(const bool warm_up_once);
-  std::shared_ptr<Aws::IOStream> CreateInvokeRequestBody() const override;
+  explicit ConfigurableWarmUpStrategy(const bool warm_up_once = kDefaultWarmUpOnce,
+                                      const size_t sleep_ms_duration = kDefaultSleepMsDuration,
+                                      const double provisioning_factor = kDefaultProvisioningFactor);
 
+  long double WarmUpFunctions(const std::shared_ptr<Client>& client, const FunctionConfig& function_config,
+                              const size_t concurrency_count) override;
   std::string GetName() const override;
-};
 
-class SleepWarmUpStrategy : public WarmUpStrategy {
- public:
-  explicit SleepWarmUpStrategy(const bool warm_up_once);
-  std::shared_ptr<Aws::IOStream> CreateInvokeRequestBody() const override;
-  std::string GetName() const override;
+  long double CalculateWarmUpCost(const std::shared_ptr<Client>& client, const FunctionConfig& function_config,
+                                  std::vector<Aws::Lambda::Model::InvokeOutcomeCallable>* invoke_outcome_callables);
+
+  static constexpr bool kDefaultWarmUpOnce = true;
+  static constexpr size_t kDefaultSleepMsDuration = 4'000;
+  static constexpr double kDefaultProvisioningFactor = 1.2;
 
  private:
-  // TODO(anyone): Eliminate magic number once we understand the parallel running lambda functions better
-  const size_t kSleepMs = 7000;
+  bool is_warmed_up_ = false;
+
+  const bool warm_up_once_;
+  const size_t sleep_ms_duration_;
+  const double provisioning_factor_;
 };
 
 class ProvisionedConcurrencyWarmUpStrategy : public WarmUpStrategy {
  public:
-  ProvisionedConcurrencyWarmUpStrategy();
-
   long double WarmUpFunctions(const std::shared_ptr<Client>& client, const FunctionConfig& function_config,
-                              const size_t function_count) override;
-  std::shared_ptr<Aws::IOStream> CreateInvokeRequestBody() const override;
+                              const size_t concurrency_count) override;
   std::string GetName() const override;
 
  private:

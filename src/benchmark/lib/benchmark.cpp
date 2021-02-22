@@ -37,7 +37,7 @@ long double Benchmark::ExtractFunctionCost(const InvocationResult& result, const
   const long double function_instance_cost =
       cost_calculator_->CalculateCostLambda(billed_duration, function_instance_mb_size, is_provisioned_concurrency);
 
-  const auto payload_value = Aws::Utils::Json::JsonValue(StreamToString(&result.invoke_result_->GetPayload()));
+  const auto payload_value = Aws::Utils::Json::JsonValue(StreamToString(&result.invoke_result->GetPayload()));
   const auto payload_view = payload_value.View();
 
   const size_t num_s3_requests_tier_1 =

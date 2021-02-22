@@ -82,7 +82,7 @@ Aws::Utils::Json::JsonValue FunctionColocationBenchmark::GenerateResultOutput(
     std::map<std::string, size_t> vm_ids_to_colocation_counts;
 
     for (const auto& benchmark_item_result : benchmark_item_results[i]) {
-      const std::string vm_id = StreamToString(&benchmark_item_result.second.invoke_result_->GetPayload());
+      const std::string vm_id = StreamToString(&benchmark_item_result.second.invoke_result->GetPayload());
 
       if (vm_ids_to_colocation_counts.count(vm_id) == 0) {
         vm_ids_to_colocation_counts.emplace(vm_id, 1);
@@ -116,7 +116,7 @@ Aws::Utils::Json::JsonValue FunctionColocationBenchmark::GenerateResultOutput(
                                ExtractFunctionCost(item_result, benchmark_parameters.function_instance_mb_size));
       }},
       {[&](const InvocationResult& item_result) {
-        return std::make_tuple("vm_id", StreamToString(&item_result.invoke_result_->GetPayload()));
+        return std::make_tuple("vm_id", StreamToString(&item_result.invoke_result->GetPayload()));
       }},
       {/*extract object metric functions*/});
 }

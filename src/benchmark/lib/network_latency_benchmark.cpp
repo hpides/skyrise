@@ -83,7 +83,7 @@ Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
              static_cast<double>(ExtractFunctionCost(single_result, benchmark_parameters.function_instance_mb_size)));
        }},
       {/*extract string metric functions*/}, {[&](const InvocationResult& single_result) {
-        const Aws::Utils::Json::JsonValue payload_value(StreamToString(&single_result.invoke_result_->GetPayload()));
+        const Aws::Utils::Json::JsonValue payload_value(StreamToString(&single_result.invoke_result->GetPayload()));
         const auto ms_durations = payload_value.View().GetArray("ms_durations");
 
         Aws::Utils::Array<Aws::Utils::Json::JsonValue> duration_seconds(ms_durations.GetLength());

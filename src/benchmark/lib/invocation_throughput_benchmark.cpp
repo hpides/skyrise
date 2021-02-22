@@ -78,8 +78,8 @@ Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
     auto max_end_time = std::chrono::system_clock::time_point::min();
 
     for (const auto& item_result : invocation_result) {
-      min_start_time = std::min(min_start_time, item_result.second.start_point_);
-      max_end_time = std::max(max_end_time, item_result.second.end_point_);
+      min_start_time = std::min(min_start_time, item_result.second.start_point);
+      max_end_time = std::max(max_end_time, item_result.second.end_point);
     }
 
     const double duration = std::chrono::duration<double>(max_end_time - min_start_time).count();
@@ -106,8 +106,8 @@ Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
        {"warm_up_cost_usd", static_cast<double>(benchmark_result->GetOverallFunctionWarmUpCost())}},
       {/*aggregated string metrics*/}, benchmark_result,
       {[&](const InvocationResult& item_result) {
-         return std::make_tuple(
-             "duration", std::chrono::duration<double>(item_result.end_point_ - item_result.start_point_).count());
+         return std::make_tuple("duration",
+                                std::chrono::duration<double>(item_result.end_point - item_result.start_point).count());
        },
        [&](const InvocationResult& item_result) {
          return std::make_tuple("function_cost_usd",

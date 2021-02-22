@@ -155,7 +155,7 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> NetworkBenchmark::GenerateBatched
 
   size_t i = 0;
   for (const auto& invocation_result : sub_result) {
-    Aws::Utils::Json::JsonValue result_value(StreamToString(&invocation_result.second.invoke_result_->GetPayload()));
+    Aws::Utils::Json::JsonValue result_value(StreamToString(&invocation_result.second.invoke_result->GetPayload()));
     const auto duration_views = result_value.View().GetArray("ms_durations");
 
     Aws::Utils::Array<Aws::Utils::Json::JsonValue> duration_values(duration_views.GetLength());

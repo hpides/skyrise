@@ -16,14 +16,18 @@ struct FunctionTemperatureBenchmarkParameters {
   size_t function_instance_mb_size;
   size_t invocation_count;
   size_t repetition_count;
-  std::shared_ptr<WarmUpStrategy> warm_up_strategy;
+  size_t sleep_ms_duration;
+  double provisioning_factor;
+  std::string warm_up_strategy;
 };
 
 class FunctionTemperatureBenchmark : public Benchmark {
  public:
   FunctionTemperatureBenchmark(std::shared_ptr<CostCalculator> cost_calculator,
                                const std::vector<size_t>& function_instance_mb_sizes,
-                               const std::vector<size_t>& invocation_counts, const size_t repetition_count);
+                               const std::vector<size_t>& invocation_counts,
+                               const std::vector<size_t>& sleep_ms_durations,
+                               const std::vector<double>& provisioning_factors, const size_t repetition_count);
 
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> Run(const std::shared_ptr<BenchmarkRunner>& benchmark_runner);
 

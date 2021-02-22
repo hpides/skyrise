@@ -82,7 +82,7 @@ Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
 
   for (size_t i = 0; i < invocation_results.size(); ++i) {
     for (const auto& invocation : invocation_results[i]) {
-      const std::string vm_id = StreamToString(&invocation.second.invoke_result_->GetPayload());
+      const std::string vm_id = StreamToString(&invocation.second.invoke_result->GetPayload());
 
       if (i == 0) {
         vm_ids_to_availability_flags.try_emplace(vm_id, benchmark_parameters.repetition_count, false);
@@ -176,7 +176,7 @@ Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
                                ExtractFunctionCost(item_result, benchmark_parameters.function_instance_mb_size));
       }},
       {[&](const InvocationResult& item_result) {
-        return std::make_tuple("vm_id", StreamToString(&item_result.invoke_result_->GetPayload()));
+        return std::make_tuple("vm_id", StreamToString(&item_result.invoke_result->GetPayload()));
       }},
       {/*extract object metric functions*/});
 }

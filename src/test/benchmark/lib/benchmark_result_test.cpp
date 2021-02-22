@@ -49,7 +49,7 @@ TEST_F(BenchmarkResultTest, ConcurrencyStressTest) {
   }
 
   result.UpdateSQSMessageBody(3, "541", "abc");
-  EXPECT_EQ(invocation_results[3].find("541")->second.sqs_message_body_, "abc");
+  EXPECT_EQ(invocation_results[3].find("541")->second.sqs_message_body, "abc");
 }
 
 TEST_F(BenchmarkResultTest, FunctionWarmingCost) {
