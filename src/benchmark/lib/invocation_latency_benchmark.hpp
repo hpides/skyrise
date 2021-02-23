@@ -21,7 +21,7 @@ struct InvocationLatencyBenchmarkParameters {
 class InvocationLatencyBenchmark : public Benchmark {
  public:
   InvocationLatencyBenchmark(std::shared_ptr<Client> client, std::shared_ptr<BenchmarkHelper> helper,
-                             std::shared_ptr<CostCalculator> cost_calculator_,
+                             std::shared_ptr<CostCalculator> cost_calculator,
                              const std::vector<size_t>& function_instance_mb_sizes,
                              const std::vector<size_t>& invocation_counts, const std::vector<bool>& warm_modes,
                              const size_t repetition_count);
