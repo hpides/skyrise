@@ -24,8 +24,6 @@ class BenchmarkRunner {
 
   std::shared_ptr<BenchmarkResult> RunConfig(const BenchmarkConfig& config);
 
-  size_t setup_thread_count_ = 32;
-
  private:
   void SetConfig(const BenchmarkConfig& config);
 
@@ -33,33 +31,27 @@ class BenchmarkRunner {
   void SetupEventQueue();
   void Teardown();
 
-  void RunParallel();
+  void InvokeFunctions();
 
   void WarmUpFunctions(const size_t repetition);
-  std::pair<Aws::String, Aws::Lambda::Model::InvokeRequest> CreateInvokeRequest(
-      const Aws::String& function_name, const Aws::String& invocation_id, const size_t repetition, const bool is_warmup,
-      const std::shared_ptr<Aws::IOStream>& payload = nullptr);
-  void CreateInvokeRequests(const bool is_warmup);
+  Aws::Lambda::Model::InvokeRequest CreateInvokeRequest(const Aws::String& function_name,
+                                                        const Aws::String& invocation_id,
+                                                        const std::shared_ptr<Aws::IOStream>& payload);
+  void CreateInvokeRequests();
   std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> CollectSqsMessages(const size_t invocation_count);
 
   static Aws::Utils::CryptoBuffer OpenFunctionZip(const Aws::String& function_path);
   Aws::Lambda::Model::FunctionCode SetFunctionCode(const Aws::String& function_path, const Aws::String& function_name,
                                                    const bool is_local);
-  std::vector<Aws::Lambda::Model::CreateFunctionOutcome> UploadFunctions(
-      const size_t thread_count, const size_t thread_index, const Aws::Lambda::Model::TracingConfig& tracing_config);
-
-  bool IsWarmStartBenchmark();
 
   std::shared_ptr<BenchmarkConfig> config_;
   std::unordered_set<Aws::String> config_history_;
 
-  std::vector<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>> invoke_requests_;
-  std::vector<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>> invoke_warmup_requests_;
+  std::vector<std::vector<std::pair<Aws::String, Aws::Lambda::Model::InvokeRequest>>> invoke_requests_;
 
   const std::shared_ptr<Client> client_;
 
   std::shared_ptr<Aws::String> sqs_queue_url_;
-  std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> sqs_messages_;
 
   std::shared_ptr<BenchmarkResult> benchmark_result_;
   std::unordered_map<std::string, Aws::Utils::CryptoBuffer> package_files_;

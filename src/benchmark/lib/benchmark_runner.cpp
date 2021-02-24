@@ -52,7 +52,7 @@ std::shared_ptr<BenchmarkResult> BenchmarkRunner::RunConfig(const BenchmarkConfi
 
     Setup();
 
-    RunParallel();
+    InvokeFunctions();
 
   } catch (const std::exception& e) {
     AWS_LOGSTREAM_ERROR(kTag.c_str(), e.what());
@@ -68,6 +68,8 @@ std::shared_ptr<BenchmarkResult> BenchmarkRunner::RunConfig(const BenchmarkConfi
 void BenchmarkRunner::SetConfig(const BenchmarkConfig& config) {
   if (config_history_.emplace(config.benchmark_id_).second) {
     config_ = std::make_shared<BenchmarkConfig>(config);
+    invoke_requests_.clear();
+    invoke_requests_.shrink_to_fit();
   } else {
     Fail("BenchmarkConfig " + config.benchmark_id_ + " has already been run.");
   }
@@ -76,36 +78,34 @@ void BenchmarkRunner::SetConfig(const BenchmarkConfig& config) {
 void BenchmarkRunner::Setup() {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Creating functions...");
 
-  size_t function_count = config_->function_configs_.size();
-  size_t thread_count = function_count > setup_thread_count_ ? setup_thread_count_ : function_count;
-  std::vector<std::future<std::vector<Aws::Lambda::Model::CreateFunctionOutcome>>> outcome_vec_futures;
-  outcome_vec_futures.reserve(thread_count);
+  // TODO(d-justen): Employ custom Lambda client if parallel function upload gets us in trouble
+  const auto& lambda_client = client_->GetLambdaClient();
 
-  Aws::Lambda::Model::TracingConfig tracing_config;
+  std::vector<Aws::Lambda::Model::CreateFunctionOutcomeCallable> outcome_callables;
 
-  if (config_->enable_tracing_) {
-    tracing_config.WithMode(Aws::Lambda::Model::TracingMode::Active);
-  }
+  for (const auto& function_config : config_->function_configs_) {
+    auto create_function_request =
+        Aws::Lambda::Model::CreateFunctionRequest()
+            .WithFunctionName(function_config.function_name)
+            .WithRuntime(Aws::Lambda::Model::Runtime::provided_al2)
+            .WithRole(function_role_arn_)
+            .WithHandler("HandlerFunction")
+            .WithTimeout(kLambdaFunctionTimeoutSeconds)
+            .WithMemorySize(function_config.memory_size)
+            .WithCode(SetFunctionCode(function_config.function_path, function_config.function_name,
+                                      function_config.is_local));
 
-  for (size_t i = 0; i < thread_count; i++) {
-    outcome_vec_futures.emplace_back(
-        std::async(&BenchmarkRunner::UploadFunctions, this, thread_count, i, tracing_config));
-  }
-
-  // We first wait for all threads to finish so that we do not tear down functions that are still uploading in case of
-  // an error
-  for (const auto& outcome_vec_future : outcome_vec_futures) {
-    outcome_vec_future.wait();
-  }
-
-  for (auto& outcome_vec_future : outcome_vec_futures) {
-    const auto& outcome_vec = outcome_vec_future.get();
-
-    for (const auto& outcome : outcome_vec) {
-      if (!outcome.IsSuccess()) {
-        Fail(outcome.GetError().GetMessage());
-      }
+    if (config_->enable_tracing_) {
+      create_function_request.SetTracingConfig(
+          Aws::Lambda::Model::TracingConfig().WithMode(Aws::Lambda::Model::TracingMode::Active));
     }
+
+    outcome_callables.emplace_back(lambda_client.CreateFunctionCallable(create_function_request));
+  }
+
+  for (auto& outcome_callable : outcome_callables) {
+    const auto& outcome = outcome_callable.get();
+    Assert(outcome.IsSuccess(), outcome.GetError().GetMessage());
   }
 
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Functions created.");
@@ -114,11 +114,7 @@ void BenchmarkRunner::Setup() {
     SetupEventQueue();
   }
 
-  if (IsWarmStartBenchmark()) {
-    CreateInvokeRequests(true);
-  }
-
-  CreateInvokeRequests(false);
+  CreateInvokeRequests();
 }
 
 void BenchmarkRunner::SetupEventQueue() {
@@ -209,18 +205,10 @@ void BenchmarkRunner::Teardown() {
   }
 }
 
-void BenchmarkRunner::RunParallel() {
+void BenchmarkRunner::InvokeFunctions() {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Invoking functions concurrently...");
 
   const auto& lambda_client = client_->GetLambdaClient();
-
-  size_t invocations_finished = 0;
-  std::mutex invocations_finished_mutex;
-
-  const auto increment_invocations_finished = [&]() {
-    std::lock_guard<std::mutex> lock(invocations_finished_mutex);
-    invocations_finished++;
-  };
 
   benchmark_result_ =
       std::make_shared<BenchmarkResult>(config_->repetition_count_, config_->concurrent_invocation_count_);
@@ -228,7 +216,7 @@ void BenchmarkRunner::RunParallel() {
   // BENCHMARK STARTS
 
   for (size_t i = 0; i < config_->repetition_count_; i++) {
-    if (IsWarmStartBenchmark()) {
+    if (config_->warm_up_ != WarmUp::kNone) {
       WarmUpFunctions(i);
     }
 
@@ -249,16 +237,13 @@ void BenchmarkRunner::RunParallel() {
             benchmark_result_->FinishInvocation(context_function_invocation->GetRepetition(),
                                                 context_function_invocation->GetUUID(), invoke_result,
                                                 outcome.IsSuccess());
-            increment_invocations_finished();
           },
           std::make_shared<const ContextFunctionInvocation>(i, invocation_id));
     }
 
-    while (invocations_finished < config_->concurrent_invocation_count_) {
+    while (!benchmark_result_->HasRepetitionFinished(i)) {
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-
-    invocations_finished = 0;
 
     if (config_->use_event_queue_ == UseEventQueue::kYes) {
       const auto sqs_messages = CollectSqsMessages(invoke_requests_[i].size());
@@ -268,6 +253,8 @@ void BenchmarkRunner::RunParallel() {
       }
     }
 
+    config_->after_repetition_callbacks_[i]();
+
     AWS_LOGSTREAM_INFO(kTag.c_str(), "Repetition " << i << " finished in "
                                                    << benchmark_result_->GetRepetitionDuration(i).count()
                                                    << " seconds.");
@@ -275,8 +262,8 @@ void BenchmarkRunner::RunParallel() {
   }
 
   // BENCHMARK ENDS
-  AWS_LOGSTREAM_INFO(kTag.c_str(), "Parallel benchmark finished in "
-                                       << benchmark_result_->GetBenchmarkDuration().count() << " seconds.");
+  AWS_LOGSTREAM_INFO(kTag.c_str(),
+                     "Benchmark finished in " << benchmark_result_->GetBenchmarkDuration().count() << " seconds.");
 }
 
 void BenchmarkRunner::WarmUpFunctions(const size_t repetition) {
@@ -284,6 +271,7 @@ void BenchmarkRunner::WarmUpFunctions(const size_t repetition) {
 
   const size_t function_index =
       config_->use_one_function_per_repetition_ == UseOneFunctionPerRepetition::kYes ? repetition : 0;
+
   long double function_warm_up_cost = config_->warm_up_strategy_->WarmUpFunctions(
       client_, config_->function_configs_[function_index], config_->concurrent_invocation_count_);
 
@@ -292,26 +280,15 @@ void BenchmarkRunner::WarmUpFunctions(const size_t repetition) {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Functions warmed up.");
 }
 
-std::pair<Aws::String, Aws::Lambda::Model::InvokeRequest> BenchmarkRunner::CreateInvokeRequest(
-    const Aws::String& function_name, const Aws::String& invocation_id, const size_t repetition, const bool is_warmup,
-    const std::shared_ptr<Aws::IOStream>& payload) {
+Aws::Lambda::Model::InvokeRequest BenchmarkRunner::CreateInvokeRequest(const Aws::String& function_name,
+                                                                       const Aws::String& invocation_id,
+                                                                       const std::shared_ptr<Aws::IOStream>& payload) {
   const auto invocation_type = config_->use_event_queue_ == UseEventQueue::kYes
                                    ? Aws::Lambda::Model::InvocationType::Event
                                    : Aws::Lambda::Model::InvocationType::RequestResponse;
-  Aws::StringStream supplemented_id;
-  supplemented_id << (config_->repetition_count_ > 1 ? "repetition-" + std::to_string(repetition) + "-" : "");
-  supplemented_id << invocation_id << (is_warmup ? "-warmup" : "");
 
-  const auto json_value = [&]() {
-    Aws::Utils::Json::JsonValue value;
-
-    if (payload) {
-      value = Aws::Utils::Json::JsonValue(StreamToString(payload.get()));
-    }
-
-    return value.WithString("invocation_id", supplemented_id.str());
-  }();
-
+  const auto json_value =
+      Aws::Utils::Json::JsonValue(StreamToString(payload.get())).WithString("invocation_id", invocation_id);
   const auto body = std::make_shared<Aws::StringStream>(json_value.View().WriteCompact());
 
   auto invoke_request = Aws::Lambda::Model::InvokeRequest()
@@ -322,30 +299,27 @@ std::pair<Aws::String, Aws::Lambda::Model::InvokeRequest> BenchmarkRunner::Creat
   invoke_request.SetBody(body);
   invoke_request.SetContentType("application/json");
 
-  return {supplemented_id.str(), invoke_request};
+  return invoke_request;
 }
 
-void BenchmarkRunner::CreateInvokeRequests(const bool is_warmup) {
-  AWS_LOGSTREAM_INFO(kTag.c_str(), "Creating invoke requests" << (is_warmup ? "for function warm-up" : "") << "...");
-  std::vector<std::unordered_map<Aws::String, Aws::Lambda::Model::InvokeRequest>> invoke_requests(
-      config_->repetition_count_);
+void BenchmarkRunner::CreateInvokeRequests() {
+  AWS_LOGSTREAM_INFO(kTag.c_str(), "Creating invoke requests...");
+  invoke_requests_.reserve(config_->repetition_count_);
 
   for (size_t i = 0; i < config_->repetition_count_; i++) {
-    invoke_requests[i].reserve(config_->concurrent_invocation_count_);
+    std::vector<std::pair<Aws::String, Aws::Lambda::Model::InvokeRequest>> requests;
+    requests.reserve(config_->concurrent_invocation_count_);
 
     for (const auto& config : config_->repetition_configs_[i]) {
-      invoke_requests[i].emplace(
-          CreateInvokeRequest(config.function_name, config.invocation_id, i, is_warmup, config.payload));
+      const Aws::String invocation_id = std::to_string(i) + "-" + config.invocation_id;
+      requests.emplace_back(invocation_id,
+                            CreateInvokeRequest(config.function_name, config.invocation_id, config.payload));
     }
+
+    invoke_requests_.emplace_back(requests);
   }
 
-  if (is_warmup) {
-    invoke_warmup_requests_ = invoke_requests;
-  } else {
-    invoke_requests_ = invoke_requests;
-  }
-
-  AWS_LOGSTREAM_INFO(kTag.c_str(), "Invoke requests " << (is_warmup ? "for function warm-up" : "") << " created.");
+  AWS_LOGSTREAM_INFO(kTag.c_str(), "Invoke requests created.");
 }
 
 std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> BenchmarkRunner::CollectSqsMessages(
@@ -424,43 +398,5 @@ Aws::Lambda::Model::FunctionCode BenchmarkRunner::SetFunctionCode(const Aws::Str
 
   return code;
 }
-
-std::vector<Aws::Lambda::Model::CreateFunctionOutcome> BenchmarkRunner::UploadFunctions(
-    const size_t thread_count, const size_t thread_index, const Aws::Lambda::Model::TracingConfig& tracing_config) {
-  const size_t function_count = config_->function_configs_.size();
-  const size_t block_size = (function_count / thread_count) + (function_count % thread_count != 0 ? 1 : 0);
-
-  std::vector<Aws::Lambda::Model::CreateFunctionOutcome> outcomes;
-  outcomes.reserve(block_size);
-
-  const auto& lambda_client = client_->GetLambdaClient();
-
-  for (size_t i = thread_index; i < config_->function_configs_.size(); i += thread_count) {
-    const auto& function_config = config_->function_configs_[i];
-    const auto code =
-        SetFunctionCode(function_config.function_path, function_config.function_name, function_config.is_local);
-
-    AWS_LOGSTREAM_INFO(kTag.c_str(), "Creating function " << function_config.function_name << "...");
-
-    const auto create_function_request = Aws::Lambda::Model::CreateFunctionRequest()
-                                             .WithFunctionName(function_config.function_name)
-                                             .WithRuntime(Aws::Lambda::Model::Runtime::provided_al2)
-                                             .WithRole(function_role_arn_)
-                                             .WithHandler("HandlerFunction")
-                                             .WithCode(code)
-                                             .WithTimeout(kLambdaFunctionTimeoutSeconds)
-                                             .WithTracingConfig(tracing_config)
-                                             .WithMemorySize(function_config.memory_size);
-
-    outcomes.emplace_back(lambda_client.CreateFunction(create_function_request));
-
-    const auto publish_version_outcome = lambda_client.PublishVersion(
-        Aws::Lambda::Model::PublishVersionRequest().WithFunctionName(function_config.function_name));
-    Assert(publish_version_outcome.IsSuccess(), publish_version_outcome.GetError().GetMessage());
-  }
-  return outcomes;
-}
-
-bool BenchmarkRunner::IsWarmStartBenchmark() { return config_->warm_up_ != WarmUp::kNone; }
 
 }  // namespace skyrise

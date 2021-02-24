@@ -33,6 +33,8 @@ class BenchmarkResult {
                             const Aws::String& sqs_message_body);
   void SetFunctionWarmUpCost(const size_t repetition, const long double cost);
 
+  bool HasRepetitionFinished(const size_t repetition) const;
+
   const std::vector<std::map<Aws::String, InvocationResult>>& GetInvocationResults() const;
   std::chrono::duration<double> GetRepetitionDuration(const size_t repetition) const;
   std::chrono::duration<double> GetBenchmarkDuration() const;

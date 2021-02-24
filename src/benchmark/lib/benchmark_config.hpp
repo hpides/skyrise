@@ -42,8 +42,6 @@ class BenchmarkConfig {
   std::shared_ptr<WarmUpStrategy> warm_up_strategy_;
   std::vector<FunctionConfig> function_configs_;
   std::vector<std::vector<FunctionInvocationConfig>> repetition_configs_;
-
- private:
 };
 
 }  // namespace skyrise

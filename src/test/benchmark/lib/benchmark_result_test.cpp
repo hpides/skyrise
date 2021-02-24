@@ -16,6 +16,8 @@ TEST_F(BenchmarkResultTest, ConcurrencyStressTest) {
   BenchmarkResult result(10, 1000);
 
   for (size_t i = 0; i < 10; i++) {
+    EXPECT_FALSE(result.HasRepetitionFinished(i));
+
     std::vector<std::future<void>> registration_futures;
 
     for (size_t j = 0; j < 1000; j++) {
@@ -30,6 +32,8 @@ TEST_F(BenchmarkResultTest, ConcurrencyStressTest) {
     for (const auto& registration_future : registration_futures) {
       registration_future.wait();
     }
+
+    EXPECT_TRUE(result.HasRepetitionFinished(i));
   }
 
   const auto end = std::chrono::steady_clock::now();

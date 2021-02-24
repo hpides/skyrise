@@ -59,6 +59,10 @@ void BenchmarkResult::SetFunctionWarmUpCost(const size_t repetition, const long 
   function_warm_up_costs_[repetition] = cost;
 }
 
+bool BenchmarkResult::HasRepetitionFinished(const size_t repetition) const {
+  return invocations_finished_[repetition] == invocation_count_;
+}
+
 const std::vector<std::map<Aws::String, InvocationResult>>& BenchmarkResult::GetInvocationResults() const {
   return invocation_results_;
 }
