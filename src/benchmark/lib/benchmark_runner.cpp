@@ -106,6 +106,10 @@ void BenchmarkRunner::Setup() {
   for (auto& outcome_callable : outcome_callables) {
     const auto& outcome = outcome_callable.get();
     Assert(outcome.IsSuccess(), outcome.GetError().GetMessage());
+
+    const auto publish_version_outcome = lambda_client.PublishVersion(
+        Aws::Lambda::Model::PublishVersionRequest().WithFunctionName(outcome.GetResult().GetFunctionName()));
+    Assert(publish_version_outcome.IsSuccess(), publish_version_outcome.GetError().GetMessage());
   }
 
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Functions created.");
