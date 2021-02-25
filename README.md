@@ -1,3 +1,5 @@
+[![Build Status](https://skyrise-ci.epic-hpi.de/buildStatus/icon?job=skyrise/master)](https://skyrise-ci.epic-hpi.de/blue/organizations/jenkins/skyrise/activity)
+
 # Skyrise
 
 ## Quickstart
