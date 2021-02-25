@@ -3,7 +3,7 @@
 set -euo pipefail
 
 commit_coverage=$(cat coverage_percentage.txt)
-master_coverage=$(curl --max-time 10 --silent --user ${JENKINS_HTTPS_AUTH} https://skyrise-ci.epic-hpi.de/job/skyrise/job/master/lastStableBuild/artifact/coverage_percentage.txt)
+master_coverage=$(curl --max-time 10 --silent https://skyrise-ci.epic-hpi.de/job/skyrise/job/master/lastStableBuild/artifact/coverage_percentage.txt)
 
 if [ ${master_coverage} ]; then
   if [ $(bc -l <<< "${commit_coverage%\%} >= ${master_coverage%\%}") -eq 1 ]; then

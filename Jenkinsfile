@@ -26,7 +26,6 @@ pipeline {
         AWS_ACCESS_KEY_ID = credentials('skyrise-ci-aws-access-key-id')
         AWS_SECRET_ACCESS_KEY = credentials('skyrise-ci-aws-secret-access-key')
         CCACHE_DISABLE = 'true'
-        JENKINS_HTTPS_AUTH = credentials('skyrise-ci-https-auth')
       }
       steps {
         script {
