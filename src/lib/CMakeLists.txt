@@ -31,6 +31,7 @@ set(
 
 set(
     SHARED_SOURCES
+    scheduler/types.hpp
     utils/array.hpp
     utils/assert.hpp
     utils/concurrent/queue.hpp
@@ -55,6 +56,8 @@ set(
     SHARED_LIBRARIES
     aws-cpp-sdk-core
     aws-cpp-sdk-s3
+    aws-cpp-sdk-sqs
+    aws-cpp-sdk-xray
 )
 
 add_library(skyriseSharedLibrary STATIC ${SHARED_SOURCES})
@@ -75,7 +78,11 @@ set(
     client/client.cpp
     client/client.hpp
     configuration.hpp
+    coordinator.cpp
+    coordinator.hpp
     limits.hpp
+    monitoring/function_segments.cpp
+    monitoring/function_segments.hpp
     utils/costs/cost_calculator.cpp
     utils/costs/cost_calculator.hpp
     utils/costs/pricing.cpp
@@ -88,7 +95,6 @@ set(
     aws-cpp-sdk-lambda
     aws-cpp-sdk-monitoring
     aws-cpp-sdk-pricing
-    aws-cpp-sdk-sqs
     aws-cpp-sdk-xray
     skyriseShared
 )
@@ -101,6 +107,12 @@ set(
     WORKER_SOURCES
     cloud_function/function.cpp
     cloud_function/function.hpp
+    monitoring/metrics_collector.cpp
+    monitoring/metrics_collector.hpp
+    monitoring/monitoring_handler.cpp
+    monitoring/monitoring_handler.hpp
+    monitoring/tracer.cpp
+    monitoring/tracer.hpp
     utils/profiling/function_host_information.cpp
     utils/profiling/function_host_information.hpp
 )

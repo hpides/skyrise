@@ -1,10 +1,7 @@
 #include "function_segments.hpp"
 
 #include <algorithm>
-#include <iomanip>
-#include <tuple>
 
-#include <aws/core/utils/Outcome.h>
 #include <aws/core/utils/json/JsonSerializer.h>
 #include <aws/core/utils/logging/LogMacros.h>
 #include <aws/xray/model/BatchGetTracesRequest.h>
@@ -12,18 +9,18 @@
 
 namespace skyrise {
 
-std::map<Aws::String, std::set<Aws::String>> FunctionSegmentsAnalyzer::GetTraceIds(
+std::map<Aws::String, std::unordered_set<Aws::String>> FunctionSegmentsAnalyzer::GetTraceIds(
     const std::vector<Aws::String>& function_names,
     const std::chrono::time_point<std::chrono::system_clock>& start_time,
     const std::chrono::time_point<std::chrono::system_clock>& end_time, size_t num_ids_expected) {
-  std::map<Aws::String, std::set<Aws::String>> trace_ids;
+  std::map<Aws::String, std::unordered_set<Aws::String>> trace_ids;
 
   if (function_names.empty()) {
     return trace_ids;
   }
 
   for (const auto& function_name : function_names) {
-    trace_ids.emplace(function_name, std::set<Aws::String>{});
+    trace_ids.emplace(function_name, std::unordered_set<Aws::String>{});
   }
 
   Aws::XRay::Model::GetTraceSummariesRequest get_trace_summaries_request;
@@ -44,9 +41,7 @@ std::map<Aws::String, std::set<Aws::String>> FunctionSegmentsAnalyzer::GetTraceI
       next_token = outcome.GetResult().GetNextToken();
 
       for (const auto& trace_summary : trace_summaries) {
-        if (trace_ids.find(trace_summary.GetEntryPoint().GetName()) != trace_ids.cend()) {
-          trace_ids[trace_summary.GetEntryPoint().GetName()].emplace(trace_summary.GetId());
-        }
+        trace_ids[trace_summary.GetEntryPoint().GetName()].emplace(trace_summary.GetId());
       }
 
       num_scanned_traces_ += trace_summaries.size();
@@ -112,41 +107,43 @@ std::map<Aws::String, Aws::XRay::Model::Trace> FunctionSegmentsAnalyzer::GetTrac
   return traces;
 }
 
-std::map<Aws::String, std::pair<std::chrono::duration<double>, std::chrono::duration<double>>>
-FunctionSegmentsAnalyzer::GetSegments(const Aws::XRay::Model::Trace& trace) {
-  std::map<Aws::String, std::pair<std::chrono::duration<double>, std::chrono::duration<double>>>
-      unprocessed_lambda_segments;
+void FunctionSegmentsAnalyzer::FlattenSubsegments(
+    const std::shared_ptr<std::map<Aws::String, Aws::Utils::Json::JsonValue>>& unprocessed_lambda_segments,
+    const Aws::String& parent, const Aws::Utils::Json::JsonView& json) {
+  if (json.KeyExists("subsegments")) {
+    const auto subsegments_array = json.GetArray("subsegments");
+    for (size_t i = 0; i < subsegments_array.GetLength(); ++i) {
+      const auto item = subsegments_array.GetItem(i);
+      unprocessed_lambda_segments->emplace(
+          (parent.empty() || parent == "Invocation" ? "" : parent + "_") + item.GetString("name"), item.Materialize());
+      FlattenSubsegments(unprocessed_lambda_segments, item.GetString("name"), subsegments_array.GetItem(i));
+    }
+  }
+}
+
+std::map<Aws::String, Aws::Utils::Json::JsonValue> FunctionSegmentsAnalyzer::GetSegments(
+    const Aws::XRay::Model::Trace& trace) {
+  const auto unprocessed_lambda_segments = std::make_shared<std::map<Aws::String, Aws::Utils::Json::JsonValue>>();
 
   if (!trace.IdHasBeenSet()) {
-    return unprocessed_lambda_segments;
+    return *unprocessed_lambda_segments;
   }
 
   for (const auto& segment : trace.GetSegments()) {
     Aws::Utils::Json::JsonValue document_json(segment.GetDocument());
 
-    if (document_json.View().KeyExists("subsegments")) {
-      const auto subsegments = document_json.View().GetArray("subsegments");
+    FlattenSubsegments(unprocessed_lambda_segments, "", document_json.View());
 
-      for (size_t i = 0; i < subsegments.GetLength(); ++i) {
-        const auto subsegment = subsegments.GetItem(i);
-        unprocessed_lambda_segments.emplace(
-            subsegment.GetString("name"),
-            std::make_pair(std::chrono::duration<double>(subsegment.GetDouble("start_time")),
-                           std::chrono::duration<double>(subsegment.GetDouble("end_time"))));
-      }
-    } else if (document_json.View().KeyExists("origin")) {
-      unprocessed_lambda_segments.emplace(
-          document_json.View().GetString("origin"),
-          std::make_pair(std::chrono::duration<double>(document_json.View().GetDouble("start_time")),
-                         std::chrono::duration<double>(document_json.View().GetDouble("end_time"))));
+    if (document_json.View().KeyExists("origin")) {
+      unprocessed_lambda_segments->emplace(document_json.View().GetString("origin"), document_json);
     }
   }
-  return unprocessed_lambda_segments;
+
+  return *unprocessed_lambda_segments;
 }
 
 LambdaSegmentDurations FunctionSegmentsAnalyzer::CalculateLambdaSegmentDurations(
-    const std::map<Aws::String, std::pair<std::chrono::duration<double>, std::chrono::duration<double>>>&
-        unprocessed_lambda_segments,
+    const std::map<Aws::String, Aws::Utils::Json::JsonValue>& unprocessed_lambda_segments,
     const std::chrono::time_point<std::chrono::system_clock>& start_time,
     const std::chrono::time_point<std::chrono::system_clock>& end_time) {
   auto lambda_segment_durations = CreateLambdaSegmentDurations();
@@ -155,25 +152,30 @@ LambdaSegmentDurations FunctionSegmentsAnalyzer::CalculateLambdaSegmentDurations
     return lambda_segment_durations;
   }
 
-  const auto segment_duration = unprocessed_lambda_segments.at("AWS::Lambda");
+  const auto segment_duration = unprocessed_lambda_segments.at("AWS::Lambda").View();
 
-  const auto lambda_start = segment_duration.first;
-  const auto lambda_end = segment_duration.second;
+  const auto lambda_start = std::chrono::duration<double>(segment_duration.GetDouble("start_time"));
+  const auto lambda_end = std::chrono::duration<double>(segment_duration.GetDouble("end_time"));
   lambda_segment_durations["network_call"] = lambda_start - start_time.time_since_epoch();
   lambda_segment_durations["network_return"] = end_time.time_since_epoch() - lambda_end;
 
-  for (const auto& [subsegment_name, subsegment_duration] : unprocessed_lambda_segments) {
+  for (const auto& [subsegment_name, subsegment] : unprocessed_lambda_segments) {
+    const auto subsegment_start = std::chrono::duration<double>(subsegment.View().GetDouble("start_time"));
+    const auto subsegment_end = std::chrono::duration<double>(subsegment.View().GetDouble("end_time"));
+
     if (subsegment_name == "Initialization") {
-      lambda_segment_durations["initialization_remainder"] = subsegment_duration.first - lambda_start;
-      lambda_segment_durations["initialization"] = subsegment_duration.second - subsegment_duration.first;
+      lambda_segment_durations["initialization_remainder"] = subsegment_start - lambda_start;
+      lambda_segment_durations["initialization"] = subsegment_end - subsegment_start;
     } else if (subsegment_name == "Overhead") {
-      lambda_segment_durations["function_overhead"] = subsegment_duration.second - subsegment_duration.first;
+      lambda_segment_durations["function_overhead"] = subsegment_end - subsegment_start;
     } else if (subsegment_name == "Invocation") {
       lambda_segment_durations["initialization_remainder"] =
           lambda_segment_durations["initialization_remainder"].count() > 0.0
               ? lambda_segment_durations["initialization_remainder"]
-              : subsegment_duration.first - lambda_start;
-      lambda_segment_durations["function_execution"] = subsegment_duration.second - subsegment_duration.first;
+              : subsegment_start - lambda_start;
+      lambda_segment_durations["function_execution"] = subsegment_end - subsegment_start;
+    } else if (subsegment_name.find_first_of("AWS::") != 0) {
+      lambda_segment_durations[subsegment_name] = subsegment_end - subsegment_start;
     }
   }
 
@@ -202,6 +204,7 @@ LambdaSegmentDurations FunctionSegmentsAnalyzer::CalculateLambdaSegmentDurations
 //  function_execution: Duration of XRay invocation segment
 //  function_overhead: Duration of XRay overhead segment
 //  function_remainder: Time not accounted for
+// All other segments are created with our tracer class to monitor Skyrise operators and stages.
 LambdaSegmentDurations FunctionSegmentsAnalyzer::CreateLambdaSegmentDurations() {
   return {{"total", std::chrono::duration<double>(0)},
           {"network_total", std::chrono::duration<double>(0)},

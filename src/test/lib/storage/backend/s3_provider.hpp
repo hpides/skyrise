@@ -16,7 +16,7 @@ class TemporaryS3Bucket {
       : error_(StorageErrorType::kNoError),
         client_(std::move(client)),
         bucket_name_("skyrise-testing-" +
-                     RandomString(kBucketRandomSuffixLength, kCharacterSetLower + kCharacterSetNumber)) {
+                     RandomString(kBucketRandomSuffixLength, kCharacterSetLower + kCharacterSetDecimal)) {
     error_ = S3Storage::CreateBucket(client_, bucket_name_);
     if (!error_) {
       storage_ = std::make_unique<S3Storage>(client_, bucket_name_);

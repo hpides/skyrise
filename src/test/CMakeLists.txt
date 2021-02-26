@@ -11,7 +11,13 @@ set(
     benchmark/lib/benchmark_result_test.cpp
     benchmark/lib/compression/compression_test.cpp
     benchmark/lib/data_generation/tpch_test.cpp
-    benchmark/lib/function_segments_test.cpp
+    
+    lib/monitoring/function_segments_test.cpp
+    lib/monitoring/metrics_collector_test.cpp
+    lib/monitoring/tracer_test.cpp
+    lib/monitoring/monitoring_test_utils.cpp
+    lib/monitoring/monitoring_test_utils.hpp
+
 
     lib/storage/backend/abstract_provider.hpp
     lib/storage/backend/filesystem_provider.hpp

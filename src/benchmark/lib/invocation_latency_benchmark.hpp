@@ -5,7 +5,7 @@
 #include "benchmark.hpp"
 #include "benchmark_config.hpp"
 #include "benchmark_helper.hpp"
-#include "function_segments.hpp"
+#include "monitoring/function_segments.hpp"
 #include "utils/costs/cost_calculator.hpp"
 
 namespace skyrise {

@@ -26,8 +26,6 @@ set(
     function_colocation_benchmark.hpp
     function_config.hpp
     function_invocation_config.hpp
-    function_segments.cpp
-    function_segments.hpp
     function_temperature_benchmark.cpp
     function_temperature_benchmark.hpp
     idle_availability_benchmark.cpp

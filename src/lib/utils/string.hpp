@@ -18,7 +18,8 @@ namespace skyrise {
 // Character sets for randomly generated strings
 const std::string kCharacterSetUpper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const std::string kCharacterSetLower = "abcdefghijklmnopqrstuvwxyz";
-const std::string kCharacterSetNumber = "0123456789";
+const std::string kCharacterSetDecimal = "0123456789";
+const std::string kCharacterSetHex = "0123456789abcdef";
 
 // Crop a source file path to ensure readable assert messages (e.g., "/long/path/1234/src/lib/file.cpp" becomes
 // "src/lib/file.cpp")
@@ -51,7 +52,7 @@ std::string VectorToString(const std::vector<T>& vector, const std::string& deli
 // Create a randomly generated string
 std::string RandomString(const size_t length, const std::string& character_set = kCharacterSetUpper +
                                                                                  kCharacterSetLower +
-                                                                                 kCharacterSetNumber);
+                                                                                 kCharacterSetDecimal);
 
 /**
  * Get the number of bytes that are allocated on the heap for the given string.

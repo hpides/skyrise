@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_set>
+
 #include <aws/xray/XRayClient.h>
 
 #include "benchmark_runner.hpp"
@@ -13,17 +15,18 @@ class FunctionSegmentsAnalyzer {
   FunctionSegmentsAnalyzer(const Aws::XRay::XRayClient& client)
       : client_(client), num_accessed_traces_(0), num_scanned_traces_(0){};
 
-  std::map<Aws::String, std::set<Aws::String>> GetTraceIds(
+  std::map<Aws::String, std::unordered_set<Aws::String>> GetTraceIds(
       const std::vector<Aws::String>& function_names,
       const std::chrono::time_point<std::chrono::system_clock>& start_time,
       const std::chrono::time_point<std::chrono::system_clock>& end_time, size_t num_ids_expected = 1);
   std::map<Aws::String, Aws::XRay::Model::Trace> GetTraces(const std::vector<Aws::String>& trace_ids);
 
-  static std::map<Aws::String, std::pair<std::chrono::duration<double>, std::chrono::duration<double>>> GetSegments(
-      const Aws::XRay::Model::Trace& trace);
+  static void FlattenSubsegments(
+      const std::shared_ptr<std::map<Aws::String, Aws::Utils::Json::JsonValue>>& unprocessed_lambda_segments,
+      const Aws::String& parent, const Aws::Utils::Json::JsonView& json);
+  static std::map<Aws::String, Aws::Utils::Json::JsonValue> GetSegments(const Aws::XRay::Model::Trace& trace);
   static LambdaSegmentDurations CalculateLambdaSegmentDurations(
-      const std::map<Aws::String, std::pair<std::chrono::duration<double>, std::chrono::duration<double>>>&
-          unprocessed_lambda_segments,
+      const std::map<Aws::String, Aws::Utils::Json::JsonValue>& unprocessed_lambda_segments,
       const std::chrono::time_point<std::chrono::system_clock>& start_time,
       const std::chrono::time_point<std::chrono::system_clock>& end_time);
   static LambdaSegmentDurations CreateLambdaSegmentDurations();

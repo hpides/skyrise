@@ -64,7 +64,7 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> InvocationLatencyBenchmark::Run(
 
         config_result_segments_futures->emplace_back(
             invocation_result.second.invocation_id, std::async([&]() {
-              std::map<Aws::String, std::pair<std::chrono::duration<double>, std::chrono::duration<double>>> segments;
+              std::map<Aws::String, Aws::Utils::Json::JsonValue> segments;
 
               try {
                 const auto trace_id = ExtractTraceId(invocation_result.second);
