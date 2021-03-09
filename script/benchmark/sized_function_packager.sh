@@ -2,10 +2,12 @@
 
 set -euo pipefail
 
-_10_MB=10240
+# Offset to create the correct zip size for release build
+_10_MB_OFFSET=$((1024 * 4))
+_10_MB=$(((1024 * 1024 * 10) - $_10_MB_OFFSET))
 
 PACKAGE_DIR=$1
-PACKAGE_SIZE=$(du $PACKAGE_DIR/skyriseFunctionMinimal.zip 2> /dev/null | cut -f1)
+PACKAGE_SIZE=$(du -b $PACKAGE_DIR/skyriseFunctionMinimal.zip 2> /dev/null | cut -f1)
 MINIMAL_SIZE=$((_10_MB - PACKAGE_SIZE))
 IS_CHANGED=false
 
@@ -24,15 +26,15 @@ if [ $IS_CHANGED = false ]; then
 fi
 
 if [ $MINIMAL_SIZE -gt 0 ]; then
-  dd if=/dev/urandom count=1 bs=${MINIMAL_SIZE}K 2> /dev/null > $PACKAGE_DIR/sized_blob_minimal
+  dd if=/dev/urandom count=1 bs=${MINIMAL_SIZE} 2> /dev/null > $PACKAGE_DIR/sized_blob_minimal
 else
   touch $PACKAGE_DIR/sized_blob_minimal
 fi
 
 # Offsets to create the correct zip size for release build
-dd if=/dev/urandom count=1 bs=10236K 2> /dev/null > $PACKAGE_DIR/temp_sized_blob_20MB &
+dd if=/dev/urandom count=1 bs=10240K 2> /dev/null > $PACKAGE_DIR/temp_sized_blob_20MB &
 dd if=/dev/urandom count=1 bs=20476K 2> /dev/null > $PACKAGE_DIR/temp_sized_blob_30MB &
-dd if=/dev/urandom count=1 bs=30712K 2> /dev/null > $PACKAGE_DIR/temp_sized_blob_40MB &
+dd if=/dev/urandom count=1 bs=30716K 2> /dev/null > $PACKAGE_DIR/temp_sized_blob_40MB &
 dd if=/dev/urandom count=2 bs=20476K 2> /dev/null > $PACKAGE_DIR/temp_sized_blob_50MB &
 dd if=/dev/urandom count=4 bs=23036K 2> /dev/null > $PACKAGE_DIR/temp_sized_blob_100MB &
 wait
@@ -51,7 +53,7 @@ wait
 zip -q -u $PACKAGE_DIR/skyriseFunctionSized10MB.zip $PACKAGE_DIR/sized_blob_minimal &
 
 for SIZE in {20,30,40,50,100}; do
-zip -q -u $PACKAGE_DIR/skyriseFunctionSized${SIZE}MB.zip $PACKAGE_DIR/sized_blob_${SIZE}MB &
+  zip -q -u $PACKAGE_DIR/skyriseFunctionSized${SIZE}MB.zip $PACKAGE_DIR/sized_blob_${SIZE}MB &
 done
 wait
 

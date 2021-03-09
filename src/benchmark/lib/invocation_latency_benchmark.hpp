@@ -15,6 +15,7 @@ struct InvocationLatencyBenchmarkParameters {
   size_t function_instance_mb_size;
   size_t invocation_count;
   bool warm_mode;
+  size_t sleep_ms_duration;
   size_t repetition_count;
 };
 
@@ -24,7 +25,7 @@ class InvocationLatencyBenchmark : public Benchmark {
                              std::shared_ptr<CostCalculator> cost_calculator,
                              const std::vector<size_t>& function_instance_mb_sizes,
                              const std::vector<size_t>& invocation_counts, const std::vector<bool>& warm_modes,
-                             const size_t repetition_count);
+                             const std::vector<size_t>& sleep_ms_durations, const size_t repetition_count);
 
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> Run(const std::shared_ptr<BenchmarkRunner>& benchmark_runner) override;
 
@@ -43,6 +44,7 @@ class InvocationLatencyBenchmark : public Benchmark {
   const std::vector<size_t> function_instance_mb_sizes_;
   const std::vector<size_t>& invocation_counts_;
   const std::vector<bool>& warm_modes_;
+  const std::vector<size_t> sleep_ms_durations_;
   const size_t repetition_count_;
 
   long double benchmark_cost_;

@@ -25,9 +25,8 @@ void ExecuteInsideAPI(const std::function<void()>& function) {
 }
 
 // TODO(anyone): Consolidate common utility functions in lib/utils
-std::pair<std::chrono::time_point<std::chrono::system_clock>, std::chrono::time_point<std::chrono::system_clock>>
-UploadFunction(const std::shared_ptr<Client>& client, const std::string& package_name, const std::string& function_name,
-               const std::string& role_name, bool enable_tracing) {
+void UploadFunction(const std::shared_ptr<Client>& client, const std::string& package_name,
+                    const std::string& function_name, const std::string& role_name, bool enable_tracing) {
   // TODO(anyone): Use GetProjectDirPath() currently residing in BenchmarkConfig for more robustness
   const Aws::String function_path = "./pkg/" + package_name + ".zip";
   std::ifstream infile(function_path, std::ios::in | std::ios::binary);
@@ -59,7 +58,10 @@ UploadFunction(const std::shared_ptr<Client>& client, const std::string& package
   const auto create_function_outcome = client->GetLambdaClient().CreateFunction(create_function_request);
 
   Assert(create_function_outcome.IsSuccess(), create_function_outcome.GetError().GetMessage());
+}
 
+std::pair<std::chrono::time_point<std::chrono::system_clock>, std::chrono::time_point<std::chrono::system_clock>>
+InvokeFunction(const std::shared_ptr<Client>& client, const std::string& function_name) {
   Aws::Lambda::Model::InvokeRequest invoke_request;
   invoke_request.WithFunctionName(function_name);
 

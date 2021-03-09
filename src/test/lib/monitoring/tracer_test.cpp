@@ -25,7 +25,9 @@ class TracerTest : public ::testing::Test {
     std::function<void()> api_executable = [&]() {
       client_ = std::make_shared<skyrise::Client>();
 
-      const auto time_points = UploadFunction(client_, kPackageName_, kFunctionName_, kRoleName_, kEnableTracing_);
+      UploadFunction(client_, kPackageName_, kFunctionName_, kRoleName_, kEnableTracing_);
+      const auto time_points = InvokeFunction(client_, kFunctionName_);
+
       start_time_ = time_points.first;
       end_time_ = time_points.second;
     };

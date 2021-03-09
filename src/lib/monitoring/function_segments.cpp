@@ -112,10 +112,12 @@ void FunctionSegmentsAnalyzer::FlattenSubsegments(
     const Aws::String& parent, const Aws::Utils::Json::JsonView& json) {
   if (json.KeyExists("subsegments")) {
     const auto subsegments_array = json.GetArray("subsegments");
+
     for (size_t i = 0; i < subsegments_array.GetLength(); ++i) {
       const auto item = subsegments_array.GetItem(i);
       unprocessed_lambda_segments->emplace(
           (parent.empty() || parent == "Invocation" ? "" : parent + "_") + item.GetString("name"), item.Materialize());
+
       FlattenSubsegments(unprocessed_lambda_segments, item.GetString("name"), subsegments_array.GetItem(i));
     }
   }

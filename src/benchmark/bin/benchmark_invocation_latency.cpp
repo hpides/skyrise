@@ -31,8 +31,14 @@ int main(int argc, char* argv[]) {
 
     cli_options_adder("function_instance_mb_sizes", "The function instance sizes [MB]",
                       cxxopts::value<std::vector<size_t>>());
-    cli_options_adder("invocation_counts", "The invocation counts", cxxopts::value<std::vector<size_t>>());
+    cli_options_adder("invocation_counts",
+                      "The invocation counts; set invocation count to 100 or less and use repetition count to "
+                      "multiply number of traces",
+                      cxxopts::value<std::vector<size_t>>());
     cli_options_adder("warm_modes", "The warm modes", cxxopts::value<std::vector<bool>>());
+    cli_options_adder("sleep_ms_durations",
+                      "The sleep durations [ms]; increase sleep time if there are too many function warm starts",
+                      cxxopts::value<std::vector<size_t>>());
     cli_options_adder("repetition_count", "The repetition count", cxxopts::value<size_t>());
 
     cli_options_adder("verbose", "Show the verbose status log", cxxopts::value<bool>());
@@ -69,11 +75,12 @@ int main(int argc, char* argv[]) {
     const auto benchmark_helper = std::make_shared<skyrise::BenchmarkHelper>(client);
 
     // Initialize the benchmark
-    skyrise::InvocationLatencyBenchmark benchmark(
-        client, benchmark_helper, cost_calculator,
-        {cli_arguments["function_instance_mb_sizes"].as<std::vector<size_t>>()},
-        {cli_arguments["invocation_counts"].as<std::vector<size_t>>()},
-        {cli_arguments["warm_modes"].as<std::vector<bool>>()}, cli_arguments["repetition_count"].as<size_t>());
+    skyrise::InvocationLatencyBenchmark benchmark(client, benchmark_helper, cost_calculator,
+                                                  cli_arguments["function_instance_mb_sizes"].as<std::vector<size_t>>(),
+                                                  cli_arguments["invocation_counts"].as<std::vector<size_t>>(),
+                                                  cli_arguments["warm_modes"].as<std::vector<bool>>(),
+                                                  cli_arguments["sleep_ms_durations"].as<std::vector<size_t>>(),
+                                                  cli_arguments["repetition_count"].as<size_t>());
 
     // Run the benchmark
     const auto benchmark_result = benchmark.Run(benchmark_runner);

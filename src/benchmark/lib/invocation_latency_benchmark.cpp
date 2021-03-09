@@ -20,7 +20,8 @@ namespace skyrise {
 InvocationLatencyBenchmark::InvocationLatencyBenchmark(
     std::shared_ptr<Client> client, std::shared_ptr<BenchmarkHelper> helper,
     std::shared_ptr<CostCalculator> cost_calculator, const std::vector<size_t>& function_instance_mb_sizes,
-    const std::vector<size_t>& invocation_counts, const std::vector<bool>& warm_modes, const size_t repetition_count)
+    const std::vector<size_t>& invocation_counts, const std::vector<bool>& warm_modes,
+    const std::vector<size_t>& sleep_ms_durations, const size_t repetition_count)
     : Benchmark(cost_calculator),
       client_(std::move(client)),
       helper_(std::move(helper)),
@@ -28,6 +29,7 @@ InvocationLatencyBenchmark::InvocationLatencyBenchmark(
       function_instance_mb_sizes_(function_instance_mb_sizes),
       invocation_counts_(invocation_counts),
       warm_modes_(warm_modes),
+      sleep_ms_durations_(sleep_ms_durations),
       repetition_count_(repetition_count),
       benchmark_cost_(0),
       cost_overhead_(0),
@@ -91,7 +93,6 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> InvocationLatencyBenchmark::Run(
 
     for (auto& future_segment_result : *config_result_segments_futures) {
       auto latency_segments = future_segment_result.second.get();
-
       // Use functions with initialization for coldstart testing and without initialization for warmstart testing
       if ((benchmark_parameters.warm_mode
                ? latency_segments["initialization"].count() == 0 && latency_segments["function_total"].count() > 0
@@ -151,19 +152,28 @@ void InvocationLatencyBenchmark::Setup() {
     for (const auto function_instance_mb_size : function_instance_mb_sizes_) {
       for (const auto invocation_count : invocation_counts_) {
         for (const auto warm_mode : warm_modes_) {
-          benchmark_configs_.emplace_back(
-              InvocationLatencyBenchmarkParameters{package_name, function_instance_mb_size, invocation_count, warm_mode,
-                                                   repetition_count_},
-              BenchmarkConfig{package_name,
-                              function_instance_mb_size,
-                              repetition_count_,
-                              static_cast<size_t>(invocation_count * kOverprovisioningCoefficient),
-                              warm_mode ? WarmUp::kDefault : WarmUp::kNone,
-                              warm_mode ? UseOneFunctionPerRepetition::kNo : UseOneFunctionPerRepetition::kYes,
-                              UseEventQueue::kNo,
-                              {},
-                              kBenchmarkName,
-                              kEnableTracing});
+          for (const auto sleep_ms_duration : sleep_ms_durations_) {
+            BenchmarkConfig benchmark_config{
+                package_name,
+                function_instance_mb_size,
+                repetition_count_,
+                static_cast<size_t>(invocation_count * kOverprovisioningCoefficient),
+                warm_mode ? WarmUp::kDefault : WarmUp::kNone,
+                warm_mode ? UseOneFunctionPerRepetition::kNo : UseOneFunctionPerRepetition::kYes,
+                UseEventQueue::kNo,
+                {},
+                kBenchmarkName,
+                kEnableTracing};
+
+            const auto payload_stream = std::make_shared<Aws::StringStream>(
+                Aws::Utils::Json::JsonValue().WithInt64("sleep_ms", sleep_ms_duration).View().WriteCompact());
+            benchmark_config.SetOnePayloadForAllFunctions(payload_stream);
+
+            benchmark_configs_.emplace_back(
+                InvocationLatencyBenchmarkParameters{package_name, function_instance_mb_size, invocation_count,
+                                                     warm_mode, sleep_ms_duration, repetition_count_},
+                benchmark_config);
+          }
         }
       }
     }
@@ -240,7 +250,7 @@ Aws::Utils::Json::JsonValue InvocationLatencyBenchmark::GenerateResultOutput(
   benchmark_name << "InvocationLatencyBenchmark/" << benchmark_parameters.function_package_name << "/"
                  << benchmark_parameters.function_instance_mb_size << "/" << benchmark_parameters.invocation_count
                  << "/" << (benchmark_parameters.warm_mode ? "Warm" : "Cold") << "/"
-                 << "/" << benchmark_parameters.repetition_count;
+                 << benchmark_parameters.sleep_ms_duration << "/" << benchmark_parameters.repetition_count;
 
   const auto& segments = FunctionSegmentsAnalyzer::CreateLambdaSegmentDurations();
   std::vector<std::function<std::tuple<Aws::String, double>(const InvocationResult&)>> extract_metric_functions;
@@ -288,6 +298,7 @@ Aws::Utils::Json::JsonValue InvocationLatencyBenchmark::GenerateResultOutput(
     aggregated_metrics.emplace_back(segment.first + "_percentile_99_99", aggregates.GetPercentile(99.99));
     aggregated_metrics.emplace_back(segment.first + "_standard_deviation", aggregates.GetStandardDeviation());
   }
+
   aggregated_metrics.emplace_back("benchmark_cost_usd", static_cast<double>(benchmark_cost_));
   aggregated_metrics.emplace_back("benchmark_cost_overhead_usd", static_cast<double>(cost_overhead_));
   aggregated_metrics.emplace_back("warm_up_cost_usd",
