@@ -163,37 +163,6 @@ void BenchmarkRunner::SetupEventQueue() {
 }
 
 void BenchmarkRunner::Teardown() {
-  AWS_LOGSTREAM_INFO(kTag.c_str(), "Deleting functions...");
-
-  std::vector<std::pair<Aws::String, std::future<Aws::Lambda::Model::DeleteFunctionOutcome>>> delete_function_outcomes;
-  delete_function_outcomes.reserve(config_->function_configs_.size());
-
-  const auto& lambda_client = client_->GetLambdaClient();
-
-  for (const auto& function_config : config_->function_configs_) {
-    AWS_LOGSTREAM_INFO(kTag.c_str(), "Deleting function " << function_config.function_name << "...")
-
-    delete_function_outcomes.emplace_back(
-        function_config.function_name, std::async([&]() {
-          const auto delete_function_request =
-              Aws::Lambda::Model::DeleteFunctionRequest().WithFunctionName(function_config.function_name);
-
-          return lambda_client.DeleteFunction(delete_function_request);
-        }));
-  }
-
-  for (auto& outcome_pair : delete_function_outcomes) {
-    const auto outcome = outcome_pair.second.get();
-
-    if (outcome.IsSuccess()) {
-      AWS_LOGSTREAM_INFO(kTag.c_str(), "Function " << outcome_pair.first << " deleted.");
-    } else {
-      AWS_LOGSTREAM_ERROR(kTag.c_str(), outcome.GetError().GetMessage());
-    }
-  }
-
-  AWS_LOGSTREAM_INFO(kTag.c_str(), "Functions deleted.");
-
   if (sqs_queue_url_) {
     AWS_LOGSTREAM_INFO(kTag.c_str(), "Deleting queue " << *sqs_queue_url_ << "...");
 
@@ -262,7 +231,18 @@ void BenchmarkRunner::InvokeFunctions() {
     AWS_LOGSTREAM_INFO(kTag.c_str(), "Repetition " << i << " finished in "
                                                    << benchmark_result_->GetRepetitionDuration(i).count()
                                                    << " seconds.");
-    // TODO(d-justen): If OneFunctionPerRepetition: delete function i instantly
+    if (config_->use_one_function_per_repetition_ == UseOneFunctionPerRepetition::kYes ||
+        i == config_->repetition_count_ - 1) {
+      const size_t function_index =
+          config_->use_one_function_per_repetition_ == UseOneFunctionPerRepetition::kYes ? i : 0;
+      AWS_LOGSTREAM_INFO(kTag.c_str(),
+                         "Delete function " << config_->function_configs_[function_index].function_name << "...");
+
+      lambda_client.DeleteFunction(Aws::Lambda::Model::DeleteFunctionRequest().WithFunctionName(
+          config_->function_configs_[function_index].function_name));
+
+      AWS_LOGSTREAM_INFO(kTag.c_str(), "Function deleted.");
+    }
   }
 
   // BENCHMARK ENDS

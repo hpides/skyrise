@@ -136,6 +136,10 @@ Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
     unavailable_phases_counts.emplace_back(static_cast<double>(unavailable_phases_count));
   }
 
+  if (unavailable_phases_lengths.empty()) {
+    unavailable_phases_lengths.emplace_back(0);
+  }
+
   const BenchmarkResultAggregate availability_percentages_aggregates(availability_percentages);
   const BenchmarkResultAggregate unavailable_phases_counts_aggregates(unavailable_phases_counts);
   const BenchmarkResultAggregate unavailable_phases_lengths_aggregates(unavailable_phases_lengths);

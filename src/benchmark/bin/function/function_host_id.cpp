@@ -1,12 +1,15 @@
 #include "function_host_id.hpp"
 
 #include <sstream>
+#include <thread>
 
 #include <aws/lambda-runtime/runtime.h>
 
 #include "utils/profiling/function_host_information.hpp"
 
 namespace skyrise {
+
+const size_t kMsSleep = 3000;
 
 aws::lambda_runtime::invocation_response FunctionHostId::OnHandleRequest(
     const Aws::Utils::Json::JsonView& /*request*/) const {
@@ -20,6 +23,8 @@ aws::lambda_runtime::invocation_response FunctionHostId::OnHandleRequest(
   identifier << information_identification.id;
   identifier << "_";
   identifier << information_identification.ip_private;
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(kMsSleep));
 
   return aws::lambda_runtime::invocation_response::success(identifier.str(), "text/plain");
 }

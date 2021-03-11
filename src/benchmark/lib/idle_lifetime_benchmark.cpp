@@ -24,7 +24,7 @@ IdleLifetimeBenchmark::IdleLifetimeBenchmark(std::shared_ptr<CostCalculator> cos
 
   for (const auto sleep_min_duration : sleep_min_durations) {
     std::vector<std::function<void()>> after_repetition_callbacks;
-    after_repetition_callbacks.reserve(repetition_count - 1);
+    after_repetition_callbacks.reserve(repetition_count + 1);
 
     for (size_t i = 0; i < repetition_count; ++i) {
       after_repetition_callbacks.emplace_back(
@@ -75,33 +75,42 @@ Aws::Utils::Json::JsonValue IdleLifetimeBenchmark::GenerateResultOutput(
 
   const auto& invocation_results = benchmark_result->GetInvocationResults();
 
-  std::map<Aws::String, double> vm_ids_to_idle_lifetimes;
+  std::vector<double> idle_lifetime_percentages;
+  idle_lifetime_percentages.reserve(invocation_results.size() - 1);
+
+  std::set<std::string> initial_vm_ids;
 
   for (size_t i = 0; i < invocation_results.size(); ++i) {
+    std::set<std::string> observed_vm_ids;
+
     for (const auto& invocation : invocation_results[i]) {
       const Aws::String vm_id = StreamToString(&invocation.second.invoke_result->GetPayload());
 
       if (i == 0) {
-        vm_ids_to_idle_lifetimes.emplace(vm_id, 0);
-      } else if (vm_ids_to_idle_lifetimes.count(vm_id) > 0) {
-        vm_ids_to_idle_lifetimes[vm_id] = static_cast<double>(benchmark_parameters.sleep_min_duration);
+        initial_vm_ids.emplace(vm_id);
+      } else if (initial_vm_ids.count(vm_id) > 0) {
+        observed_vm_ids.emplace(vm_id);
       }
+    }
+
+    if (i > 0) {
+      idle_lifetime_percentages.emplace_back(observed_vm_ids.size() / static_cast<double>(initial_vm_ids.size()));
     }
   }
 
-  const BenchmarkResultAggregate aggregates(ExtractMapValues(vm_ids_to_idle_lifetimes));
+  const BenchmarkResultAggregate aggregates(idle_lifetime_percentages);
 
   return BenchmarkHelper::GenerateJsonOutput(
       benchmark_name.str(),
-      {{"idle_lifetime_min_minimum", aggregates.GetMinimum()},
-       {"idle_lifetime_min_maximum", aggregates.GetMaximum()},
-       {"idle_lifetime_min_average", aggregates.GetAverage()},
-       {"idle_lifetime_min_median", aggregates.GetMedian()},
-       {"idle_lifetime_min_percentile_0.01", aggregates.GetPercentile(0.01)},
-       {"idle_lifetime_min_percentile_0.1", aggregates.GetPercentile(0.1)},
-       {"idle_lifetime_min_percentile_1", aggregates.GetPercentile(1)},
-       {"idle_lifetime_min_percentile_10", aggregates.GetPercentile(10)},
-       {"idle_lifetime_min_std_dev", aggregates.GetStandardDeviation()},
+      {{"idle_lifetime_percentage_minimum", aggregates.GetMinimum()},
+       {"idle_lifetime_percentage_maximum", aggregates.GetMaximum()},
+       {"idle_lifetime_percentage_average", aggregates.GetAverage()},
+       {"idle_lifetime_percentage_median", aggregates.GetMedian()},
+       {"idle_lifetime_percentage_percentile_0.01", aggregates.GetPercentile(0.01)},
+       {"idle_lifetime_percentage_percentile_0.1", aggregates.GetPercentile(0.1)},
+       {"idle_lifetime_percentage_percentile_1", aggregates.GetPercentile(1)},
+       {"idle_lifetime_percentage_percentile_10", aggregates.GetPercentile(10)},
+       {"idle_lifetime_percentage_std_dev", aggregates.GetStandardDeviation()},
        {"benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
                                   benchmark_result, benchmark_parameters.function_instance_mb_size))}},
       {/*aggregated string metrics*/}, benchmark_result, {[&](const InvocationResult& item_result) {

@@ -28,7 +28,7 @@ NetworkThroughputBenchmark::NetworkThroughputBenchmark(std::shared_ptr<Benchmark
             Aws::StringStream function_name;
             function_name << "skyriseFunction" << (operation_type == S3OperationType::kRead ? "Read" : "Write") << "S3";
 
-            BenchmarkConfig config(function_name.str(), function_instance_mb_size, repetition_count_ / batch_size_, 1);
+            BenchmarkConfig config(function_name.str(), function_instance_mb_size, repetition_count_);
             config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size, thread_count,
                                                 config.concurrent_invocation_count_, operation_type));
             benchmark_configs_.emplace_back(

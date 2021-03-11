@@ -37,6 +37,7 @@ aws::lambda_runtime::invocation_response Function::HandlerFunction(
 
 void Function::HandleRequest() const {
   Aws::SDKOptions options;
+  options.httpOptions.installSigPipeHandler = true;
   options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Info;
   options.loggingOptions.logger_create_fn = [] {
     return Aws::MakeShared<Aws::Utils::Logging::ConsoleLogSystem>("console_logger",

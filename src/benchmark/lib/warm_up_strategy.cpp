@@ -72,19 +72,23 @@ long double ConfigurableWarmUpStrategy::CalculateWarmUpCost(
   long double function_warm_up_cost = 0;
 
   for (auto& outcome_callable : *invoke_outcome_callables) {
-    const auto result = outcome_callable.get().GetResultWithOwnership();
+    auto outcome = outcome_callable.get();
 
-    // TODO(anyone): Decouple Base64 decoding and LogResult parsing from WarmUpStrategy
-    const Aws::Utils::ByteBuffer log_result_chars = Aws::Utils::Base64::Base64().Decode(result.GetLogResult());
-    const std::string log_result(reinterpret_cast<char const*>(log_result_chars.GetUnderlyingData()),
-                                 log_result_chars.GetLength());
+    if (outcome.IsSuccess()) {
+      const auto result = outcome.GetResultWithOwnership();
 
-    const std::regex metric_regex("REPORT.+Billed Duration: ([\\d\\.]+)");
-    std::smatch metric_match;
-    std::regex_search(log_result, metric_match, metric_regex);
+      // TODO(anyone): Decouple Base64 decoding and LogResult parsing from WarmUpStrategy
+      const Aws::Utils::ByteBuffer log_result_chars = Aws::Utils::Base64::Base64().Decode(result.GetLogResult());
+      const std::string log_result(reinterpret_cast<char const*>(log_result_chars.GetUnderlyingData()),
+                                   log_result_chars.GetLength());
 
-    function_warm_up_cost +=
-        cost_calculator_->CalculateCostLambda(std::stod(metric_match[1]), function_config.memory_size);
+      const std::regex metric_regex("REPORT.+Billed Duration: ([\\d\\.]+)");
+      std::smatch metric_match;
+      std::regex_search(log_result, metric_match, metric_regex);
+
+      function_warm_up_cost +=
+          cost_calculator_->CalculateCostLambda(std::stod(metric_match[1]), function_config.memory_size);
+    }
   }
 
   return function_warm_up_cost;
