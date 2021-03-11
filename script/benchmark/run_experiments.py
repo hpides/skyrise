@@ -49,9 +49,12 @@ if __name__ == "__main__":
                         dest="experiments")
     arguments = parser.parse_args()
 
-    experiments = set(filter(None, arguments.experiments.split(",")))
-    experiments = experiments.intersection(
-        experiment_specifications.experiments) if experiments else experiment_specifications.experiments
+    experiment_identifiers = set(filter(None, arguments.experiments.split(",")))
+
+    experiments = [
+        experiment for experiment in experiment_specifications.experiments
+        if (experiment.identifier in experiment_identifiers)
+    ] if experiment_identifiers else experiment_specifications.experiments
 
     script_path = pathlib.Path(__file__).parent.resolve()
     executable_path = pathlib.Path(script_path / experiment_specifications.executables_path).resolve()
