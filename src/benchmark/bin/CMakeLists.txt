@@ -1,6 +1,8 @@
 add_executable(
     skyriseBenchmarkFunctionColocation
 
+    benchmark_executable.cpp
+    benchmark_executable.hpp
     benchmark_function_colocation.cpp
 )
 
@@ -13,6 +15,8 @@ target_link_libraries(
 add_executable(
     skyriseBenchmarkFunctionTemperature
 
+    benchmark_executable.cpp
+    benchmark_executable.hpp
     benchmark_function_temperature.cpp
 )
 
@@ -25,6 +29,8 @@ target_link_libraries(
 add_executable(
     skyriseBenchmarkIdleAvailability
 
+    benchmark_executable.cpp
+    benchmark_executable.hpp
     benchmark_idle_availability.cpp
 )
 
@@ -37,6 +43,8 @@ target_link_libraries(
 add_executable(
     skyriseBenchmarkIdleLifetime
 
+    benchmark_executable.cpp
+    benchmark_executable.hpp
     benchmark_idle_lifetime.cpp
 )
 
@@ -49,6 +57,8 @@ target_link_libraries(
 add_executable(
     skyriseBenchmarkInvocationLatency
 
+    benchmark_executable.cpp
+    benchmark_executable.hpp
     benchmark_invocation_latency.cpp
 )
 
@@ -61,6 +71,8 @@ target_link_libraries(
 add_executable(
     skyriseBenchmarkInvocationThroughput
 
+    benchmark_executable.cpp
+    benchmark_executable.hpp
     benchmark_invocation_throughput.cpp
 )
 
@@ -73,6 +85,8 @@ target_link_libraries(
 add_executable(
     skyriseBenchmarkNetworkLatency
 
+    benchmark_executable.cpp
+    benchmark_executable.hpp
     benchmark_network_latency.cpp
 )
 
@@ -85,6 +99,8 @@ target_link_libraries(
 add_executable(
     skyriseBenchmarkNetworkThroughput
 
+    benchmark_executable.cpp
+    benchmark_executable.hpp
     benchmark_network_throughput.cpp
 )
 
@@ -97,6 +113,8 @@ target_link_libraries(
 add_executable(
     skyriseBenchmarkNetworkThroughputParallel
 
+    benchmark_executable.cpp
+    benchmark_executable.hpp
     benchmark_network_throughput_parallel.cpp
 )
 

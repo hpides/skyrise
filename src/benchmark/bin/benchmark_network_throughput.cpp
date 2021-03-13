@@ -1,102 +1,33 @@
-#include <iostream>
-#include <string>
-
-#include <aws/core/Aws.h>
-#include <aws/core/utils/logging/ConsoleLogSystem.h>
-#include <aws/core/utils/logging/LogLevel.h>
-#include <cxxopts.hpp>
-
-#include "benchmark_helper.hpp"
-#include "benchmark_runner.hpp"
-#include "client/client.hpp"
+#include "benchmark_executable.hpp"
 #include "network_throughput_benchmark.hpp"
-#include "utils/costs/cost_calculator.hpp"
-#include "utils/filesystem.hpp"
-#include "utils/git_metadata.hpp"
-#include "utils/time.hpp"
 
 int main(int argc, char* argv[]) {
-  int return_code = 0;
-
-  cxxopts::ParseResult cli_arguments;
-  Aws::SDKOptions sdk_options;
-  sdk_options.httpOptions.installSigPipeHandler = true;
-
   try {
-    // Parse the command line arguments
-    cxxopts::Options cli_options("skyriseBenchmarkNetworkThroughput", "Network Throughput Benchmark");
+    BenchmarkExecutable executable("skyriseBenchmarkNetworkThroughput", "Network Throughput Benchmark");
 
-    cxxopts::OptionAdder cli_options_adder = cli_options.add_options();
-    cli_options_adder("output", "The output file <file.json>", cxxopts::value<std::string>());
+    cxxopts::OptionAdder& option_adder = executable.GetOptionAdder();
+    option_adder("function_instance_mb_sizes", "The function instance sizes [MB]",
+                 cxxopts::value<std::vector<size_t>>());
+    option_adder("object_byte_sizes", "The object sizes [B]", cxxopts::value<std::vector<size_t>>());
+    option_adder("thread_counts", "The thread counts", cxxopts::value<std::vector<size_t>>());
+    option_adder("batch_size", "The batch size", cxxopts::value<size_t>());
+    option_adder("repetition_count", "The repetition count", cxxopts::value<size_t>());
 
-    cli_options_adder("function_instance_mb_sizes", "The function instance sizes [MB]",
-                      cxxopts::value<std::vector<size_t>>());
-    cli_options_adder("object_byte_sizes", "The object sizes [B]", cxxopts::value<std::vector<size_t>>());
-    cli_options_adder("thread_counts", "The thread counts", cxxopts::value<std::vector<size_t>>());
-    cli_options_adder("batch_size", "The batch size", cxxopts::value<size_t>());
-    cli_options_adder("repetition_count", "The repetition count", cxxopts::value<size_t>());
+    cxxopts::ParseResult& parse_result = executable.GetParseResult(argc, argv);
 
-    cli_options_adder("verbose", "Show the verbose status log", cxxopts::value<bool>());
-    cli_options_adder("help", "Print the usage overview", cxxopts::value<bool>());
+    auto benchmark = std::make_shared<skyrise::NetworkThroughputBenchmark>(
+        executable.GetBenchmarkHelper(), executable.GetCostCalculator(),
+        parse_result["function_instance_mb_sizes"].as<std::vector<size_t>>(),
+        parse_result["object_byte_sizes"].as<std::vector<size_t>>(),
+        parse_result["thread_counts"].as<std::vector<size_t>>(), parse_result["batch_size"].as<size_t>(),
+        parse_result["repetition_count"].as<size_t>());
 
-    cli_options.parse_positional({"output"});
-    cli_options.positional_help("OUTPUT");
-
-    cli_arguments = cli_options.parse(argc, argv);
-
-    if (cli_arguments.count("help") > 0) {
-      std::cout << cli_options.help();
-      exit(0);
-    }
-
-    if (cli_arguments.count("output") == 0) {
-      throw cxxopts::option_required_exception("OUTPUT");
-    }
-
-    if (cli_arguments.count("verbose") > 0) {
-      Aws::Utils::Logging::LogLevel log_level{Aws::Utils::Logging::LogLevel::Info};
-      sdk_options.loggingOptions.logLevel = log_level;
-      sdk_options.loggingOptions.logger_create_fn = [log_level]() {
-        return Aws::MakeShared<Aws::Utils::Logging::ConsoleLogSystem>("console_logger", log_level);
-      };
-    }
-
-    Aws::InitAPI(sdk_options);
-
-    // Initialize the clients
-    const auto client = std::make_shared<skyrise::Client>();
-    const auto cost_calculator = std::make_shared<skyrise::CostCalculator>(client);
-    const auto benchmark_runner = std::make_shared<skyrise::BenchmarkRunner>(client);
-    const auto benchmark_helper = std::make_shared<skyrise::BenchmarkHelper>(client);
-
-    // Initialize the benchmark
-    skyrise::NetworkThroughputBenchmark benchmark(
-        benchmark_helper, cost_calculator, {cli_arguments["function_instance_mb_sizes"].as<std::vector<size_t>>()},
-        {cli_arguments["object_byte_sizes"].as<std::vector<size_t>>()},
-        {cli_arguments["thread_counts"].as<std::vector<size_t>>()}, cli_arguments["batch_size"].as<size_t>(),
-        cli_arguments["repetition_count"].as<size_t>());
-
-    // Run the benchmark
-    const auto benchmark_result = benchmark.Run(benchmark_runner);
-
-    // Generate the output
-    const auto output =
-        Aws::Utils::Json::JsonValue()
-            .WithObject("context", Aws::Utils::Json::JsonValue()
-                                       .WithString("date", skyrise::GetFormattedTimestamp("%Y/%m/%d-%H:%M:%S"))
-                                       .WithString("commit", GitMetadata::CommitSha1()))
-            .WithArray("benchmarks", benchmark_result);
-
-    // Save the output
-    skyrise::WriteStringToFile(output.View().WriteReadable(), cli_arguments["output"].as<std::string>());
-
+    executable.ExecuteBenchmark(benchmark);
   } catch (const std::exception& exception) {
     std::cout << exception.what() << "\n";
 
-    return_code = 1;
+    return 1;
   }
 
-  Aws::ShutdownAPI(sdk_options);
-
-  return return_code;
+  return 0;
 }
