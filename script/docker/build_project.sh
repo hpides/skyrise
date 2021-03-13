@@ -22,6 +22,7 @@ exitWithError() {
 SOURCE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../"; pwd)
 BUILD_DIR=cmake-build-debug
 CMAKE_OPTIONS=''
+CMAKE_FORCE=false
 MAKE_TARGET=all
 PREFIX=hpiepic
 BUILD_TYPE=Debug
@@ -30,6 +31,7 @@ while [ "$#" -gt 0 ]; do
     case $1 in
         -b|--build-dir) BUILD_DIR="$2"; shift ;;
         -c|--cmake) CMAKE_OPTIONS="$2"; shift ;;
+        -f|--cmake-force) CMAKE_FORCE=true ;;
         -p|--prefix) PREFIX="$2"; shift ;;
         -t|--build-type) BUILD_TYPE="$2"; shift ;;
         -m|--make-target) MAKE_TARGET="$2"; shift ;;
@@ -38,8 +40,6 @@ while [ "$#" -gt 0 ]; do
     esac
     shift
 done
-
-mkdir -p "${SOURCE_DIR}/${BUILD_DIR}"
 
 if [ "$(uname -s)" = Linux ]; then
     NUM_CORES=$(nproc)
@@ -50,13 +50,19 @@ else
     exit 1
 fi
 
+mkdir -p "${SOURCE_DIR}/${BUILD_DIR}"
+CMAKE_COMMAND=''
+if [ ! -f "${SOURCE_DIR}/${BUILD_DIR}/CMakeCache.txt" ] || [ "${CMAKE_FORCE}" = true ]; then
+    CMAKE_COMMAND="cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ${CMAKE_OPTIONS}; "
+fi
+
 PROJECT_MOUNT_POINT=/var/skyrise
-USER_ID="$(id -u)"
 BUILD_COMMAND="export CCACHE_DIR=${PROJECT_MOUNT_POINT}/ccache; \
 cd ${PROJECT_MOUNT_POINT}/${BUILD_DIR}; \
-cmake .. -GNinja -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ${CMAKE_OPTIONS}; \
+${CMAKE_COMMAND}\
 ninja-build $MAKE_TARGET -j$NUM_CORES"
 
+USER_ID="$(id -u)"
 COMMAND="docker run --rm \
 --user ${USER_ID} \
 --volume ${SOURCE_DIR}:${PROJECT_MOUNT_POINT} \
