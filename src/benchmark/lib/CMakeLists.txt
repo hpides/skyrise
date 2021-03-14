@@ -26,8 +26,10 @@ set(
     function_colocation_benchmark.hpp
     function_config.hpp
     function_invocation_config.hpp
-    function_temperature_benchmark.cpp
-    function_temperature_benchmark.hpp
+    function_warm_up_benchmark.cpp
+    function_warm_up_benchmark.hpp
+    function_warm_up_continuous_benchmark.cpp
+    function_warm_up_continuous_benchmark.hpp
     idle_availability_benchmark.cpp
     idle_availability_benchmark.hpp
     idle_lifetime_benchmark.cpp

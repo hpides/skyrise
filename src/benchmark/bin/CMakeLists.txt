@@ -13,15 +13,29 @@ target_link_libraries(
 )
 
 add_executable(
-    skyriseBenchmarkFunctionTemperature
+    skyriseBenchmarkFunctionWarmUp
 
     benchmark_executable.cpp
     benchmark_executable.hpp
-    benchmark_function_temperature.cpp
+    benchmark_function_warm_up.cpp
 )
 
 target_link_libraries(
-    skyriseBenchmarkFunctionTemperature
+    skyriseBenchmarkFunctionWarmUp
+
+    skyriseBenchmark
+)
+
+add_executable(
+    skyriseBenchmarkFunctionWarmUpContinuous
+
+    benchmark_executable.cpp
+    benchmark_executable.hpp
+    benchmark_function_warm_up_continuous.cpp
+)
+
+target_link_libraries(
+    skyriseBenchmarkFunctionWarmUpContinuous
 
     skyriseBenchmark
 )

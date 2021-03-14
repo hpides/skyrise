@@ -1,9 +1,9 @@
 #include "benchmark_executable.hpp"
-#include "function_temperature_benchmark.hpp"
+#include "function_warm_up_benchmark.hpp"
 
 int main(int argc, char* argv[]) {
   try {
-    BenchmarkExecutable executable("skyriseBenchmarkFunctionTemperature", "Function Temperature Benchmark");
+    BenchmarkExecutable executable("skyriseBenchmarkFunctionWarmUp", "Function Warm Up Benchmark");
 
     cxxopts::OptionAdder& option_adder = executable.GetOptionAdder();
     option_adder("function_instance_mb_sizes", "The function instance sizes [MB]",
@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
 
     cxxopts::ParseResult& parse_result = executable.GetParseResult(argc, argv);
 
-    auto benchmark = std::make_shared<skyrise::FunctionTemperatureBenchmark>(
+    auto benchmark = std::make_shared<skyrise::FunctionWarmUpBenchmark>(
         executable.GetCostCalculator(), parse_result["function_instance_mb_sizes"].as<std::vector<size_t>>(),
         parse_result["invocation_counts"].as<std::vector<size_t>>(),
         parse_result["sleep_ms_durations"].as<std::vector<size_t>>(),

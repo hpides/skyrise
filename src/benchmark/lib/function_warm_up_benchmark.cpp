@@ -1,4 +1,4 @@
-#include "function_temperature_benchmark.hpp"
+#include "function_warm_up_benchmark.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -9,12 +9,12 @@
 
 namespace skyrise {
 
-FunctionTemperatureBenchmark::FunctionTemperatureBenchmark(std::shared_ptr<CostCalculator> cost_calculator,
-                                                           const std::vector<size_t>& function_instance_mb_sizes,
-                                                           const std::vector<size_t>& invocation_counts,
-                                                           const std::vector<size_t>& sleep_ms_durations,
-                                                           const std::vector<double>& provisioning_factors,
-                                                           const size_t repetition_count)
+FunctionWarmUpBenchmark::FunctionWarmUpBenchmark(std::shared_ptr<CostCalculator> cost_calculator,
+                                                 const std::vector<size_t>& function_instance_mb_sizes,
+                                                 const std::vector<size_t>& invocation_counts,
+                                                 const std::vector<size_t>& sleep_ms_durations,
+                                                 const std::vector<double>& provisioning_factors,
+                                                 const size_t repetition_count)
     : Benchmark(std::move(cost_calculator)) {
   benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size() *
                              (1 + sleep_ms_durations.size() * provisioning_factors.size()));
@@ -33,9 +33,9 @@ FunctionTemperatureBenchmark::FunctionTemperatureBenchmark(std::shared_ptr<CostC
           config.SetOnePayloadForAllFunctions(std::make_shared<Aws::StringStream>(payload_value.View().WriteCompact()));
 
           benchmark_configs_.emplace_back(
-              FunctionTemperatureBenchmarkParameters{function_instance_mb_size, invocation_count, repetition_count,
-                                                     sleep_ms_duration, provisioning_factor,
-                                                     config.warm_up_strategy_->GetName()},
+              FunctionWarmUpBenchmarkParameters{function_instance_mb_size, invocation_count, repetition_count,
+                                                sleep_ms_duration, provisioning_factor,
+                                                config.warm_up_strategy_->GetName()},
               config);
         }
       }
@@ -47,14 +47,14 @@ FunctionTemperatureBenchmark::FunctionTemperatureBenchmark(std::shared_ptr<CostC
       config.SetOnePayloadForAllFunctions(std::make_shared<Aws::StringStream>(payload_value.View().WriteCompact()));
 
       benchmark_configs_.emplace_back(
-          FunctionTemperatureBenchmarkParameters{function_instance_mb_size, invocation_count, repetition_count, 0, 1.0,
-                                                 config.warm_up_strategy_->GetName()},
+          FunctionWarmUpBenchmarkParameters{function_instance_mb_size, invocation_count, repetition_count, 0, 1.0,
+                                            config.warm_up_strategy_->GetName()},
           config);
     }
   }
 }
 
-Aws::Utils::Array<Aws::Utils::Json::JsonValue> FunctionTemperatureBenchmark::Run(
+Aws::Utils::Array<Aws::Utils::Json::JsonValue> FunctionWarmUpBenchmark::Run(
     const std::shared_ptr<BenchmarkRunner>& benchmark_runner) {
   std::vector<std::shared_ptr<BenchmarkResult>> benchmark_results;
 
@@ -71,11 +71,11 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> FunctionTemperatureBenchmark::Run
   return benchmark_outputs;
 }
 
-Aws::Utils::Json::JsonValue FunctionTemperatureBenchmark::GenerateResultOutput(
+Aws::Utils::Json::JsonValue FunctionWarmUpBenchmark::GenerateResultOutput(
     const std::shared_ptr<BenchmarkResult>& benchmark_result,
-    const FunctionTemperatureBenchmarkParameters& benchmark_parameters) const {
+    const FunctionWarmUpBenchmarkParameters& benchmark_parameters) const {
   Aws::StringStream benchmark_name;
-  benchmark_name << "FunctionTemperatureBenchmark/" << benchmark_parameters.function_instance_mb_size << "/"
+  benchmark_name << "FunctionWarmUpBenchmark/" << benchmark_parameters.function_instance_mb_size << "/"
                  << benchmark_parameters.invocation_count << "/" << benchmark_parameters.sleep_ms_duration << "/"
                  << benchmark_parameters.provisioning_factor << "/" << benchmark_parameters.warm_up_strategy;
 
