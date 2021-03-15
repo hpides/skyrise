@@ -34,7 +34,8 @@ class StorageError {
   [[nodiscard]] StorageErrorType GetType() const { return type_; }
   [[nodiscard]] const std::string& GetMessage() const { return message_; }
 
-  explicit operator bool() const { return type_ != StorageErrorType::kNoError; }
+  bool IsError() const { return type_ != StorageErrorType::kNoError; }
+  explicit operator bool() const { return IsError(); }
 
  private:
   StorageErrorType type_;

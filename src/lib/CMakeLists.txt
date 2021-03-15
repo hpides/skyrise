@@ -3,6 +3,24 @@ set(POST_CONFIGURE_FILE "utils/git_metadata.cpp")
 include(${PROJECT_SOURCE_DIR}/third_party/cmake-git-version-tracking/git_watcher.cmake)
 
 set(
+    SERIALIZATION_SOURCES
+    serialization/binary_serialization_stream.cpp
+    serialization/binary_serialization_stream.hpp
+    serialization/schema_serialization.cpp
+    serialization/schema_serialization.hpp
+)
+
+set(
+    STATISTICS_SOURCES
+    statistics/manifest_reader.cpp
+    statistics/manifest_reader.hpp
+    statistics/manifest_writer.cpp
+    statistics/manifest_writer.hpp
+    statistics/statistics_collector.cpp
+    statistics/statistics_collector.hpp
+)
+
+set(
     STORAGE_SOURCES
     storage/backend/abstract_storage.hpp
     storage/backend/storage_filesystem.cpp
@@ -49,6 +67,8 @@ set(
     utils/time.hpp
     utils/unit_conversion.hpp
     utils/vector.hpp
+    ${SERIALIZATION_SOURCES}
+    ${STATISTICS_SOURCES}
     ${STORAGE_SOURCES}
 )
 

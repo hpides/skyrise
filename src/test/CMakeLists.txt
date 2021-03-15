@@ -18,6 +18,13 @@ set(
     lib/monitoring/monitoring_test_utils.cpp
     lib/monitoring/monitoring_test_utils.hpp
 
+    lib/serialization/schema_serialization_test.cpp
+
+    lib/statistics/manifest_shared.cpp
+    lib/statistics/manifest_shared.hpp
+    lib/statistics/manifest_reader_test.cpp
+    lib/statistics/manifest_writer_test.cpp
+    lib/statistics/statistics_collector_test.cpp
 
     lib/storage/backend/abstract_provider.hpp
     lib/storage/backend/filesystem_provider.hpp

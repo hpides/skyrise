@@ -49,6 +49,8 @@ class OrcFormatter : public AbstractFormatter {
   void ProcessChunk(const Chunk& chunk) override;
   void Finalize() override;
 
+  void AddMetadata(std::string key, std::string value);
+
  private:
   static std::unique_ptr<orc::Type> SkyriseTypeToOrcType(DataType type);
   static void CopySegmentToOrcColumn(const std::shared_ptr<AbstractSegment>& segment,

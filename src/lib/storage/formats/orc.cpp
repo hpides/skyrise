@@ -87,6 +87,10 @@ void OrcFormatter::CopySegmentToOrcColumn(const std::shared_ptr<AbstractSegment>
   }
 }
 
+void OrcFormatter::AddMetadata(std::string key, std::string value) {
+  writer_->addUserMetadata(std::move(key), std::move(value));
+}
+
 template <typename SegmentType, typename VectorBatchType>
 void OrcFormatter::GenericCopySegmentToOrcColumn(SegmentType* segment, VectorBatchType* batch) {
   auto& segment_values = segment->Values();
