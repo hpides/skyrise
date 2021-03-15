@@ -10,10 +10,6 @@
 	path = third_party/cmake-git-version-tracking
 	url = https://github.com/andrew-hardin/cmake-git-version-tracking.git
 	shallow = true
-[submodule "third_party/csv-parser"]
-	path = third_party/csv-parser
-	url = https://github.com/vincentlaucsb/csv-parser.git
-	shallow = true
 [submodule "third_party/cxxopts"]
 	path = third_party/cxxopts
 	url = https://github.com/jarro2783/cxxopts.git
@@ -21,11 +17,6 @@
 [submodule "third_party/googletest"]
 	path = third_party/googletest
 	url = https://github.com/google/googletest.git
-	shallow = true
-[submodule "third_party/jemalloc"]
-	path = third_party/jemalloc
-	url = https://github.com/jemalloc/jemalloc.git
-	branch = dev
 	shallow = true
 [submodule "third_party/magic_enum"]
 	path = third_party/magic_enum
