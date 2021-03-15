@@ -74,8 +74,7 @@ _source_extensions = '''
 def get_sources(source_dir, exclude_globs=[]):
     sources = []
     for directory, subdirs, basenames in os.walk(source_dir):
-        for path in [os.path.join(directory, basename)
-                     for basename in basenames]:
+        for path in [os.path.join(directory, basename) for basename in basenames]:
             # filter out non-source files
             if os.path.splitext(path)[1] not in _source_extensions:
                 continue
