@@ -12,7 +12,6 @@ Checks: '
         -cert-dcl16-c,
         -cert-env33-c,
         -cert-err58-cpp,
-        -cppcoreguidelines-avoid-c-arrays,
         -cppcoreguidelines-avoid-non-const-global-variables,
         -cppcoreguidelines-interfaces-global-init,
         -cppcoreguidelines-owning-memory,
@@ -24,11 +23,9 @@ Checks: '
         -fuchsia-statically-constructed-objects,
         -google-runtime-int,
         -hicpp-no-array-decay,
-        -hicpp-avoid-c-arrays,
         -llvm-include-order,
         -llvmlibc-*,
         -misc-no-recursion,
-        -modernize-avoid-c-arrays,
         -modernize-pass-by-value,
         -modernize-use-trailing-return-type
         '
@@ -46,7 +43,6 @@ Checks: '
 #   cert-dcl16-c                                            Using 1.0f instead of 1.0F is fine for us
 #   cert-env33-c                                            We use popen()
 #   cert-err58-cpp                                          We are okay with uncaught errors
-#   cppcoreguidelines-avoid-c-arrays                        We need argc/argv in our BenchmarkExecutable
 #   cppcoreguidelines-avoid-non-const-global-variables      Does not like Google Test
 #   cppcoreguidelines-interfaces-global-init                Does not like std::vector<std::function<void()>> a{[]() { std::cout << "a"; }};
 #   cppcoreguidelines-owning-memory                         Does not like Google Test
@@ -57,12 +53,10 @@ Checks: '
 #   fuchsia-overloaded-operator                             We overload operators
 #   fuchsia-statically-constructed-objects                  Does not like Google Test
 #   google-runtime-int                                      We want to use "long long" instead of int64_t, because of tpch-dbgen
-#   hicpp-avoid-c-arrays                                    We need argc/argv in our BenchmarkExecutable
 #   hicpp-no-array-decay                                    Does not like Pricing pricing(Aws::Region::US_EAST_1);
 #   llvm-include-order                                      We use #pragma once
 #   llvmlibc-*                                              We do not use LLVM's libc++, but GCC's libstdc++
 #   misc-no-recursion                                       Recursion is useful when parsing data nested structures
-#   modernize-avoid-c-arrays                                We need argc/argv in our BenchmarkExecutable
 #   modernize-pass-by-value                                 We do not trust people to properly use std::move
 #   modernize-use-trailing-return-type                      We do not want to use trailing return types
 
