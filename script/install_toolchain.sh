@@ -37,7 +37,8 @@ if [[ "$unamestr" == 'Linux' ]]; then
                 pip3 install --no-input --quiet \
                 cpplint \
                 pytictoc \
-                termcolor
+                termcolor \
+                yapf
 
                 # Symlink to default Amazon Linux certificate file
                 sudo mkdir -p /etc/pki/tls/certs

@@ -1,8 +1,8 @@
 # Tool versions and locations
-ARG CCACHE_VERSION=4.1
+ARG CCACHE_VERSION=4.2
 ARG CCACHE_DIR=/opt/build/ccache-${CCACHE_VERSION}
 ARG CMAKE_VERSION=3.19
-ARG CMAKE_PATCH=4
+ARG CMAKE_PATCH=6
 ARG CMAKE_DIR=/opt/build/cmake-${CMAKE_VERSION}.${CMAKE_PATCH}
 ARG CPPCHECK_VERSION=2.3
 ARG CPPCHECK_DIR=/opt/build/cppcheck-${CPPCHECK_VERSION}
@@ -235,7 +235,8 @@ RUN yum install -y \
     # Python packages
     pip3 install --no-input --quiet \
     pytictoc \
-    termcolor
+    termcolor \
+    yapf
 
 COPY --from=base /opt /opt
 

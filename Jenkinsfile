@@ -106,9 +106,12 @@ pipeline {
                 }
               }
             },
-            "ClangFormat": {
-              stage("ClangFormat") {
-                stage("Format") {
+            "Format": {
+              stage("Format") {
+                stage("Python") {
+                  sh 'yapf --diff --recursive --parallel script'
+                }
+                stage("C++") {
                   sh 'python3 script/run_clang_format.py --clang_format_binary clang-format --source_dir src --quiet'
                 }
               }
