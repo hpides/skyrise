@@ -39,9 +39,7 @@ BenchmarkRunner::BenchmarkRunner(std::shared_ptr<Client> client) : client_(std::
   const auto get_role_outcome =
       client_->GetIAMClient().GetRole(Aws::IAM::Model::GetRoleRequest().WithRoleName(kFunctionRoleName));
 
-  if (!get_role_outcome.IsSuccess()) {
-    Fail(get_role_outcome.GetError().GetMessage());
-  }
+  Assert(get_role_outcome.IsSuccess(), get_role_outcome.GetError().GetMessage());
 
   function_role_arn_ = get_role_outcome.GetResult().GetRole().GetArn();
 }
@@ -57,7 +55,7 @@ std::shared_ptr<BenchmarkResult> BenchmarkRunner::RunConfig(const BenchmarkConfi
   } catch (const std::exception& e) {
     AWS_LOGSTREAM_ERROR(kTag.c_str(), e.what());
     Teardown();
-    return std::make_shared<BenchmarkResult>(0, 0);
+    return nullptr;
   }
 
   Teardown();
@@ -66,13 +64,12 @@ std::shared_ptr<BenchmarkResult> BenchmarkRunner::RunConfig(const BenchmarkConfi
 }
 
 void BenchmarkRunner::SetConfig(const BenchmarkConfig& config) {
-  if (config_history_.emplace(config.benchmark_id_).second) {
-    config_ = std::make_shared<BenchmarkConfig>(config);
-    invoke_requests_.clear();
-    invoke_requests_.shrink_to_fit();
-  } else {
-    Fail("BenchmarkConfig " + config.benchmark_id_ + " has already been run.");
-  }
+  Assert(config_history_.emplace(config.benchmark_id_).second,
+         "BenchmarkConfig " + config.benchmark_id_ + " has already been run.");
+
+  config_ = std::make_shared<BenchmarkConfig>(config);
+  invoke_requests_.clear();
+  invoke_requests_.shrink_to_fit();
 }
 
 void BenchmarkRunner::Setup() {
@@ -132,12 +129,10 @@ void BenchmarkRunner::SetupEventQueue() {
   const auto create_queue_outcome =
       sqs_client.CreateQueue(Aws::SQS::Model::CreateQueueRequest().WithQueueName(queue_name));
 
-  if (create_queue_outcome.IsSuccess()) {
-    sqs_queue_url_ = std::make_shared<Aws::String>(create_queue_outcome.GetResult().GetQueueUrl());
-    AWS_LOGSTREAM_INFO(kTag.c_str(), "Queue " << queue_name << " created.");
-  } else {
-    Fail(create_queue_outcome.GetError().GetMessage());
-  }
+  Assert(create_queue_outcome.IsSuccess(), create_queue_outcome.GetError().GetMessage());
+
+  sqs_queue_url_ = std::make_shared<Aws::String>(create_queue_outcome.GetResult().GetQueueUrl());
+  AWS_LOGSTREAM_INFO(kTag.c_str(), "Queue " << queue_name << " created.");
 
   const auto queue_attributes_outcome =
       sqs_client.GetQueueAttributes(Aws::SQS::Model::GetQueueAttributesRequest()
@@ -145,9 +140,7 @@ void BenchmarkRunner::SetupEventQueue() {
                                         .WithAttributeNames(std::vector<Aws::SQS::Model::QueueAttributeName>(
                                             1, Aws::SQS::Model::QueueAttributeName::QueueArn)));
 
-  if (!queue_attributes_outcome.IsSuccess()) {
-    Fail(queue_attributes_outcome.GetError().GetMessage());
-  }
+  Assert(queue_attributes_outcome.IsSuccess(), queue_attributes_outcome.GetError().GetMessage());
 
   const auto queue_arn =
       queue_attributes_outcome.GetResult().GetAttributes().at(Aws::SQS::Model::QueueAttributeName::QueueArn);
@@ -156,6 +149,7 @@ void BenchmarkRunner::SetupEventQueue() {
     lambda_client.PutFunctionEventInvokeConfig(
         Aws::Lambda::Model::PutFunctionEventInvokeConfigRequest()
             .WithFunctionName(function_config.function_name)
+            .WithQualifier("1")
             .WithDestinationConfig(Aws::Lambda::Model::DestinationConfig()
                                        .WithOnSuccess(Aws::Lambda::Model::OnSuccess().WithDestination(queue_arn))
                                        .WithOnFailure(Aws::Lambda::Model::OnFailure().WithDestination(queue_arn))));
@@ -205,11 +199,14 @@ void BenchmarkRunner::InvokeFunctions() {
               const std::shared_ptr<const Aws::Client::AsyncCallerContext>& context) {
             const auto context_function_invocation =
                 std::dynamic_pointer_cast<const ContextFunctionInvocation>(context);
+
+            const bool is_success = outcome.IsSuccess();
+
             const auto invoke_result =
-                std::make_shared<Aws::Lambda::Model::InvokeResult>(outcome.GetResultWithOwnership());
+                is_success ? std::make_shared<Aws::Lambda::Model::InvokeResult>(outcome.GetResultWithOwnership())
+                           : nullptr;
             benchmark_result_->FinishInvocation(context_function_invocation->GetRepetition(),
-                                                context_function_invocation->GetUUID(), invoke_result,
-                                                outcome.IsSuccess());
+                                                context_function_invocation->GetUUID(), invoke_result, is_success);
           },
           std::make_shared<const ContextFunctionInvocation>(i, invocation_id));
     }
@@ -296,8 +293,7 @@ void BenchmarkRunner::CreateInvokeRequests() {
 
     for (const auto& config : config_->repetition_configs_[i]) {
       const Aws::String invocation_id = std::to_string(i) + "-" + config.invocation_id;
-      requests.emplace_back(invocation_id,
-                            CreateInvokeRequest(config.function_name, config.invocation_id, config.payload));
+      requests.emplace_back(invocation_id, CreateInvokeRequest(config.function_name, invocation_id, config.payload));
     }
 
     invoke_requests_.emplace_back(requests);
@@ -324,8 +320,7 @@ std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> BenchmarkRunner::C
 
     for (const auto& message : messages) {
       const auto json_value = Aws::Utils::Json::JsonValue(message.GetBody());
-      const auto json_view = json_value.View();
-      const auto invocation_id = json_view.GetObject("requestPayload").GetString("invocation_id");
+      const auto invocation_id = json_value.View().GetObject("requestPayload").GetString("invocation_id");
 
       sqs_messages->emplace(invocation_id, message.GetBody());
 
@@ -333,9 +328,7 @@ std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> BenchmarkRunner::C
                                                                        .WithQueueUrl(*sqs_queue_url_)
                                                                        .WithReceiptHandle(message.GetReceiptHandle()));
 
-      if (!delete_message_outcome.IsSuccess()) {
-        Fail(delete_message_outcome.GetError().GetMessage());
-      }
+      Assert(delete_message_outcome.IsSuccess(), delete_message_outcome.GetError().GetMessage());
     }
   }
   return sqs_messages;
@@ -343,10 +336,7 @@ std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> BenchmarkRunner::C
 
 Aws::Utils::CryptoBuffer BenchmarkRunner::OpenFunctionZip(const Aws::String& function_path) {
   std::ifstream infile(function_path, std::ios::in | std::ios::binary);
-
-  if (!infile) {
-    Fail(function_path + " could not be opened.");
-  }
+  Assert(infile, function_path + " could not be opened.");
 
   const std::string file_buffer = StreamToString(&infile);
 
@@ -372,10 +362,7 @@ Aws::Lambda::Model::FunctionCode BenchmarkRunner::SetFunctionCode(const Aws::Str
     std::smatch matches;
 
     const auto function_name_found = std::regex_search(function_name, matches, function_name_regex);
-
-    if (!function_name_found) {
-      Fail("S3 key could not be extracted from function name " + function_name + ".");
-    }
+    Assert(function_name_found, "S3 key could not be extracted from function name " + function_name + ".");
 
     code.WithS3Bucket(function_path).WithS3Key(matches[1]);
   }

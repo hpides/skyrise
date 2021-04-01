@@ -80,8 +80,10 @@ void BenchmarkExecutable::InitializeClients() {
   Aws::InitAPI(sdk_options_);
 
   client_ = std::make_shared<skyrise::Client>();
-  cost_calculator_ = std::make_shared<skyrise::CostCalculator>(client_);
+
+  benchmark_helper_ = std::make_shared<skyrise::BenchmarkHelper>(client_);
   benchmark_runner_ = std::make_shared<skyrise::BenchmarkRunner>(client_);
+  cost_calculator_ = std::make_shared<skyrise::CostCalculator>(client_);
 }
 
 void BenchmarkExecutable::DeinitializeClients() { Aws::ShutdownAPI(sdk_options_); }

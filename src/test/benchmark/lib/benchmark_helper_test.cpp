@@ -1,7 +1,6 @@
 #include "benchmark_helper.hpp"
 
 #include <chrono>
-#include <cmath>
 #include <functional>
 #include <map>
 #include <memory>
@@ -10,7 +9,6 @@
 
 #include <aws/core/Aws.h>
 #include <aws/core/utils/base64/Base64.h>
-#include <aws/lambda/model/InvokeRequest.h>
 #include <gtest/gtest.h>
 
 #include "benchmark_config.hpp"

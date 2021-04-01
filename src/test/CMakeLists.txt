@@ -9,6 +9,7 @@ set(
     benchmark/lib/benchmark_helper_test.cpp
     benchmark/lib/benchmark_result_aggregate_test.cpp
     benchmark/lib/benchmark_result_test.cpp
+    benchmark/lib/benchmark_runner_test.cpp
     benchmark/lib/compression/compression_test.cpp
     benchmark/lib/data_generation/tpch_test.cpp
     
