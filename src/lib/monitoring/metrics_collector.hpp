@@ -7,7 +7,7 @@
 #include <aws/sqs/SQSClient.h>
 #include <magic_enum.hpp>
 
-#include "scheduler/types.hpp"
+#include "scheduler/scheduler_types.hpp"
 
 namespace skyrise {
 

@@ -1,4 +1,4 @@
-#include "writer.hpp"
+#include "table_writer.hpp"
 
 namespace skyrise {
 

@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "all_variants.hpp"
+#include "all_type_variant.hpp"
 
 namespace skyrise {
 

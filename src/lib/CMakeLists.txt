@@ -33,23 +33,24 @@ set(
     storage/formats/csv.hpp
     storage/formats/orc.cpp
     storage/formats/orc.hpp
-    storage/table/writer.cpp
-    storage/table/writer.hpp
-    storage/types/abstract_segment.hpp
-    storage/types/all_variants.hpp
-    storage/types/base_value_segment.hpp
-    storage/types/chunk.cpp
-    storage/types/chunk.hpp
-    storage/types/null_value.hpp
-    storage/types/table_column_definition.cpp
-    storage/types/table_column_definition.hpp
-    storage/types/value_segment.cpp
-    storage/types/value_segment.hpp
+    storage/storage_types.hpp
+    storage/table/abstract_segment.hpp
+    storage/table/base_value_segment.hpp
+    storage/table/chunk.cpp
+    storage/table/chunk.hpp
+    storage/table/table_column_definition.cpp
+    storage/table/table_column_definition.hpp
+    storage/table/value_segment.cpp
+    storage/table/value_segment.hpp
+    storage/table/table_writer.cpp
+    storage/table/table_writer.hpp
 )
 
 set(
     SHARED_SOURCES
-    scheduler/types.hpp
+    all_type_variant.hpp
+    scheduler/scheduler_types.hpp
+    types.hpp
     utils/array.hpp
     utils/assert.hpp
     utils/concurrent/queue.hpp

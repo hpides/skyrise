@@ -221,7 +221,7 @@ std::shared_ptr<TableColumnDefinitions> StatisticsCollector::GetSchema() {
     const orc::Type* orc_type = type.getSubtype(i);
     DataType skyrise_type = detail::ConvertOrcTypeToSkyriseType(orc_type->getKind());
 
-    // The current ORC definition has no information about whether or not null values are allowed for a column.
+    // The current ORC definition has no information about whether or not NULL values are allowed for a column.
     bool nullable = false;
 
     schema->emplace_back(type.getFieldName(i), skyrise_type, nullable);

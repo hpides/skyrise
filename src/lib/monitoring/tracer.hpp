@@ -5,7 +5,7 @@
 #include <aws/core/utils/json/JsonSerializer.h>
 #include <aws/xray/XRayClient.h>
 
-#include "scheduler/types.hpp"
+#include "scheduler/scheduler_types.hpp"
 
 namespace skyrise {
 

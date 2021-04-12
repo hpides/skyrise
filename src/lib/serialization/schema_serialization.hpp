@@ -1,7 +1,7 @@
 #pragma once
 
 #include "binary_serialization_stream.hpp"
-#include "storage/types/table_column_definition.hpp"
+#include "storage/table/table_column_definition.hpp"
 
 namespace skyrise {
 

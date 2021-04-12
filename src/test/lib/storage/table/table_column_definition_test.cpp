@@ -1,7 +1,7 @@
 /**
  * Taken and modified from our sister project Hyrise (https://github.com/hyrise/hyrise)
  */
-#include "storage/types/table_column_definition.hpp"
+#include "storage/table/table_column_definition.hpp"
 
 #include <gtest/gtest.h>
 

@@ -7,7 +7,7 @@
 #include <aws/core/utils/logging/LogMacros.h>
 
 #include "storage/backend/abstract_storage.hpp"
-#include "storage/types/table_column_definition.hpp"
+#include "storage/table/table_column_definition.hpp"
 #include "utils/literal.hpp"
 
 namespace skyrise {

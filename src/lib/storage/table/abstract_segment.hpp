@@ -3,7 +3,9 @@
  */
 #pragma once
 
-#include "all_variants.hpp"
+#include "all_type_variant.hpp"
+#include "storage/storage_types.hpp"
+#include "storage/table/chunk.hpp"
 
 namespace skyrise {
 

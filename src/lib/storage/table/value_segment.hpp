@@ -10,7 +10,8 @@
 #include <vector>
 
 #include "base_value_segment.hpp"
-#include "chunk.hpp"
+#include "storage/storage_types.hpp"
+#include "storage/table/chunk.hpp"
 #include "utils/string.hpp"
 
 namespace skyrise {
@@ -19,7 +20,7 @@ namespace skyrise {
 template <typename T>
 class ValueSegment : public BaseValueSegment {
  public:
-  explicit ValueSegment(bool nullable = false, ChunkOffset capacity = Chunk::kDefaultSize);
+  explicit ValueSegment(bool nullable = false, ChunkOffset capacity = kChunkDefaultSize);
 
   // Creates a ValueSegment with the given values.
   explicit ValueSegment(std::vector<T>&& values);
@@ -37,14 +38,14 @@ class ValueSegment : public BaseValueSegment {
   bool IsNull(ChunkOffset chunk_offset) const;
 
   // Returns the value at a certain position.
-  // Only use if you are certain that no null values are present.
+  // Only use if you are certain that no NULL values are present.
   // chunk_offset must be a valid offset within this chunk.
   T get(ChunkOffset chunk_offset) const;
 
   // Returns the value at a certain position.
   std::optional<T> GetTypedValue(ChunkOffset chunk_offset) const {
     // performance critical - not in cpp to help with inlining
-    // Column supports null values and value is null
+    // Column supports NULL values and value is NULL
     if (IsNullable() && (*null_values_)[chunk_offset]) {
       return std::nullopt;
     }
@@ -53,7 +54,7 @@ class ValueSegment : public BaseValueSegment {
 
   // Adds a value to the end of the segment. Not thread-safe. May fail if ValueSegment was not initially created with
   // sufficient capacity.
-  // val may only contain null values, if IsNullable() is true.
+  // val may only contain NULL values, if IsNullable() is true.
   void Append(const AllTypeVariant& val) final;
 
   // Returns all values. This is the preferred method to check a value at a certain index. Usually you need to
@@ -62,12 +63,12 @@ class ValueSegment : public BaseValueSegment {
   const std::vector<T>& Values() const;
   std::vector<T>& Values();
 
-  // Returns whether segment supports null values.
+  // Returns whether segment supports NULL values.
   bool IsNullable() const final;
 
-  // Returns null value vector that indicates whether a value is null with true at position i.
+  // Returns a NULL value vector that indicates whether a value is NULL with true at position i.
   // Call this only, if IsNullable() is true.
-  // This is the preferred method to check a for a null value at a certain index.
+  // This is the preferred method to check a for a NULL value at a certain index.
   // Usually you need to access more than a single value anyway.
   const std::vector<bool>& NullValues() const final;
 

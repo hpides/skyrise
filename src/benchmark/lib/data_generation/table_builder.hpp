@@ -10,10 +10,11 @@
 #include <tuple>
 #include <vector>
 
-#include "storage/table/writer.hpp"
-#include "storage/types/chunk.hpp"
-#include "storage/types/table_column_definition.hpp"
-#include "storage/types/value_segment.hpp"
+#include "storage/storage_types.hpp"
+#include "storage/table/chunk.hpp"
+#include "storage/table/table_column_definition.hpp"
+#include "storage/table/table_writer.hpp"
+#include "storage/table/value_segment.hpp"
 
 namespace skyrise {
 namespace detail {
@@ -102,7 +103,7 @@ class TableBuilder {
         value_vector_pairs);
     row_count_++;
 
-    if (CurrentChunkCount() >= Chunk::kDefaultSize) {
+    if (CurrentChunkCount() >= kChunkDefaultSize) {
       EmitChunk();
     }
   }

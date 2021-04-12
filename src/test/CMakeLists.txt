@@ -37,12 +37,11 @@ set(
     
     lib/storage/formats/csv_test.cpp
     lib/storage/formats/orc_test.cpp
-    
-    lib/storage/table/table_test.cpp
 
-    lib/storage/types/chunk_test.cpp
-    lib/storage/types/table_column_definition_test.cpp
-    lib/storage/types/value_segment_test.cpp
+    lib/storage/table/chunk_test.cpp
+    lib/storage/table/table_column_definition_test.cpp
+    lib/storage/table/table_writer_test.cpp
+    lib/storage/table/value_segment_test.cpp
 
     lib/utils/costs/cost_calculator_test.cpp
     lib/utils/costs/costs_test_utils.cpp

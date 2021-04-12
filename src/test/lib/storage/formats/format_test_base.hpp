@@ -5,8 +5,8 @@
 
 #include <gtest/gtest.h>
 
-#include "storage/types/table_column_definition.hpp"
-#include "storage/types/value_segment.hpp"
+#include "storage/table/table_column_definition.hpp"
+#include "storage/table/value_segment.hpp"
 
 namespace skyrise {
 

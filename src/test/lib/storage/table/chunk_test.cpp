@@ -1,11 +1,11 @@
 /**
  * Taken and modified from our sister project Hyrise (https://github.com/hyrise/hyrise)
  */
-#include "storage/types/chunk.hpp"
+#include "storage/table/chunk.hpp"
 
 #include <gtest/gtest.h>
 
-#include "storage/types/value_segment.hpp"
+#include "storage/table/value_segment.hpp"
 
 namespace skyrise {
 
@@ -51,7 +51,7 @@ TEST_F(StorageChunkTest, RetrieveSegment) {
   chunk_ = std::make_shared<Chunk>(Segments({value_segment_int_, value_segment_str_}));
   chunk_->Append({2, "two"});
 
-  auto abstract_segment = chunk_->GetSegment(ColumnID{0});
+  auto abstract_segment = chunk_->GetSegment(ColumnId{0});
   EXPECT_EQ(abstract_segment->Size(), 4);
 }
 

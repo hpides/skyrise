@@ -1,7 +1,7 @@
 /**
  * Taken and modified from our sister project Hyrise (https://github.com/hyrise/hyrise)
  */
-#include "storage/types/value_segment.hpp"
+#include "storage/table/value_segment.hpp"
 
 #include <gtest/gtest.h>
 

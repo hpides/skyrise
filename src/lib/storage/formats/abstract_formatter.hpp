@@ -4,8 +4,8 @@
 #include <iostream>
 #include <memory>
 
-#include "storage/types/chunk.hpp"
-#include "storage/types/table_column_definition.hpp"
+#include "storage/table/chunk.hpp"
+#include "storage/table/table_column_definition.hpp"
 
 namespace skyrise {
 

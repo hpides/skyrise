@@ -11,7 +11,7 @@ class BaseValueSegment : public AbstractSegment {
  public:
   using AbstractSegment::AbstractSegment;
 
-  // Returns true if segment supports null values
+  // Returns true if segment supports NULL values
   virtual bool IsNullable() const = 0;
 
   // Appends the value at the end of the segment

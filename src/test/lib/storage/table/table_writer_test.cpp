@@ -1,10 +1,11 @@
+#include "storage/table/table_writer.hpp"
+
 #include <gtest/gtest.h>
 
 #include "../backend/mock_storage.hpp"
 #include "storage/formats/csv.hpp"
-#include "storage/table/writer.hpp"
-#include "storage/types/table_column_definition.hpp"
-#include "storage/types/value_segment.hpp"
+#include "storage/table/table_column_definition.hpp"
+#include "storage/table/value_segment.hpp"
 
 namespace skyrise {
 

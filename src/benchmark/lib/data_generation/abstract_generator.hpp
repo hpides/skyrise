@@ -2,7 +2,7 @@
 
 #include "storage/backend/abstract_storage.hpp"
 #include "storage/formats/abstract_formatter.hpp"
-#include "storage/table/writer.hpp"
+#include "storage/table/table_writer.hpp"
 #include "table_builder.hpp"
 
 namespace skyrise {

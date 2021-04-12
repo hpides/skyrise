@@ -10,7 +10,7 @@
 
 #include "storage/backend/abstract_storage.hpp"
 #include "storage/formats/abstract_formatter.hpp"
-#include "storage/types/chunk.hpp"
+#include "storage/table/chunk.hpp"
 #include "utils/concurrent/queue.hpp"
 
 namespace skyrise {

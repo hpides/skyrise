@@ -3,7 +3,7 @@
 #include <orc/OrcFile.hh>
 
 #include "abstract_formatter.hpp"
-#include "storage/types/value_segment.hpp"
+#include "storage/table/value_segment.hpp"
 #include "utils/literal.hpp"
 
 namespace skyrise {
