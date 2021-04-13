@@ -32,5 +32,7 @@ ninja all
 - [Tobias Maltenberger](https://github.com/maltenbergert)
 - [Jan Mensch](https://github.com/CAJan93)
 - [Julian Menzler](https://github.com/julianmenzler)
+- [Timon Millich](https://github.com/tmillich)
+- [Theo Radig](https://github.com/TheoRadig)
 - [Pascal Schulze](https://github.com/orgs/hpi-epic/people/pscls)
 - [Jan Siebert](https://github.com/JanSiebert)

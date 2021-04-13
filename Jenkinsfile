@@ -214,6 +214,8 @@ String getCommitterSlackUserId() {
     "maltenbergert": "U014GG68EDP",
     "mweisgut": "U01G1P36TEF",
     "pscls": "U01DC9KJJ0N",
+    "theoradig": "U01QETWC53P",
+    "tmillich": "U01QWKGTCKB",
     "tobodner": "U014FR9CNRF"
   ]
   return gitHubToSlack.containsKey(committerName) ?
