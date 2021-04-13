@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <chrono>
+#include <functional>
+#include <thread>
 
 #include "benchmark_helper.hpp"
 #include "benchmark_result_aggregate.hpp"
@@ -19,14 +21,19 @@ FunctionWarmUpBenchmark::FunctionWarmUpBenchmark(std::shared_ptr<CostCalculator>
   benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size() *
                              (1 + sleep_ms_durations.size() * provisioning_factors.size()));
 
-  const auto payload_value = Aws::Utils::Json::JsonValue().WithBool("warmup", true).WithInteger("sleep_ms", kSleepMs);
+  const auto payload_value =
+      Aws::Utils::Json::JsonValue().WithBool("warmup", true).WithInteger("sleep_ms", kFunctionSleepMs);
 
   for (const auto function_instance_mb_size : function_instance_mb_sizes) {
     for (const auto invocation_count : invocation_counts) {
       for (const auto sleep_ms_duration : sleep_ms_durations) {
         for (const auto provisioning_factor : provisioning_factors) {
+          std::vector<std::function<void()>> after_repetition_callbacks(
+              repetition_count, [&]() { std::this_thread::sleep_for(std::chrono::minutes(kRepetitionSleepMin)); });
+
           BenchmarkConfig config(kFunctionName, function_instance_mb_size, repetition_count, invocation_count,
-                                 WarmUp::kDefaultOncePerRepetition, UseOneFunctionPerRepetition::kYes);
+                                 WarmUp::kDefaultOncePerRepetition, UseOneFunctionPerRepetition::kYes,
+                                 UseEventQueue::kNo, after_repetition_callbacks);
           config.warm_up_strategy_ =
               std::make_shared<ConfigurableWarmUpStrategy>(false, sleep_ms_duration, provisioning_factor);
 

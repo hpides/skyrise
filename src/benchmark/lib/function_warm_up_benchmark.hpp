@@ -37,8 +37,10 @@ class FunctionWarmUpBenchmark : public Benchmark {
   std::vector<std::pair<FunctionWarmUpBenchmarkParameters, BenchmarkConfig>> benchmark_configs_;
 
   const Aws::String kFunctionName = "skyriseFunctionSimple";
+
   // TODO(anyone): Eliminate magic number once we understand the parallel running lambda functions better
-  const size_t kSleepMs = 7000;
+  const size_t kFunctionSleepMs = 7000;
+  const size_t kRepetitionSleepMin = 5;
 };
 
 }  // namespace skyrise
