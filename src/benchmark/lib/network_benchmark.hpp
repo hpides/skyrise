@@ -46,13 +46,6 @@ class NetworkBenchmark : public Benchmark {
                                                                const size_t invocation_count,
                                                                const S3OperationType operation_type);
 
-  Aws::Utils::Array<Aws::Utils::Json::JsonValue> GenerateBatchedSubResultOutput(
-      const std::map<Aws::String, InvocationResult>& sub_result, const Aws::String& benchmark_name,
-      const size_t function_instance_mb_size, const Aws::String& metric_name,
-      const std::function<double(const double)>& process_value);
-  std::vector<double> ExtractValuesFromBatchedSubResults(
-      const Aws::Utils::Array<Aws::Utils::Json::JsonValue>& batched_runs, const Aws::String& metric_name) const;
-
   const std::shared_ptr<BenchmarkHelper> helper_;
 
   std::vector<size_t> object_byte_sizes_;

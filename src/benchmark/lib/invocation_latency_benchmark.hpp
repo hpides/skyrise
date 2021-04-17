@@ -33,7 +33,6 @@ class InvocationLatencyBenchmark : public Benchmark {
   void Setup();
   void Teardown();
   long double CalculateBenchmarkCost(const std::vector<std::shared_ptr<BenchmarkResult>>& benchmark_results);
-  static Aws::String ExtractTraceId(const InvocationResult& result);
   Aws::Utils::Json::JsonValue GenerateResultOutput(
       const std::shared_ptr<BenchmarkResult>& benchmark_result, const InvocationLatencyBenchmarkParameters& parameters,
       const std::shared_ptr<std::unordered_map<Aws::String, LambdaSegmentDurations>>& result_segments) const;

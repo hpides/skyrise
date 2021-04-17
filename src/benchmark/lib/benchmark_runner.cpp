@@ -181,6 +181,7 @@ void BenchmarkRunner::InvokeFunctions() {
       std::make_shared<BenchmarkResult>(config_->repetition_count_, config_->concurrent_invocation_count_);
 
   // BENCHMARK STARTS
+  const auto benchmark_start = std::chrono::steady_clock::now();
 
   for (size_t i = 0; i < config_->repetition_count_; i++) {
     if (config_->warm_up_ != WarmUp::kNone) {
@@ -189,26 +190,21 @@ void BenchmarkRunner::InvokeFunctions() {
 
     AWS_LOGSTREAM_INFO(kTag.c_str(), "Repetition " << i << " started.");
 
-    for (const auto& [invocation_id, invoke_request] : invoke_requests_[i]) {
-      benchmark_result_->RegisterInvocation(i, invocation_id);
+    for (size_t j = 0; j < invoke_requests_[i].size(); j++) {
+      benchmark_result_->RegisterInvocation(i, j, invoke_requests_[i][j].first);
 
       lambda_client.InvokeAsync(
-          invoke_request,
+          invoke_requests_[i][j].second,
           [&](const Aws::Lambda::LambdaClient* /*unused*/, const Aws::Lambda::Model::InvokeRequest& /*unused*/,
               Aws::Lambda::Model::InvokeOutcome outcome,
               const std::shared_ptr<const Aws::Client::AsyncCallerContext>& context) {
             const auto context_function_invocation =
                 std::dynamic_pointer_cast<const ContextFunctionInvocation>(context);
 
-            const bool is_success = outcome.IsSuccess();
-
-            const auto invoke_result =
-                is_success ? std::make_shared<Aws::Lambda::Model::InvokeResult>(outcome.GetResultWithOwnership())
-                           : nullptr;
             benchmark_result_->FinishInvocation(context_function_invocation->GetRepetition(),
-                                                context_function_invocation->GetUUID(), invoke_result, is_success);
+                                                context_function_invocation->GetInvokeIndex(), &outcome);
           },
-          std::make_shared<const ContextFunctionInvocation>(i, invocation_id));
+          std::make_shared<const ContextFunctionInvocation>(i, j, invoke_requests_[i][j].first));
     }
 
     while (!benchmark_result_->HasRepetitionFinished(i)) {
@@ -216,18 +212,14 @@ void BenchmarkRunner::InvokeFunctions() {
     }
 
     if (config_->use_event_queue_ == UseEventQueue::kYes) {
-      const auto sqs_messages = CollectSqsMessages(invoke_requests_[i].size());
-
-      for (const auto& sqs_message : *sqs_messages) {
-        benchmark_result_->UpdateSQSMessageBody(i, sqs_message.first, sqs_message.second);
-      }
+      CollectSqsMessages(invoke_requests_[i].size());
     }
 
     config_->after_repetition_callbacks_[i]();
 
     AWS_LOGSTREAM_INFO(kTag.c_str(), "Repetition " << i << " finished in "
-                                                   << benchmark_result_->GetRepetitionDuration(i).count()
-                                                   << " seconds.");
+                                                   << benchmark_result_->GetBenchmarkRepetitions()[i].GetDurationMs()
+                                                   << " ms.");
     if (config_->use_one_function_per_repetition_ == UseOneFunctionPerRepetition::kYes ||
         i == config_->repetition_count_ - 1) {
       const size_t function_index =
@@ -243,8 +235,9 @@ void BenchmarkRunner::InvokeFunctions() {
   }
 
   // BENCHMARK ENDS
-  AWS_LOGSTREAM_INFO(kTag.c_str(),
-                     "Benchmark finished in " << benchmark_result_->GetBenchmarkDuration().count() << " seconds.");
+  const auto benchmark_end = std::chrono::steady_clock::now();
+  const double duration_seconds = std::chrono::duration<double>(benchmark_end - benchmark_start).count();
+  AWS_LOGSTREAM_INFO(kTag.c_str(), "Benchmark finished in " << duration_seconds << " seconds.");
 }
 
 void BenchmarkRunner::WarmUpFunctions(const size_t repetition) {
@@ -261,39 +254,39 @@ void BenchmarkRunner::WarmUpFunctions(const size_t repetition) {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Functions warmed up.");
 }
 
-Aws::Lambda::Model::InvokeRequest BenchmarkRunner::CreateInvokeRequest(const Aws::String& function_name,
-                                                                       const Aws::String& invocation_id,
-                                                                       const std::shared_ptr<Aws::IOStream>& payload) {
-  const auto invocation_type = config_->use_event_queue_ == UseEventQueue::kYes
-                                   ? Aws::Lambda::Model::InvocationType::Event
-                                   : Aws::Lambda::Model::InvocationType::RequestResponse;
-
-  const auto json_value =
-      Aws::Utils::Json::JsonValue(StreamToString(payload.get())).WithString("invocation_id", invocation_id);
-  const auto body = std::make_shared<Aws::StringStream>(json_value.View().WriteCompact());
-
-  auto invoke_request = Aws::Lambda::Model::InvokeRequest()
-                            .WithFunctionName(function_name)
-                            .WithInvocationType(invocation_type)
-                            .WithQualifier("1")
-                            .WithLogType(Aws::Lambda::Model::LogType::Tail);
-  invoke_request.SetBody(body);
-  invoke_request.SetContentType("application/json");
-
-  return invoke_request;
-}
-
 void BenchmarkRunner::CreateInvokeRequests() {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Creating invoke requests...");
   invoke_requests_.reserve(config_->repetition_count_);
+
+  const auto invocation_type = config_->use_event_queue_ == UseEventQueue::kYes
+                                   ? Aws::Lambda::Model::InvocationType::Event
+                                   : Aws::Lambda::Model::InvocationType::RequestResponse;
 
   for (size_t i = 0; i < config_->repetition_count_; i++) {
     std::vector<std::pair<Aws::String, Aws::Lambda::Model::InvokeRequest>> requests;
     requests.reserve(config_->concurrent_invocation_count_);
 
-    for (const auto& config : config_->repetition_configs_[i]) {
-      const Aws::String invocation_id = std::to_string(i) + "-" + config.invocation_id;
-      requests.emplace_back(invocation_id, CreateInvokeRequest(config.function_name, invocation_id, config.payload));
+    const auto& repetition_config = config_->repetition_configs_[i];
+
+    for (size_t j = 0; j < repetition_config.size(); j++) {
+      const auto& function_invocation_config = repetition_config[j];
+      const Aws::String invoke_id = std::to_string(i) + "-" + function_invocation_config.invoke_id;
+
+      const auto json_value = Aws::Utils::Json::JsonValue(StreamToString(function_invocation_config.payload.get()))
+                                  .WithString("invoke_id", invoke_id)
+                                  .WithInteger("repetition", i)
+                                  .WithInteger("invoke_index", j);
+      const auto body = std::make_shared<Aws::StringStream>(json_value.View().WriteCompact());
+
+      auto invoke_request = Aws::Lambda::Model::InvokeRequest()
+                                .WithFunctionName(function_invocation_config.function_name)
+                                .WithInvocationType(invocation_type)
+                                .WithQualifier("1")
+                                .WithLogType(Aws::Lambda::Model::LogType::Tail);
+      invoke_request.SetBody(body);
+      invoke_request.SetContentType("application/json");
+
+      requests.emplace_back(invoke_id, invoke_request);
     }
 
     invoke_requests_.emplace_back(requests);
@@ -302,15 +295,12 @@ void BenchmarkRunner::CreateInvokeRequests() {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Invoke requests created.");
 }
 
-std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> BenchmarkRunner::CollectSqsMessages(
-    const size_t invocation_count) {
-  auto sqs_messages = std::make_shared<std::unordered_map<Aws::String, Aws::String>>();
-  sqs_messages->reserve(invocation_count);
-
+void BenchmarkRunner::CollectSqsMessages(const size_t invocation_count) {
   const auto& sqs_client = client_->GetSQSClient();
   size_t receive_message_requests = 0;
+  size_t sqs_message_count = 0;
 
-  while (sqs_messages->size() < invocation_count && receive_message_requests < kLambdaFunctionTimeoutSeconds) {
+  while (sqs_message_count < invocation_count && receive_message_requests < kLambdaFunctionTimeoutSeconds) {
     receive_message_requests++;
     const auto receive_message_outcome = sqs_client.ReceiveMessage(Aws::SQS::Model::ReceiveMessageRequest()
                                                                        .WithQueueUrl(*sqs_queue_url_)
@@ -319,10 +309,14 @@ std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> BenchmarkRunner::C
     const auto messages = receive_message_outcome.GetResult().GetMessages();
 
     for (const auto& message : messages) {
-      const auto json_value = Aws::Utils::Json::JsonValue(message.GetBody());
-      const auto invocation_id = json_value.View().GetObject("requestPayload").GetString("invocation_id");
+      sqs_message_count++;
 
-      sqs_messages->emplace(invocation_id, message.GetBody());
+      const auto json_value = Aws::Utils::Json::JsonValue(message.GetBody());
+      const auto request_payload = json_value.View().GetObject("requestPayload");
+      const size_t repetition = request_payload.GetInteger("repetition");
+      const size_t invoke_index = request_payload.GetInteger("invoke_index");
+
+      benchmark_result_->UpdateSQSMessageBody(repetition, invoke_index, message.GetBody());
 
       const auto delete_message_outcome = sqs_client.DeleteMessage(Aws::SQS::Model::DeleteMessageRequest()
                                                                        .WithQueueUrl(*sqs_queue_url_)
@@ -331,7 +325,6 @@ std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> BenchmarkRunner::C
       Assert(delete_message_outcome.IsSuccess(), delete_message_outcome.GetError().GetMessage());
     }
   }
-  return sqs_messages;
 }
 
 Aws::Utils::CryptoBuffer BenchmarkRunner::OpenFunctionZip(const Aws::String& function_path) {

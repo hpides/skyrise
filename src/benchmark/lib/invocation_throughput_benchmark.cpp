@@ -68,18 +68,18 @@ Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
                  << "/" << benchmark_parameters.repetition_count << "/"
                  << (benchmark_parameters.use_event_queue == UseEventQueue::kYes ? "Yes" : "No");
 
-  const auto& invocation_results = benchmark_result->GetInvocationResults();
+  const auto& benchmark_repetitions = benchmark_result->GetBenchmarkRepetitions();
 
   std::vector<double> invocation_throughputs;
-  invocation_throughputs.reserve(invocation_results.size());
+  invocation_throughputs.reserve(benchmark_repetitions.size());
 
-  for (const auto& invocation_result : invocation_results) {
+  for (const auto& benchmark_repetition : benchmark_repetitions) {
     auto min_start_time = std::chrono::system_clock::time_point::max();
     auto max_end_time = std::chrono::system_clock::time_point::min();
 
-    for (const auto& item_result : invocation_result) {
-      min_start_time = std::min(min_start_time, item_result.second.start_point);
-      max_end_time = std::max(max_end_time, item_result.second.end_point);
+    for (const auto& invoke_result : benchmark_repetition.GetInvokeResults()) {
+      min_start_time = std::min(min_start_time, invoke_result.GetStartPoint());
+      max_end_time = std::max(max_end_time, invoke_result.GetEndPoint());
     }
 
     const double duration = std::chrono::duration<double>(max_end_time - min_start_time).count();
@@ -103,15 +103,16 @@ Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
        {"invocation_throughput_functions_per_s_std_dev", aggregates.GetStandardDeviation()},
        {"benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
                                   benchmark_result, benchmark_parameters.function_instance_mb_size))},
-       {"warm_up_cost_usd", static_cast<double>(benchmark_result->GetOverallFunctionWarmUpCost())}},
+       {"warm_up_cost_usd", static_cast<double>(benchmark_result->GetWarmUpCost())}},
       {/*aggregated string metrics*/}, benchmark_result,
-      {[&](const InvocationResult& item_result) {
-         return std::make_tuple("duration",
-                                std::chrono::duration<double>(item_result.end_point - item_result.start_point).count());
+      {[&](const InvokeResult& invoke_result) {
+         return std::make_tuple(
+             "duration",
+             std::chrono::duration<double>(invoke_result.GetEndPoint() - invoke_result.GetStartPoint()).count());
        },
-       [&](const InvocationResult& item_result) {
+       [&](const InvokeResult& invoke_result) {
          return std::make_tuple("function_cost_usd",
-                                ExtractFunctionCost(item_result, benchmark_parameters.function_instance_mb_size));
+                                ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size));
        }},
       {/*extract string metric functions*/}, {/*extract object metric functions*/});
 }

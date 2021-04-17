@@ -77,28 +77,24 @@ Aws::Utils::Json::JsonValue FunctionWarmUpContinuousBenchmark::GenerateResultOut
                  << benchmark_parameters.provisioning_factor << "/" << benchmark_parameters.warm_up_min_interval << "/"
                  << benchmark_parameters.repetition_count;
 
-  const auto is_warm_function = [&](const InvocationResult& invocation_result) {
-    return !BenchmarkHelper::ExtractLogResultMetric(invocation_result, "Init Duration");
+  const auto is_warm_function = [&](const InvokeResult& invoke_result) {
+    return !invoke_result.GetLogResult()->HasInitDuration();
   };
 
-  const auto& invocation_results = benchmark_result->GetInvocationResults();
+  const auto& benchmark_repetitions = benchmark_result->GetBenchmarkRepetitions();
 
   std::vector<double> warm_function_percentages;
   warm_function_percentages.reserve(benchmark_parameters.repetition_count);
 
-  for (const auto& invocation_result : invocation_results) {
+  for (const auto& benchmark_repetition : benchmark_repetitions) {
     size_t successful_function_count = 0;
     size_t warm_function_count = 0;
 
-    const auto repetition_results = ExtractMapValues(invocation_result);
-
-    for (size_t j = 0; j < benchmark_parameters.invocation_count; ++j) {
-      const auto& result = repetition_results[j];
-
-      if (result.invoke_result && result.invoke_result->GetFunctionError().empty()) {
+    for (const auto& invoke_result : benchmark_repetition.GetInvokeResults()) {
+      if (invoke_result.IsSuccess()) {
         ++successful_function_count;
 
-        if (is_warm_function(result)) {
+        if (is_warm_function(invoke_result)) {
           ++warm_function_count;
         }
       }
@@ -130,20 +126,15 @@ Aws::Utils::Json::JsonValue FunctionWarmUpContinuousBenchmark::GenerateResultOut
                                warm_function_percentages_aggregates.GetPercentile(10));
   numeric_metrics.emplace_back("warm_function_percentage_std_dev",
                                warm_function_percentages_aggregates.GetStandardDeviation());
-  numeric_metrics.emplace_back("warm_up_cost_usd", benchmark_result->GetOverallFunctionWarmUpCost());
+  numeric_metrics.emplace_back("warm_up_cost_usd", benchmark_result->GetWarmUpCost());
   numeric_metrics.emplace_back("function_cost_usd",
                                static_cast<double>(CalculateOverallFunctionCost(
                                    benchmark_result, benchmark_parameters.function_instance_mb_size)));
 
-  std::vector<double> function_warm_up_cost(benchmark_result->GetFunctionWarmUpCosts().cbegin(),
-                                            benchmark_result->GetFunctionWarmUpCosts().cend());
-
-  const BenchmarkResultAggregate warm_up_cost_aggregates(function_warm_up_cost);
-
   return BenchmarkHelper::GenerateJsonOutput(
       benchmark_name.str(), numeric_metrics, {/*aggregated string metrics*/}, benchmark_result,
-      {/*extract double metric functions*/}, {[&](const InvocationResult& invocation_result) {
-        return std::make_tuple("is_warm_function", is_warm_function(invocation_result) ? "true" : "false");
+      {/*extract double metric functions*/}, {[&](const InvokeResult& invoke_result) {
+        return std::make_tuple("is_warm_function", is_warm_function(invoke_result) ? "true" : "false");
       }},
       {/*extract object metric functions*/});
 }

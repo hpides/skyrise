@@ -4,10 +4,8 @@
 #include <cmath>
 #include <fstream>
 #include <iterator>
-#include <numeric>
 #include <regex>
 
-#include <aws/core/utils/base64/Base64.h>
 #include <aws/core/utils/logging/LogMacros.h>
 #include <aws/s3/model/CreateBucketRequest.h>
 #include <aws/s3/model/Delete.h>
@@ -30,11 +28,11 @@ Aws::Utils::Json::JsonValue BenchmarkHelper::GenerateJsonOutput(
     const Aws::String& benchmark_name, const std::vector<std::tuple<Aws::String, double>>& aggregated_numeric_metrics,
     const std::vector<std::tuple<Aws::String, Aws::String>>& aggregated_alphabetic_metrics,
     const std::shared_ptr<BenchmarkResult>& benchmark_result,
-    const std::vector<std::function<std::tuple<Aws::String, double>(const InvocationResult&)>>&
+    const std::vector<std::function<std::tuple<Aws::String, double>(const InvokeResult&)>>&
         extract_numeric_metric_functions,
-    const std::vector<std::function<std::tuple<Aws::String, Aws::String>(const InvocationResult&)>>&
+    const std::vector<std::function<std::tuple<Aws::String, Aws::String>(const InvokeResult&)>>&
         extract_alphabetic_metric_functions,
-    const std::vector<std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const InvocationResult&)>>&
+    const std::vector<std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const InvokeResult&)>>&
         extract_object_metric_functions) {
   auto json_output = Aws::Utils::Json::JsonValue().WithString("name", benchmark_name);
 
@@ -46,44 +44,45 @@ Aws::Utils::Json::JsonValue BenchmarkHelper::GenerateJsonOutput(
     json_output = json_output.WithString(metric_name, aggregated_alphabetic_metric);
   }
 
-  const auto& invocation_results = benchmark_result->GetInvocationResults();
+  const auto& benchmark_repetitions = benchmark_result->GetBenchmarkRepetitions();
 
-  Aws::Utils::Array<Aws::Utils::Json::JsonValue> repetitions(invocation_results.size());
+  Aws::Utils::Array<Aws::Utils::Json::JsonValue> repetitions(benchmark_repetitions.size());
 
-  for (size_t i = 0; i < invocation_results.size(); i++) {
-    auto repetition_value = Aws::Utils::Json::JsonValue()
-                                .WithInteger("repetition", i)
-                                .WithDouble("duration_seconds", benchmark_result->GetRepetitionDuration(i).count())
-                                .WithDouble("warmup_cost_usd", benchmark_result->GetFunctionWarmUpCosts()[i]);
+  for (size_t i = 0; i < benchmark_repetitions.size(); i++) {
+    auto repetition_value =
+        Aws::Utils::Json::JsonValue()
+            .WithInteger("repetition", i)
+            .WithDouble("duration_ms", benchmark_repetitions[i].GetDurationMs())
+            .WithDouble("warmup_cost_usd", static_cast<double>(benchmark_repetitions[i].GetWarmUpCost()));
 
-    Aws::Utils::Array<Aws::Utils::Json::JsonValue> invocations(invocation_results[i].size());
+    Aws::Utils::Array<Aws::Utils::Json::JsonValue> invocations(benchmark_repetitions[i].GetInvokeResults().size());
 
     size_t j = 0;
-    for (const auto& [invocation_id, benchmark_item_result] : invocation_results[i]) {
-      auto invocation_value = Aws::Utils::Json::JsonValue().WithString("name", invocation_id);
+    for (const auto& invoke_result : benchmark_repetitions[i].GetInvokeResults()) {
+      auto invoke_result_value = Aws::Utils::Json::JsonValue().WithString("name", invoke_result.GetInvokeId());
 
-      if (benchmark_item_result.invoke_result && benchmark_item_result.invoke_result->GetFunctionError().empty()) {
-        invocation_value = invocation_value.WithBool("success", true);
+      if (invoke_result.IsSuccess()) {
+        invoke_result_value = invoke_result_value.WithBool("success", true);
 
         for (const auto& extract_numeric_metric_function : extract_numeric_metric_functions) {
-          const auto& [metric_name, numeric_metric] = extract_numeric_metric_function(benchmark_item_result);
-          invocation_value = invocation_value.WithDouble(metric_name, numeric_metric);
+          const auto& [metric_name, numeric_metric] = extract_numeric_metric_function(invoke_result);
+          invoke_result_value = invoke_result_value.WithDouble(metric_name, numeric_metric);
         }
 
         for (const auto& extract_alphabetic_metric_function : extract_alphabetic_metric_functions) {
-          const auto& [metric_name, alphabetic_metric] = extract_alphabetic_metric_function(benchmark_item_result);
-          invocation_value = invocation_value.WithString(metric_name, alphabetic_metric);
+          const auto& [metric_name, alphabetic_metric] = extract_alphabetic_metric_function(invoke_result);
+          invoke_result_value = invoke_result_value.WithString(metric_name, alphabetic_metric);
         }
 
         for (const auto& extract_object_metric_function : extract_object_metric_functions) {
-          const auto& [metric_name, object_metric] = extract_object_metric_function(benchmark_item_result);
-          invocation_value = invocation_value.WithObject(metric_name, object_metric);
+          const auto& [metric_name, object_metric] = extract_object_metric_function(invoke_result);
+          invoke_result_value = invoke_result_value.WithObject(metric_name, object_metric);
         }
       } else {
-        invocation_value = invocation_value.WithBool("success", false);
+        invoke_result_value = invoke_result_value.WithBool("success", false);
       }
 
-      invocations[j] = invocation_value;
+      invocations[j] = invoke_result_value;
       j++;
     }
 
@@ -210,61 +209,6 @@ long double BenchmarkHelper::EmptyS3Bucket(const Aws::String& bucket_name) const
   }
 
   return cost;
-}
-
-std::vector<double> BenchmarkHelper::ExtractMetrics(
-    const std::shared_ptr<BenchmarkResult>& benchmark_result,
-    const std::function<double(const InvocationResult&)>& extract_metric) {
-  const auto& invocation_results = benchmark_result->GetInvocationResults();
-
-  if (invocation_results.empty()) {
-    return {};
-  }
-
-  std::vector<double> metrics;
-  metrics.reserve(invocation_results.size() * invocation_results.front().size());
-
-  for (const auto& repetition_results : invocation_results) {
-    const auto repetition_metrics = ExtractMetrics(repetition_results, extract_metric);
-    metrics.insert(metrics.cend(), repetition_metrics.cbegin(), repetition_metrics.cend());
-  }
-
-  return metrics;
-}
-
-std::vector<double> BenchmarkHelper::ExtractMetrics(
-    const std::map<Aws::String, InvocationResult>& repetition_results,
-    const std::function<double(const InvocationResult&)>& extract_metric) {
-  std::vector<double> metrics;
-  metrics.reserve(repetition_results.size());
-  std::transform(repetition_results.cbegin(), repetition_results.cend(), std::back_inserter(metrics),
-                 [&](const std::pair<const Aws::String, skyrise::InvocationResult>& map_entry) {
-                   return extract_metric(map_entry.second);
-                 });
-
-  return metrics;
-}
-
-double BenchmarkHelper::ExtractMetric(const InvocationResult& result, const Aws::String& key) {
-  const auto payload_value = Aws::Utils::Json::JsonValue(StreamToString(&result.invoke_result->GetPayload()));
-  const auto payload_view = payload_value.View();
-
-  return payload_view.GetDouble(key);
-}
-
-std::optional<double> BenchmarkHelper::ExtractLogResultMetric(const InvocationResult& result,
-                                                              const std::string& metric_name) {
-  // TODO(anyone): Make this compatible with Logs that are only in the SQS Message body
-  const Aws::Utils::ByteBuffer log_result_chars =
-      Aws::Utils::Base64::Base64().Decode(result.invoke_result->GetLogResult());
-  const std::string log_result(reinterpret_cast<char const*>(log_result_chars.GetUnderlyingData()),
-                               log_result_chars.GetLength());
-
-  const std::regex metric_regex("REPORT.+?" + metric_name + ": ([\\d\\.]+)");
-  std::smatch metric_match;
-  const bool is_match = std::regex_search(log_result, metric_match, metric_regex);
-
-  return is_match ? std::optional<double>(std::stod(metric_match[1])) : std::nullopt;
 }
 
 }  // namespace skyrise

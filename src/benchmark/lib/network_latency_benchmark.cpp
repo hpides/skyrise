@@ -22,7 +22,7 @@ NetworkLatencyBenchmark::NetworkLatencyBenchmark(std::shared_ptr<BenchmarkHelper
                        repetition_count) {
   for (const auto function_instance_mb_size : function_instance_mb_sizes) {
     for (const size_t object_byte_size_read : object_byte_sizes_read) {
-      BenchmarkConfig config("skyriseFunctionReadS3", function_instance_mb_size, repetition_count_ / batch_size_, 1);
+      BenchmarkConfig config("skyriseFunctionReadS3", function_instance_mb_size, repetition_count_);
       config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size_read, 1,
                                           config.concurrent_invocation_count_, S3OperationType::kRead));
       benchmark_configs_.emplace_back(
@@ -31,8 +31,7 @@ NetworkLatencyBenchmark::NetworkLatencyBenchmark(std::shared_ptr<BenchmarkHelper
     }
 
     for (const size_t object_byte_size_write : object_byte_sizes_write) {
-      BenchmarkConfig config("skyriseFunctionWriteS3", function_instance_mb_size, repetition_count_ / batch_size_, 1,
-                             WarmUp::kNone);
+      BenchmarkConfig config("skyriseFunctionWriteS3", function_instance_mb_size, repetition_count_);
       config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size_write, 1,
                                           config.concurrent_invocation_count_, S3OperationType::kWrite));
       benchmark_configs_.emplace_back(
@@ -49,13 +48,22 @@ Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
                  << "FunctionInstanceMB/" << std::string(magic_enum::enum_name(benchmark_parameters.operation_type))
                  << "/" << benchmark_parameters.object_byte_size << "ObjectByteSize";
 
-  const auto invocation_results = benchmark_result->GetInvocationResults().front();
+  const auto benchmark_repetitions = benchmark_result->GetBenchmarkRepetitions();
 
-  const auto batched_runs = GenerateBatchedSubResultOutput(invocation_results, benchmark_name.str(),
-                                                           benchmark_parameters.function_instance_mb_size,
-                                                           "ms_latencies", [](const double value) { return value; });
+  std::vector<double> latencies;
+  latencies.reserve(benchmark_repetitions.size() * benchmark_repetitions.front().GetInvokeResults().size());
 
-  const BenchmarkResultAggregate aggregates(ExtractValuesFromBatchedSubResults(batched_runs, "ms_latencies"));
+  for (const auto& benchmark_repetition : benchmark_repetitions) {
+    for (const auto& invoke_result : benchmark_repetition.GetInvokeResults()) {
+      const auto ms_latencies = invoke_result.GetResponseBody().GetArray("ms_durations");
+
+      for (size_t i = 0; i < ms_latencies.GetLength(); i++) {
+        latencies.emplace_back(ms_latencies[i].AsDouble());
+      }
+    }
+  }
+
+  const BenchmarkResultAggregate aggregates(latencies);
 
   return BenchmarkHelper::GenerateJsonOutput(
       benchmark_name.str(),
@@ -72,19 +80,16 @@ Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
                                   benchmark_result, benchmark_parameters.function_instance_mb_size))},
        {"benchmark_cost_overhead_usd", static_cast<double>(cost_overhead_ / benchmark_configs_.size())}},
       {/*aggregated string metrics*/}, benchmark_result,
-      {[&](const InvocationResult& single_result) {
-         return std::make_tuple(
-             "billed_lambda_duration_ms",
-             BenchmarkHelper::ExtractLogResultMetric(single_result, "Billed Duration").value_or(0.0));
+      {[&](const InvokeResult& invoke_result) {
+         return std::make_tuple("billed_lambda_duration_ms", invoke_result.GetLogResult()->GetBilledDurationMs());
        },
-       [&](const InvocationResult& single_result) {
+       [&](const InvokeResult& invoke_result) {
          return std::make_tuple(
              "function_cost_usd",
-             static_cast<double>(ExtractFunctionCost(single_result, benchmark_parameters.function_instance_mb_size)));
+             static_cast<double>(ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size)));
        }},
-      {/*extract string metric functions*/}, {[&](const InvocationResult& single_result) {
-        const Aws::Utils::Json::JsonValue payload_value(StreamToString(&single_result.invoke_result->GetPayload()));
-        const auto ms_durations = payload_value.View().GetArray("ms_durations");
+      {/*extract string metric functions*/}, {[&](const InvokeResult& invoke_result) {
+        const auto ms_durations = invoke_result.GetResponseBody().GetArray("ms_durations");
 
         Aws::Utils::Array<Aws::Utils::Json::JsonValue> duration_seconds(ms_durations.GetLength());
 

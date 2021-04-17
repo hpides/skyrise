@@ -21,10 +21,10 @@ class Benchmark {
       const std::shared_ptr<BenchmarkRunner>& benchmark_runner) = 0;
 
  protected:
-  long double CalculateOverallFunctionCost(const std::shared_ptr<BenchmarkResult>& result,
+  long double CalculateOverallFunctionCost(const std::shared_ptr<BenchmarkResult>& benchmark_result,
                                            const size_t function_instance_mb_size,
                                            const bool is_provisioned_concurrency = false) const;
-  long double ExtractFunctionCost(const InvocationResult& result, const size_t function_instance_mb_size,
+  long double ExtractFunctionCost(const InvokeResult& invoke_result, const size_t function_instance_mb_size,
                                   const bool is_provisioned_concurrency = false) const;
 
   // TODO(maltenbergert): Move parts of BenchmarkHelper here

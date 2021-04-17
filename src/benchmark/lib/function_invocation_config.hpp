@@ -6,7 +6,7 @@ namespace skyrise {
 
 struct FunctionInvocationConfig {
   Aws::String function_name;
-  Aws::String invocation_id;
+  Aws::String invoke_id;
   std::shared_ptr<Aws::IOStream> payload;
 };
 

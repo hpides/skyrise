@@ -8,7 +8,9 @@
 #include <tuple>
 
 #include <aws/core/Aws.h>
+#include <aws/core/utils/Outcome.h>
 #include <aws/core/utils/base64/Base64.h>
+#include <aws/core/utils/json/JsonSerializer.h>
 #include <gtest/gtest.h>
 
 #include "benchmark_config.hpp"
@@ -26,10 +28,24 @@ TEST_F(BenchmarkHelperTest, GenerateJsonOutput) {
     const auto benchmark_result = std::make_shared<BenchmarkResult>(1, 3);
 
     for (size_t i = 0; i < 3; i++) {
-      benchmark_result->RegisterInvocation(0, std::to_string(i));
-      benchmark_result->FinishInvocation(0, std::to_string(i), std::make_shared<Aws::Lambda::Model::InvokeResult>(),
-                                         true);
-      benchmark_result->UpdateSQSMessageBody(0, std::to_string(i), std::to_string(i));
+      benchmark_result->RegisterInvocation(0, i, std::to_string(i));
+
+      const auto payload_value = Aws::Utils::Json::JsonValue().WithBool("success", true);
+
+      // We have to use a raw pointer here as the InvokeResult's ResponseStream will take ownership of this stream
+      auto* result_body = new Aws::StringStream;
+      *result_body << payload_value.View().WriteCompact();
+
+      Aws::Lambda::Model::InvokeResult invoke_result;
+      invoke_result.ReplaceBody(result_body);
+      auto outcome =
+          Aws::Utils::Outcome<Aws::Lambda::Model::InvokeResult, Aws::Lambda::LambdaError>(std::move(invoke_result));
+
+      const auto sqs_message_body_value = Aws::Utils::Json::JsonValue().WithObject(
+          "responsePayload", Aws::Utils::Json::JsonValue().WithBool("success", true));
+
+      benchmark_result->FinishInvocation(0, i, &outcome);
+      benchmark_result->UpdateSQSMessageBody(0, i, sqs_message_body_value.View().WriteCompact());
     }
 
     std::vector<std::tuple<Aws::String, double>> aggregated_numeric_metrics;
@@ -38,28 +54,24 @@ TEST_F(BenchmarkHelperTest, GenerateJsonOutput) {
     std::vector<std::tuple<Aws::String, Aws::String>> aggregated_alphabetic_metrics;
     aggregated_alphabetic_metrics.emplace_back(std::make_tuple("alphabetic_metric", "zero"));
 
-    std::vector<std::function<std::tuple<Aws::String, double>(const InvocationResult&)>>
-        extract_numeric_metric_functions{[](const InvocationResult& b) {
-                                           return std::make_tuple("numeric_metric_1", std::stod(b.sqs_message_body));
-                                         },
-                                         [](const InvocationResult& b) {
-                                           return std::make_tuple("numeric_metric_2", static_cast<double>(b.success));
-                                         }};
+    std::vector<std::function<std::tuple<Aws::String, double>(const InvokeResult&)>> extract_numeric_metric_functions{
+        [](const InvokeResult& b) { return std::make_tuple("numeric_metric_1", b.GetDurationMs()); },
+        [](const InvokeResult& b) { return std::make_tuple("numeric_metric_2", static_cast<double>(b.IsSuccess())); }};
 
-    std::vector<std::function<std::tuple<Aws::String, Aws::String>(const InvocationResult&)>>
+    std::vector<std::function<std::tuple<Aws::String, Aws::String>(const InvokeResult&)>>
         extract_alphabetic_metric_functions{
-            [](const InvocationResult& b) { return std::make_tuple("alphabetic_metric_1", b.sqs_message_body); },
-            [](const InvocationResult& b) {
-              return std::make_tuple("alphabetic_metric_2", b.success ? "true" : "false");
+            [](const InvokeResult& b) { return std::make_tuple("alphabetic_metric_1", b.GetInvokeId()); },
+            [](const InvokeResult& b) {
+              return std::make_tuple("alphabetic_metric_2", b.IsSuccess() ? "true" : "false");
             }};
 
-    std::vector<std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const InvocationResult&)>>
+    std::vector<std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const InvokeResult&)>>
         extract_object_metric_functions{
-            [](const InvocationResult& b) {
-              return std::make_tuple("object_metric_1", Aws::Utils::Json::JsonValue().AsString(b.sqs_message_body));
+            [](const InvokeResult& b) {
+              return std::make_tuple("object_metric_1", Aws::Utils::Json::JsonValue().AsString(b.GetInvokeId()));
             },
-            [](const InvocationResult& b) {
-              return std::make_tuple("object_metric_2", Aws::Utils::Json::JsonValue().AsBool(b.success));
+            [](const InvokeResult& b) {
+              return std::make_tuple("object_metric_2", Aws::Utils::Json::JsonValue().AsBool(b.IsSuccess()));
             }};
 
     const auto json_value = BenchmarkHelper::GenerateJsonOutput(
@@ -76,7 +88,7 @@ TEST_F(BenchmarkHelperTest, GenerateJsonOutput) {
     EXPECT_EQ(repetitions.GetLength(), 1);
 
     EXPECT_TRUE(repetitions[0].ValueExists("repetition"));
-    EXPECT_TRUE(repetitions[0].ValueExists("duration_seconds"));
+    EXPECT_TRUE(repetitions[0].ValueExists("duration_ms"));
     EXPECT_TRUE(repetitions[0].ValueExists("invocations"));
 
     const auto invocations = repetitions[0].GetArray("invocations");
@@ -91,53 +103,6 @@ TEST_F(BenchmarkHelperTest, GenerateJsonOutput) {
       EXPECT_TRUE(invocations[i].ValueExists("object_metric_1"));
       EXPECT_TRUE(invocations[i].ValueExists("object_metric_2"));
     }
-  }
-  Aws::ShutdownAPI(options);
-}
-
-TEST_F(BenchmarkHelperTest, ExtractLogResultMetric) {
-  Aws::SDKOptions options;
-
-  Aws::InitAPI(options);
-  {
-    const Aws::String log_result =
-        "REPORT RequestId: dc5e1ec9-c123-46ce-b72c-6ae7e629eb5a Duration: 238.83 ms Billed Duration: 261 ms Memory "
-        "Size: 3008 MB Max Memory Used: 44 MB Init Duration: 22.09 ms";
-    Aws::Utils::ByteBuffer log_result_buffer(log_result.size());
-
-    for (size_t i = 0; i < log_result.size(); i++) {
-      log_result_buffer[i] = log_result[i];
-    }
-
-    const auto log_result_encoded = Aws::Utils::Base64::Base64().Encode(log_result_buffer);
-
-    auto invoke_result = Aws::Lambda::Model::InvokeResult();
-    invoke_result.SetLogResult(log_result_encoded);
-    invoke_result.SetStatusCode(200);
-
-    const auto time_point = std::chrono::system_clock::now();
-
-    const InvocationResult invocation_result{
-        "0",        true,      true, {}, std::make_shared<Aws::Lambda::Model::InvokeResult>(std::move(invoke_result)),
-        time_point, time_point};
-
-    const auto init_duration = BenchmarkHelper::ExtractLogResultMetric(invocation_result, "Init Duration");
-    EXPECT_EQ(init_duration.value(), 22.09);
-
-    const auto duration = BenchmarkHelper::ExtractLogResultMetric(invocation_result, "Duration");
-    EXPECT_EQ(duration.value(), 238.83);
-
-    const auto billed_duration = BenchmarkHelper::ExtractLogResultMetric(invocation_result, "Billed Duration");
-    EXPECT_EQ(billed_duration.value(), 261);
-
-    const auto memory_mb_size = BenchmarkHelper::ExtractLogResultMetric(invocation_result, "Memory Size");
-    EXPECT_EQ(memory_mb_size.value(), 3008);
-
-    const auto max_memory_used = BenchmarkHelper::ExtractLogResultMetric(invocation_result, "Max Memory Used");
-    EXPECT_EQ(max_memory_used.value(), 44);
-
-    const auto xray_trace_id = BenchmarkHelper::ExtractLogResultMetric(invocation_result, "XRAY TraceId");
-    EXPECT_FALSE(xray_trace_id.has_value());
   }
   Aws::ShutdownAPI(options);
 }

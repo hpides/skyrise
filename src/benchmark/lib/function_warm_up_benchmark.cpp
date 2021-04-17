@@ -86,27 +86,25 @@ Aws::Utils::Json::JsonValue FunctionWarmUpBenchmark::GenerateResultOutput(
                  << benchmark_parameters.invocation_count << "/" << benchmark_parameters.sleep_ms_duration << "/"
                  << benchmark_parameters.provisioning_factor << "/" << benchmark_parameters.warm_up_strategy;
 
-  const auto is_warm_function = [&](const InvocationResult& invocation_result) {
-    return !BenchmarkHelper::ExtractLogResultMetric(invocation_result, "Init Duration") ||
+  const auto is_warm_function = [&](const InvokeResult& invoke_result) {
+    return !invoke_result.GetLogResult()->HasInitDuration() ||
            benchmark_parameters.warm_up_strategy == "ProvisionedConcurrencyWarmUpStrategy";
   };
 
-  const auto& invocation_results = benchmark_result->GetInvocationResults();
+  const auto& benchmark_repetitions = benchmark_result->GetBenchmarkRepetitions();
 
   std::vector<double> warm_function_percentages;
   warm_function_percentages.reserve(benchmark_parameters.repetition_count);
 
-  for (const auto& repetition_results : invocation_results) {
+  for (const auto& benchmark_repetition : benchmark_repetitions) {
     size_t successful_function_count = 0;
     size_t warm_function_count = 0;
 
-    for (const auto& invocation_result : repetition_results) {
-      const auto& result = invocation_result.second;
-
-      if (result.invoke_result && result.invoke_result->GetFunctionError().empty()) {
+    for (const auto& invoke_result : benchmark_repetition.GetInvokeResults()) {
+      if (invoke_result.IsSuccess()) {
         ++successful_function_count;
 
-        if (is_warm_function(result)) {
+        if (is_warm_function(invoke_result)) {
           ++warm_function_count;
         }
       }
@@ -116,11 +114,6 @@ Aws::Utils::Json::JsonValue FunctionWarmUpBenchmark::GenerateResultOutput(
   }
 
   const BenchmarkResultAggregate warm_function_percentages_aggregates(warm_function_percentages);
-
-  std::vector<double> function_warm_up_cost(benchmark_result->GetFunctionWarmUpCosts().cbegin(),
-                                            benchmark_result->GetFunctionWarmUpCosts().cend());
-
-  const BenchmarkResultAggregate warm_up_cost_aggregates(function_warm_up_cost);
 
   return BenchmarkHelper::GenerateJsonOutput(
       benchmark_name.str(),
@@ -133,13 +126,13 @@ Aws::Utils::Json::JsonValue FunctionWarmUpBenchmark::GenerateResultOutput(
        {"warm_function_percentage_percentile_1", warm_function_percentages_aggregates.GetPercentile(1)},
        {"warm_function_percentage_percentile_10", warm_function_percentages_aggregates.GetPercentile(10)},
        {"warm_function_percentage_std_dev", warm_function_percentages_aggregates.GetStandardDeviation()},
-       {"warm_up_cost_usd", benchmark_result->GetOverallFunctionWarmUpCost()},
+       {"warm_up_cost_usd", benchmark_result->GetWarmUpCost()},
        {"function_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
                                  benchmark_result, benchmark_parameters.function_instance_mb_size,
                                  benchmark_parameters.warm_up_strategy == "ProvisionedConcurrencyWarmUpStrategy"))}},
       {/*aggregated string metrics*/}, benchmark_result, {/*extract double metric functions*/},
-      {[&](const InvocationResult& invocation_result) {
-        return std::make_tuple("is_warm_function", is_warm_function(invocation_result) ? "true" : "false");
+      {[&](const InvokeResult& invoke_result) {
+        return std::make_tuple("is_warm_function", is_warm_function(invoke_result) ? "true" : "false");
       }},
       {/*extract object metric functions*/});
 }

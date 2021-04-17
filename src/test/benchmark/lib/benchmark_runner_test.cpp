@@ -6,7 +6,6 @@
 #include "benchmark_config.hpp"
 #include "client/client.hpp"
 #include "lib/testing/aws_test.hpp"
-#include "utils/string.hpp"
 
 namespace skyrise {
 
@@ -19,42 +18,34 @@ class BenchmarkRunnerTest : public ::testing::Test {
     const auto result = benchmark_runner_.RunConfig(benchmark_config);
     ASSERT_TRUE(result);
 
-    const auto invocation_results = result->GetInvocationResults();
-    EXPECT_EQ(invocation_results.size(), benchmark_config.repetition_count_);
+    const auto benchmark_repetitions = result->GetBenchmarkRepetitions();
+    EXPECT_EQ(benchmark_repetitions.size(), benchmark_config.repetition_count_);
 
     if (benchmark_config.warm_up_ == WarmUp::kNone) {
-      EXPECT_EQ(result->GetOverallFunctionWarmUpCost(), 0.0L);
+      EXPECT_EQ(result->GetWarmUpCost(), 0.0L);
     } else {
-      EXPECT_GT(result->GetOverallFunctionWarmUpCost(), 0.0L);
+      EXPECT_GT(result->GetWarmUpCost(), 0.0L);
     }
 
-    const auto& warm_up_costs = result->GetFunctionWarmUpCosts();
-    ASSERT_EQ(warm_up_costs.size(), invocation_results.size());
-
-    for (size_t i = 0; i < invocation_results.size(); i++) {
+    for (size_t i = 0; i < benchmark_repetitions.size(); i++) {
       EXPECT_TRUE(result->HasRepetitionFinished(i));
 
       if (i > 0 && benchmark_config.warm_up_ == WarmUp::kDefaultOncePerRepetition) {
-        EXPECT_GT(warm_up_costs[i], 0.0L);
+        EXPECT_GT(benchmark_repetitions[i].GetWarmUpCost(), 0.0L);
       }
 
-      const auto& repetition_results = invocation_results[i];
-      EXPECT_EQ(repetition_results.size(), benchmark_config.concurrent_invocation_count_);
+      EXPECT_EQ(benchmark_repetitions[i].GetInvokeResults().size(), benchmark_config.concurrent_invocation_count_);
 
-      for (const auto& single_result : repetition_results) {
-        EXPECT_FALSE(single_result.first.empty());
-        EXPECT_TRUE(single_result.second.success);
-        EXPECT_TRUE(single_result.second.finished);
+      const auto response_body = Aws::Utils::Json::JsonValue().AsString("success");
 
-        const auto& invoke_result = single_result.second.invoke_result;
+      for (const auto& invoke_result : benchmark_repetitions[i].GetInvokeResults()) {
+        EXPECT_TRUE(invoke_result.IsSuccess());
+        EXPECT_TRUE(invoke_result.IsComplete());
+
+        EXPECT_EQ(invoke_result.GetResponseBody().WriteCompact(), response_body.View().WriteCompact());
 
         if (benchmark_config.use_event_queue_ == UseEventQueue::kNo) {
-          EXPECT_FALSE(invoke_result->GetLogResult().empty());
-
-          std::string payload = StreamToString(&invoke_result->GetPayload());
-          EXPECT_FALSE(payload.empty());
-        } else {
-          EXPECT_FALSE(single_result.second.sqs_message_body.empty());
+          EXPECT_TRUE(invoke_result.HasLogResult());
         }
       }
     }

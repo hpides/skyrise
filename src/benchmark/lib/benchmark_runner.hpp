@@ -34,11 +34,8 @@ class BenchmarkRunner {
   void InvokeFunctions();
 
   void WarmUpFunctions(const size_t repetition);
-  Aws::Lambda::Model::InvokeRequest CreateInvokeRequest(const Aws::String& function_name,
-                                                        const Aws::String& invocation_id,
-                                                        const std::shared_ptr<Aws::IOStream>& payload);
   void CreateInvokeRequests();
-  std::shared_ptr<std::unordered_map<Aws::String, Aws::String>> CollectSqsMessages(const size_t invocation_count);
+  void CollectSqsMessages(const size_t invocation_count);
 
   static Aws::Utils::CryptoBuffer OpenFunctionZip(const Aws::String& function_path);
   Aws::Lambda::Model::FunctionCode SetFunctionCode(const Aws::String& function_path, const Aws::String& function_name,
@@ -63,12 +60,14 @@ class BenchmarkRunner {
 
 class ContextFunctionInvocation : public Aws::Client::AsyncCallerContext {
  public:
-  ContextFunctionInvocation(const size_t repetition, const Aws::String& invocation_id)
-      : Aws::Client::AsyncCallerContext(invocation_id), repetition_(repetition) {}
+  ContextFunctionInvocation(const size_t repetition, const size_t invoke_index, const Aws::String& invocation_id)
+      : Aws::Client::AsyncCallerContext(invocation_id), repetition_(repetition), invoke_index_(invoke_index) {}
   size_t GetRepetition() const { return repetition_; }
+  size_t GetInvokeIndex() const { return invoke_index_; }
 
  private:
   const size_t repetition_;
+  const size_t invoke_index_;
 };
 
 }  // namespace skyrise

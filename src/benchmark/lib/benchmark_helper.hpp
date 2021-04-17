@@ -21,11 +21,11 @@ class BenchmarkHelper {
       const Aws::String& benchmark_name, const std::vector<std::tuple<Aws::String, double>>& aggregated_numeric_metrics,
       const std::vector<std::tuple<Aws::String, Aws::String>>& aggregated_alphabetic_metrics,
       const std::shared_ptr<BenchmarkResult>& benchmark_result,
-      const std::vector<std::function<std::tuple<Aws::String, double>(const InvocationResult&)>>&
+      const std::vector<std::function<std::tuple<Aws::String, double>(const InvokeResult&)>>&
           extract_numeric_metric_functions,
-      const std::vector<std::function<std::tuple<Aws::String, Aws::String>(const InvocationResult&)>>&
+      const std::vector<std::function<std::tuple<Aws::String, Aws::String>(const InvokeResult&)>>&
           extract_alphabetic_metric_functions,
-      const std::vector<std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const InvocationResult&)>>&
+      const std::vector<std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const InvokeResult&)>>&
           extract_object_metric_functions);
 
   long double CreateS3BucketIfNotExists(const Aws::String& bucket_name) const;
@@ -36,13 +36,6 @@ class BenchmarkHelper {
       const std::vector<std::tuple<Aws::String, std::shared_ptr<Aws::IOStream>, size_t>>& objects,
       const Aws::String& bucket_name) const;
   long double EmptyS3Bucket(const Aws::String& bucket_name) const;
-
-  static std::vector<double> ExtractMetrics(const std::shared_ptr<BenchmarkResult>& benchmark_result,
-                                            const std::function<double(const InvocationResult&)>& extract_metric);
-  static std::vector<double> ExtractMetrics(const std::map<Aws::String, InvocationResult>& repetition_results,
-                                            const std::function<double(const InvocationResult&)>& extract_metric);
-  static double ExtractMetric(const InvocationResult& result, const Aws::String& key);
-  static std::optional<double> ExtractLogResultMetric(const InvocationResult& result, const std::string& metric_name);
 
  private:
   const std::shared_ptr<Client> client_;

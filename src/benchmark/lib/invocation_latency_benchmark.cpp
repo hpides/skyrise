@@ -58,26 +58,29 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> InvocationLatencyBenchmark::Run(
     config_result_segments_futures->reserve(benchmark_parameters.repetition_count *
                                             (benchmark_parameters.invocation_count * kOverprovisioningCoefficient));
 
-    for (const auto& repetition : benchmark_result->GetInvocationResults()) {
-      for (const auto& invocation_result : repetition) {
-        if (!invocation_result.second.success) {
+    for (const auto& benchmark_repetition : benchmark_result->GetBenchmarkRepetitions()) {
+      for (const auto& invoke_result : benchmark_repetition.GetInvokeResults()) {
+        if (!invoke_result.IsSuccess()) {
           continue;
         }
 
         config_result_segments_futures->emplace_back(
-            invocation_result.second.invocation_id, std::async([&]() {
+            invoke_result.GetInvokeId(), std::async([&]() {
               std::map<Aws::String, Aws::Utils::Json::JsonValue> segments;
 
               try {
-                const auto trace_id = ExtractTraceId(invocation_result.second);
+                Assert(invoke_result.HasLogResult(), "InvokeResult must contain LogResult.");
+                Assert(invoke_result.GetLogResult()->HasXrayTraceId(), "LogResult must contain Xray TraceId.");
+
+                const auto trace_id = invoke_result.GetLogResult()->GetXrayTraceId();
                 const auto trace = function_segments_analyzer_->GetTraces({trace_id})[trace_id];
                 segments = FunctionSegmentsAnalyzer::GetSegments(trace);
               } catch (const std::exception& e) {
                 AWS_LOGSTREAM_ERROR(kTag.c_str(), e.what());
               }
 
-              return FunctionSegmentsAnalyzer::CalculateLambdaSegmentDurations(
-                  segments, invocation_result.second.start_point, invocation_result.second.end_point);
+              return FunctionSegmentsAnalyzer::CalculateLambdaSegmentDurations(segments, invoke_result.GetStartPoint(),
+                                                                               invoke_result.GetEndPoint());
             }));
 
         // Reduce throttled exceptions during trace retrieval
@@ -228,20 +231,6 @@ long double InvocationLatencyBenchmark::CalculateBenchmarkCost(
   return lambda_cost + xray_cost;
 }
 
-Aws::String InvocationLatencyBenchmark::ExtractTraceId(const InvocationResult& result) {
-  Aws::Utils::Base64::Base64 base64;
-  const Aws::Utils::ByteBuffer log_result_chars = base64.Decode(result.invoke_result->GetLogResult());
-
-  const unsigned char* data = log_result_chars.GetUnderlyingData();
-  std::string log_result(reinterpret_cast<char const*>(data), log_result_chars.GetLength());
-
-  const std::regex trace_id_regex("XRAY TraceId: (\\S*)\\s");
-  std::smatch trace_id_match;
-  std::regex_search(log_result, trace_id_match, trace_id_regex);
-
-  return trace_id_match[1];
-}
-
 Aws::Utils::Json::JsonValue InvocationLatencyBenchmark::GenerateResultOutput(
     const std::shared_ptr<BenchmarkResult>& benchmark_result,
     const InvocationLatencyBenchmarkParameters& benchmark_parameters,
@@ -253,20 +242,20 @@ Aws::Utils::Json::JsonValue InvocationLatencyBenchmark::GenerateResultOutput(
                  << benchmark_parameters.sleep_ms_duration << "/" << benchmark_parameters.repetition_count;
 
   const auto& segments = FunctionSegmentsAnalyzer::CreateLambdaSegmentDurations();
-  std::vector<std::function<std::tuple<Aws::String, double>(const InvocationResult&)>> extract_metric_functions;
+  std::vector<std::function<std::tuple<Aws::String, double>(const InvokeResult&)>> extract_metric_functions;
   extract_metric_functions.reserve(segments.size() + 1);
 
   for (const auto& segment : segments) {
-    extract_metric_functions.emplace_back([&segment, &result_segments](const InvocationResult& single_result) {
+    extract_metric_functions.emplace_back([&segment, &result_segments](const InvokeResult& invoke_result) {
       return std::make_tuple(
           segment.first,
-          std::chrono::duration<double>((*result_segments)[single_result.invocation_id][segment.first]).count());
+          std::chrono::duration<double>((*result_segments)[invoke_result.GetInvokeId()][segment.first]).count());
     });
   }
 
-  extract_metric_functions.emplace_back([&](const InvocationResult& item_result) {
+  extract_metric_functions.emplace_back([&](const InvokeResult& invoke_result) {
     return std::make_tuple("function_cost_usd",
-                           ExtractFunctionCost(item_result, benchmark_parameters.function_instance_mb_size));
+                           ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size));
   });
 
   std::vector<std::tuple<Aws::String, double>> aggregated_metrics;
@@ -301,8 +290,7 @@ Aws::Utils::Json::JsonValue InvocationLatencyBenchmark::GenerateResultOutput(
 
   aggregated_metrics.emplace_back("benchmark_cost_usd", static_cast<double>(benchmark_cost_));
   aggregated_metrics.emplace_back("benchmark_cost_overhead_usd", static_cast<double>(cost_overhead_));
-  aggregated_metrics.emplace_back("warm_up_cost_usd",
-                                  static_cast<double>(benchmark_result->GetOverallFunctionWarmUpCost()));
+  aggregated_metrics.emplace_back("warm_up_cost_usd", static_cast<double>(benchmark_result->GetWarmUpCost()));
 
   auto json_output = BenchmarkHelper::GenerateJsonOutput(benchmark_name.str(), aggregated_metrics, {}, benchmark_result,
                                                          extract_metric_functions, {}, {});

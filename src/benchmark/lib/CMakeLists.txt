@@ -38,6 +38,8 @@ set(
     invocation_latency_benchmark.cpp
     invocation_throughput_benchmark.cpp
     invocation_throughput_benchmark.hpp
+    log_result.cpp
+    log_result.hpp
     network_benchmark.cpp
     network_benchmark.hpp
     network_latency_benchmark.cpp

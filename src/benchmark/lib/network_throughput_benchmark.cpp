@@ -49,24 +49,24 @@ Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
                  << benchmark_parameters.thread_count << "Threads/"
                  << magic_enum::enum_name(benchmark_parameters.operation_type);
 
-  const auto invocation_results = benchmark_result->GetInvocationResults().front();
-
-  const auto batched_runs = GenerateBatchedSubResultOutput(
-      invocation_results, benchmark_name.str(), benchmark_parameters.function_instance_mb_size, "duration_seconds",
-      [&](const double value) {
-        return std::chrono::duration<double>(std::chrono::duration<double, std::milli>(value)).count();
-      });
-
-  const auto seconds_durations = ExtractValuesFromBatchedSubResults(batched_runs, "duration_seconds");
+  const auto& benchmark_repetitions = benchmark_result->GetBenchmarkRepetitions();
 
   std::vector<double> throughputs;
-  throughputs.reserve(seconds_durations.size());
+  throughputs.reserve(benchmark_repetitions.size() * benchmark_repetitions.front().GetInvokeResults().size());
 
-  std::transform(seconds_durations.cbegin(), seconds_durations.cend(), std::back_inserter(throughputs),
-                 [&](const double seconds_duration) {
-                   return ByteToMb(benchmark_parameters.object_byte_size) * benchmark_parameters.thread_count /
-                          seconds_duration;
-                 });
+  for (const auto& benchmark_repetition : benchmark_repetitions) {
+    for (const auto& invoke_result : benchmark_repetition.GetInvokeResults()) {
+      const auto ms_durations = invoke_result.GetResponseBody().GetArray("ms_durations");
+
+      for (size_t i = 0; i < ms_durations.GetLength(); i++) {
+        const double seconds_duration =
+            std::chrono::duration<double>(std::chrono::duration<double, std::milli>(ms_durations[i].AsDouble()))
+                .count();
+        throughputs.emplace_back(ByteToMb(benchmark_parameters.object_byte_size) * benchmark_parameters.thread_count /
+                                 seconds_duration);
+      }
+    }
+  }
 
   const BenchmarkResultAggregate aggregates(throughputs);
 
@@ -85,19 +85,16 @@ Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
                                   benchmark_result, benchmark_parameters.function_instance_mb_size))},
        {"benchmark_cost_overhead_usd", cost_overhead_ / benchmark_configs_.size()}},
       {/*aggregated string metrics*/}, benchmark_result,
-      {[&](const InvocationResult& single_result) {
-         return std::make_tuple(
-             "billed_lambda_duration_ms",
-             BenchmarkHelper::ExtractLogResultMetric(single_result, "Billed Duration").value_or(0.0));
+      {[&](const InvokeResult& invoke_result) {
+         return std::make_tuple("billed_lambda_duration_ms", invoke_result.GetLogResult()->GetBilledDurationMs());
        },
-       [&](const InvocationResult& single_result) {
+       [&](const InvokeResult& invoke_result) {
          return std::make_tuple(
              "function_cost_usd",
-             static_cast<double>(ExtractFunctionCost(single_result, benchmark_parameters.function_instance_mb_size)));
+             static_cast<double>(ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size)));
        }},
-      {/*extract string metric functions*/}, {[&](const InvocationResult& single_result) {
-        const Aws::Utils::Json::JsonValue payload_value(StreamToString(&single_result.invoke_result->GetPayload()));
-        const auto ms_durations = payload_value.View().GetArray("ms_durations");
+      {/*extract string metric functions*/}, {[&](const InvokeResult& invoke_result) {
+        const auto ms_durations = invoke_result.GetResponseBody().GetArray("ms_durations");
 
         Aws::Utils::Array<Aws::Utils::Json::JsonValue> duration_seconds(ms_durations.GetLength());
 

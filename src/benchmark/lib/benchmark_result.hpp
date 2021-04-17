@@ -8,53 +8,86 @@
 #include <vector>
 
 #include <aws/core/Aws.h>
-#include <aws/lambda/model/InvokeResult.h>
+#include <aws/lambda/LambdaClient.h>
+
+#include "log_result.hpp"
 
 namespace skyrise {
 
-struct InvocationResult {
-  Aws::String invocation_id;
-  bool success;
-  bool finished;
-  Aws::String sqs_message_body;
-  std::shared_ptr<Aws::Lambda::Model::InvokeResult> invoke_result;
-  std::chrono::time_point<std::chrono::system_clock> start_point;
-  std::chrono::time_point<std::chrono::system_clock> end_point;
+class InvokeResult {
+ public:
+  explicit InvokeResult(Aws::String invoke_id = {});
+
+  void Complete(Aws::Lambda::Model::InvokeOutcome* invoke_outcome);
+  void UpdateSQSMessageBody(const Aws::String& sqs_message_body);
+
+  const Aws::String& GetInvokeId() const;
+  Aws::Utils::Json::JsonView GetResponseBody() const;
+  std::shared_ptr<const LogResult> GetLogResult() const;
+
+  double GetDurationMs() const;
+  const std::chrono::time_point<std::chrono::system_clock>& GetStartPoint() const;
+  const std::chrono::time_point<std::chrono::system_clock>& GetEndPoint() const;
+
+  bool HasLogResult() const;
+
+  bool IsSuccess() const;
+  bool IsComplete() const;
+
+ private:
+  Aws::String invoke_id_;
+  bool success_;
+  bool complete_;
+
+  std::chrono::time_point<std::chrono::system_clock> start_point_;
+  std::chrono::time_point<std::chrono::system_clock> end_point_;
+
+  Aws::Utils::Json::JsonValue response_body_;
+  std::shared_ptr<const LogResult> log_result_;
+};
+
+class BenchmarkRepetition {
+ public:
+  explicit BenchmarkRepetition(const size_t invocation_count);
+  void RegisterInvocation(const size_t invoke_index, const Aws::String& invoke_id);
+  void CompleteInvocation(const size_t invoke_index, Aws::Lambda::Model::InvokeOutcome* invoke_outcome);
+  void UpdateSQSMessageBody(const size_t invoke_index, const Aws::String& sqs_message_body);
+  void SetFunctionWarmUpCost(const long double cost);
+
+  const std::vector<InvokeResult>& GetInvokeResults() const;
+  long double GetWarmUpCost() const;
+  double GetDurationMs() const;
+  bool IsComplete() const;
+
+ private:
+  const size_t invocation_count_;
+  std::vector<InvokeResult> invoke_results_;
+
+  long double warm_up_cost_;
 };
 
 class BenchmarkResult {
  public:
   BenchmarkResult(const size_t repetition_count, const size_t invocation_count);
 
-  void RegisterInvocation(const size_t repetition, const Aws::String& invocation_id);
-  void FinishInvocation(const size_t repetition, const Aws::String& invocation_id,
-                        const std::shared_ptr<Aws::Lambda::Model::InvokeResult>& result, const bool success);
-  void UpdateSQSMessageBody(const size_t repetition, const Aws::String& invocation_id,
-                            const Aws::String& sqs_message_body);
+  void RegisterInvocation(const size_t repetition, const size_t invoke_index, const Aws::String& invoke_id);
+  void FinishInvocation(const size_t repetition, const size_t invoke_index,
+                        Aws::Lambda::Model::InvokeOutcome* invoke_outcome);
+  void UpdateSQSMessageBody(const size_t repetition, const size_t invoke_index, const Aws::String& sqs_message_body);
   void SetFunctionWarmUpCost(const size_t repetition, const long double cost);
 
-  bool HasRepetitionFinished(const size_t repetition) const;
+  double GetDurationMs() const;
+  const std::vector<BenchmarkRepetition>& GetBenchmarkRepetitions() const;
+  long double GetWarmUpCost() const;
 
-  const std::vector<std::map<Aws::String, InvocationResult>>& GetInvocationResults() const;
-  std::chrono::duration<double> GetRepetitionDuration(const size_t repetition) const;
-  std::chrono::duration<double> GetBenchmarkDuration() const;
-  const std::vector<long double>& GetFunctionWarmUpCosts() const;
-  long double GetOverallFunctionWarmUpCost() const;
+  bool HasRepetitionFinished(const size_t repetition) const;
+  bool IsComplete() const;
 
  private:
-  std::vector<std::map<Aws::String, InvocationResult>> invocation_results_;
-  std::vector<size_t> invocations_finished_;
-  std::vector<long double> function_warm_up_costs_;
-  std::vector<std::tuple<std::chrono::time_point<std::chrono::system_clock>,
-                         std::chrono::time_point<std::chrono::system_clock>>>
-      repetition_durations_;
-  size_t invocation_count_;
+  const size_t repetition_count_;
+  const size_t invocation_count_;
 
-  std::chrono::time_point<std::chrono::system_clock> benchmark_start_point_;
-  std::chrono::time_point<std::chrono::system_clock> benchmark_end_point_;
-
-  std::mutex mutex_register_invocation_;
-  std::mutex mutex_finish_invocation_;
+  std::vector<BenchmarkRepetition> benchmark_repetitions_;
 };
 
 }  // namespace skyrise

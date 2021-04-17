@@ -73,18 +73,18 @@ Aws::Utils::Json::JsonValue IdleLifetimeBenchmark::GenerateResultOutput(
                  << benchmark_parameters.invocation_count << "/" << benchmark_parameters.sleep_min_duration << "/"
                  << benchmark_parameters.repetition_count;
 
-  const auto& invocation_results = benchmark_result->GetInvocationResults();
+  const auto& benchmark_repetitions = benchmark_result->GetBenchmarkRepetitions();
 
   std::vector<double> idle_lifetime_percentages;
-  idle_lifetime_percentages.reserve(invocation_results.size() - 1);
+  idle_lifetime_percentages.reserve(benchmark_repetitions.size() - 1);
 
   std::set<std::string> initial_vm_ids;
 
-  for (size_t i = 0; i < invocation_results.size(); ++i) {
+  for (size_t i = 0; i < benchmark_repetitions.size(); ++i) {
     std::set<std::string> observed_vm_ids;
 
-    for (const auto& invocation : invocation_results[i]) {
-      const Aws::String vm_id = StreamToString(&invocation.second.invoke_result->GetPayload());
+    for (const auto& invoke_result : benchmark_repetitions[i].GetInvokeResults()) {
+      const Aws::String vm_id = invoke_result.GetResponseBody().AsString();
 
       if (i == 0) {
         initial_vm_ids.emplace(vm_id);
@@ -113,12 +113,12 @@ Aws::Utils::Json::JsonValue IdleLifetimeBenchmark::GenerateResultOutput(
        {"idle_lifetime_percentage_std_dev", aggregates.GetStandardDeviation()},
        {"benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
                                   benchmark_result, benchmark_parameters.function_instance_mb_size))}},
-      {/*aggregated string metrics*/}, benchmark_result, {[&](const InvocationResult& item_result) {
+      {/*aggregated string metrics*/}, benchmark_result, {[&](const InvokeResult& invoke_result) {
         return std::make_tuple("function_cost_usd",
-                               ExtractFunctionCost(item_result, benchmark_parameters.function_instance_mb_size));
+                               ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size));
       }},
-      {[&](const InvocationResult& item_result) {
-        return std::make_tuple("vm_id", StreamToString(&item_result.invoke_result->GetPayload()));
+      {[&](const InvokeResult& invoke_result) {
+        return std::make_tuple("vm_id", invoke_result.GetResponseBody().AsString());
       }},
       {/*extract object metric functions*/});
 }
