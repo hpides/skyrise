@@ -88,4 +88,11 @@ ZstdCompressor::ZstdCompressor(bool favor_speed_over_compression) {
       kBufferCapacity, kCompressionBlockSize, *orc::getDefaultPool()));
 }
 
+Lz4Compressor::Lz4Compressor(bool favor_speed_over_compression) {
+  compression_stream_ = std::make_unique<OrcBufferedOutputStreamFacadeImplementation>(orc::createCompressor(
+      orc::CompressionKind_LZ4, &output_,
+      favor_speed_over_compression ? orc::CompressionStrategy_SPEED : orc::CompressionStrategy_COMPRESSION,
+      kBufferCapacity, kCompressionBlockSize, *orc::getDefaultPool()));
+}
+
 }  // namespace skyrise

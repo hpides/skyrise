@@ -37,4 +37,9 @@ class ZstdDecompressor : public Decompressor {
   bool Process();
 };
 
+class Lz4Decompressor : public Decompressor {
+ public:
+  bool Process();
+};
+
 }  // namespace skyrise

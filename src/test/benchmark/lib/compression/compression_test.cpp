@@ -21,10 +21,12 @@ class CompressionTradeoffTest : public ::testing::Test {};
 
 using CompressionTypes = ::testing::Types<CompressionTypeDefinitions<NoneCompressor, NoneDecompressor>,
                                           CompressionTypeDefinitions<ZlibCompressor, ZlibDecompressor>,
-                                          CompressionTypeDefinitions<ZstdCompressor, ZstdDecompressor>>;
+                                          CompressionTypeDefinitions<ZstdCompressor, ZstdDecompressor>,
+                                          CompressionTypeDefinitions<Lz4Compressor, Lz4Decompressor>>;
 
 using CompressionTradeoffTypes = ::testing::Types<CompressionTypeDefinitions<ZlibCompressor, ZlibDecompressor>,
-                                                  CompressionTypeDefinitions<ZstdCompressor, ZstdDecompressor>>;
+                                                  CompressionTypeDefinitions<ZstdCompressor, ZstdDecompressor>,
+                                                  CompressionTypeDefinitions<Lz4Compressor, Lz4Decompressor>>;
 
 TYPED_TEST_SUITE(CompressionTest, CompressionTypes, );
 TYPED_TEST_SUITE(CompressionTradeoffTest, CompressionTradeoffTypes, );
@@ -68,7 +70,10 @@ TYPED_TEST(CompressionTradeoffTest, CompressDecompress) {
   typename TypeParam::Compressor compressor_favor_compression(false);
   typename TypeParam::Compressor compressor_favor_speed(true);
 
-  std::string input_data = RandomString(5_MB + 7);  // Something that is not dividable by block size.
+  // Something that is not dividable by block size.
+  // Generate a pattern that can be compressed easily.
+  std::vector<char> input_data(5_MB + 7, 'a');
+
   std::stringstream compressed_data_favor_compression;
   std::stringstream compressed_data_favor_speed;
 
@@ -79,8 +84,8 @@ TYPED_TEST(CompressionTradeoffTest, CompressDecompress) {
     compressed_data_favor_speed.write(data, length);
   });
 
-  compressor_favor_compression.Process(input_data.c_str(), input_data.size());
-  compressor_favor_speed.Process(input_data.c_str(), input_data.size());
+  compressor_favor_compression.Process(input_data.data(), input_data.size());
+  compressor_favor_speed.Process(input_data.data(), input_data.size());
 
   compressor_favor_compression.Finish();
   compressor_favor_speed.Finish();

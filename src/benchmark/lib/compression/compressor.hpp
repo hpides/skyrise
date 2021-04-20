@@ -62,4 +62,9 @@ class ZstdCompressor : public Compressor {
   ZstdCompressor(bool favor_speed_over_compression = false);
 };
 
+class Lz4Compressor : public Compressor {
+ public:
+  Lz4Compressor(bool favor_speed_over_compression = false);
+};
+
 }  // namespace skyrise
