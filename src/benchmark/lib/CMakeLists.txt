@@ -48,8 +48,6 @@ set(
     network_throughput_benchmark.hpp
     network_throughput_parallel_benchmark.cpp
     network_throughput_parallel_benchmark.hpp
-    warm_up_strategy.cpp
-    warm_up_strategy.hpp
 )
 
 set(

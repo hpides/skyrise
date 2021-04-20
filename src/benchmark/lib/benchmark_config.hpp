@@ -6,7 +6,7 @@
 
 #include "function_config.hpp"
 #include "function_invocation_config.hpp"
-#include "warm_up_strategy.hpp"
+#include "scheduler/warm_up_strategy.hpp"
 
 namespace skyrise {
 

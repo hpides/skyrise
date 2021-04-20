@@ -104,6 +104,8 @@ set(
     limits.hpp
     monitoring/function_segments.cpp
     monitoring/function_segments.hpp
+    scheduler/warm_up_strategy.cpp
+    scheduler/warm_up_strategy.hpp
     utils/costs/cost_calculator.cpp
     utils/costs/cost_calculator.hpp
     utils/costs/pricing.cpp
