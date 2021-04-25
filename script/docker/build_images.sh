@@ -15,6 +15,7 @@ exitWithError() {
 }
 
 SOURCE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../"; pwd)
+DATE=$(date +'%Y%m%d')
 PREFIX=$USER
 PRUNE=false
 while [ "$#" -gt 0 ]; do
@@ -28,10 +29,10 @@ done
 
 echo "Building images with repository prefix ${PREFIX}.."
 export DOCKER_BUILDKIT=1
-docker build --build-arg BUILDKIT_INLINE_CACHE=1 --pull --target base --tag ${PREFIX}/skyrise:base ${SOURCE_DIR}
-docker build --build-arg BUILDKIT_INLINE_CACHE=1 --pull --target build --tag ${PREFIX}/skyrise:build ${SOURCE_DIR}
-docker build --build-arg BUILDKIT_INLINE_CACHE=1 --pull --target run --tag ${PREFIX}/skyrise:run ${SOURCE_DIR}
-docker build --build-arg BUILDKIT_INLINE_CACHE=1 --pull --target ubuntu --tag ${PREFIX}/skyrise:ubuntu ${SOURCE_DIR}
+docker build --build-arg BUILDKIT_INLINE_CACHE=1 --pull --target amazonlinux2 \
+             --tag ${PREFIX}/skyrise:amazonlinux2-${DATE} ${SOURCE_DIR}
+docker build --build-arg BUILDKIT_INLINE_CACHE=1 --pull --target ubuntu \
+             --tag ${PREFIX}/skyrise:ubuntu-${DATE} ${SOURCE_DIR}
 
 if [ "$PRUNE" = true ]; then
     echo "Removing dangling images.."

@@ -5,6 +5,8 @@ if (buildNumber > 1)
   milestone(buildNumber - 1)
 milestone(buildNumber)
 
+DOCKER_IMAGE_CREATION_DATE = '20210423'
+
 FULL_CI = buildWithFullCi()
 if (FULL_CI) {
   githubNotify context: 'full-ci', status: 'SUCCESS'
@@ -14,11 +16,11 @@ pipeline {
   agent none
 
   stages {
-    stage("Amazon Linux") {
+    stage("Amazon Linux 2") {
       agent {
         docker {
-          image 'hpiepic/skyrise:build'
-          alwaysPull true
+          image "hpiepic/skyrise:amazonlinux2-${DOCKER_IMAGE_CREATION_DATE}"
+          alwaysPull false
           args '--dns=192.168.30.50'
         }
       }
@@ -76,7 +78,8 @@ pipeline {
                     ])
                     
                     sh 'llvm-cov report -summary-only -ignore-filename-regex="(third_party|test)" \
-                        -instr-profile=skyriseTest.profdata bin/skyriseTest | tail -n1 -c7 > coverage_percentage.txt'
+                        -instr-profile=skyriseTest.profdata bin/skyriseTest | tail -n1 -c47 | head -c6 \
+                        > coverage_percentage.txt'
                     archiveArtifacts 'coverage_percentage.txt'
 
                     output = sh script: '../script/compare_coverage.sh', returnStdout: true
@@ -127,8 +130,8 @@ pipeline {
       }
       agent {
         docker {
-          image 'hpiepic/skyrise:ubuntu'
-          alwaysPull true
+          image "hpiepic/skyrise:ubuntu-${DOCKER_IMAGE_CREATION_DATE}"
+          alwaysPull false
         }
       }
       steps {

@@ -65,7 +65,7 @@ bool Function::RunsInLambdaEnvironment() {
   // Detect AWS Lambda execution environment based on environment variables that are be set by the runtimes.
   // See https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html.
 
-  return std::getenv("AWS_LAMBDA_FUNCTION_NAME") != nullptr;
+  return std::getenv("AWS_LAMBDA_FUNCTION_NAME") != nullptr;  // NOLINT(concurrency-mt-unsafe)
 }
 
 void Function::RunStandalone() const {

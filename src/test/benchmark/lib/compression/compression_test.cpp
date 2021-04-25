@@ -8,7 +8,7 @@
 namespace skyrise {
 
 template <typename CompressorClass, typename DecompressorClass>
-struct CompressionTypeDefinitions {
+struct CompressionTypeDefinitions {  // NOLINT(altera-struct-pack-align)
   using Compressor = CompressorClass;
   using Decompressor = DecompressorClass;
 };

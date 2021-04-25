@@ -7,6 +7,7 @@
 # The script is configurable via the following parameters:
 #   -b/--build-dir      The subdirectory of the project root where output files are stored (default is cmake-build-debug)
 #   -c/--cmake          A string of options that is passed to CMake (e.g. '-DONE_OPTION=ON -DOTHER_OPTION=OFF')
+#   -d/--date           The creation date of the Docker image (default is the latest on DockerHub)
 #   -m/--make-target    The target for make (default is all)
 #   -p/--prefix         The prefix of the repository name for the Docker image (default is hpiepic)
 #   -t/--build-type     The CMake build type (default is Debug)
@@ -21,16 +22,18 @@ exitWithError() {
 
 SOURCE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../"; pwd)
 BUILD_DIR=cmake-build-debug
+BUILD_TYPE=Debug
 CMAKE_OPTIONS=''
 CMAKE_FORCE=false
+DATE=20210423
 MAKE_TARGET=all
 PREFIX=hpiepic
-BUILD_TYPE=Debug
 VERBOSE=false
 while [ "$#" -gt 0 ]; do
     case $1 in
         -b|--build-dir) BUILD_DIR="$2"; shift ;;
         -c|--cmake) CMAKE_OPTIONS="$2"; shift ;;
+        -d|--date) DATE="$2"; shift ;;
         -f|--cmake-force) CMAKE_FORCE=true ;;
         -p|--prefix) PREFIX="$2"; shift ;;
         -t|--build-type) BUILD_TYPE="$2"; shift ;;
@@ -66,7 +69,7 @@ USER_ID="$(id -u)"
 COMMAND="docker run --rm \
 --user ${USER_ID} \
 --volume ${SOURCE_DIR}:${PROJECT_MOUNT_POINT} \
-${PREFIX}/skyrise:build bash -c \"${BUILD_COMMAND}\""
+${PREFIX}/skyrise:amazonlinux2-${DATE} bash -c \"${BUILD_COMMAND}\""
 
 if [ "$VERBOSE" = true ]; then
     echo "Executing build command: ${COMMAND}"

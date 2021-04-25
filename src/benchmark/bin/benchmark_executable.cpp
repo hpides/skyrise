@@ -33,7 +33,7 @@ cxxopts::ParseResult& BenchmarkExecutable::GetParseResult(
   if (cli_parse_result_.count("help") > 0) {
     std::cout << cli_options_.help();
 
-    std::exit(0);
+    std::exit(0);  // NOLINT(concurrency-mt-unsafe)
   }
 
   if (cli_parse_result_.count("output") == 0) {

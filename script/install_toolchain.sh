@@ -6,14 +6,14 @@ if [[ "$unamestr" == 'Linux' ]]; then
     if [ -f /etc/lsb-release ] && cat /etc/lsb-release | grep DISTRIB_ID | grep Ubuntu >/dev/null; then
         echo "Installing toolchain..."   
         if sudo apt-get update >/dev/null; then
-            if [[ "$(lsb_release -sr)" == "20.10" ]]; then
+            if [[ "$(lsb_release -sr)" == "21.04" ]]; then
                 sudo apt-get install --no-install-recommends -y \
                 binutils-dev \
                 ca-certificates \
                 ccache \
-                clang-11 \
-                clang-format-11 \
-                clang-tidy-11 \
+                clang-12 \
+                clang-format-12 \
+                clang-tidy-12 \
                 cmake \
                 cppcheck \
                 curl \
@@ -29,10 +29,10 @@ if [[ "$unamestr" == 'Linux' ]]; then
                 zip \
                 zlib1g-dev
                 
-                sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-11 110 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-11
-                sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-11 110
-                sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-11 110
-                sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 102 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+                sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 120 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-12
+                sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-12 120
+                sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-12 120
+                sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 103 --slave /usr/bin/g++ g++ /usr/bin/g++-10
 
                 pip3 install --no-input --quiet \
                 cpplint \

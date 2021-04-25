@@ -27,7 +27,7 @@ std::string ReadFileToString(const std::string& filename) {
   if (file_size > 0) {
     content.resize(file_size);
     in_stream.seekg(0, std::ios::beg);
-    in_stream.read(&content.front(), content.size());
+    in_stream.read(&content.front(), static_cast<int64_t>(content.size()));
   }
 
   in_stream.close();

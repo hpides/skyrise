@@ -34,8 +34,9 @@ BinarySerializationStream& BinarySerializationStream::operator>>(bool& value) {
 }
 
 BinarySerializationStream& BinarySerializationStream::operator<<(const std::string& value) {
-  *this << static_cast<int64_t>(value.size());
-  io_->write(value.c_str(), value.size());
+  auto string_length = static_cast<int64_t>(value.size());
+  *this << string_length;
+  io_->write(value.c_str(), string_length);
   return *this;
 }
 BinarySerializationStream& BinarySerializationStream::operator>>(std::string& value) {

@@ -9,6 +9,7 @@ option(SKYRISE_ENABLE_CLANG_FORMAT "Enable formatting with clang-format" OFF)
 option(SKYRISE_ENABLE_CLANG_TIDY "Enable static analysis with clang-tidy" OFF)
 option(SKYRISE_ENABLE_CPPCHECK "Enable static analysis with cppcheck" OFF)
 option(SKYRISE_ENABLE_CPPLINT "Enable static analysis with cpplint" OFF)
+option(SKYRISE_ENABLE_LLVM_COV "Enable code coverage with llvm-cov" OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
