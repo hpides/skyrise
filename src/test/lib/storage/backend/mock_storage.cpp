@@ -2,7 +2,8 @@
 
 namespace skyrise {
 
-MockReader::MockReader(std::shared_ptr<std::string> data) : data_(std::move(data)) {}
+MockReader::MockReader(std::shared_ptr<std::string> data, std::string identifier)
+    : data_(std::move(data)), identifier_(std::move(identifier)) {}
 
 StorageError MockReader::Read(size_t first_byte, size_t last_byte,
                               std::function<void(const char* data, size_t length)> callback) {
@@ -22,6 +23,16 @@ StorageError MockReader::Read(size_t first_byte, size_t last_byte,
   callback(&data_->c_str()[first_byte], data_length);
 
   return StorageError::Success();
+}
+
+const ObjectStatus& MockReader::GetStatus() {
+  if (!data_) {
+    status_ = ObjectStatus(StorageError(StorageErrorType::kNotFound));
+  } else {
+    status_ = ObjectStatus(identifier_, 0, "dummyChecksum", data_->size());
+  }
+
+  return status_;
 }
 
 StorageError MockReader::Close() { return StorageError::Success(); }
@@ -70,18 +81,7 @@ std::unique_ptr<ObjectReader> MockStorage::OpenForReading(const std::string& obj
     return std::make_unique<MockReader>();
   }
 
-  return std::make_unique<MockReader>(iterator->second);
-}
-
-ObjectStatus MockStorage::GetStatus(const std::string& object_identifier) {
-  std::lock_guard guard(store_mutex_);
-
-  auto iterator = store_.find(object_identifier);
-  if (iterator == store_.end()) {
-    return ObjectStatus(StorageError(StorageErrorType::kNotFound));
-  }
-
-  return ObjectStatus(object_identifier, 0, "dummy-checksum", iterator->second->size());
+  return std::make_unique<MockReader>(iterator->second, object_identifier);
 }
 
 StorageError MockStorage::Delete(const std::string& object_identifier) {

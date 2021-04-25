@@ -93,6 +93,7 @@ class S3ObjectReader : public ObjectReader {
 
   StorageError Read(size_t first_byte, size_t last_byte,
                     std::function<void(const char* data, size_t length)> callback) override;
+  const ObjectStatus& GetStatus() override;
   StorageError Close() override;
 
  private:
@@ -117,7 +118,6 @@ class S3Storage : public Storage {
     return std::make_unique<S3ObjectReader>(client_, bucket_, object_identifier);
   }
 
-  ObjectStatus GetStatus(const std::string& object_identifier) override;
   StorageError Delete(const std::string& object_identifier) override;
   std::pair<std::vector<ObjectStatus>, StorageError> List(const std::string& object_prefix) override;
 

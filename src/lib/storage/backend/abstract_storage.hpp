@@ -20,6 +20,7 @@ enum class StorageErrorType {
   kOperationNotSupported,
   kPermissionDenied,
   kTemporary,
+  kUninitialized,
   kUnknown
 };
 
@@ -44,6 +45,7 @@ class StorageError {
 
 class ObjectStatus {
  public:
+  ObjectStatus() : error_(StorageErrorType::kUninitialized) {}
   explicit ObjectStatus(StorageError error) : error_(error) {}
   ObjectStatus(std::string identifier, time_t last_modified, std::string checksum, size_t object_size)
       : identifier_(std::move(identifier)),
@@ -88,7 +90,11 @@ class ObjectReader {
   // have been read or an error occured. This function is not thread-safe.
   virtual StorageError Read(size_t first_byte, size_t last_byte,
                             std::function<void(const char* data, size_t length)> callback) = 0;
+  virtual const ObjectStatus& GetStatus() = 0;
   virtual StorageError Close() = 0;
+
+ protected:
+  ObjectStatus status_;
 };
 
 // Storage provides a common interface for accessing and manipulating objects. The functions are safe to call
@@ -98,7 +104,9 @@ class Storage {
   virtual ~Storage() = default;
   virtual std::unique_ptr<ObjectWriter> OpenForWriting(const std::string& object_identifier) = 0;
   virtual std::unique_ptr<ObjectReader> OpenForReading(const std::string& object_identifier) = 0;
-  virtual ObjectStatus GetStatus(const std::string& object_identifier) = 0;
+  ObjectStatus GetStatus(const std::string& object_identifier) {
+    return OpenForReading(object_identifier)->GetStatus();
+  };
   virtual StorageError Delete(const std::string& object_identifier) = 0;
   virtual std::pair<std::vector<ObjectStatus>, StorageError> List(const std::string& object_prefix = "") = 0;
 };

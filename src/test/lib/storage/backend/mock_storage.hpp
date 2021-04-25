@@ -26,19 +26,21 @@ class MockWriter : public ObjectWriter {
 class MockReader : public ObjectReader {
  public:
   MockReader() = default;
-  MockReader(std::shared_ptr<std::string> data);
+  MockReader(std::shared_ptr<std::string> data, std::string identifier);
   StorageError Read(size_t first_byte, size_t last_byte, std::function<void(const char* data, size_t length)> callback);
+  const ObjectStatus& GetStatus();
   StorageError Close();
 
  private:
   std::shared_ptr<std::string> data_;
+  std::string identifier_;
+  ObjectStatus status_;
 };
 
 class MockStorage : public Storage {
  public:
   std::unique_ptr<ObjectWriter> OpenForWriting(const std::string& object_identifier);
   std::unique_ptr<ObjectReader> OpenForReading(const std::string& object_identifier);
-  ObjectStatus GetStatus(const std::string& object_identifier);
   StorageError Delete(const std::string& object_identifier);
   std::pair<std::vector<ObjectStatus>, StorageError> List(const std::string& object_prefix = "");
 

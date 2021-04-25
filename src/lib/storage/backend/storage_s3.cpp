@@ -290,23 +290,6 @@ std::pair<std::vector<ObjectStatus>, StorageError> S3Storage::List(const std::st
   return std::make_pair(result_vector, error);
 }
 
-ObjectStatus S3Storage::GetStatus(const std::string& object_identifier) {
-  Aws::S3::Model::HeadObjectRequest request;
-  request.SetBucket(bucket_);
-  request.SetKey(object_identifier);
-  auto outcome = client_->HeadObject(request);
-  if (!outcome.IsSuccess()) {
-    return ObjectStatus(GetErrorFromOutcome(outcome));
-  }
-  auto result = outcome.GetResult();
-
-  const time_t last_modified = detail::ConvertAwsDateTime(result.GetLastModified());
-  const std::string& hash = result.GetETag();
-  size_t size = result.GetContentLength();
-
-  return ObjectStatus(object_identifier, last_modified, hash, size);
-}
-
 S3MultipartUploader::S3MultipartUploader(std::shared_ptr<const Aws::S3::S3Client> client, std::string bucket,
                                          std::string object_id)
     : client_(std::move(client)),
@@ -423,6 +406,29 @@ StorageError S3ObjectReader::Read(size_t first_byte, size_t last_byte,
   }
 
   return StorageError::Success();
+}
+
+const ObjectStatus& S3ObjectReader::GetStatus() {
+  if (status_.GetError()) {
+    Aws::S3::Model::HeadObjectRequest request;
+
+    request.SetBucket(bucket_);
+    request.SetKey(object_id_);
+    auto outcome = client_->HeadObject(request);
+
+    if (!outcome.IsSuccess()) {
+      status_ = ObjectStatus(GetErrorFromOutcome(outcome));
+    } else {
+      auto result = outcome.GetResult();
+
+      const time_t last_modified = detail::ConvertAwsDateTime(result.GetLastModified());
+      const std::string& hash = result.GetETag();
+      const size_t size = result.GetContentLength();
+
+      status_ = ObjectStatus(object_id_, last_modified, hash, size);
+    }
+  }
+  return status_;
 }
 
 void S3ObjectReader::SetRange(Aws::S3::Model::GetObjectRequest& request, size_t first_byte, size_t last_byte) {
