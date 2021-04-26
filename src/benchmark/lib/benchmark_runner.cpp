@@ -18,6 +18,7 @@
 #include <aws/lambda/model/OnFailure.h>
 #include <aws/lambda/model/OnSuccess.h>
 #include <aws/lambda/model/PublishVersionRequest.h>
+#include <aws/lambda/model/PutFunctionConcurrencyRequest.h>
 #include <aws/lambda/model/PutFunctionEventInvokeConfigRequest.h>
 #include <aws/sqs/model/CreateQueueRequest.h>
 #include <aws/sqs/model/CreateQueueResult.h>
@@ -184,6 +185,23 @@ void BenchmarkRunner::InvokeFunctions() {
   const auto benchmark_start = std::chrono::steady_clock::now();
 
   for (size_t i = 0; i < config_->repetition_count_; i++) {
+    if (config_->use_one_function_per_repetition_ == UseOneFunctionPerRepetition::kYes || i == 0) {
+      const size_t function_concurrency = [&]() {
+        if (config_->warm_up_strategy_ && config_->warm_up_strategy_->GetName() == "ConfigurableWarmUpStrategy") {
+          return static_cast<size_t>(invoke_requests_[i].size() *
+                                     ConfigurableWarmUpStrategy::kDefaultProvisioningFactor);
+        } else {
+          return invoke_requests_[i].size();
+        }
+      }();
+
+      const auto put_function_concurrency_outcome =
+          lambda_client.PutFunctionConcurrency(Aws::Lambda::Model::PutFunctionConcurrencyRequest()
+                                                   .WithFunctionName(config_->function_configs_[i].function_name)
+                                                   .WithReservedConcurrentExecutions(function_concurrency));
+      Assert(put_function_concurrency_outcome.IsSuccess(), put_function_concurrency_outcome.GetError().GetMessage());
+    }
+
     if (config_->warm_up_ != WarmUp::kNone) {
       WarmUpFunctions(i);
     }
