@@ -19,6 +19,7 @@ pipeline {
     stage("Amazon Linux 2") {
       agent {
         docker {
+          registryCredentialsId 'skyrise-ci-dockerhub-access-token'
           image "hpiepic/skyrise:amazonlinux2-${DOCKER_IMAGE_CREATION_DATE}"
           alwaysPull false
           args '--dns=192.168.30.50'
@@ -130,6 +131,7 @@ pipeline {
       }
       agent {
         docker {
+          registryCredentialsId 'skyrise-ci-dockerhub-access-token'
           image "hpiepic/skyrise:ubuntu-${DOCKER_IMAGE_CREATION_DATE}"
           alwaysPull false
         }
