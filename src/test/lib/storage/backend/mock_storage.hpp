@@ -31,10 +31,15 @@ class MockReader : public ObjectReader {
   const ObjectStatus& GetStatus();
   StorageError Close();
 
+  // Returns a reference to the counter. While you can use this reference to later check the current value of the
+  // counter, keep in mind that it has the same lifetime as the MockReader itself.
+  const size_t& GetReadOperationCounter() const;
+
  private:
   std::shared_ptr<std::string> data_;
   std::string identifier_;
   ObjectStatus status_;
+  size_t num_reads_ = 0;
 };
 
 class MockStorage : public Storage {

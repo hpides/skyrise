@@ -27,6 +27,8 @@ set(
     storage/backend/storage_filesystem.hpp
     storage/backend/storage_s3.cpp
     storage/backend/storage_s3.hpp
+    storage/backend/stream.cpp
+    storage/backend/stream.hpp
     storage/formats/abstract_formatter.cpp
     storage/formats/abstract_formatter.hpp
     storage/formats/csv.cpp

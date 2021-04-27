@@ -7,6 +7,8 @@ MockReader::MockReader(std::shared_ptr<std::string> data, std::string identifier
 
 StorageError MockReader::Read(size_t first_byte, size_t last_byte,
                               std::function<void(const char* data, size_t length)> callback) {
+  num_reads_++;
+
   if (!data_) {
     return StorageError(StorageErrorType::kNotFound);
   }
@@ -34,6 +36,8 @@ const ObjectStatus& MockReader::GetStatus() {
 
   return status_;
 }
+
+const size_t& MockReader::GetReadOperationCounter() const { return num_reads_; }
 
 StorageError MockReader::Close() { return StorageError::Success(); }
 

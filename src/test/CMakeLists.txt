@@ -34,6 +34,7 @@ set(
     lib/storage/backend/s3_provider.hpp
     lib/storage/backend/s3_test.cpp
     lib/storage/backend/storage_test.cpp
+    lib/storage/backend/stream_test.cpp
     
     lib/storage/formats/csv_test.cpp
     lib/storage/formats/orc_test.cpp
