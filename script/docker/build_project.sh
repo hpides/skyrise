@@ -65,9 +65,10 @@ cd ${PROJECT_MOUNT_POINT}/${BUILD_DIR}; \
 ${CMAKE_COMMAND}\
 ninja-build $MAKE_TARGET -j$NUM_CORES"
 
-USER_ID="$(id -u)"
+USER="$(id -u)"
+GROUP="$(id -g)"
 COMMAND="docker run --rm \
---user ${USER_ID} \
+--user ${USER}:${GROUP} \
 --volume ${SOURCE_DIR}:${PROJECT_MOUNT_POINT} \
 ${PREFIX}/skyrise:amazonlinux2-${DATE} bash -c \"${BUILD_COMMAND}\""
 
