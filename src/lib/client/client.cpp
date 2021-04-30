@@ -71,7 +71,7 @@ const Aws::XRay::XRayClient& Client::GetXRayClient() const { return *xray_client
 
 const Aws::String& Client::GetClientRegion() const { return client_region_; }
 
-Aws::Client::ClientConfiguration Client::GenerateClientConfig() const {
+Aws::Client::ClientConfiguration Client::GenerateClientConfig() {
   Aws::Client::ClientConfiguration client_configuration;
   client_configuration.caFile = kCaFile;
   client_configuration.connectTimeoutMs = kConnectTimeoutMs;

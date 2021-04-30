@@ -9,8 +9,8 @@
 
 namespace skyrise {
 
-const std::string kFunctionName = "skyriseFunctionSimple";
-const size_t kMemorySize = 128;
+inline static const std::string kFunctionName{"skyriseFunctionSimple"};
+inline constexpr size_t kMemorySize = 128;
 
 class BenchmarkRunnerTest : public ::testing::Test {
  protected:

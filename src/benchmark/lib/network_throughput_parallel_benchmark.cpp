@@ -16,9 +16,9 @@
 namespace skyrise {
 
 // TODO(d-justen): Change to the best performing parameters found by NetworkThroughputBenchmark
-const size_t kFunctionInstanceMbSize = 3008;
-const size_t kObjectByteSize = 16_MB;
-const size_t kThreadCount = 4;
+inline constexpr size_t kFunctionInstanceMbSize = 3008;
+inline constexpr size_t kObjectByteSize = 16_MB;
+inline constexpr size_t kThreadCount = 4;
 
 NetworkThroughputParallelBenchmark::NetworkThroughputParallelBenchmark(std::shared_ptr<BenchmarkHelper> helper,
                                                                        std::shared_ptr<CostCalculator> cost_calculator,

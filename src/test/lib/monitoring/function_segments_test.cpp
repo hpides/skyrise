@@ -25,8 +25,8 @@ class FunctionSegmentsAnalyzerTest : public ::testing::Test {
     std::function<void()> api_executable = [&]() {
       client_ = std::make_shared<skyrise::Client>();
 
-      UploadFunction(client_, kPackageName_, kFunctionName_, kRoleName_, kEnableTracing_);
-      const auto time_points = InvokeFunction(client_, kFunctionName_);
+      UploadFunction(client_, kPackageName, function_name_, kRoleName, kEnableTracing);
+      const auto time_points = InvokeFunction(client_, function_name_);
 
       lambda_start_time_ = time_points.first;
       lambda_end_time_ = time_points.second;
@@ -37,7 +37,7 @@ class FunctionSegmentsAnalyzerTest : public ::testing::Test {
   }
 
   void TearDown() override {
-    std::function<void()> api_executable = [&]() { DeleteFunction(client_, kFunctionName_); };
+    std::function<void()> api_executable = [&]() { DeleteFunction(client_, function_name_); };
 
     ExecuteInsideAPI(api_executable);
   }
@@ -48,10 +48,10 @@ class FunctionSegmentsAnalyzerTest : public ::testing::Test {
 
   std::shared_ptr<skyrise::Client> client_;
 
-  const std::string kPackageName_ = "skyriseFunctionSimple";
-  const std::string kFunctionName_ = kPackageName_ + RandomString(8);
-  const bool kEnableTracing_ = true;
-  const std::string kRoleName_ = "AWSLambda";
+  static constexpr bool kEnableTracing = true;
+  inline static const std::string kPackageName = "skyriseFunctionSimple";
+  inline static const std::string kRoleName = "AWSLambda";
+  const std::string function_name_ = kPackageName + RandomString(8);
 };
 
 TEST_F(FunctionSegmentsAnalyzerTest, GetCalculatedSegments) {
@@ -59,12 +59,12 @@ TEST_F(FunctionSegmentsAnalyzerTest, GetCalculatedSegments) {
     const auto end_time = std::chrono::system_clock::now();
 
     FunctionSegmentsAnalyzer analyzer(client_->GetXRayClient());
-    const auto trace_ids = analyzer.GetTraceIds({kFunctionName_}, start_time_, end_time);
+    const auto trace_ids = analyzer.GetTraceIds({function_name_}, start_time_, end_time);
 
-    EXPECT_FALSE(trace_ids.at(kFunctionName_).empty());
+    EXPECT_FALSE(trace_ids.at(function_name_).empty());
 
     Aws::XRay::Model::Trace trace;
-    for (const auto& trace_id : trace_ids.at(kFunctionName_)) {
+    for (const auto& trace_id : trace_ids.at(function_name_)) {
       trace = analyzer.GetTraces({trace_id})[trace_id];
       EXPECT_FALSE(trace.GetSegments().empty());
     }

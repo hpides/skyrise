@@ -34,7 +34,7 @@
 namespace skyrise {
 
 // TODO(anyone): Add commit hash to logging tag
-const std::string kTag = "SKYRISE/BENCHMARK/BENCHMARK_RUNNER";
+inline const std::string kTag{"SKYRISE/BENCHMARK/BENCHMARK_RUNNER"};
 
 BenchmarkRunner::BenchmarkRunner(std::shared_ptr<Client> client) : client_(std::move(client)) {
   const auto get_role_outcome =

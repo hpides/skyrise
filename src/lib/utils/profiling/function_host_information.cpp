@@ -94,9 +94,9 @@ std::string FunctionHostInformationCollector::AsJson(
 }
 
 std::string FunctionHostInformationCollector::Id() const {
-  constexpr auto kRegex = "[0-9]+:cpu,cpuacct:/sandbox-root-([0-9a-zA-Z]{6})";
+  const std::string regex{"[0-9]+:cpu,cpuacct:/sandbox-root-([0-9a-zA-Z]{6})"};
   const auto file_content = ReadFileContent(config_.cgroup_path);
-  const auto match = FindFirst(kRegex, file_content);
+  const auto match = FindFirst(regex, file_content);
   return match.empty() ? "" : match.front();
 }
 
@@ -117,9 +117,9 @@ std::string FunctionHostInformationCollector::IpPublic() const {
   if (!config_.collect_ip_public) {
     return "";
   }
-  constexpr auto kRegex = "([0-9]+.[0-9]+.[0-9]+.[0-9]+)";
+  const std::string regex{"([0-9]+.[0-9]+.[0-9]+.[0-9]+)"};
   const auto command_output = ReadStdout(config_.ip_public_command);
-  const auto match = FindFirst(kRegex, command_output);
+  const auto match = FindFirst(regex, command_output);
   return match.empty() ? "" : match.front();
 }
 
@@ -142,16 +142,16 @@ std::string FunctionHostInformationCollector::FileSystemDetails() const {
 }
 
 size_t FunctionHostInformationCollector::BootTimeSeconds() const {
-  constexpr auto kRegex = "btime ([^[:space:]]*)";
+  const std::string regex{"btime ([^[:space:]]*)"};
   const auto file_content = ReadFileContent(config_.stat_path);
-  const auto match = FindFirst(kRegex, file_content);
+  const auto match = FindFirst(regex, file_content);
   return match.empty() ? 0 : stoul(match.front());
 }
 
 size_t FunctionHostInformationCollector::UptimeSeconds() const {
-  constexpr auto kRegex = "([0-9]*).[0-9]{2} [0-9]*.[0-9]{2}";
+  const std::string regex{"([0-9]*).[0-9]{2} [0-9]*.[0-9]{2}"};
   const auto file_content = ReadFileContent(config_.uptime_path);
-  const auto match = FindFirst(kRegex, file_content);
+  const auto match = FindFirst(regex, file_content);
   return match.empty() ? 0 : stoul(match.front());
 }
 
@@ -174,9 +174,9 @@ FunctionHostInformationCollector::CpuInfo_ FunctionHostInformationCollector::Cpu
 }
 
 size_t FunctionHostInformationCollector::RamSizeMb() const {
-  constexpr auto kRegex = R"(MemTotal:\s+([0-9]+)(\skB)?\n)";
+  const std::string regex{R"(MemTotal:\s+([0-9]+)(\skB)?\n)"};
   const auto file_content = ReadFileContent(config_.meminfo_path);
-  const auto match = FindFirst(kRegex, file_content);
+  const auto match = FindFirst(regex, file_content);
   const auto ram_size_kb = match.empty() ? 0 : stoul(match.front());
   return ByteToMb(KbToByte(ram_size_kb));
 }

@@ -36,7 +36,7 @@ class IdleLifetimeBenchmark : public Benchmark {
 
   std::vector<std::pair<IdleLifetimeBenchmarkParameters, BenchmarkConfig>> benchmark_configs_;
 
-  const Aws::String kFunctionName = "skyriseFunctionHostId";
+  const Aws::String kFunctionName{"skyriseFunctionHostId"};
 };
 
 }  // namespace skyrise

@@ -33,7 +33,7 @@ class Client {
   const Aws::String& GetClientRegion() const;
 
  private:
-  Aws::Client::ClientConfiguration GenerateClientConfig() const;
+  static Aws::Client::ClientConfiguration GenerateClientConfig();
 
   std::unique_ptr<Aws::CloudWatch::CloudWatchClient> cloudwatch_client_;
   std::unique_ptr<Aws::IAM::IAMClient> iam_client_;
@@ -46,14 +46,14 @@ class Client {
   Aws::String client_region_;
 
   // Default location of certificate authority file on Amazon Linux 2
-  const Aws::String kCaFile = "/etc/pki/tls/certs/ca-bundle.crt";
-  const size_t kConnectTimeoutMs = 10'000;
-  const bool kEnableTcpKeepAlive = false;
-  const size_t kMaxConnections = 20'000;
-  const Aws::String kPricingEndpoint = Aws::Region::US_EAST_1;
-  const size_t kRequestTimeoutMs = 900'000;
+  inline static const Aws::String kCaFile{"/etc/pki/tls/certs/ca-bundle.crt"};
+  static constexpr size_t kConnectTimeoutMs = 10'000;
+  static constexpr bool kEnableTcpKeepAlive = false;
+  static constexpr size_t kMaxConnections = 20'000;
+  inline static Aws::String kPricingEndpoint = Aws::Region::US_EAST_1;
+  static constexpr size_t kRequestTimeoutMs = 900'000;
   // TODO(anyone): Base the pool size on the underlying number of cores available
-  const size_t kS3ExecutorPoolSize = 32;
+  static constexpr size_t kS3ExecutorPoolSize = 32;
 };
 
 }  // namespace skyrise

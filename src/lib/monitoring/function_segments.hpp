@@ -39,9 +39,9 @@ class FunctionSegmentsAnalyzer {
   size_t num_accessed_traces_;
   size_t num_scanned_traces_;
 
-  const size_t kRetries = 10;
-  const size_t kSleepRetryMs = 1000;
-  const Aws::String kTag = "SKYRISE/BENCHMARK/FUNCTION_SEGMENTS";
+  static constexpr size_t kRetries = 10;
+  static constexpr size_t kSleepRetryMs = 1000;
+  const Aws::String kTag{"SKYRISE/BENCHMARK/FUNCTION_SEGMENTS"};
 };
 
 }  // namespace skyrise

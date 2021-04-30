@@ -23,10 +23,10 @@ class OrcOutputProxy : public orc::OutputStream {
     callback_(static_cast<const char*>(buf), length);
   }
   void close() override {}
-  const std::string& getName() const override { return name_; }
+  const std::string& getName() const override { return kName; }
 
  private:
-  const std::string name_ = "OrcOutputProxy";
+  inline static const std::string kName{"OrcOutputProxy"};
   static constexpr uint64_t kWriteChunkSize = 16_MB;
   uint64_t bytes_written_ = 0;
   WriteCallback callback_;

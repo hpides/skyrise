@@ -56,8 +56,8 @@ class Tracer {
   std::string trace_id_, parent_id_, is_sampled_;
   std::map<std::string, std::vector<StageInformation>> subsegments_;
 
-  const std::string kTraceIdRegex = "^Root=(.+);Parent=(.+);Sampled=(\\d)";
-  const std::string kTag = "SKYRISE/MONITORING/TRACER";
+  inline static const std::string kTraceIdRegex{"^Root=(.+);Parent=(.+);Sampled=(\\d)"};
+  inline static const std::string kTag{"SKYRISE/MONITORING/TRACER"};
 };
 
 }  // namespace skyrise

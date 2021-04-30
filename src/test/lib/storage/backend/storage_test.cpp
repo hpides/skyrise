@@ -67,13 +67,13 @@ TYPED_TEST_SUITE(BaseStorageTest, StorageProviderTypes, );
 // Trailing comma on purpose (https://github.com/google/googletest/issues/1419)
 
 TYPED_TEST(BaseStorageTest, CreateReadDeleteSmallObject) {
-  constexpr auto kFilename = "small.txt";
-  constexpr auto kFileContent = "abcd";
+  static const std::string kFilename{"small.txt"};
+  static const std::string kFileContent{"abcd"};
   constexpr size_t kFileSize = 4;
 
   // Create
   auto writer = this->storage_->OpenForWriting(kFilename);
-  EXPECT_FALSE(writer->Write(kFileContent, kFileSize));
+  EXPECT_FALSE(writer->Write(kFileContent.c_str(), kFileSize));
   EXPECT_FALSE(writer->Close());
 
   this->WaitForObjectToBecomeVisible(kFilename);
@@ -105,7 +105,7 @@ TYPED_TEST(BaseStorageTest, CreateReadDeleteSmallObject) {
   // Read specific byte ranges
   buffer.clear();
   reader = this->storage_->OpenForReading(kFilename);
-  auto compare_against = std::string(kFileContent).substr(1, 2);
+  auto compare_against = kFileContent.substr(1, 2);
   EXPECT_FALSE(reader->Read(1, 2, [&buffer](const char* data, size_t n) {
     for (size_t i = 0; i < n; i++) {
       buffer.push_back(data[i]);
@@ -126,7 +126,7 @@ TYPED_TEST(BaseStorageTest, CreateReadDeleteSmallObject) {
 TYPED_TEST(BaseStorageTest, CreateReadDeleteBigObject) {
   constexpr size_t kChunkSize = 16_KB;
   constexpr size_t kTestFileSize = 31_MB;
-  constexpr auto kFilename = "big.txt";
+  static const std::string kFilename{"big.txt"};
   std::vector<char> buffer(kChunkSize, 'x');
 
   // Create
@@ -157,20 +157,20 @@ TYPED_TEST(BaseStorageTest, CreateReadDeleteBigObject) {
 }
 
 TYPED_TEST(BaseStorageTest, ListObjects) {
-  constexpr auto kFilename1 = "file1.txt";
-  constexpr auto kFilename2 = "file2.txt";
-  constexpr auto kFileContent1 = "abcd";
-  constexpr auto kFileContent2 = "efghi";
+  static const std::string kFilename1{"file1.txt"};
+  static const std::string kFilename2{"file2.txt"};
+  static const std::string kFileContent1{"abcd"};
+  static const std::string kFileContent2{"efghi"};
   constexpr size_t kFileSize1 = 4;
   constexpr size_t kFileSize2 = 5;
 
   // Create
   auto writer = this->storage_->OpenForWriting(kFilename1);
-  EXPECT_FALSE(writer->Write(kFileContent1, kFileSize1));
+  EXPECT_FALSE(writer->Write(kFileContent1.c_str(), kFileSize1));
   EXPECT_FALSE(writer->Close());
 
   writer = this->storage_->OpenForWriting(kFilename2);
-  EXPECT_FALSE(writer->Write(kFileContent2, kFileSize2));
+  EXPECT_FALSE(writer->Write(kFileContent2.c_str(), kFileSize2));
   EXPECT_FALSE(writer->Close());
 
   this->WaitForObjectToBecomeVisible(kFilename1);

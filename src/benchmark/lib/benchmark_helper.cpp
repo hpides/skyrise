@@ -20,7 +20,7 @@
 namespace skyrise {
 
 // TODO(anyone): Add Git commit hash to logging tag
-const std::string kTag = "SKYRISE/BENCHMARK/BENCHMARK_HELPER";
+inline const std::string kTag{"SKYRISE/BENCHMARK/BENCHMARK_HELPER"};
 
 // TODO(anyone): Split this into a) CreateJsonOutput, b) AddDoubleMetrics, and c) AddStringMetrics once it gets moved to
 // the abstract Benchmark class

@@ -10,7 +10,7 @@ class ManifestWriterTest : public ManifestTest {
  protected:
   void SetUp() override { ManifestTest::SetUp(); };
 
-  static constexpr auto kTestFile = "test.orc";
+  inline static const std::string kTestFile{"test.orc"};
 };
 
 TEST_F(ManifestWriterTest, WriteManifestWithSinglePartition) {

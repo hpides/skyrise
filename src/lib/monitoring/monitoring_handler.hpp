@@ -25,7 +25,7 @@ class MonitoringHandler {
   const std::shared_ptr<MetricsCollector> metrics_collector_;
   const std::shared_ptr<Tracer> tracer_;
 
-  const std::string kTag = "SKYRISE/MONITORING/MONITORING_HANDLER";
+  inline static const std::string kTag{"SKYRISE/MONITORING/MONITORING_HANDLER"};
 };
 
 template <typename Stages>

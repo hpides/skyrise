@@ -11,7 +11,7 @@ class PullingInputStream : public orc::SeekableInputStream {
   explicit PullingInputStream(std::function<void(const char** data, size_t* length)> callback)
       : callback_(std::move(callback)) {}
   void seek(orc::PositionProvider& /*position*/) override{/* We do not support seeking here */};
-  [[nodiscard]] std::string getName() const override { return kName_; };
+  [[nodiscard]] std::string getName() const override { return kName; };
   void BackUp(int /*count*/) override {}
   bool Skip(int /*count*/) override { return false; }
   [[nodiscard]] int64_t ByteCount() const override { return current_position_; }
@@ -23,7 +23,7 @@ class PullingInputStream : public orc::SeekableInputStream {
   }
 
  private:
-  const std::string kName_ = "PullingInputStream";
+  inline static const std::string kName{"PullingInputStream"};
   std::function<void(const char** data, size_t* length)> callback_;
   size_t current_position_ = 0;
 };

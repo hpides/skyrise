@@ -9,7 +9,7 @@
 
 namespace skyrise {
 
-const size_t kMsSleep = 3000;
+inline constexpr size_t kMsSleep = 3000;
 
 aws::lambda_runtime::invocation_response FunctionHostId::OnHandleRequest(
     const Aws::Utils::Json::JsonView& /*request*/) const {

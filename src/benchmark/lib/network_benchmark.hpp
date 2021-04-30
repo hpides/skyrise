@@ -39,8 +39,8 @@ class NetworkBenchmark : public Benchmark {
   void Setup();
   void Teardown();
 
-  Aws::String GenerateObjectKey(const size_t object_byte_size, const size_t invocation_index,
-                                const size_t thread_index) const;
+  static Aws::String GenerateObjectKey(const size_t object_byte_size, const size_t invocation_index,
+                                       const size_t thread_index);
   std::vector<std::shared_ptr<Aws::IOStream>> GeneratePayloads(const size_t function_instance_mb_size,
                                                                const size_t object_byte_size, const size_t thread_count,
                                                                const size_t invocation_count,
@@ -59,11 +59,11 @@ class NetworkBenchmark : public Benchmark {
 
   long double cost_overhead_;
 
-  const size_t kMaxObjectsPerPrefix = 1000;
-  const size_t kMaxMemoryUsageBytes = GbToByte(2);
-  const Aws::String kObjectKeySuffix = "networkBenchmark";
-  const Aws::String kReadBucket = "network-benchmark-read";
-  const Aws::String kWriteBucket = "network-benchmark-write";
+  static constexpr size_t kMaxObjectsPerPrefix = 1000;
+  const size_t kMaxMemoryUsageBytes = GbToByte(2);  // TODO(julianmenzler) C++20: Use consteval & constexpr
+  inline static const Aws::String kObjectKeySuffix{"networkBenchmark"};
+  inline static const Aws::String kReadBucket{"network-benchmark-read"};
+  inline static const Aws::String kWriteBucket{"network-benchmark-write"};
 };
 
 }  // namespace skyrise

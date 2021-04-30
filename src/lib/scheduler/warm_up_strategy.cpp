@@ -17,7 +17,7 @@
 
 namespace skyrise {
 
-const std::string kTag = "SKYRISE/BENCHMARK/WARM_UP_STRATEGY";
+inline const std::string kTag{"SKYRISE/BENCHMARK/WARM_UP_STRATEGY"};
 
 ConfigurableWarmUpStrategy::ConfigurableWarmUpStrategy(const bool warm_up_once, const size_t sleep_ms_duration,
                                                        const double provisioning_factor)

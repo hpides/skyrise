@@ -23,7 +23,7 @@ class MetricsCollectorTest : public ::testing::Test {
       client_ = std::make_shared<skyrise::Client>();
 
       Aws::SQS::Model::CreateQueueRequest create_queue_request;
-      create_queue_request.WithQueueName(kQueueName_);
+      create_queue_request.WithQueueName(queue_name_);
       const auto create_queue_outcome = client_->GetSQSClient().CreateQueue(create_queue_request);
       queue_url_ = create_queue_outcome.GetResult().GetQueueUrl();
 
@@ -48,11 +48,11 @@ class MetricsCollectorTest : public ::testing::Test {
   std::shared_ptr<skyrise::Client> client_;
   std::string queue_url_;
 
-  const std::string kPackageName_ = "skyriseFunctionSimple";
-  const std::string kFunctionName_ = kPackageName_ + RandomString(8);
-  const std::string kQueueName_ = "skyrise-test-metrics-collector" + RandomString(8);
-  const std::string kRoleName_ = "AWSLambda";
-  const size_t kSleepSeconds_ = 3;
+  static constexpr size_t kSleepSeconds = 3;
+  inline static const std::string kPackageName = "skyriseFunctionSimple";
+  inline static const std::string kRoleName = "AWSLambda";
+  const std::string function_name_ = kPackageName + RandomString(8);
+  const std::string queue_name_ = "skyrise-test-metrics-collector" + RandomString(8);
 };
 
 TEST_F(MetricsCollectorTest, SendMetric) {
@@ -71,7 +71,7 @@ TEST_F(MetricsCollectorTest, SendMetric) {
       metrics_collector.CollectMetrics(RuntimeMetrics{});
     }
 
-    std::this_thread::sleep_for(std::chrono::seconds(kSleepSeconds_));
+    std::this_thread::sleep_for(std::chrono::seconds(kSleepSeconds));
 
     Aws::SQS::Model::ReceiveMessageRequest receive_message_request;
     receive_message_request.WithMaxNumberOfMessages(10).WithQueueUrl(queue_url_).WithWaitTimeSeconds(20);

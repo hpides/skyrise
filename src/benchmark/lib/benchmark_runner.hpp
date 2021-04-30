@@ -54,7 +54,7 @@ class BenchmarkRunner {
   std::unordered_map<std::string, Aws::Utils::CryptoBuffer> package_files_;
   std::mutex package_files_mutex_;
 
-  const Aws::String kFunctionRoleName = "AWSLambda";
+  const Aws::String kFunctionRoleName{"AWSLambda"};
   Aws::String function_role_arn_;
 };
 

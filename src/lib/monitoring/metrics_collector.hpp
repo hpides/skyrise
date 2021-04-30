@@ -52,8 +52,8 @@ class MetricsCollector {
   const SubqueryFragmentIdentifier subquery_fragment_identifier_;
   const std::chrono::time_point<std::chrono::system_clock> instance_start_;
 
-  const std::string kTag = "SKYRISE/MONITORING/METRICS_COLLECTOR";
-  const size_t kMaxMessagesPerBatch = 10;
+  inline static const std::string kTag{"SKYRISE/MONITORING/METRICS_COLLECTOR"};
+  static constexpr size_t kMaxMessagesPerBatch = 10;
 };
 
 }  // namespace skyrise

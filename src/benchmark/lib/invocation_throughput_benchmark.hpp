@@ -37,7 +37,7 @@ class InvocationThroughputBenchmark : public Benchmark {
 
   std::vector<std::pair<InvocationThroughputBenchmarkParameters, BenchmarkConfig>> benchmark_configs_;
 
-  const Aws::String kFunctionName = "skyriseFunctionSimple";
+  const Aws::String kFunctionName{"skyriseFunctionSimple"};
 };
 
 }  // namespace skyrise

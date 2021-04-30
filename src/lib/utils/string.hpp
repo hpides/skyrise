@@ -16,10 +16,10 @@
 namespace skyrise {
 
 // Character sets for randomly generated strings
-const std::string kCharacterSetUpper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const std::string kCharacterSetLower = "abcdefghijklmnopqrstuvwxyz";
-const std::string kCharacterSetDecimal = "0123456789";
-const std::string kCharacterSetHex = "0123456789abcdef";
+inline const std::string kCharacterSetUpper{"ABCDEFGHIJKLMNOPQRSTUVWXYZ"};
+inline const std::string kCharacterSetLower{"abcdefghijklmnopqrstuvwxyz"};
+inline const std::string kCharacterSetDecimal{"0123456789"};
+inline const std::string kCharacterSetHex{"0123456789abcdef"};
 
 // Crop a source file path to ensure readable assert messages (e.g., "/long/path/1234/src/lib/file.cpp" becomes
 // "src/lib/file.cpp")

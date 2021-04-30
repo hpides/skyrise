@@ -12,11 +12,11 @@ namespace skyrise {
 
 class FormatterTest : public ::testing::Test {
  protected:
-  static constexpr auto kStringExample1 = "Hello";
-  static constexpr auto kStringExample2 = "world";
-  static constexpr auto kStringExample3 = "!";
-  static constexpr auto kColumn1Name = "id";
-  static constexpr auto kColumn2Name = "text";
+  inline static const std::string kStringExample1{"Hello"};
+  inline static const std::string kStringExample2{"world"};
+  inline static const std::string kStringExample3{"!"};
+  inline static const std::string kColumn1Name{"id"};
+  inline static const std::string kColumn2Name{"text"};
 
   void SetUp() override {
     schema_.push_back(TableColumnDefinition(kColumn1Name, DataType::kInt, false));

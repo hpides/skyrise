@@ -4,7 +4,7 @@
 
 namespace skyrise {
 
-const std::string kSleepKeyPattern = "sleep_ms\":";
+inline const std::string kSleepKeyPattern{"sleep_ms\":"};
 
 // This function does not inherit from the abstract Function class to keep its size at a minimum.
 aws::lambda_runtime::invocation_response HandlerFunction(const aws::lambda_runtime::invocation_request& request) {

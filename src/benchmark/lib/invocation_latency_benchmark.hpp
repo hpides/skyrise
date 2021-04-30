@@ -58,11 +58,11 @@ class InvocationLatencyBenchmark : public Benchmark {
       "S3_skyriseFunctionSized40MB", "skyriseFunctionSized50MB",    "S3_skyriseFunctionSized50MB",
       "S3_skyriseFunctionSized100MB"};
 
-  const Aws::String kBenchmarkName = "invocation-latency-benchmark";
-  const bool kEnableTracing = true;
-  const double kOverprovisioningCoefficient = 1.2;
-  const Aws::String kTag = "SKYRISE/BENCHMARK/INVOCATION_LATENCY_BENCHMARK";
-  const size_t kTraceRetrievalDelayMs = 5;
+  static constexpr bool kEnableTracing = true;
+  static constexpr double kOverprovisioningCoefficient = 1.2;
+  static constexpr size_t kTraceRetrievalDelayMs = 5;
+  inline static const Aws::String kBenchmarkName{"invocation-latency-benchmark"};
+  inline static const Aws::String kTag{"SKYRISE/BENCHMARK/INVOCATION_LATENCY_BENCHMARK"};
 };
 
 }  // namespace skyrise

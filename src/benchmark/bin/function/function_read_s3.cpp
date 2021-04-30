@@ -17,11 +17,11 @@
 
 namespace skyrise {
 
-const std::string kTag = "SKYRISE/BENCHMARK/WORKER/READ_S3";
+inline const std::string kTag{"SKYRISE/BENCHMARK/WORKER/READ_S3"};
 
 aws::lambda_runtime::invocation_response FunctionReadS3::OnHandleRequest(
     const Aws::Utils::Json::JsonView& request) const {
-  const Aws::String bucket = request.GetString("s3_bucket");
+  const Aws::String bucket{request.GetString("s3_bucket")};
   const auto keys = request.GetArray("s3_keys");
   const size_t batch_size = request.GetInteger("batch_size");
 

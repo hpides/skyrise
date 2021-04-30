@@ -12,7 +12,7 @@ class Coordinator {
   std::shared_ptr<Client> client_;
 
  private:
-  const Aws::String kTag = "SKYRISE/COORDINATOR";
+  const Aws::String kTag{"SKYRISE/COORDINATOR"};
 };
 
 }  // namespace skyrise

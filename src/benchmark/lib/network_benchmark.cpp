@@ -99,7 +99,7 @@ void NetworkBenchmark::Teardown() {
 }
 
 Aws::String NetworkBenchmark::GenerateObjectKey(const size_t object_byte_size, const size_t invocation_index,
-                                                const size_t thread_index) const {
+                                                const size_t thread_index) {
   Aws::StringStream object_key;
   object_key << thread_index << "-" << invocation_index / kMaxObjectsPerPrefix << "/" << object_byte_size << "B-"
              << invocation_index;

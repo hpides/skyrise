@@ -39,7 +39,7 @@ class FunctionWarmUpContinuousBenchmark : public Benchmark {
 
   std::vector<std::pair<FunctionWarmUpContinuousBenchmarkParameters, BenchmarkConfig>> benchmark_configs_;
 
-  const Aws::String kFunctionName = "skyriseFunctionSimple";
+  inline static const Aws::String kFunctionName{"skyriseFunctionSimple"};
 };
 
 }  // namespace skyrise

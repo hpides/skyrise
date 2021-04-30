@@ -55,7 +55,7 @@ struct ObjectStatistics {
 
 class StatisticsCollector {
  public:
-  static constexpr auto kFormatOrc = "orc";
+  inline static const std::string kFormatOrc{"orc"};
 
   StatisticsCollector(std::shared_ptr<Storage> storage, const ObjectStatus& object)
       : storage_(std::move(storage)), object_status_(object) {

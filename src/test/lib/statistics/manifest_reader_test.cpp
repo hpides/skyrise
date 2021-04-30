@@ -21,8 +21,8 @@ class ManifestReaderTest : public ManifestTest {
     manifest_writer_->Close();
   }
 
-  static constexpr auto kMetadataFile = "manifest.orc";
-  static constexpr auto kTablePrefix = "someprefix";
+  inline static const std::string kMetadataFile{"manifest.orc"};
+  inline static const std::string kTablePrefix{"someprefix"};
   std::shared_ptr<ManifestWriter> manifest_writer_;
 };
 

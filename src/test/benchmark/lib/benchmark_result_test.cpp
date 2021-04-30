@@ -87,20 +87,20 @@ TEST_F(BenchmarkResultTest, InvokeResultAndLogResult) {
 }
 
 TEST_F(BenchmarkResultTest, ConcurrencyStressTest) {
+  static constexpr size_t kRepetitionCount = 10;
+  static constexpr size_t kInvocationCount = 1000;
+
   const auto benchmark_start = std::chrono::steady_clock::now();
 
-  const size_t repetition_count = 10;
-  const size_t invocation_count = 1000;
+  BenchmarkResult result(kRepetitionCount, kInvocationCount);
 
-  BenchmarkResult result(repetition_count, invocation_count);
-
-  for (size_t i = 0; i < repetition_count; i++) {
+  for (size_t i = 0; i < kRepetitionCount; i++) {
     const auto repetition_start = std::chrono::steady_clock::now();
     EXPECT_FALSE(result.HasRepetitionFinished(i));
 
     std::vector<std::future<void>> registration_futures;
 
-    for (size_t j = 0; j < invocation_count; j++) {
+    for (size_t j = 0; j < kInvocationCount; j++) {
       registration_futures.emplace_back(std::async(
           [&](const size_t repetition, const size_t invocation_id) {
             result.RegisterInvocation(repetition, invocation_id, std::to_string(invocation_id));
@@ -132,10 +132,10 @@ TEST_F(BenchmarkResultTest, ConcurrencyStressTest) {
 
   const auto& benchmark_repetitions = result.GetBenchmarkRepetitions();
 
-  EXPECT_EQ(benchmark_repetitions.size(), repetition_count);
+  EXPECT_EQ(benchmark_repetitions.size(), kRepetitionCount);
 
   for (const auto& benchmark_repetition : benchmark_repetitions) {
-    EXPECT_EQ(benchmark_repetition.GetInvokeResults().size(), invocation_count);
+    EXPECT_EQ(benchmark_repetition.GetInvokeResults().size(), kInvocationCount);
   }
 
   for (size_t i = 0; i < 10; i++) {
@@ -150,12 +150,12 @@ TEST_F(BenchmarkResultTest, ConcurrencyStressTest) {
 }
 
 TEST_F(BenchmarkResultTest, FunctionWarmingCost) {
-  const size_t repetition_count = 10;
-  const size_t invocation_count = 10;
-  BenchmarkResult result(repetition_count, invocation_count);
+  static constexpr size_t kRepetitionCount = 10;
+  static constexpr size_t kInvocationCount = 10;
+  BenchmarkResult result(kRepetitionCount, kInvocationCount);
 
-  for (size_t i = 0; i < repetition_count; i++) {
-    for (size_t j = 0; j < invocation_count; j++) {
+  for (size_t i = 0; i < kRepetitionCount; i++) {
+    for (size_t j = 0; j < kInvocationCount; j++) {
       result.RegisterInvocation(i, j, std::to_string(j));
       result.FinishInvocation(i, j, nullptr);
     }

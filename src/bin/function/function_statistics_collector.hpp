@@ -6,11 +6,11 @@ namespace skyrise {
 
 class FunctionStatisticsCollector : public Function {
  public:
-  static constexpr auto kInvalidArguments = "InvalidArguments";
-  static constexpr auto kObjectNotAccessible = "ObjectNotAccessible";
-  static constexpr auto kIoError = "IoError";
-  static constexpr auto kParsingError = "ParsingError";
-  static constexpr auto kLogicError = "LogicError";
+  inline static const std::string kInvalidArguments{"InvalidArguments"};
+  inline static const std::string kObjectNotAccessible{"ObjectNotAccessible"};
+  inline static const std::string kIoError{"IoError"};
+  inline static const std::string kParsingError{"ParsingError"};
+  inline static const std::string kLogicError{"LogicError"};
 
  protected:
   static bool PayloadIsValid(const Aws::Utils::Json::JsonView& request);

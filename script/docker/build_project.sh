@@ -7,6 +7,7 @@
 # The script is configurable via the following parameters:
 #   -b/--build-dir      The subdirectory of the project root where output files are stored (default is cmake-build-debug)
 #   -c/--cmake          A string of options that is passed to CMake (e.g. '-DONE_OPTION=ON -DOTHER_OPTION=OFF')
+#   -f/--cmake-force    Forced re-run of CMake to ignore CMakeCache.txt files
 #   -d/--date           The creation date of the Docker image (default is the latest on DockerHub)
 #   -m/--make-target    The target for make (default is all)
 #   -p/--prefix         The prefix of the repository name for the Docker image (default is hpiepic)
@@ -16,7 +17,7 @@
 set -e
 exitWithError() {
     echo "$1"
-    echo "Usage: $0 [-b|--build-dir BUILD_DIR] [-c|--cmake CMAKE_OPTIONS] [-m|--make-target MAKE_TARGET] [-p|--prefix PREFIX] [-t|--build-type BUILD_TYPE] [-v|--verbose]"
+    echo "Usage: $0 [-b|--build-dir BUILD_DIR] [-c|--cmake CMAKE_OPTIONS] [-f|--cmake-force] [-d|--date] [-m|--make-target MAKE_TARGET] [-p|--prefix PREFIX] [-t|--build-type BUILD_TYPE] [-v|--verbose]"
     exit 1
 }
 

@@ -25,8 +25,8 @@ class TracerTest : public ::testing::Test {
     std::function<void()> api_executable = [&]() {
       client_ = std::make_shared<skyrise::Client>();
 
-      UploadFunction(client_, kPackageName_, kFunctionName_, kRoleName_, kEnableTracing_);
-      const auto time_points = InvokeFunction(client_, kFunctionName_);
+      UploadFunction(client_, kPackageName, function_name_, kRoleName, kEnableTracing);
+      const auto time_points = InvokeFunction(client_, function_name_);
 
       start_time_ = time_points.first;
       end_time_ = time_points.second;
@@ -36,7 +36,7 @@ class TracerTest : public ::testing::Test {
   }
 
   void TearDown() override {
-    std::function<void()> api_executable = [&]() { DeleteFunction(client_, kFunctionName_); };
+    std::function<void()> api_executable = [&]() { DeleteFunction(client_, function_name_); };
 
     ExecuteInsideAPI(api_executable);
   }
@@ -45,19 +45,19 @@ class TracerTest : public ::testing::Test {
   std::chrono::time_point<std::chrono::system_clock> start_time_;
   std::chrono::time_point<std::chrono::system_clock> end_time_;
 
-  const std::string kPackageName_ = "skyriseFunctionSimple";
-  const std::string kFunctionName_ = kPackageName_ + RandomString(8);
-  const bool kEnableTracing_ = true;
-  const std::string kRoleName_ = "AWSLambda";
-  const size_t kSleepSeconds_ = 5;
+  static constexpr bool kEnableTracing = true;
+  static constexpr size_t kSleepSeconds = 5;
+  inline static const std::string kPackageName = "skyriseFunctionSimple";
+  inline static const std::string kRoleName = "AWSLambda";
+  const std::string function_name_ = kPackageName + RandomString(8);
 };
 
 TEST_F(TracerTest, GetTrace) {
   const auto executable = [&] {
     FunctionSegmentsAnalyzer function_segments_analyzer(client_->GetXRayClient());
-    const auto trace_ids = function_segments_analyzer.GetTraceIds({kFunctionName_}, start_time_, end_time_);
+    const auto trace_ids = function_segments_analyzer.GetTraceIds({function_name_}, start_time_, end_time_);
 
-    const std::string trace_id = *trace_ids.at(kFunctionName_).cbegin();
+    const std::string trace_id = *trace_ids.at(function_name_).cbegin();
     auto trace = function_segments_analyzer.GetTraces({trace_id})[trace_id];
     auto segments = FunctionSegmentsAnalyzer::GetSegments(trace);
     const std::string id = segments.at("Invocation").View().GetString("id");
@@ -76,7 +76,7 @@ TEST_F(TracerTest, GetTrace) {
       tracer.EnterStage("Stage3");
     }
 
-    std::this_thread::sleep_for(std::chrono::seconds(kSleepSeconds_));
+    std::this_thread::sleep_for(std::chrono::seconds(kSleepSeconds));
 
     trace = function_segments_analyzer.GetTraces({trace_id})[trace_id];
     segments = FunctionSegmentsAnalyzer::GetSegments(trace);

@@ -13,7 +13,7 @@ class ManifestTest : public ::testing::Test {
  protected:
   void SetUp() override;
 
-  static constexpr auto kDataFile = "files/lineitem.orc";
+  inline static const std::string kDataFile{"files/lineitem.orc"};
   ObjectStatistics statistics_;
   std::shared_ptr<Storage> storage_;
   std::shared_ptr<TableColumnDefinitions> schema_;

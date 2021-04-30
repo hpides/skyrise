@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <string>
 
 #include "client/client.hpp"
 
@@ -28,26 +29,26 @@ struct PricingXray {
 };
 
 namespace UsageTypeLambda {
-static const char* const Request = "Request";
-static const char* const LambdaGBSecond = "Lambda-GB-Second";
-static const char* const LambdaEdgeRequest = "Lambda-Edge-Request";
-static const char* const LambdaEdgeGBSecond = "Lambda-Edge-GB-Second";
-static const char* const LambdaProvisionedGBSecond = "Lambda-Provisioned-GB-Second";
-static const char* const LambdaProvisionedConcurrency = "Lambda-Provisioned-Concurrency";
+inline const std::string Request{"Request"};
+inline const std::string LambdaGBSecond{"Lambda-GB-Second"};
+inline const std::string LambdaEdgeRequest{"Lambda-Edge-Request"};
+inline const std::string LambdaEdgeGBSecond{"Lambda-Edge-GB-Second"};
+inline const std::string LambdaProvisionedGBSecond{"Lambda-Provisioned-GB-Second"};
+inline const std::string LambdaProvisionedConcurrency{"Lambda-Provisioned-Concurrency"};
 }  // namespace UsageTypeLambda
 
 namespace UsageTypeS3 {
-static const char* const RequestTier1 = "Requests-Tier1";  // POST/PUT/COPY/LIST
-static const char* const RequestTier2 = "Requests-Tier2";  // GET/SELECT and everything else
-static const char* const SelectReturnedBytes = "Select-Returned-Bytes";
-static const char* const SelectScannedBytes = "Select-Scanned-Bytes";
-static const char* const TagStorage = "TagStorage-TagHrs";
-static const char* const TimedStorage = "TimedStorage-ByteHrs";
+inline const std::string RequestTier1{"Requests-Tier1"};  // POST/PUT/COPY/LIST
+inline const std::string RequestTier2{"Requests-Tier2"};  // GET/SELECT and everything else
+inline const std::string SelectReturnedBytes{"Select-Returned-Bytes"};
+inline const std::string SelectScannedBytes{"Select-Scanned-Bytes"};
+inline const std::string TagStorage{"TagStorage-TagHrs"};
+inline const std::string TimedStorage{"TimedStorage-ByteHrs"};
 }  // namespace UsageTypeS3
 
 namespace UsageTypeXray {
-static const char* const XrayTracesAccessed = "XRay-TracesAccessed";
-static const char* const XrayTracesStored = "XRay-TracesStored";
+inline const std::string XrayTracesAccessed{"XRay-TracesAccessed"};
+inline const std::string XrayTracesStored{"XRay-TracesStored"};
 }  // namespace UsageTypeXray
 
 /*
