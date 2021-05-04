@@ -44,7 +44,7 @@ if [[ "$unamestr" == 'Linux' ]]; then
                 sudo mkdir -p /etc/pki/tls/certs
                 sudo ln -s /etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt
             else
-                echo "Error: Ubuntu version must be 20.04"
+                echo "Error: Ubuntu version must be 21.04"
                 exit 1
             fi
         else
