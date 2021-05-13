@@ -11,6 +11,7 @@ Checks: '
         -*braces-around-statements,
         -abseil-string-find-startswith,
         -cert-dcl16-c,
+        -cert-dcl58-cpp,
         -cert-env33-c,
         -cert-err58-cpp,
         -cppcoreguidelines-avoid-non-const-global-variables,

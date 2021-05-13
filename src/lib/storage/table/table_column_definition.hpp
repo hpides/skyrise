@@ -22,7 +22,7 @@ struct TableColumnDefinition final {
   bool nullable{false};
 };
 
-// So that google test, e.g., prints readable error messages
+// So that GoogleTest, e.g., prints readable error messages
 inline std::ostream& operator<<(std::ostream& stream, const TableColumnDefinition& definition) {
   stream << definition.name << " " << definition.data_type << " "
          << (definition.nullable ? "nullable" : "not nullable");

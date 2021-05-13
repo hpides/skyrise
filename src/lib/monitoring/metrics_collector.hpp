@@ -19,9 +19,15 @@ struct RuntimeMetrics {
   Aws::Utils::Json::JsonValue ToJson() const {
     Aws::Utils::Json::JsonValue metrics;
 
-    if (processed_bytes > 0) metrics.WithInt64("processed_bytes", processed_bytes);
-    if (processed_chunks > 0) metrics.WithInt64("processed_chunks", processed_chunks);
-    if (processed_rows > 0) metrics.WithInt64("processed_rows", processed_rows);
+    if (processed_bytes > 0) {
+      metrics.WithInt64("processed_bytes", processed_bytes);
+    }
+    if (processed_chunks > 0) {
+      metrics.WithInt64("processed_chunks", processed_chunks);
+    }
+    if (processed_rows > 0) {
+      metrics.WithInt64("processed_rows", processed_rows);
+    }
 
     return metrics;
   }

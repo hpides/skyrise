@@ -51,6 +51,13 @@ set(
 set(
     SHARED_SOURCES
     all_type_variant.hpp
+    expression/abstract_expression.cpp
+    expression/abstract_expression.hpp
+    expression/expression_precedence.hpp
+    expression/expression_utils.cpp
+    expression/expression_utils.hpp
+    expression/value_expression.cpp
+    expression/value_expression.hpp
     scheduler/scheduler_types.hpp
     types.hpp
     utils/array.hpp
