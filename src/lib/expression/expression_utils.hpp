@@ -41,7 +41,7 @@ enum class ExpressionVisitation { kVisitArguments, kDoNotVisitArguments };
  * @tparam Visitor      Functor called with every sub expression as a param returning an ExpressionVisitation.
  */
 template <typename Expression, typename Visitor>
-void VisitExpression(const Expression& expression, Visitor visitor) {
+void VisitExpression(Expression& expression, Visitor visitor) {
   // The reference wrapper bit is important so we can manipulate the Expression even by replacing sub expressions
   std::queue<std::reference_wrapper<Expression>> expression_queue;
   expression_queue.push(expression);
