@@ -7,6 +7,7 @@ include_directories(
 set(
     TEST_SOURCES
     benchmark/lib/benchmark_helper_test.cpp
+    benchmark/lib/benchmark_integration_test.cpp
     benchmark/lib/benchmark_result_aggregate_test.cpp
     benchmark/lib/benchmark_result_test.cpp
     benchmark/lib/benchmark_runner_test.cpp
