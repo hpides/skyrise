@@ -3,7 +3,7 @@
 #include <chrono>
 #include <thread>
 
-#ifdef SKYRISE_DEBUG
+#if SKYRISE_DEBUG
 #include <cstdlib>
 #include <iostream>
 
@@ -46,21 +46,21 @@ void Function::HandleRequest() const {
 
   Aws::InitAPI(options);
   {
-#ifdef SKYRISE_DEBUG
+#if SKYRISE_DEBUG
     if (!RunsInLambdaEnvironment()) {
       RunStandalone();
     } else {
 #endif
       aws::lambda_runtime::run_handler(
           [&](const aws::lambda_runtime::invocation_request& request) { return HandlerFunction(request); });
-#ifdef SKYRISE_DEBUG
+#if SKYRISE_DEBUG
     }
 #endif
   }
   Aws::ShutdownAPI(options);
 }
 
-#ifdef SKYRISE_DEBUG
+#if SKYRISE_DEBUG
 bool Function::RunsInLambdaEnvironment() {
   // Detect AWS Lambda execution environment based on environment variables that are be set by the runtimes.
   // See https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html.

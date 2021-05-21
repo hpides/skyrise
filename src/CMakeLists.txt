@@ -4,7 +4,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_definitions(SKYRISE_DEBUG)
+    add_compile_definitions(SKYRISE_DEBUG=1)
+else()
+    add_compile_definitions(SKYRISE_DEBUG=0)
 endif()
 
 add_compile_options(-pthread -Wall -Wextra -Wpedantic -Werror)

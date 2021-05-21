@@ -15,7 +15,7 @@ class Function {
       const aws::lambda_runtime::invocation_request& request) const;
   virtual aws::lambda_runtime::invocation_response OnHandleRequest(const Aws::Utils::Json::JsonView& request) const = 0;
 
-#ifdef SKYRISE_DEBUG
+#if SKYRISE_DEBUG
   static bool RunsInLambdaEnvironment();
   void RunStandalone() const;
 #endif
