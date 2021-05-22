@@ -1,0 +1,21 @@
+{ "name": "timestamp_date_bool_varchar.orc",
+  "type": "struct<a_timestamp:timestamp,a_date:date,a_bool:boolean,a_varchar:varchar(2)>",
+  "rows": 2,
+  "stripe count": 1,
+  "format": "0.12", "writer version": "ORC-135",
+  "compression": "zlib", "compression block": 65536,
+  "file length": 544,
+  "content": 282, "stripe stats": 71, "footer": 163, "postscript": 24,
+  "row index stride": 10000,
+  "user metadata": {
+  },
+  "stripes": [
+    { "stripe": 0, "rows": 2,
+      "offset": 3, "length": 282,
+      "index": 124, "data": 69, "footer": 89
+    }
+  ]
+}
+
+{"a_timestamp": "2021-04-27 14:51:33.0", "a_date": "2021-04-27", "a_bool": true, "a_varchar": "ab"}
+{"a_timestamp": "2021-04-27 14:51:33.0", "a_date": "2021-04-27", "a_bool": false, "a_varchar": "c"}

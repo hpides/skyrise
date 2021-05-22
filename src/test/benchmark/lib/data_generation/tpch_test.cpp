@@ -2,7 +2,7 @@
 
 #include "data_generation/tpch/tpch_generator.hpp"
 #include "lib/storage/backend/mock_storage.hpp"
-#include "storage/formats/csv.hpp"
+#include "storage/formats/csv_writer.hpp"
 #include "storage/table/table_writer.hpp"
 
 namespace skyrise {
@@ -12,10 +12,10 @@ class TpchDataGeneratorTest : public ::testing::Test {
   static constexpr float kScaleFactor = 0.01;
   void SetUp() override {
     // Define output format
-    CsvFormatterOptions csv_options;
+    CsvFormatWriterOptions csv_options;
     csv_options.field_separator = ',';
     csv_options.include_headers = true;
-    csv_factory_ = std::make_shared<FormatterFactory<CsvFormatter>>(csv_options);
+    csv_factory_ = std::make_shared<FormatterFactory<CsvFormatWriter>>(csv_options);
 
     // Define storage backend
     storage_ = std::make_shared<MockStorage>();
@@ -34,7 +34,7 @@ class TpchDataGeneratorTest : public ::testing::Test {
   }
 
   std::shared_ptr<MockStorage> storage_;
-  std::shared_ptr<AbstractFormatterFactory> csv_factory_;
+  std::shared_ptr<AbstractFormatWriterFactory> csv_factory_;
   TableWriterFactory get_table_writer_;
 };
 

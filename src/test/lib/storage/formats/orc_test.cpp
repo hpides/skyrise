@@ -1,10 +1,9 @@
-#include "storage/formats/orc.hpp"
-
 #include <memory>
 #include <sstream>
 #include <string>
 
 #include "format_test_base.hpp"
+#include "storage/formats/orc_writer.hpp"
 
 namespace skyrise {
 
@@ -19,7 +18,7 @@ TEST_F(OrcFormatterTest, FormatChunkAsOrc) {
   options.compression_kind = orc::CompressionKind_NONE;
 
   OrcFormatter formatter(options);
-  formatter.SetOutput(output_ptr);
+  formatter.SetOutputHandler([&output_ptr](const char* data, size_t size) { output_ptr->write(data, size); });
 
   formatter.Initialize(schema_);
   formatter.ProcessChunk(*chunk_);

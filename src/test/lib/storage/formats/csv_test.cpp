@@ -1,26 +1,25 @@
-#include "storage/formats/csv.hpp"
-
 #include <memory>
 #include <sstream>
 #include <string>
 
 #include "format_test_base.hpp"
+#include "storage/formats/csv_writer.hpp"
 
 namespace skyrise {
 
-class CsvFormatterTest : public FormatterTest {};
+class CsvFormatWriterTest : public FormatterTest {};
 
-TEST_F(CsvFormatterTest, FormatChunkAsCSV) {
+TEST_F(CsvFormatWriterTest, FormatChunkAsCSV) {
   std::stringstream output;
   std::shared_ptr<std::stringstream> output_ptr(&output, [](auto /*unused*/) {});
 
-  CsvFormatterOptions options;
+  CsvFormatWriterOptions options;
   options.include_headers = true;
   options.field_separator = ",";
   options.record_separator = "\n";
 
-  CsvFormatter formatter(options);
-  formatter.SetOutput(output_ptr);
+  CsvFormatWriter formatter(options);
+  formatter.SetOutputHandler([&output_ptr](const char* data, size_t size) { output_ptr->write(data, size); });
 
   formatter.Initialize(schema_);
   formatter.ProcessChunk(*chunk_);

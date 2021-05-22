@@ -29,12 +29,16 @@ set(
     storage/backend/storage_s3.hpp
     storage/backend/stream.cpp
     storage/backend/stream.hpp
-    storage/formats/abstract_formatter.cpp
-    storage/formats/abstract_formatter.hpp
-    storage/formats/csv.cpp
-    storage/formats/csv.hpp
-    storage/formats/orc.cpp
-    storage/formats/orc.hpp
+    storage/formats/abstract_format_reader.cpp
+    storage/formats/abstract_format_reader.hpp
+    storage/formats/abstract_format_writer.cpp
+    storage/formats/abstract_format_writer.hpp
+    storage/formats/csv_writer.cpp
+    storage/formats/csv_writer.hpp
+    storage/formats/orc_reader.cpp
+    storage/formats/orc_reader.hpp
+    storage/formats/orc_writer.cpp
+    storage/formats/orc_writer.hpp
     storage/storage_types.hpp
     storage/table/abstract_segment.hpp
     storage/table/base_value_segment.hpp

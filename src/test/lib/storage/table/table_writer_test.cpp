@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "../backend/mock_storage.hpp"
-#include "storage/formats/csv.hpp"
+#include "storage/formats/csv_writer.hpp"
 #include "storage/table/table_column_definition.hpp"
 #include "storage/table/value_segment.hpp"
 
@@ -33,7 +33,7 @@ class TableWriterTest : public ::testing::Test {
     options_.include_headers = false;
     options_.field_separator = ",";
     options_.record_separator = "\n";
-    csv_factory_ = std::make_shared<FormatterFactory<CsvFormatter>>(options_);
+    csv_factory_ = std::make_shared<FormatterFactory<CsvFormatWriter>>(options_);
 
     config_.format_factory = csv_factory_;
     config_.num_threads = 4;
@@ -59,8 +59,8 @@ class TableWriterTest : public ::testing::Test {
   std::shared_ptr<BaseValueSegment> value_segment_int_;
   std::shared_ptr<BaseValueSegment> value_segment_str_;
   TableColumnDefinitions schema_;
-  CsvFormatterOptions options_;
-  std::shared_ptr<FormatterFactory<CsvFormatter>> csv_factory_;
+  CsvFormatWriterOptions options_;
+  std::shared_ptr<FormatterFactory<CsvFormatWriter>> csv_factory_;
   TableWriterConfig config_;
 };
 

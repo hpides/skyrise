@@ -59,7 +59,7 @@ void TableWriter::Finalize() { NonVirtualFinalize(); }
 
 void TableWriter::ProcessChunkLoop() {
   size_t num_rows_written = 0;
-  std::unique_ptr<skyrise::AbstractFormatter> formatter;
+  std::unique_ptr<skyrise::AbstractFormatWriter> formatter;
   std::unique_ptr<ObjectWriter> output_object;
   StorageError error = StorageError::Success();
 
@@ -98,7 +98,7 @@ void TableWriter::ProcessChunkLoop() {
       // Iff `formatter` is a `nullptr`, `output_object` is a `nullptr` too.
       output_object = storage_->OpenForWriting(config_.naming_strategy(object_id_counter_++));
       formatter = config_.format_factory->Get();
-      formatter->SetOutput(writer_callback);
+      formatter->SetOutputHandler(writer_callback);
       formatter->Initialize(config_.schema);
     }
 

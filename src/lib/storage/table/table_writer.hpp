@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "storage/backend/abstract_storage.hpp"
-#include "storage/formats/abstract_formatter.hpp"
+#include "storage/formats/abstract_format_writer.hpp"
 #include "storage/table/chunk.hpp"
 #include "utils/concurrent/queue.hpp"
 
@@ -26,7 +26,7 @@ class AbstractTableWriter {
 
 struct TableWriterConfig {
   // Required object that provides configurations to create formatters.
-  std::shared_ptr<AbstractFormatterFactory> format_factory;
+  std::shared_ptr<AbstractFormatWriterFactory> format_factory;
 
   // The schema of the table. Every chunk must follow the same schema.
   TableColumnDefinitions schema;

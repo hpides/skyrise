@@ -1,10 +1,10 @@
-#include "csv.hpp"
+#include "csv_writer.hpp"
 
 namespace skyrise {
 
-CsvFormatter::CsvFormatter(CsvFormatterOptions options) : options_(std::move(options)) {}
+CsvFormatWriter::CsvFormatWriter(CsvFormatWriterOptions options) : options_(std::move(options)) {}
 
-void CsvFormatter::Initialize(const TableColumnDefinitions& schema) {
+void CsvFormatWriter::Initialize(const TableColumnDefinitions& schema) {
   num_fields_ = schema.size();
 
   if (options_.include_headers) {
@@ -23,7 +23,7 @@ void CsvFormatter::Initialize(const TableColumnDefinitions& schema) {
   }
 }
 
-void CsvFormatter::ProcessChunk(const Chunk& chunk) {
+void CsvFormatWriter::ProcessChunk(const Chunk& chunk) {
   if (num_fields_ == 0) {
     return;
   }
@@ -49,7 +49,7 @@ void CsvFormatter::ProcessChunk(const Chunk& chunk) {
   }
 }
 
-void CsvFormatter::Finalize() {
+void CsvFormatWriter::Finalize() {
   // Nothing to do here.
 }
 

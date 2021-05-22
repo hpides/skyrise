@@ -36,8 +36,11 @@ set(
     lib/storage/backend/s3_test.cpp
     lib/storage/backend/storage_test.cpp
     lib/storage/backend/stream_test.cpp
+    lib/storage/backend/testdata_storage.cpp
+    lib/storage/backend/testdata_storage.hpp
     
     lib/storage/formats/csv_test.cpp
+    lib/storage/formats/orc_reader_test.cpp
     lib/storage/formats/orc_test.cpp
 
     lib/storage/table/chunk_test.cpp
@@ -63,3 +66,10 @@ set(
 add_executable(skyriseTest ${TEST_SOURCES})
 
 target_link_libraries(skyriseTest skyriseBenchmark skyriseCoordinator skyriseWorker ${TEST_LIBRARIES})
+
+# Copy test files that are used in unit tests
+add_custom_command(
+    TARGET skyriseTest POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_SOURCE_DIR}/src/test/testdata
+        ${CMAKE_BINARY_DIR}/testdata)

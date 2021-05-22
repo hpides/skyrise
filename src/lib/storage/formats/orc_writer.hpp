@@ -2,7 +2,7 @@
 
 #include <orc/OrcFile.hh>
 
-#include "abstract_formatter.hpp"
+#include "abstract_format_writer.hpp"
 #include "storage/table/value_segment.hpp"
 #include "utils/literal.hpp"
 
@@ -40,7 +40,7 @@ struct OrcFormatterOptions {
   size_t stripe_size = 64_MB;  // orc default
 };
 
-class OrcFormatter : public AbstractFormatter {
+class OrcFormatter : public AbstractFormatWriter {
  public:
   using Configuration = OrcFormatterOptions;
   OrcFormatter(OrcFormatterOptions config);

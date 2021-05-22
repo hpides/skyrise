@@ -1,4 +1,4 @@
-#include "orc.hpp"
+#include "orc_writer.hpp"
 
 namespace skyrise {
 
@@ -106,10 +106,10 @@ void OrcFormatter::GenericCopySegmentToOrcColumn(SegmentType* segment, VectorBat
 
 template <>
 void OrcFormatter::GenericCopySegmentToOrcColumn(ValueSegment<std::string>* segment, orc::StringVectorBatch* batch) {
-  // String is special, because we need to store all strings concatenated inside `batch->blob`.
-  // In `batch->data` we store pointers to the first character of the string.
-  // Finally `batch->length` holds the number of bytes for every string.
-
+  /**
+   * String is special, because we need to store all strings concatenated inside batch->blob. In batch->data we store
+   * pointers to the first character of the string. Finally batch->length holds the number of bytes for every string.
+   */
   auto& segment_values = segment->Values();
 
   size_t total_string_bytes = 0;
