@@ -69,8 +69,8 @@ class AbstractExpression : public std::enable_shared_from_this<AbstractExpressio
 
   size_t Hash() const;
 
-  const ExpressionType type;
-  std::vector<std::shared_ptr<AbstractExpression>> arguments;
+  const ExpressionType type_;
+  std::vector<std::shared_ptr<AbstractExpression>> arguments_;
 
  protected:
   /**

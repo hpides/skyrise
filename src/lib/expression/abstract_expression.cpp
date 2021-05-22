@@ -15,7 +15,7 @@ namespace skyrise {
 
 AbstractExpression::AbstractExpression(const ExpressionType init_type,
                                        const std::vector<std::shared_ptr<AbstractExpression>>& init_arguments)
-    : type(init_type), arguments(init_arguments) {}
+    : type_(init_type), arguments_(init_arguments) {}
 
 std::shared_ptr<AbstractExpression> AbstractExpression::DeepCopy() const { return OnDeepCopy(); }
 
@@ -26,13 +26,13 @@ bool AbstractExpression::operator==(const AbstractExpression& other) const {
     return true;
   }
 
-  if (type != other.type) {
+  if (type_ != other.type_) {
     return false;
   }
   if (!ShallowEquals(other)) {
     return false;
   }
-  if (!ExpressionsEqual(arguments, other.arguments)) {
+  if (!ExpressionsEqual(arguments_, other.arguments_)) {
     return false;
   }
 
@@ -42,11 +42,11 @@ bool AbstractExpression::operator==(const AbstractExpression& other) const {
 bool AbstractExpression::operator!=(const AbstractExpression& other) const { return !operator==(other); }
 
 size_t AbstractExpression::Hash() const {
-  size_t hash = boost::hash_value(type);
+  size_t hash = boost::hash_value(type_);
 
-  for (const auto& argument : arguments) {
+  for (const auto& argument : arguments_) {
     // Include the hash value of the inputs but do not recurse any deeper. A deep comparison is necessary anyway.
-    boost::hash_combine(hash, argument->type);
+    boost::hash_combine(hash, argument->type_);
     boost::hash_combine(hash, argument->OnShallowHash());
   }
 
