@@ -76,18 +76,18 @@ TEST_F(FunctionSegmentsAnalyzerTest, GetCalculatedSegments) {
         FunctionSegmentsAnalyzer::CalculateLambdaSegmentDurations(segments, lambda_start_time_, lambda_end_time_);
 
     EXPECT_FALSE(lambda_segments.empty());
-    EXPECT_GT(lambda_segments.at("total").count(), 0.0);
-    EXPECT_GT(lambda_segments.at("function_total").count(), 0.0);
-    EXPECT_GT(lambda_segments.at("network_total").count(), 0.0);
-    EXPECT_GT(lambda_segments.at("network_call").count(), 0.0);
     // Allow some clock skew between test machine and data center.
+    EXPECT_GT(lambda_segments.at("total").count(), -0.1);
+    EXPECT_GT(lambda_segments.at("function_total").count(), -0.1);
+    EXPECT_GT(lambda_segments.at("network_total").count(), -0.1);
+    EXPECT_GT(lambda_segments.at("network_call").count(), -0.1);
     EXPECT_GT(lambda_segments.at("network_return").count(), -0.1);
-    EXPECT_GT(lambda_segments.at("initialization_total").count(), 0.0);
-    EXPECT_GT(lambda_segments.at("initialization").count(), 0.0);
-    EXPECT_GT(lambda_segments.at("initialization_remainder").count(), 0.0);
-    EXPECT_GT(lambda_segments.at("function_execution").count(), 0.0);
-    EXPECT_GT(lambda_segments.at("function_overhead").count(), 0.0);
-    EXPECT_GT(lambda_segments.at("function_remainder").count(), 0.0);
+    EXPECT_GT(lambda_segments.at("initialization_total").count(), -0.1);
+    EXPECT_GT(lambda_segments.at("initialization").count(), -0.1);
+    EXPECT_GT(lambda_segments.at("initialization_remainder").count(), -0.1);
+    EXPECT_GT(lambda_segments.at("function_execution").count(), -0.1);
+    EXPECT_GT(lambda_segments.at("function_overhead").count(), -0.1);
+    EXPECT_GT(lambda_segments.at("function_remainder").count(), -0.1);
 
     EXPECT_GT(analyzer.GetNumAccessedTraces(), 0);
     EXPECT_GT(analyzer.GetNumScannedTraces(), 0);
