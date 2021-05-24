@@ -37,7 +37,14 @@ const std::shared_ptr<PricingS3>& Pricing::GetS3Pricing() { return pricing_s3_; 
 const std::shared_ptr<PricingXray>& Pricing::GetXrayPricing() { return pricing_xray_; }
 
 std::map<Aws::String, long double> Pricing::FetchPricing(const Aws::String& service_code) const {
-  const auto location = TranslateRegionToLocation(client_->GetClientRegion());
+  // Determine location from region
+  const Aws::String& region = client_->GetClientRegion();
+
+  if (kRegionToLocation.count(region) == 0) {
+    Fail("AWS region " + region + " not supported.");
+  }
+
+  const Aws::String& location = kRegionToLocation.at(region);
 
   // Create filters for Price List Service API
   Aws::Vector<Aws::Pricing::Model::Filter> filters = {Aws::Pricing::Model::Filter()
@@ -95,60 +102,6 @@ std::map<Aws::String, long double> Pricing::FetchPricing(const Aws::String& serv
   }
 
   return prices_map;
-}
-
-Aws::String Pricing::TranslateRegionToLocation(const Aws::String& region) {
-  if (region == Aws::Region::US_EAST_1)
-    return "US East (N. Virginia)";
-  else if (region == Aws::Region::US_EAST_2)
-    return "US East (Ohio)";
-  else if (region == Aws::Region::US_WEST_1)
-    return "US West (N. California)";
-  else if (region == Aws::Region::US_WEST_2)
-    return "US West (Oregon)";
-  else if (region == Aws::Region::EU_WEST_1)
-    return "EU (Ireland)";
-  else if (region == Aws::Region::EU_WEST_2)
-    return "EU (London)";
-  else if (region == Aws::Region::EU_WEST_3)
-    return "EU (Paris)";
-  else if (region == Aws::Region::EU_CENTRAL_1)
-    return "EU (Frankfurt)";
-  else if (region == Aws::Region::AP_SOUTHEAST_1)
-    return "Asia Pacific (Singapore)";
-  else if (region == Aws::Region::AP_SOUTHEAST_2)
-    return "Asia Pacific (Sydney)";
-  else if (region == Aws::Region::AP_NORTHEAST_1)
-    return "Asia Pacific (Tokyo)";
-  else if (region == Aws::Region::AP_NORTHEAST_2)
-    return "Asia Pacific (Seoul)";
-  else if (region == Aws::Region::SA_EAST_1)
-    return "South America (São Paulo)";
-  else if (region == Aws::Region::CA_CENTRAL_1)
-    return "Canada (Central)";
-  else if (region == Aws::Region::AP_SOUTH_1)
-    return "Asia Pacific (Mumbai)";
-  else if (region == Aws::Region::CN_NORTH_1)
-    return "China (Beijing)";
-  else if (region == Aws::Region::CN_NORTHWEST_1)
-    return "China (Ningxia)";
-  else if (region == Aws::Region::US_GOV_WEST_1)
-    return "AWS GovCloud (US)";
-  else if (region == Aws::Region::AF_SOUTH_1)
-    return "Africa (Cape Town)";
-  else if (region == Aws::Region::AP_EAST_1)
-    return "Asia Pacific (Hong Kong)";
-  else if (region == Aws::Region::AP_NORTHEAST_3)
-    return "Asia Pacific (Osaka-Local)";
-  else if (region == Aws::Region::EU_NORTH_1)
-    return "Europe (Stockholm)";
-  else if (region == Aws::Region::ME_SOUTH_1)
-    return "Middle East (Bahrain)";
-  else if (region == Aws::Region::US_GOV_EAST_1)
-    return "AWS GovCloud (US-East)";
-  else {
-    Fail("AWS region " + region + " not supported.");
-  }
 }
 
 }  // namespace skyrise

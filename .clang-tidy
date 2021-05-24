@@ -8,7 +8,6 @@ Checks: '
         -*-narrowing-conversions,
         -*-non-private-member-variables-in-classes,
         -*-uppercase-literal-suffix,
-        -*braces-around-statements,
         -abseil-string-find-startswith,
         -cert-dcl16-c,
         -cert-dcl58-cpp,
@@ -42,7 +41,6 @@ Checks: '
 #   *-narrowing-conversions                                 TODO(JanSiebert): Fix storage classes
 #   *-non-private-member-variables-in-classes               We use public member variables
 #   *-uppercase-literal-suffix                              Using 1.0f instead of 1.0F is fine for us
-#   *braces-around-statements                               We allow if statements without braces
 #   abseil-string-find-startswith                           We do not use abseil
 #   cert-dcl16-c                                            Using 1.0f instead of 1.0F is fine for us
 #   cert-env33-c                                            We use popen()

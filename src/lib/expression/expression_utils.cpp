@@ -19,9 +19,11 @@ std::vector<std::shared_ptr<AbstractExpression>> ExpressionsDeepCopy(
     const std::vector<std::shared_ptr<AbstractExpression>>& expressions) {
   std::vector<std::shared_ptr<AbstractExpression>> copied_expressions;
   copied_expressions.reserve(expressions.size());
+
   for (const auto& expression : expressions) {
     copied_expressions.emplace_back(expression->DeepCopy());
   }
+
   return copied_expressions;
 }
 
@@ -29,7 +31,10 @@ std::string ExpressionDescriptions(const std::vector<std::shared_ptr<AbstractExp
                                    const AbstractExpression::DescriptionMode mode) {
   std::stringstream stream;
 
-  if (!expressions.empty()) stream << expressions.front()->Description(mode);
+  if (!expressions.empty()) {
+    stream << expressions.front()->Description(mode);
+  }
+
   for (size_t i = 1; i < expressions.size(); ++i) {
     stream << ", " << expressions[i]->Description(mode);
   }
