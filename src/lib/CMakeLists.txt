@@ -60,6 +60,10 @@ set(
     expression/expression_precedence.hpp
     expression/expression_utils.cpp
     expression/expression_utils.hpp
+    expression/list_expression.cpp
+    expression/list_expression.hpp
+    expression/unary_minus_expression.cpp
+    expression/unary_minus_expression.hpp
     expression/value_expression.cpp
     expression/value_expression.hpp
     scheduler/scheduler_types.hpp

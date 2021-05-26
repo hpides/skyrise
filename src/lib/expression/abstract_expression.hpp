@@ -16,7 +16,7 @@ namespace skyrise {
 
 class AbstractLqpNode;
 
-enum class ExpressionType { kAggregate, kArithmetic, kLqpColumn, kLogical, kPredicate, kUnaryMinus, kValue };
+enum class ExpressionType { kAggregate, kArithmetic, kList, kLogical, kLqpColumn, kPredicate, kUnaryMinus, kValue };
 
 /**
  * AbstractExpression is a self-contained data structure describing Expressions.
