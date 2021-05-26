@@ -34,16 +34,16 @@ class OrcOutputProxy : public orc::OutputStream {
 
 }  // namespace detail
 
-struct OrcFormatterOptions {
+struct OrcFormatWriterOptions {
   orc::CompressionKind compression_kind = orc::CompressionKind_NONE;
   orc::CompressionStrategy compression_strategy = orc::CompressionStrategy_SPEED;
   size_t stripe_size = 64_MB;  // orc default
 };
 
-class OrcFormatter : public AbstractFormatWriter {
+class OrcFormatWriter : public AbstractFormatWriter {
  public:
-  using Configuration = OrcFormatterOptions;
-  OrcFormatter(OrcFormatterOptions config);
+  using Configuration = OrcFormatWriterOptions;
+  OrcFormatWriter(OrcFormatWriterOptions config);
 
   void Initialize(const TableColumnDefinitions& schema) override;
   void ProcessChunk(const Chunk& chunk) override;
@@ -59,7 +59,7 @@ class OrcFormatter : public AbstractFormatWriter {
   static void GenericCopySegmentToOrcColumn(SegmentT* segment, VectorBatchT* batch);
 
   detail::OrcOutputProxy output_proxy_;
-  OrcFormatterOptions config_;
+  OrcFormatWriterOptions config_;
   std::unique_ptr<orc::Type> type_;
   std::unique_ptr<orc::Writer> writer_;
   std::unique_ptr<orc::ColumnVectorBatch> batch_;
@@ -67,6 +67,6 @@ class OrcFormatter : public AbstractFormatWriter {
 
 // This specialization needs to be in the same scope as OrcFormatter
 template <>
-void OrcFormatter::GenericCopySegmentToOrcColumn(ValueSegment<std::string>* segment, orc::StringVectorBatch* batch);
+void OrcFormatWriter::GenericCopySegmentToOrcColumn(ValueSegment<std::string>* segment, orc::StringVectorBatch* batch);
 
 }  // namespace skyrise

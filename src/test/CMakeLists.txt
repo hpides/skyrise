@@ -38,10 +38,10 @@ set(
     lib/storage/backend/stream_test.cpp
     lib/storage/backend/testdata_storage.cpp
     lib/storage/backend/testdata_storage.hpp
-    
-    lib/storage/formats/csv_test.cpp
+
+    lib/storage/formats/csv_writer_test.cpp
     lib/storage/formats/orc_reader_test.cpp
-    lib/storage/formats/orc_test.cpp
+    lib/storage/formats/orc_writer_test.cpp
 
     lib/storage/table/chunk_test.cpp
     lib/storage/table/table_column_definition_test.cpp

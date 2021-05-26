@@ -50,10 +50,10 @@ class OrcFormatReaderTest : public ::testing::Test {
   }
 
   void WriteMockOrc() {
-    OrcFormatterOptions options;
+    OrcFormatWriterOptions options;
     auto object_writer = storage_.OpenForWriting(kOrcObjectName);
     Chunk chunk = CreateChunkWithMockData();
-    OrcFormatter orc_writer(options);
+    OrcFormatWriter orc_writer(options);
     orc_writer.SetOutputHandler(
         [&object_writer](const char* data, size_t length) { object_writer->Write(data, length); });
     orc_writer.Initialize(CreateSchemaForChunk());

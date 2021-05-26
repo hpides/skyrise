@@ -4,7 +4,6 @@
 
 #include "abstract_format_reader.hpp"
 #include "storage/backend/abstract_storage.hpp"
-#include "storage/backend/stream.hpp"
 
 namespace skyrise {
 

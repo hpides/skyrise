@@ -80,8 +80,8 @@ void ManifestWriter::AssertOutputStream() {
     return;
   }
 
-  OrcFormatterOptions options;
-  formatter_ = std::make_unique<OrcFormatter>(options);
+  OrcFormatWriterOptions options;
+  formatter_ = std::make_unique<OrcFormatWriter>(options);
   formatter_->SetOutputHandler([this](const char* data, size_t length) {
     if (!error_) {
       error_ = this->writer_->Write(data, length);

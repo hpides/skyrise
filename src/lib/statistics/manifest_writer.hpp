@@ -32,7 +32,7 @@ class ManifestWriter {
   static constexpr int kManifestVersion = 1;
 
   std::unique_ptr<ObjectWriter> writer_;
-  std::unique_ptr<OrcFormatter> formatter_;
+  std::unique_ptr<OrcFormatWriter> formatter_;
   std::shared_ptr<TableColumnDefinitions> partition_schema_;
   std::string table_prefix_;
   std::vector<std::shared_ptr<BaseValueSegment>> current_segments_;

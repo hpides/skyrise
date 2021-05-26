@@ -1,9 +1,10 @@
+#include "storage/formats/csv_writer.hpp"
+
 #include <memory>
 #include <sstream>
 #include <string>
 
 #include "format_test_base.hpp"
-#include "storage/formats/csv_writer.hpp"
 
 namespace skyrise {
 

@@ -5,7 +5,7 @@
 #include "serialization/schema_serialization.hpp"
 #include "statistics/statistics_collector.hpp"
 #include "storage/backend/abstract_storage.hpp"
-#include "storage/formats/orc_writer.hpp"
+#include "storage/formats/orc_reader.hpp"
 #include "utils/assert.hpp"
 
 namespace skyrise {

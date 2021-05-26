@@ -1,23 +1,24 @@
+#include "storage/formats/orc_writer.hpp"
+
 #include <memory>
 #include <sstream>
 #include <string>
 
 #include "format_test_base.hpp"
-#include "storage/formats/orc_writer.hpp"
 
 namespace skyrise {
 
-class OrcFormatterTest : public FormatterTest {};
+class OrcFormatWriterTest : public FormatterTest {};
 
-TEST_F(OrcFormatterTest, FormatChunkAsOrc) {
+TEST_F(OrcFormatWriterTest, FormatChunkAsOrc) {
   static const std::string kOrcMagic{"ORC"};
   std::stringstream output;
   std::shared_ptr<std::stringstream> output_ptr(&output, [](auto /*unused*/) {});
 
-  OrcFormatterOptions options;
+  OrcFormatWriterOptions options;
   options.compression_kind = orc::CompressionKind_NONE;
 
-  OrcFormatter formatter(options);
+  OrcFormatWriter formatter(options);
   formatter.SetOutputHandler([&output_ptr](const char* data, size_t size) { output_ptr->write(data, size); });
 
   formatter.Initialize(schema_);
