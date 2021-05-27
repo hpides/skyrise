@@ -15,28 +15,24 @@ namespace skyrise {
 NetworkLatencyBenchmark::NetworkLatencyBenchmark(std::shared_ptr<BenchmarkHelper> helper,
                                                  std::shared_ptr<CostCalculator> cost_calculator,
                                                  const std::vector<size_t>& function_instance_mb_sizes,
-                                                 const std::vector<size_t>& object_byte_sizes_read,
-                                                 const std::vector<size_t>& object_byte_sizes_write,
-                                                 const size_t batch_size, const size_t repetition_count)
-    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), object_byte_sizes_read, {1}, {1}, batch_size,
-                       repetition_count) {
+                                                 const std::vector<size_t>& object_byte_sizes,
+                                                 const std::vector<size_t>& batch_sizes, const size_t repetition_count)
+    : NetworkBenchmark(std::move(helper), std::move(cost_calculator)) {
   for (const auto function_instance_mb_size : function_instance_mb_sizes) {
-    for (const size_t object_byte_size_read : object_byte_sizes_read) {
-      BenchmarkConfig config("skyriseFunctionReadS3", function_instance_mb_size, repetition_count_);
-      config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size_read, 1,
-                                          config.concurrent_invocation_count_, S3OperationType::kRead));
-      benchmark_configs_.emplace_back(
-          NetworkBenchmarkParameters{function_instance_mb_size, object_byte_size_read, 1, S3OperationType::kRead},
-          config);
-    }
+    for (const auto object_byte_size : object_byte_sizes) {
+      for (const auto batch_size : batch_sizes) {
+        for (const auto operation_type : {S3OperationType::kWrite, S3OperationType::kRead}) {
+          Aws::StringStream function_name;
+          function_name << "skyriseFunction" << (operation_type == S3OperationType::kRead ? "Read" : "Write") << "S3";
 
-    for (const size_t object_byte_size_write : object_byte_sizes_write) {
-      BenchmarkConfig config("skyriseFunctionWriteS3", function_instance_mb_size, repetition_count_);
-      config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size_write, 1,
-                                          config.concurrent_invocation_count_, S3OperationType::kWrite));
-      benchmark_configs_.emplace_back(
-          NetworkBenchmarkParameters{function_instance_mb_size, object_byte_size_write, 1, S3OperationType::kWrite},
-          config);
+          BenchmarkConfig config(function_name.str(), function_instance_mb_size, repetition_count);
+          NetworkBenchmarkParameters parameters{
+              function_instance_mb_size, object_byte_size, batch_size, 1, 1, 1, operation_type};
+          config.SetPayloads(GeneratePayloads(parameters));
+
+          benchmark_configs_.emplace_back(parameters, config);
+        }
+      }
     }
   }
 }
@@ -55,12 +51,18 @@ Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
 
   for (const auto& benchmark_repetition : benchmark_repetitions) {
     for (const auto& invoke_result : benchmark_repetition.GetInvokeResults()) {
-      const auto ms_latencies = invoke_result.GetResponseBody().GetArray("ms_durations");
+      if (invoke_result.IsSuccess()) {
+        const auto ms_latencies = invoke_result.GetResponseBody().GetArray("ms_durations");
 
-      for (size_t i = 0; i < ms_latencies.GetLength(); i++) {
-        latencies.emplace_back(ms_latencies[i].AsDouble());
+        for (size_t i = 0; i < ms_latencies.GetLength(); i++) {
+          latencies.emplace_back(ms_latencies[i].AsDouble());
+        }
       }
     }
+  }
+
+  if (latencies.empty()) {
+    latencies.emplace_back(-1.0);
   }
 
   const BenchmarkResultAggregate aggregates(latencies);

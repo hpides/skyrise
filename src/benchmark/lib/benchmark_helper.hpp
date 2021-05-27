@@ -36,6 +36,8 @@ class BenchmarkHelper {
       const std::vector<std::tuple<Aws::String, std::shared_ptr<Aws::IOStream>, size_t>>& objects,
       const Aws::String& bucket_name) const;
   long double EmptyS3Bucket(const Aws::String& bucket_name) const;
+  // All objects in an S3 bucket must be deleted before the bucket can be deleted
+  long double EmptyAndDeleteS3Bucket(const Aws::String& bucket_name) const;
 
  private:
   const std::shared_ptr<Client> client_;

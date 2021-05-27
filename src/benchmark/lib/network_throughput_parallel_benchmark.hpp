@@ -11,7 +11,11 @@ class NetworkThroughputParallelBenchmark : public NetworkBenchmark {
  public:
   NetworkThroughputParallelBenchmark(std::shared_ptr<BenchmarkHelper> helper,
                                      std::shared_ptr<CostCalculator> cost_calculator,
-                                     const std::vector<size_t>& invocation_counts, const size_t batch_size,
+                                     const std::vector<size_t>& function_instance_mb_sizes,
+                                     const std::vector<size_t>& object_byte_sizes,
+                                     const std::vector<size_t>& batch_sizes, const std::vector<size_t>& thread_counts,
+                                     const std::vector<size_t>& invocation_counts,
+                                     const std::vector<size_t>& bucket_counts, const bool enable_reads,
                                      const size_t repetition_count);
 
  private:

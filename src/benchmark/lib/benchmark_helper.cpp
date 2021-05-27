@@ -9,6 +9,7 @@
 #include <aws/core/utils/logging/LogMacros.h>
 #include <aws/s3/model/CreateBucketRequest.h>
 #include <aws/s3/model/Delete.h>
+#include <aws/s3/model/DeleteBucketRequest.h>
 #include <aws/s3/model/DeleteObjectsRequest.h>
 #include <aws/s3/model/ListObjectsRequest.h>
 #include <aws/s3/model/ObjectIdentifier.h>
@@ -181,32 +182,44 @@ long double BenchmarkHelper::UploadObjectsToS3Parallel(
 long double BenchmarkHelper::EmptyS3Bucket(const Aws::String& bucket_name) const {
   const auto& s3_client = client_->GetS3Client();
 
-  const auto list_objects_outcome = s3_client.ListObjects(Aws::S3::Model::ListObjectsRequest().WithBucket(bucket_name));
+  long double cost = 0.0L;
 
-  const auto cost = cost_calculator_.CalculateCostS3Requests(1, 0);
+  while (true) {
+    cost = cost_calculator_.CalculateCostS3Requests(1, 0);
+    const auto list_objects_outcome =
+        s3_client.ListObjects(Aws::S3::Model::ListObjectsRequest().WithBucket(bucket_name));
+    Assert(list_objects_outcome.IsSuccess(), list_objects_outcome.GetError().GetMessage());
 
-  if (!list_objects_outcome.IsSuccess()) {
-    Fail(list_objects_outcome.GetError().GetMessage());
+    const auto& list_objects_result = list_objects_outcome.GetResult();
+    const auto& listed_objects = list_objects_result.GetContents();
+
+    if (listed_objects.empty()) {
+      break;
+    }
+
+    Aws::Vector<Aws::S3::Model::ObjectIdentifier> objects_to_delete;
+    std::transform(listed_objects.cbegin(), listed_objects.cend(), std::back_inserter(objects_to_delete),
+                   [](const auto& object) { return Aws::S3::Model::ObjectIdentifier().WithKey(object.GetKey()); });
+
+    const auto delete_objects_outcome =
+        s3_client.DeleteObjects(Aws::S3::Model::DeleteObjectsRequest()
+                                    .WithBucket(bucket_name)
+                                    .WithDelete(Aws::S3::Model::Delete().WithObjects(objects_to_delete)));
+
+    Assert(delete_objects_outcome.IsSuccess(), delete_objects_outcome.GetError().GetMessage());
+
+    if (!list_objects_result.GetIsTruncated()) {
+      break;
+    }
   }
 
-  const auto& listed_objects = list_objects_outcome.GetResult().GetContents();
+  return cost;
+}
 
-  if (listed_objects.empty()) {
-    return cost;
-  }
-
-  Aws::Vector<Aws::S3::Model::ObjectIdentifier> objects_to_delete;
-
-  std::transform(listed_objects.cbegin(), listed_objects.cend(), std::back_inserter(objects_to_delete),
-                 [](const auto& object) { return Aws::S3::Model::ObjectIdentifier().WithKey(object.GetKey()); });
-  const auto delete_objects = Aws::S3::Model::Delete().WithObjects(objects_to_delete);
-
-  const auto delete_objects_outcome = s3_client.DeleteObjects(
-      Aws::S3::Model::DeleteObjectsRequest().WithBucket(bucket_name).WithDelete(delete_objects));
-
-  if (!delete_objects_outcome.IsSuccess()) {
-    Fail(list_objects_outcome.GetError().GetMessage());
-  }
+long double BenchmarkHelper::EmptyAndDeleteS3Bucket(const Aws::String& bucket_name) const {
+  const long double cost = EmptyS3Bucket(bucket_name);
+  const auto& s3_client = client_->GetS3Client();
+  s3_client.DeleteBucket(Aws::S3::Model::DeleteBucketRequest().WithBucket(bucket_name));
 
   return cost;
 }

@@ -19,7 +19,10 @@ enum class S3OperationType { kRead, kWrite };
 struct NetworkBenchmarkParameters {
   size_t function_instance_mb_size;
   size_t object_byte_size;
+  size_t batch_size;
   size_t thread_count;
+  size_t invocation_count;
+  size_t bucket_count;
   S3OperationType operation_type;
 };
 
@@ -29,9 +32,7 @@ class NetworkBenchmark : public Benchmark {
 
  protected:
   NetworkBenchmark(std::shared_ptr<BenchmarkHelper> helper, std::shared_ptr<CostCalculator> cost_calculator,
-                   const std::vector<size_t>& object_byte_sizes, const std::vector<size_t>& thread_counts,
-                   const std::vector<size_t>& invocation_counts, const size_t batch_size,
-                   const size_t repetition_count);
+                   const std::vector<size_t>& bucket_counts = {1});
 
   virtual Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<BenchmarkResult>& result,
                                                            const NetworkBenchmarkParameters& parameters) = 0;
@@ -41,19 +42,11 @@ class NetworkBenchmark : public Benchmark {
 
   static Aws::String GenerateObjectKey(const size_t object_byte_size, const size_t invocation_index,
                                        const size_t thread_index);
-  std::vector<std::shared_ptr<Aws::IOStream>> GeneratePayloads(const size_t function_instance_mb_size,
-                                                               const size_t object_byte_size, const size_t thread_count,
-                                                               const size_t invocation_count,
-                                                               const S3OperationType operation_type);
+  static std::vector<std::shared_ptr<Aws::IOStream>> GeneratePayloads(const NetworkBenchmarkParameters& parameters);
 
   const std::shared_ptr<BenchmarkHelper> helper_;
 
-  std::vector<size_t> object_byte_sizes_;
-  std::vector<size_t> thread_counts_;
-  std::vector<size_t> invocation_counts_;
-
-  const size_t batch_size_;
-  const size_t repetition_count_;
+  const std::vector<size_t> bucket_counts_;
 
   std::vector<std::pair<NetworkBenchmarkParameters, BenchmarkConfig>> benchmark_configs_;
 
@@ -61,9 +54,7 @@ class NetworkBenchmark : public Benchmark {
 
   static constexpr size_t kMaxObjectsPerPrefix = 1000;
   const size_t kMaxMemoryUsageBytes = GbToByte(2);  // TODO(julianmenzler) C++20: Use consteval & constexpr
-  inline static const Aws::String kObjectKeySuffix{"networkBenchmark"};
-  inline static const Aws::String kReadBucket{"network-benchmark-read"};
-  inline static const Aws::String kWriteBucket{"network-benchmark-write"};
+  inline static const Aws::String kBucketPrefix{"network-benchmark-"};
 };
 
 }  // namespace skyrise

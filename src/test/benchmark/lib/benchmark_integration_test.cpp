@@ -108,14 +108,13 @@ TEST_F(BenchmarkIntegrationTest, InvocationThroughputBenchmark) {
 
 TEST_F(BenchmarkIntegrationTest, NetworkLatencyBenchmark) {
   const std::vector<size_t> function_instance_mb_sizes = {128};
-  const std::vector<size_t> object_byte_sizes_read = {1024};
-  const std::vector<size_t> object_byte_sizes_write = {1024};
-  const size_t batch_size = 2;
+  const std::vector<size_t> object_byte_sizes = {1024};
+  const std::vector<size_t> batch_sizes = {2};
   const size_t repetition_count = 1;
 
-  auto benchmark = std::make_shared<skyrise::NetworkLatencyBenchmark>(
-      GetBenchmarkHelper(), GetCostCalculator(), function_instance_mb_sizes, object_byte_sizes_read,
-      object_byte_sizes_write, batch_size, repetition_count);
+  auto benchmark = std::make_shared<skyrise::NetworkLatencyBenchmark>(GetBenchmarkHelper(), GetCostCalculator(),
+                                                                      function_instance_mb_sizes, object_byte_sizes,
+                                                                      batch_sizes, repetition_count);
 
   const auto benchmark_result = benchmark->Run(GetBenchmarkRunner());
   EXPECT_EQ(benchmark_result.GetLength(), 2);
@@ -124,18 +123,36 @@ TEST_F(BenchmarkIntegrationTest, NetworkLatencyBenchmark) {
 TEST_F(BenchmarkIntegrationTest, NetworkThroughputBenchmark) {
   const std::vector<size_t> function_instance_mb_sizes = {128};
   const std::vector<size_t> object_byte_sizes = {16384};
+  const std::vector<size_t> batch_sizes = {2};
   const std::vector<size_t> thread_counts = {2};
-  const size_t batch_size = 2;
+
   const size_t repetition_count = 1;
 
   auto benchmark = std::make_shared<skyrise::NetworkThroughputBenchmark>(GetBenchmarkHelper(), GetCostCalculator(),
                                                                          function_instance_mb_sizes, object_byte_sizes,
-                                                                         thread_counts, batch_size, repetition_count);
+                                                                         batch_sizes, thread_counts, repetition_count);
 
   const auto benchmark_result = benchmark->Run(GetBenchmarkRunner());
   EXPECT_EQ(benchmark_result.GetLength(), 2);
 }
 
-// TODO(maltenbergert): Add test for NetworkThroughputParallelBenchmark
+TEST_F(BenchmarkIntegrationTest, NetworkThroughputParallelBenchmark) {
+  const std::vector<size_t> function_instance_mb_sizes = {128};
+  const std::vector<size_t> object_byte_sizes = {16384};
+  const std::vector<size_t> batch_sizes = {2};
+  const std::vector<size_t> thread_counts = {2};
+  const std::vector<size_t> invocation_counts = {16};
+  const std::vector<size_t> bucket_counts = {2};
+
+  const bool enable_reads = true;
+  const size_t repetition_count = 1;
+
+  auto benchmark = std::make_shared<skyrise::NetworkThroughputParallelBenchmark>(
+      GetBenchmarkHelper(), GetCostCalculator(), function_instance_mb_sizes, object_byte_sizes, batch_sizes,
+      thread_counts, invocation_counts, bucket_counts, enable_reads, repetition_count);
+
+  const auto benchmark_result = benchmark->Run(GetBenchmarkRunner());
+  EXPECT_EQ(benchmark_result.GetLength(), 2);
+}
 
 }  // namespace skyrise

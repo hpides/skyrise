@@ -12,28 +12,30 @@
 
 namespace skyrise {
 
-NetworkThroughputBenchmark::NetworkThroughputBenchmark(std::shared_ptr<BenchmarkHelper> helper,
-                                                       std::shared_ptr<CostCalculator> cost_calculator,
-                                                       const std::vector<size_t>& function_instance_mb_sizes,
-                                                       const std::vector<size_t>& object_byte_sizes,
-                                                       const std::vector<size_t>& thread_counts,
-                                                       const size_t batch_size, const size_t repetition_count)
-    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), object_byte_sizes, thread_counts, {1}, batch_size,
-                       repetition_count) {
+NetworkThroughputBenchmark::NetworkThroughputBenchmark(
+    std::shared_ptr<BenchmarkHelper> helper, std::shared_ptr<CostCalculator> cost_calculator,
+    const std::vector<size_t>& function_instance_mb_sizes, const std::vector<size_t>& object_byte_sizes,
+    const std::vector<size_t>& batch_sizes, const std::vector<size_t>& thread_counts, const size_t repetition_count)
+    : NetworkBenchmark(std::move(helper), std::move(cost_calculator)) {
   for (const auto function_instance_mb_size : function_instance_mb_sizes) {
     for (const auto object_byte_size : object_byte_sizes) {
-      for (const auto thread_count : thread_counts) {
-        if (thread_count * object_byte_size <= MbToByte(function_instance_mb_size) / 2) {
-          for (const auto operation_type : {S3OperationType::kRead, S3OperationType::kWrite}) {
-            Aws::StringStream function_name;
-            function_name << "skyriseFunction" << (operation_type == S3OperationType::kRead ? "Read" : "Write") << "S3";
+      for (const auto batch_size : batch_sizes) {
+        for (const auto thread_count : thread_counts) {
+          // Reject read/write configurations where the total object size to process is more than half of the function
+          // instance size to prevent failure
+          if (thread_count * object_byte_size <= MbToByte(function_instance_mb_size) / 2) {
+            for (const auto operation_type : {S3OperationType::kWrite, S3OperationType::kRead}) {
+              Aws::StringStream function_name;
+              function_name << "skyriseFunction" << (operation_type == S3OperationType::kRead ? "Read" : "Write")
+                            << "S3";
 
-            BenchmarkConfig config(function_name.str(), function_instance_mb_size, repetition_count_);
-            config.SetPayloads(GeneratePayloads(function_instance_mb_size, object_byte_size, thread_count,
-                                                config.concurrent_invocation_count_, operation_type));
-            benchmark_configs_.emplace_back(
-                NetworkBenchmarkParameters{function_instance_mb_size, object_byte_size, thread_count, operation_type},
-                config);
+              BenchmarkConfig config(function_name.str(), function_instance_mb_size, repetition_count);
+              NetworkBenchmarkParameters parameters{
+                  function_instance_mb_size, object_byte_size, batch_size, thread_count, 1, 1, operation_type};
+              config.SetPayloads(GeneratePayloads(parameters));
+
+              benchmark_configs_.emplace_back(parameters, config);
+            }
           }
         }
       }
@@ -56,16 +58,22 @@ Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
 
   for (const auto& benchmark_repetition : benchmark_repetitions) {
     for (const auto& invoke_result : benchmark_repetition.GetInvokeResults()) {
-      const auto ms_durations = invoke_result.GetResponseBody().GetArray("ms_durations");
+      if (invoke_result.IsSuccess()) {
+        const auto ms_durations = invoke_result.GetResponseBody().GetArray("ms_durations");
 
-      for (size_t i = 0; i < ms_durations.GetLength(); i++) {
-        const double seconds_duration =
-            std::chrono::duration<double>(std::chrono::duration<double, std::milli>(ms_durations[i].AsDouble()))
-                .count();
-        throughputs.emplace_back(ByteToMb(benchmark_parameters.object_byte_size) * benchmark_parameters.thread_count /
-                                 seconds_duration);
+        for (size_t i = 0; i < ms_durations.GetLength(); i++) {
+          const double seconds_duration =
+              std::chrono::duration<double>(std::chrono::duration<double, std::milli>(ms_durations[i].AsDouble()))
+                  .count();
+          throughputs.emplace_back(ByteToMb(benchmark_parameters.object_byte_size) * benchmark_parameters.thread_count /
+                                   seconds_duration);
+        }
       }
     }
+  }
+
+  if (throughputs.empty()) {
+    throughputs.emplace_back(-1.0);
   }
 
   const BenchmarkResultAggregate aggregates(throughputs);

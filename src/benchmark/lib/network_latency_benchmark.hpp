@@ -15,15 +15,12 @@ class NetworkLatencyBenchmark : public NetworkBenchmark {
  public:
   NetworkLatencyBenchmark(std::shared_ptr<BenchmarkHelper> helper, std::shared_ptr<CostCalculator> cost_calculator,
                           const std::vector<size_t>& function_instance_mb_sizes,
-                          const std::vector<size_t>& object_byte_sizes_read,
-                          const std::vector<size_t>& object_byte_sizes_write, const size_t batch_size,
+                          const std::vector<size_t>& object_byte_sizes, const std::vector<size_t>& batch_sizes,
                           const size_t repetition_count);
 
  private:
   Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<BenchmarkResult>& benchmark_result,
                                                    const NetworkBenchmarkParameters& benchmark_parameters) override;
-
-  const size_t kObjectBytesSize = 1_KB;
 };
 
 }  // namespace skyrise

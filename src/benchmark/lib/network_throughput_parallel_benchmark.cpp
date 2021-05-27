@@ -1,43 +1,53 @@
 #include "network_throughput_parallel_benchmark.hpp"
 
-#include <algorithm>
 #include <numeric>
 #include <regex>
 #include <tuple>
-#include <unordered_map>
 
 #include <magic_enum.hpp>
 
 #include "benchmark_result_aggregate.hpp"
-#include "utils/literal.hpp"
 #include "utils/string.hpp"
 #include "utils/unit_conversion.hpp"
 
 namespace skyrise {
 
-// TODO(d-justen): Change to the best performing parameters found by NetworkThroughputBenchmark
-inline constexpr size_t kFunctionInstanceMbSize = 3008;
-inline constexpr size_t kObjectByteSize = 16_MB;
-inline constexpr size_t kThreadCount = 4;
+NetworkThroughputParallelBenchmark::NetworkThroughputParallelBenchmark(
+    std::shared_ptr<BenchmarkHelper> helper, std::shared_ptr<CostCalculator> cost_calculator,
+    const std::vector<size_t>& function_instance_mb_sizes, const std::vector<size_t>& object_byte_sizes,
+    const std::vector<size_t>& batch_sizes, const std::vector<size_t>& thread_counts,
+    const std::vector<size_t>& invocation_counts, const std::vector<size_t>& bucket_counts, const bool enable_reads,
+    const size_t repetition_count)
+    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), bucket_counts) {
+  std::vector<S3OperationType> operation_types{S3OperationType::kWrite};
+  if (enable_reads) {
+    operation_types.emplace_back(S3OperationType::kRead);
+  }
 
-NetworkThroughputParallelBenchmark::NetworkThroughputParallelBenchmark(std::shared_ptr<BenchmarkHelper> helper,
-                                                                       std::shared_ptr<CostCalculator> cost_calculator,
-                                                                       const std::vector<size_t>& invocation_counts,
-                                                                       const size_t batch_size,
-                                                                       const size_t repetition_count)
-    : NetworkBenchmark(std::move(helper), std::move(cost_calculator), {kObjectByteSize}, {kThreadCount},
-                       invocation_counts, batch_size, repetition_count) {
-  for (const auto operation_type : {S3OperationType::kRead, S3OperationType::kWrite}) {
-    Aws::StringStream function_name;
-    function_name << "skyriseFunction" << (operation_type == S3OperationType::kRead ? "Read" : "Write") << "S3";
+  for (const auto function_instance_mb_size : function_instance_mb_sizes) {
+    for (const auto object_byte_size : object_byte_sizes) {
+      for (const auto batch_size : batch_sizes) {
+        for (const auto thread_count : thread_counts) {
+          for (const auto invocation_count : invocation_counts) {
+            for (const auto bucket_count : bucket_counts) {
+              for (const auto operation_type : operation_types) {
+                Aws::StringStream function_name;
+                function_name << "skyriseFunction" << (operation_type == S3OperationType::kRead ? "Read" : "Write")
+                              << "S3";
 
-    for (const auto invocation_count : invocation_counts_) {
-      BenchmarkConfig config(function_name.str(), kFunctionInstanceMbSize, repetition_count, invocation_count,
-                             WarmUp::kDefault);
-      config.SetPayloads(GeneratePayloads(kFunctionInstanceMbSize, kObjectByteSize, kThreadCount,
-                                          config.concurrent_invocation_count_, operation_type));
-      benchmark_configs_.emplace_back(
-          NetworkBenchmarkParameters{kFunctionInstanceMbSize, kObjectByteSize, kThreadCount, operation_type}, config);
+                BenchmarkConfig config(function_name.str(), function_instance_mb_size, repetition_count,
+                                       invocation_count, WarmUp::kDefault);
+                NetworkBenchmarkParameters parameters{
+                    function_instance_mb_size, object_byte_size, batch_size,    thread_count,
+                    invocation_count,          bucket_count,     operation_type};
+                config.SetPayloads(GeneratePayloads(parameters));
+
+                benchmark_configs_.emplace_back(parameters, config);
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
@@ -47,7 +57,7 @@ Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateResultOu
   Aws::StringStream benchmark_name;
   benchmark_name << "NetworkThroughputParallelBenchmark/" << benchmark_parameters.function_instance_mb_size
                  << "FunctionInstanceMB/" << ByteToMb(benchmark_parameters.object_byte_size) << "ObjectSizeMB/"
-                 << benchmark_parameters.thread_count << "Threads/"
+                 << benchmark_parameters.thread_count << "Threads/" << benchmark_parameters.bucket_count << "Buckets/"
                  << magic_enum::enum_name(benchmark_parameters.operation_type);
 
   const auto& benchmark_repetitions = benchmark_result->GetBenchmarkRepetitions();
@@ -60,7 +70,8 @@ Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateResultOu
         std::chrono::duration<double>(std::chrono::duration<double, std::milli>(benchmark_repetition.GetDurationMs()))
             .count();
     throughputs.emplace_back(ByteToMb(benchmark_parameters.object_byte_size) * benchmark_parameters.thread_count *
-                             batch_size_ * benchmark_repetition.GetInvokeResults().size() / duration_seconds);
+                             benchmark_parameters.bucket_count * benchmark_repetition.GetInvokeResults().size() /
+                             duration_seconds);
   }
 
   const BenchmarkResultAggregate aggregates(throughputs);
