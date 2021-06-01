@@ -18,9 +18,9 @@ class StorageChunkTest : public ::testing::Test {
     value_segment_int_->Append(3);
 
     value_segment_str_ = std::make_shared<ValueSegment<std::string>>();
-    value_segment_str_->Append("Hello,");
-    value_segment_str_->Append("world");
-    value_segment_str_->Append("!");
+    value_segment_str_->Append(std::string("Hello,"));
+    value_segment_str_->Append(std::string("world"));
+    value_segment_str_->Append(std::string("!"));
 
     Segments empty_segments;
     empty_segments.emplace_back(std::make_shared<ValueSegment<int32_t>>());
@@ -43,13 +43,13 @@ TEST_F(StorageChunkTest, AddSegmentToChunk) {
 
 TEST_F(StorageChunkTest, AddValuesToChunk) {
   chunk_ = std::make_shared<Chunk>(Segments({value_segment_int_, value_segment_str_}));
-  chunk_->Append({2, "two"});
+  chunk_->Append({2, std::string("two")});
   EXPECT_EQ(chunk_->Size(), 4);
 }
 
 TEST_F(StorageChunkTest, RetrieveSegment) {
   chunk_ = std::make_shared<Chunk>(Segments({value_segment_int_, value_segment_str_}));
-  chunk_->Append({2, "two"});
+  chunk_->Append({2, std::string("two")});
 
   auto abstract_segment = chunk_->GetSegment(ColumnId{0});
   EXPECT_EQ(abstract_segment->Size(), 4);

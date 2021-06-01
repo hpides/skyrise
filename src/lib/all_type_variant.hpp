@@ -61,6 +61,10 @@ constexpr DataType DataTypeFromType() {
 
 inline bool VariantIsNull(const AllTypeVariant& variant) { return variant.index() == 0; }
 
+inline bool IsFloatingPointDataType(const DataType data_type) {
+  return data_type == DataType::kFloat || data_type == DataType::kDouble;
+}
+
 /**
  * Relational operators
  */

@@ -7,6 +7,8 @@
 #include <queue>
 #include <sstream>
 
+#include "utils/assert.hpp"
+
 namespace skyrise {
 
 bool ExpressionsEqual(const std::vector<std::shared_ptr<AbstractExpression>>& expressions_a,
@@ -40,6 +42,38 @@ std::string ExpressionDescriptions(const std::vector<std::shared_ptr<AbstractExp
   }
 
   return stream.str();
+}
+
+DataType ExpressionCommonType(const DataType lhs, const DataType rhs) {
+  Assert(lhs != DataType::kNull || rhs != DataType::kNull, "Cannot deduce common type if both sides are NULL.");
+  Assert((lhs == DataType::kString) == (rhs == DataType::kString), "Strings are only compatible with strings.");
+
+  // Long + NULL -> Long and NULL + Long -> Long
+  if (lhs == DataType::kNull) {
+    return rhs;
+  }
+  if (rhs == DataType::kNull) {
+    return lhs;
+  }
+
+  if (lhs == DataType::kString) {
+    return DataType::kString;
+  }
+
+  if (lhs == DataType::kDouble || rhs == DataType::kDouble) {
+    return DataType::kDouble;
+  }
+  if (lhs == DataType::kLong) {
+    return IsFloatingPointDataType(rhs) ? DataType::kDouble : DataType::kLong;
+  }
+  if (rhs == DataType::kLong) {
+    return IsFloatingPointDataType(lhs) ? DataType::kDouble : DataType::kLong;
+  }
+  if (lhs == DataType::kFloat || rhs == DataType::kFloat) {
+    return DataType::kFloat;
+  }
+
+  return DataType::kInt;
 }
 
 }  // namespace skyrise

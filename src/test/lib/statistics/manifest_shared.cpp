@@ -22,8 +22,8 @@ void ManifestTest::SetUp() {
   // Schema dependant statistics.
   statistics_.null_count = std::vector<size_t>{0, 0, 1, 0, 0};
   statistics_.minmax = std::vector<std::pair<AllTypeVariant, AllTypeVariant>>{
-      std::make_pair(0L, 10L), std::make_pair("adam", "zerbert"), std::make_pair("x", "y"), std::make_pair(0.0f, 1.0f),
-      std::make_pair(0.0, 1.0)};
+      std::make_pair(0L, 10L), std::make_pair(std::string("adam"), std::string("zerbert")),
+      std::make_pair(std::string("x"), std::string("y")), std::make_pair(0.0f, 1.0f), std::make_pair(0.0, 1.0)};
 
   storage_ = std::make_shared<MockStorage>();
 }

@@ -57,9 +57,21 @@ set(
     all_type_variant.hpp
     expression/abstract_expression.cpp
     expression/abstract_expression.hpp
+    expression/abstract_predicate_expression.cpp
+    expression/abstract_predicate_expression.hpp
+    expression/arithmetic_expression.cpp
+    expression/arithmetic_expression.hpp
+    expression/between_expression.cpp
+    expression/between_expression.hpp
+    expression/binary_predicate_expression.cpp
+    expression/binary_predicate_expression.hpp
     expression/expression_precedence.hpp
     expression/expression_utils.cpp
     expression/expression_utils.hpp
+    expression/in_expression.cpp
+    expression/in_expression.hpp
+    expression/is_null_expression.cpp
+    expression/is_null_expression.hpp
     expression/list_expression.cpp
     expression/list_expression.hpp
     expression/unary_minus_expression.cpp

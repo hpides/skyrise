@@ -58,4 +58,11 @@ void VisitExpression(Expression& expression, Visitor visitor) {
   }
 }
 
+/**
+ * @returns The result DataType of a non-boolean binary expression where the operands have the specified types.
+ *          For example, <float> + <long> -> <double> and (<float>, <int>, <int>) -> <float>.
+ *          Division of integer types will return an integer type.
+ */
+DataType ExpressionCommonType(const DataType lhs, const DataType rhs);
+
 }  // namespace skyrise
