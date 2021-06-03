@@ -79,5 +79,5 @@ target_link_libraries(skyriseTest skyriseBenchmark skyriseCoordinator skyriseWor
 add_custom_command(
     TARGET skyriseTest POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E create_symlink
-        ${CMAKE_SOURCE_DIR}/src/test/testdata
-        ${CMAKE_BINARY_DIR}/testdata)
+        ${CMAKE_SOURCE_DIR}/resources
+        ${CMAKE_BINARY_DIR}/resources)

@@ -33,7 +33,7 @@ class CsvReaderTest : public ::testing::Test {
     return table_definitions;
   }
 
-  static inline const std::string kLineItemCsvPath = "csv/tpch_lineitem_top100.tbl";
+  static inline const std::string kLineItemTblPath = "tbl/tpch_lineitem_top100.tbl";
   static inline const std::string kWellBehavedCsvPath = "csv/well_behaved.csv";
   static inline const std::string kWithTypesCsvPath = "csv/with_types.csv";
   static inline const std::string kOnlyHeaderCsvPath = "csv/only_header.csv";
@@ -73,7 +73,7 @@ TEST_F(CsvReaderTest, LineItemContentTest) {
   configuration.guess_has_header = false;
   configuration.read_buffer_size = kBufferSize;
 
-  auto object_storage = storage_.OpenForReading(kLineItemCsvPath);
+  auto object_storage = storage_.OpenForReading(kLineItemTblPath);
   CsvFormatReader csv_reader(std::move(object_storage), configuration);
 
   std::unique_ptr<Chunk> next = csv_reader.Next();
@@ -105,7 +105,7 @@ TEST_F(CsvReaderTest, LineItemExpectedChunksTest) {
   configuration.guess_has_header = false;
   configuration.read_buffer_size = kBufferSize;
 
-  auto object_storage = storage_.OpenForReading(kLineItemCsvPath);
+  auto object_storage = storage_.OpenForReading(kLineItemTblPath);
   auto file_size = object_storage->GetStatus().GetSize();
   CsvFormatReader csv_reader(std::move(object_storage), configuration);
 
@@ -186,7 +186,7 @@ TEST_F(CsvReaderTest, BuildSchemaNoHeaderTest) {
   configuration.guess_has_header = false;
   configuration.has_header = false;
 
-  CsvFormatReader csv_reader(storage_.OpenForReading(kLineItemCsvPath), configuration);
+  CsvFormatReader csv_reader(storage_.OpenForReading(kLineItemTblPath), configuration);
   EXPECT_FALSE(csv_reader.HasError());
   const auto& discovered_schema = csv_reader.GetSchema();
   EXPECT_EQ(discovered_schema->size(), 17);

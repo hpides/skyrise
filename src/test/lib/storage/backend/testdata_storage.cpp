@@ -8,7 +8,9 @@
 #include "utils/assert.hpp"
 
 namespace skyrise {
+
 namespace {
+
 bool DirectoryExists(const std::string& path) {
   struct stat info {};
   int stat_result = stat(path.c_str(), &info);
@@ -23,15 +25,17 @@ std::string FindTestdataDirectory() {
   int exe_path_length = readlink("/proc/self/exe", full_path.data(), PATH_MAX);
   Assert(exe_path_length >= 1, "readlink() returned an error.");
 
-  // Look in every parent directory. Given /path/to/executable we will look into /path/to/testdata, /path/testdata and
-  // /testdata.
+  // Look in every parent directory. Given /path/to/executable we will look into /path/to/resources, /path/resources and
+  // /resources.
   std::string full_path_string(full_path.data());
   size_t offset = full_path_string.find_last_of('/');
   while (offset != std::string::npos) {
     full_path_string = full_path_string.substr(0, offset + 1);  // Keep trailing '/'.
-    full_path_string.append("testdata");
+    full_path_string.append("resources");
 
     if (DirectoryExists(full_path_string)) {
+      full_path_string.append("/test_data");
+      Assert(DirectoryExists(full_path_string), "Directory resources/test_data is missing.");
       return full_path_string;
     }
 
@@ -39,8 +43,9 @@ std::string FindTestdataDirectory() {
     offset = full_path_string.find_last_of('/');
   }
 
-  Fail("Testdata could not be found.");
+  Fail("Did not find resources directory.");
 }
+
 }  // namespace
 
 TestdataStorage::TestdataStorage() : FilesystemStorage(FindTestdataDirectory()) {}
