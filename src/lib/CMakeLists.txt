@@ -86,6 +86,8 @@ set(
     expression/is_null_expression.hpp
     expression/list_expression.cpp
     expression/list_expression.hpp
+    expression/logical_expression.cpp
+    expression/logical_expression.hpp
     expression/unary_minus_expression.cpp
     expression/unary_minus_expression.hpp
     expression/value_expression.cpp
