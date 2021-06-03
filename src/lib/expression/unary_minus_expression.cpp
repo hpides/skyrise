@@ -16,6 +16,10 @@ UnaryMinusExpression::UnaryMinusExpression(const std::shared_ptr<AbstractExpress
 
 std::shared_ptr<AbstractExpression> UnaryMinusExpression::Argument() const { return arguments_[0]; }
 
+std::shared_ptr<AbstractExpression> UnaryMinusExpression::DeepCopy() const {
+  return std::make_shared<UnaryMinusExpression>(Argument()->DeepCopy());
+}
+
 std::string UnaryMinusExpression::Description(const DescriptionMode mode) const {
   std::stringstream stream;
   stream << "-" << EncloseArgument(*Argument(), mode);
@@ -30,8 +34,9 @@ bool UnaryMinusExpression::ShallowEquals([[maybe_unused]] const AbstractExpressi
   return true;
 }
 
-std::shared_ptr<AbstractExpression> UnaryMinusExpression::OnDeepCopy() const {
-  return std::make_shared<UnaryMinusExpression>(Argument()->DeepCopy());
+size_t UnaryMinusExpression::ShallowHash() const {
+  // UnaryMinusExpression introduces no additional data fields. Therefore, we return a constant hash value.
+  return 0;
 }
 
 }  // namespace skyrise

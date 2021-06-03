@@ -15,6 +15,7 @@ class ValueExpression : public AbstractExpression {
  public:
   explicit ValueExpression(const AllTypeVariant& init_value);
 
+  std::shared_ptr<AbstractExpression> DeepCopy() const override;
   bool RequiresComputation() const override;
   std::string Description(const DescriptionMode mode) const override;
   DataType GetDataType() const override;
@@ -23,8 +24,7 @@ class ValueExpression : public AbstractExpression {
 
  protected:
   bool ShallowEquals(const AbstractExpression& expression) const override;
-  size_t OnShallowHash() const override;
-  std::shared_ptr<AbstractExpression> OnDeepCopy() const override;
+  size_t ShallowHash() const override;
 };
 
 }  // namespace skyrise

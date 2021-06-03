@@ -27,8 +27,7 @@ class InExpression : public AbstractPredicateExpression {
   const std::shared_ptr<AbstractExpression>& Value() const;
   const std::shared_ptr<AbstractExpression>& Set() const;
 
- protected:
-  std::shared_ptr<AbstractExpression> OnDeepCopy() const override;
+  std::shared_ptr<AbstractExpression> DeepCopy() const override;
 };
 
 }  // namespace skyrise

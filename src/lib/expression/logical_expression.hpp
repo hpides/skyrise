@@ -21,7 +21,7 @@ class LogicalExpression : public AbstractExpression {
   const std::shared_ptr<AbstractExpression>& LeftOperand() const;
   const std::shared_ptr<AbstractExpression>& RightOperand() const;
 
-  std::shared_ptr<AbstractExpression> OnDeepCopy() const override;
+  std::shared_ptr<AbstractExpression> DeepCopy() const override;
   std::string Description(const DescriptionMode mode) const override;
   DataType GetDataType() const override;
 
@@ -29,7 +29,7 @@ class LogicalExpression : public AbstractExpression {
 
  protected:
   bool ShallowEquals(const AbstractExpression& expression) const override;
-  size_t OnShallowHash() const override;
+  size_t ShallowHash() const override;
   ExpressionPrecedence Precedence() const override;
 };
 

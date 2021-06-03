@@ -16,7 +16,17 @@ namespace skyrise {
 
 class AbstractLqpNode;
 
-enum class ExpressionType { kAggregate, kArithmetic, kList, kLogical, kLqpColumn, kPredicate, kUnaryMinus, kValue };
+enum class ExpressionType {
+  kAggregate,
+  kArithmetic,
+  kExtract,
+  kList,
+  kLogical,
+  kLqpColumn,
+  kPredicate,
+  kUnaryMinus,
+  kValue
+};
 
 /**
  * AbstractExpression is a self-contained data structure describing Expressions.
@@ -39,7 +49,10 @@ class AbstractExpression : public std::enable_shared_from_this<AbstractExpressio
   bool operator==(const AbstractExpression& other) const;
   bool operator!=(const AbstractExpression& other) const;
 
-  std::shared_ptr<AbstractExpression> DeepCopy() const;
+  /**
+   * @returns A deep copy of the expression.
+   */
+  virtual std::shared_ptr<AbstractExpression> DeepCopy() const = 0;
 
   /**
    * Certain expression types (Parameters, Literals, and Columns) do not require computation and therefore do not
@@ -74,18 +87,14 @@ class AbstractExpression : public std::enable_shared_from_this<AbstractExpressio
 
  protected:
   /**
-   * Override to check for equality without checking the arguments. No override needed if derived expression has no
-   * data members.
+   * Override to check data fields for equality in derived types.
    */
   virtual bool ShallowEquals(const AbstractExpression& expression) const = 0;
 
   /**
-   * Override to hash data fields in derived types. No override needed if derived expression has no
-   * data members.
+   * Override to hash data fields in derived types.
    */
-  virtual size_t OnShallowHash() const;
-
-  virtual std::shared_ptr<AbstractExpression> OnDeepCopy() const = 0;
+  virtual size_t ShallowHash() const = 0;
 
   /**
    * Used internally in EncloseArgument() to put parentheses around expression arguments if they have a lower

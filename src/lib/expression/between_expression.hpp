@@ -19,11 +19,11 @@ class BetweenExpression : public AbstractPredicateExpression {
   const std::shared_ptr<AbstractExpression>& LowerBound() const;
   const std::shared_ptr<AbstractExpression>& UpperBound() const;
 
+  std::shared_ptr<AbstractExpression> DeepCopy() const override;
   std::string Description(const DescriptionMode mode) const override;
 
  protected:
   ExpressionPrecedence Precedence() const override;
-  std::shared_ptr<AbstractExpression> OnDeepCopy() const override;
 };
 
 }  // namespace skyrise

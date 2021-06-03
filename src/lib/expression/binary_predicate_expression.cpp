@@ -31,6 +31,11 @@ const std::shared_ptr<AbstractExpression>& BinaryPredicateExpression::LeftOperan
 
 const std::shared_ptr<AbstractExpression>& BinaryPredicateExpression::RightOperand() const { return arguments_[1]; }
 
+std::shared_ptr<AbstractExpression> BinaryPredicateExpression::DeepCopy() const {
+  return std::make_shared<BinaryPredicateExpression>(predicate_condition_, LeftOperand()->DeepCopy(),
+                                                     RightOperand()->DeepCopy());
+}
+
 std::string BinaryPredicateExpression::Description(const DescriptionMode mode) const {
   std::stringstream stream;
 
@@ -43,11 +48,6 @@ std::string BinaryPredicateExpression::Description(const DescriptionMode mode) c
 
 ExpressionPrecedence BinaryPredicateExpression::Precedence() const {
   return ExpressionPrecedence::kBinaryTernaryPredicate;
-}
-
-std::shared_ptr<AbstractExpression> BinaryPredicateExpression::OnDeepCopy() const {
-  return std::make_shared<BinaryPredicateExpression>(predicate_condition_, LeftOperand()->DeepCopy(),
-                                                     RightOperand()->DeepCopy());
 }
 
 }  // namespace skyrise

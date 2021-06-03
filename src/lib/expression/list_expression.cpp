@@ -15,6 +15,10 @@ ListExpression::ListExpression(const std::vector<std::shared_ptr<AbstractExpress
 
 const std::vector<std::shared_ptr<AbstractExpression>>& ListExpression::Elements() const { return arguments_; }
 
+std::shared_ptr<AbstractExpression> ListExpression::DeepCopy() const {
+  return std::make_shared<ListExpression>(ExpressionsDeepCopy(arguments_));
+}
+
 std::string ListExpression::Description(const DescriptionMode mode) const {
   std::stringstream stream;
   stream << "(";
@@ -33,8 +37,9 @@ bool ListExpression::ShallowEquals([[maybe_unused]] const AbstractExpression& ex
   return true;
 }
 
-std::shared_ptr<AbstractExpression> ListExpression::OnDeepCopy() const {
-  return std::make_shared<ListExpression>(ExpressionsDeepCopy(arguments_));
+size_t ListExpression::ShallowHash() const {
+  // ListExpression introduces no additional data fields. Therefore, we return a constant hash value.
+  return 0;
 }
 
 }  // namespace skyrise

@@ -43,6 +43,11 @@ const std::shared_ptr<AbstractExpression>& ArithmeticExpression::LeftOperand() c
 
 const std::shared_ptr<AbstractExpression>& ArithmeticExpression::RightOperand() const { return arguments_[1]; }
 
+std::shared_ptr<AbstractExpression> ArithmeticExpression::DeepCopy() const {
+  return std::make_shared<ArithmeticExpression>(arithmetic_operator_, LeftOperand()->DeepCopy(),
+                                                RightOperand()->DeepCopy());
+}
+
 std::string ArithmeticExpression::Description(const DescriptionMode mode) const {
   std::stringstream stream;
 
@@ -63,13 +68,8 @@ bool ArithmeticExpression::ShallowEquals(const AbstractExpression& expression) c
   return arithmetic_operator_ == static_cast<const ArithmeticExpression&>(expression).arithmetic_operator_;
 }
 
-size_t ArithmeticExpression::OnShallowHash() const {
+size_t ArithmeticExpression::ShallowHash() const {
   return boost::hash_value(static_cast<size_t>(arithmetic_operator_));
-}
-
-std::shared_ptr<AbstractExpression> ArithmeticExpression::OnDeepCopy() const {
-  return std::make_shared<ArithmeticExpression>(arithmetic_operator_, LeftOperand()->DeepCopy(),
-                                                RightOperand()->DeepCopy());
 }
 
 ExpressionPrecedence ArithmeticExpression::Precedence() const {

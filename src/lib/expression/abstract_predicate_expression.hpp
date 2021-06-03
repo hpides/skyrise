@@ -22,7 +22,7 @@ class AbstractPredicateExpression : public AbstractExpression {
 
  protected:
   bool ShallowEquals(const AbstractExpression& expression) const override;
-  size_t OnShallowHash() const override;
+  size_t ShallowHash() const override;
 };
 
 }  // namespace skyrise

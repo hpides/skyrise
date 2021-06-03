@@ -18,6 +18,10 @@ IsNullExpression::IsNullExpression(const PredicateCondition init_predicate_condi
 
 const std::shared_ptr<AbstractExpression>& IsNullExpression::Operand() const { return arguments_[0]; }
 
+std::shared_ptr<AbstractExpression> IsNullExpression::DeepCopy() const {
+  return std::make_shared<IsNullExpression>(predicate_condition_, Operand()->DeepCopy());
+}
+
 std::string IsNullExpression::Description(const DescriptionMode mode) const {
   std::stringstream stream;
 
@@ -31,9 +35,5 @@ std::string IsNullExpression::Description(const DescriptionMode mode) const {
 }
 
 ExpressionPrecedence IsNullExpression::Precedence() const { return ExpressionPrecedence::kUnaryPredicate; }
-
-std::shared_ptr<AbstractExpression> IsNullExpression::OnDeepCopy() const {
-  return std::make_shared<IsNullExpression>(predicate_condition_, Operand()->DeepCopy());
-}
 
 }  // namespace skyrise

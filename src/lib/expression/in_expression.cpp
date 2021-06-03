@@ -17,22 +17,22 @@ InExpression::InExpression(const PredicateCondition init_predicate_condition,
               "Expected either IN or NOT IN as PredicateCondition");
 }
 
-std::string InExpression::Description(const DescriptionMode mode) const {
-  std::stringstream stream;
-  stream << EncloseArgument(*Value(), mode) << " ";
-  stream << predicate_condition_ << " ";
-  stream << Set()->Description(mode);
-  return stream.str();
-}
-
 bool InExpression::IsNegated() const { return predicate_condition_ == PredicateCondition::kNotIn; }
 
 const std::shared_ptr<AbstractExpression>& InExpression::Value() const { return arguments_[0]; }
 
 const std::shared_ptr<AbstractExpression>& InExpression::Set() const { return arguments_[1]; }
 
-std::shared_ptr<AbstractExpression> InExpression::OnDeepCopy() const {
+std::shared_ptr<AbstractExpression> InExpression::DeepCopy() const {
   return std::make_shared<InExpression>(predicate_condition_, Value()->DeepCopy(), Set()->DeepCopy());
+}
+
+std::string InExpression::Description(const DescriptionMode mode) const {
+  std::stringstream stream;
+  stream << EncloseArgument(*Value(), mode) << " ";
+  stream << predicate_condition_ << " ";
+  stream << Set()->Description(mode);
+  return stream.str();
 }
 
 }  // namespace skyrise

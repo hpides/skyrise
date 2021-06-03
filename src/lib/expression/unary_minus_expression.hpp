@@ -16,12 +16,13 @@ class UnaryMinusExpression : public AbstractExpression {
 
   std::shared_ptr<AbstractExpression> Argument() const;
 
+  std::shared_ptr<AbstractExpression> DeepCopy() const override;
   std::string Description(const DescriptionMode mode) const override;
   DataType GetDataType() const override;
 
  protected:
   bool ShallowEquals(const AbstractExpression& expression) const override;
-  std::shared_ptr<AbstractExpression> OnDeepCopy() const override;
+  size_t ShallowHash() const override;
 };
 
 }  // namespace skyrise

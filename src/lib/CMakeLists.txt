@@ -84,6 +84,8 @@ set(
     expression/expression_precedence.hpp
     expression/expression_utils.cpp
     expression/expression_utils.hpp
+    expression/extract_expression.cpp
+    expression/extract_expression.hpp
     expression/in_expression.cpp
     expression/in_expression.hpp
     expression/is_null_expression.cpp

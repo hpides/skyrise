@@ -17,8 +17,6 @@ AbstractExpression::AbstractExpression(const ExpressionType init_type,
                                        const std::vector<std::shared_ptr<AbstractExpression>>& init_arguments)
     : type_(init_type), arguments_(init_arguments) {}
 
-std::shared_ptr<AbstractExpression> AbstractExpression::DeepCopy() const { return OnDeepCopy(); }
-
 bool AbstractExpression::RequiresComputation() const { return true; }
 
 bool AbstractExpression::operator==(const AbstractExpression& other) const {
@@ -47,17 +45,15 @@ size_t AbstractExpression::Hash() const {
   for (const auto& argument : arguments_) {
     // Include the hash value of the inputs but do not recurse any deeper. A deep comparison is necessary anyway.
     boost::hash_combine(hash, argument->type_);
-    boost::hash_combine(hash, argument->OnShallowHash());
+    boost::hash_combine(hash, argument->ShallowHash());
   }
 
-  boost::hash_combine(hash, OnShallowHash());
+  boost::hash_combine(hash, ShallowHash());
 
   return hash;
 }
 
 std::string AbstractExpression::AsColumnName() const { return Description(DescriptionMode::kColumnName); }
-
-size_t AbstractExpression::OnShallowHash() const { return 0; }
 
 ExpressionPrecedence AbstractExpression::Precedence() const { return ExpressionPrecedence::kHighest; }
 

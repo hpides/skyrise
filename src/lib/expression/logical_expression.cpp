@@ -33,7 +33,7 @@ const std::shared_ptr<AbstractExpression>& LogicalExpression::LeftOperand() cons
 
 const std::shared_ptr<AbstractExpression>& LogicalExpression::RightOperand() const { return arguments_[1]; }
 
-std::shared_ptr<AbstractExpression> LogicalExpression::OnDeepCopy() const {
+std::shared_ptr<AbstractExpression> LogicalExpression::DeepCopy() const {
   return std::make_shared<LogicalExpression>(logical_operator_, LeftOperand()->DeepCopy(), RightOperand()->DeepCopy());
 }
 
@@ -56,7 +56,7 @@ bool LogicalExpression::ShallowEquals(const AbstractExpression& expression) cons
   return logical_operator_ == static_cast<const LogicalExpression&>(expression).logical_operator_;
 }
 
-size_t LogicalExpression::OnShallowHash() const { return boost::hash_value(static_cast<size_t>(logical_operator_)); }
+size_t LogicalExpression::ShallowHash() const { return boost::hash_value(static_cast<size_t>(logical_operator_)); }
 
 ExpressionPrecedence LogicalExpression::Precedence() const { return ExpressionPrecedence::kLogical; }
 

@@ -14,6 +14,10 @@ namespace skyrise {
 ValueExpression::ValueExpression(const AllTypeVariant& init_value)
     : AbstractExpression(ExpressionType::kValue, {}), value_(init_value) {}
 
+std::shared_ptr<AbstractExpression> ValueExpression::DeepCopy() const {
+  return std::make_shared<ValueExpression>(value_);
+}
+
 bool ValueExpression::RequiresComputation() const { return false; }
 
 std::string ValueExpression::Description(const DescriptionMode /* mode */) const {
@@ -38,10 +42,6 @@ bool ValueExpression::ShallowEquals(const AbstractExpression& expression) const 
   return value_ == value_expression.value_;
 }
 
-size_t ValueExpression::OnShallowHash() const { return boost::hash_value(value_); }
-
-std::shared_ptr<AbstractExpression> ValueExpression::OnDeepCopy() const {
-  return std::make_shared<ValueExpression>(value_);
-}
+size_t ValueExpression::ShallowHash() const { return boost::hash_value(value_); }
 
 }  // namespace skyrise

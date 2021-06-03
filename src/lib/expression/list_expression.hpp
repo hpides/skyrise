@@ -16,12 +16,13 @@ class ListExpression : public AbstractExpression {
 
   const std::vector<std::shared_ptr<AbstractExpression>>& Elements() const;
 
+  std::shared_ptr<AbstractExpression> DeepCopy() const override;
   std::string Description(const DescriptionMode mode) const override;
   DataType GetDataType() const override;
 
  protected:
   bool ShallowEquals(const AbstractExpression& expression) const override;
-  std::shared_ptr<AbstractExpression> OnDeepCopy() const override;
+  size_t ShallowHash() const override;
 };
 
 }  // namespace skyrise

@@ -23,6 +23,11 @@ const std::shared_ptr<AbstractExpression>& BetweenExpression::LowerBound() const
 
 const std::shared_ptr<AbstractExpression>& BetweenExpression::UpperBound() const { return arguments_[2]; }
 
+std::shared_ptr<AbstractExpression> BetweenExpression::DeepCopy() const {
+  return std::make_shared<BetweenExpression>(predicate_condition_, Value()->DeepCopy(), LowerBound()->DeepCopy(),
+                                             UpperBound()->DeepCopy());
+}
+
 std::string BetweenExpression::Description(const DescriptionMode mode) const {
   std::stringstream stream;
   stream << EncloseArgument(*Value(), mode) << " " << predicate_condition_ << " "
@@ -31,10 +36,5 @@ std::string BetweenExpression::Description(const DescriptionMode mode) const {
 }
 
 ExpressionPrecedence BetweenExpression::Precedence() const { return ExpressionPrecedence::kBinaryTernaryPredicate; }
-
-std::shared_ptr<AbstractExpression> BetweenExpression::OnDeepCopy() const {
-  return std::make_shared<BetweenExpression>(predicate_condition_, Value()->DeepCopy(), LowerBound()->DeepCopy(),
-                                             UpperBound()->DeepCopy());
-}
 
 }  // namespace skyrise

@@ -28,7 +28,7 @@ bool AbstractPredicateExpression::ShallowEquals(const AbstractExpression& expres
   return predicate_condition_ == static_cast<const AbstractPredicateExpression&>(expression).predicate_condition_;
 }
 
-size_t AbstractPredicateExpression::OnShallowHash() const {
+size_t AbstractPredicateExpression::ShallowHash() const {
   return boost::hash_value(static_cast<size_t>(predicate_condition_));
 }
 
