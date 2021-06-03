@@ -1,0 +1,405 @@
+#include "csv_reader.hpp"
+
+#include <cctype>
+#include <cerrno>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
+#include <sstream>
+#include <stdexcept>
+#include <vector>
+
+#include "storage/table/value_segment.hpp"
+
+namespace skyrise {
+
+namespace {
+
+const std::array<char, 5> kPossibleDelimiters{'|', ';', ',', '\t', ' '};
+
+/**
+ * Split tokenizes an input given a particular delimiter. It follows a zero-copy policy by using std::string_view.
+ **/
+void Split(std::string_view data, char delimiter,
+           const std::function<void(std::string_view split_element, size_t counter)>& callback,
+           size_t max_split_elements = 0) {
+  size_t current_offset = 0;
+  // Number of current split elements
+  size_t split_element_counter = 0;
+  do {
+    const size_t next_newline = data.find(delimiter, current_offset);
+    std::string_view line = data.substr(current_offset, next_newline - current_offset);
+
+    callback(line, split_element_counter);
+
+    current_offset = next_newline;
+    ++split_element_counter;
+
+    // Continues if the current offset is not out of bounds and the current number of splits is smaller than the maximal
+    // number of split elements (if applicable).
+  } while (current_offset++ != std::string_view::npos &&
+           (max_split_elements == 0 || split_element_counter < max_split_elements));
+}
+
+// Since we do not have std::from_chars yet, we need to implement zero-copy conversions ourself.
+float ToFloat(std::string_view data) {
+  auto* end_check = static_cast<char*>(nullptr);
+  float result = std::strtof(data.begin(), &end_check);
+
+  if (result == HUGE_VAL || result == HUGE_VALF || result == HUGE_VALL) {
+    throw std::out_of_range("ToFloat failed.");
+  }
+
+  if (end_check != data.end()) {
+    throw std::invalid_argument("ToFloat failed.");
+  }
+
+  return result;
+}
+
+double ToDouble(std::string_view data) {
+  auto* end_check = static_cast<char*>(nullptr);
+  double result = std::strtod(data.begin(), &end_check);
+
+  if (result == HUGE_VAL || result == HUGE_VALF || result == HUGE_VALL) {
+    throw std::out_of_range("ToDouble failed.");
+  }
+
+  if (end_check != data.end()) {
+    throw std::invalid_argument("ToDouble failed.");
+  }
+
+  return result;
+}
+
+template <typename IntType>
+IntType ToInt(std::string_view data) {
+  auto* end_check = static_cast<char*>(nullptr);
+  long result = std::strtol(data.begin(), &end_check, 10);
+
+  if (errno == ERANGE) {
+    throw std::out_of_range("ToInt failed.");
+  }
+
+  if (end_check != data.end()) {
+    throw std::invalid_argument("ToInt failed.");
+  }
+
+  static_assert(sizeof(IntType) <= sizeof(long));
+  if constexpr (sizeof(IntType) < sizeof(long)) {
+    if (result > std::numeric_limits<IntType>::max() || result < std::numeric_limits<IntType>::min()) {
+      throw std::out_of_range("ToInt failed.");
+    }
+  }
+
+  return result;
+}
+
+}  // namespace
+
+bool CsvFormatReader::GuessHasTypeInformation(const Columns& columns) {
+  if (columns.size() < 2) {
+    return false;
+  }
+
+  return std::all_of(columns.cbegin(), columns.cend(), [](const Lines& lines) {
+    if (lines.size() < 2) {
+      return false;
+    }
+    if (!(lines[1] == "int" || lines[1] == "long" || lines[1] == "float" || lines[1] == "double" ||
+          lines[1] == "string")) {
+      return false;
+    }
+    return true;
+  });
+}
+
+bool CsvFormatReader::GuessHasHeader(const Columns& columns) {
+  // The idea behind this function is that if there is a header, the values will behave like identifier and will start
+  // with [a-z].
+  if (columns.empty() || columns[0].empty()) {
+    return false;
+  }
+
+  for (const auto& column : columns) {
+    if (column.empty() || column[0].empty() || !std::isalpha(column[0][0])) {
+      return false;
+    }
+  }
+
+  // If we see that the values in any other line do not look like an identifier, we see that the first line is
+  // special and is most likely a header.
+  const size_t num_lines_look_ahead = 5;
+  for (const auto& column : columns) {
+    for (size_t i = 1; i < std::min(column.size(), num_lines_look_ahead); i++) {
+      if (column[i].empty() || !std::isalpha(column[i][0])) {
+        return true;
+      }
+    }
+  }
+
+  // If we are not sure, we will return false.
+  return false;
+}
+
+char CsvFormatReader::GuessDelimiter(const Lines& lines) {
+  std::array<int, kPossibleDelimiters.size()> delimiter_probability{};
+  delimiter_probability.fill(2);
+
+  if (lines.empty()) {
+    return kPossibleDelimiters[0];
+  }
+
+  for (size_t i = 0; i < kPossibleDelimiters.size(); i++) {
+    const size_t num_occurences_in_first_line = std::count(lines[0].cbegin(), lines[0].cend(), kPossibleDelimiters[i]);
+
+    if (num_occurences_in_first_line == 0) {
+      delimiter_probability[i] = 1;
+    }
+
+    for (size_t j = 1; j < lines.size(); j++) {
+      const size_t occurence_in_other_lines = std::count(lines[j].cbegin(), lines[j].cend(), kPossibleDelimiters[i]);
+      if (num_occurences_in_first_line != occurence_in_other_lines) {
+        delimiter_probability[i] = 0;
+        break;
+      }
+    }
+  }
+
+  size_t maximum_index = std::distance(delimiter_probability.cbegin(),
+                                       std::max_element(delimiter_probability.cbegin(), delimiter_probability.cend()));
+  return kPossibleDelimiters[maximum_index];
+}
+
+CsvFormatReader::CsvFormatReader(std::unique_ptr<ObjectReader> source, Configuration configuration)
+    : configuration_(std::move(configuration)), source_(std::move(source)) {
+  schema_ = configuration_.schema;
+  buffer_.reserve(configuration_.read_buffer_size);
+  StorageError maybe_error = FillBuffer();
+
+  if (maybe_error.IsError()) {
+    SetError(maybe_error);
+    return;
+  }
+
+  InitialSetup();
+}
+
+static DataType IdentifierToType(std::string_view identifier) {
+  if (identifier == "int") {
+    return DataType::kInt;
+  }
+  if (identifier == "long") {
+    return DataType::kLong;
+  }
+  if (identifier == "float") {
+    return DataType::kFloat;
+  }
+  if (identifier == "double") {
+    return DataType::kDouble;
+  }
+  if (identifier == "string") {
+    return DataType::kString;
+  }
+
+  Fail("Invalid type found in type definition.");
+}
+
+void CsvFormatReader::BuildColumnTypes(TableColumnDefinitions* schema) {
+  if (configuration_.has_types) {
+    for (size_t i = 0; i < schema->size(); i++) {
+      (*schema)[i].data_type = IdentifierToType(columns_[i][1]);
+    }
+  } else {
+    // If we do not have more information, eveything is a string.
+    for (auto& column_definition : *schema) {
+      column_definition.data_type = DataType::kString;
+    }
+  }
+}
+
+void CsvFormatReader::BuildColumnNames(TableColumnDefinitions* schema) {
+  if (configuration_.has_header) {
+    for (const auto& headline : columns_) {
+      if (headline.empty()) {
+        break;
+      }
+      schema->emplace_back();
+      schema->back().name = headline.front();
+    }
+  } else {
+    std::stringstream headline;
+    for (size_t i = 0; i < columns_.size(); i++) {
+      headline.clear();
+      headline << "Column" << (i + 1);
+      schema->emplace_back();
+      schema->back().name = headline.str();
+    }
+  }
+}
+
+void CsvFormatReader::BuildSchema() {
+  auto schema = std::make_shared<TableColumnDefinitions>();
+  BuildColumnNames(schema.get());
+  BuildColumnTypes(schema.get());
+  schema_ = std::move(schema);
+}
+
+void CsvFormatReader::InitialSetup() {
+  Lines lines;
+  std::string_view buffer_content(buffer_.data(), buffer_.size());
+  const size_t num_lines_look_ahead = 5;
+  const auto line_handler = [&lines](std::string_view data, size_t /*counter*/) { lines.emplace_back(data); };
+  Split(buffer_content, '\n', line_handler, num_lines_look_ahead);
+
+  if (configuration_.guess_delimiter) {
+    configuration_.delimiter = GuessDelimiter(lines);
+    configuration_.guess_delimiter = false;
+  }
+
+  ExtractColumns();
+
+  if (configuration_.guess_has_header) {
+    configuration_.has_header = GuessHasHeader(columns_);
+    configuration_.guess_has_header = false;
+  }
+
+  if (configuration_.has_header) {
+    num_ignore_lines_in_next_chunk_ = 1;
+  }
+
+  if (configuration_.has_header && configuration_.guess_has_types) {
+    configuration_.has_types = GuessHasTypeInformation(columns_);
+  }
+
+  configuration_.guess_has_types = false;
+
+  if (configuration_.has_types) {
+    num_ignore_lines_in_next_chunk_++;
+  }
+
+  if (configuration_.schema == nullptr) {
+    BuildSchema();
+  }
+}
+
+StorageError CsvFormatReader::FillBuffer() {
+  buffer_.clear();
+  if (read_full_file_) {
+    return StorageError::Success();
+  }
+
+  StorageError error =
+      source_->Read(chunk_offset_, chunk_offset_ + configuration_.read_buffer_size - 1,
+                    [this](const char* data, size_t length) { buffer_.insert(buffer_.end(), data, data + length); });
+
+  if (error) {
+    buffer_.clear();
+    return error;
+  }
+
+  // If we did not reach the end of the file, we have to back up to avoid having unfinished lines in the buffer.
+  if (buffer_.size() == configuration_.read_buffer_size) {
+    auto newline_offset = std::find(buffer_.rbegin(), buffer_.rend(), '\n');
+    if (newline_offset != buffer_.rend()) {
+      buffer_.resize(buffer_.size() - std::distance(buffer_.rbegin(), newline_offset));
+    }
+  } else {
+    read_full_file_ = true;
+  }
+
+  // We do not want our buffer to end with a newline.
+  size_t num_truncate_lines = 0;
+  while (buffer_.size() > num_truncate_lines && buffer_[buffer_.size() - num_truncate_lines - 1] == '\n') {
+    ++num_truncate_lines;
+  }
+
+  buffer_.resize(buffer_.size() - num_truncate_lines);
+
+  chunk_offset_ += buffer_.size();
+  return error;
+}
+
+void CsvFormatReader::ExtractColumns() {
+  columns_.clear();
+  std::string_view buffer_content(buffer_.data(), buffer_.size());
+
+  Split(buffer_content, '\n', [this](std::string_view line, size_t /*line_num*/) {
+    if (!line.empty()) {
+      Split(line, configuration_.delimiter, [this](std::string_view column, size_t column_counter) {
+        if (columns_.size() == column_counter) {
+          columns_.emplace_back();
+        }
+
+        columns_[column_counter].emplace_back(column);
+      });
+    }
+  });
+}
+
+bool CsvFormatReader::HasNext() {
+  return !HasError() && !buffer_.empty() && !columns_.empty() && num_ignore_lines_in_next_chunk_ < columns_[0].size();
+}
+
+template <typename TargetSegmentType>
+static std::shared_ptr<AbstractSegment> CreateSegment(
+    std::vector<std::string_view>* column_values, size_t num_skip_lines,
+    const std::function<TargetSegmentType(std::string_view data)>& callback) {
+  auto result = std::make_shared<ValueSegment<TargetSegmentType>>(false, column_values->size());
+  auto& destination = result->Values();
+  for (size_t i = num_skip_lines; i < column_values->size(); i++) {
+    destination.emplace_back(callback(column_values->at(i)));
+  }
+  return result;
+}
+
+static std::shared_ptr<AbstractSegment> ParseSegmentForDataType(DataType type, std::vector<std::string_view>* column,
+                                                                size_t skip_lines = 0) {
+  switch (type) {
+    case DataType::kString:
+      return CreateSegment<std::string>(column, skip_lines, [](std::string_view value) { return std::string(value); });
+    case DataType::kLong:
+      return CreateSegment<int64_t>(column, skip_lines, [](std::string_view value) { return ToInt<int64_t>(value); });
+    case DataType::kInt:
+      return CreateSegment<int32_t>(column, skip_lines, [](std::string_view value) { return ToInt<int32_t>(value); });
+    case DataType::kFloat:
+      return CreateSegment<float>(column, skip_lines, [](std::string_view value) { return ToFloat(value); });
+    case DataType::kDouble:
+      return CreateSegment<double>(column, skip_lines, [](std::string_view value) { return ToDouble(value); });
+    default:
+      Fail("Encountered invalid type");
+  }
+}
+
+std::unique_ptr<Chunk> CsvFormatReader::Next() {
+  Segments segments;
+  bool has_error = false;
+  try {
+    for (size_t i = 0; i < schema_->size(); i++) {
+      segments.emplace_back(
+          ParseSegmentForDataType(schema_->at(i).data_type, &columns_.at(i), num_ignore_lines_in_next_chunk_));
+    }
+  } catch (const std::out_of_range& /*e*/) {
+    has_error = true;
+  } catch (const std::invalid_argument& /*e*/) {
+    has_error = true;
+  }
+
+  if (has_error) {
+    SetError(StorageError(StorageErrorType::kInvalidArgument,
+                          "Error while converting values in file. Make sure the file does match the schema."));
+    return nullptr;
+  }
+
+  num_ignore_lines_in_next_chunk_ = 0;
+
+  StorageError maybe_error = FillBuffer();
+  if (maybe_error.IsError()) {
+    SetError(maybe_error);
+  }
+
+  ExtractColumns();
+  return std::make_unique<Chunk>(segments);
+}
+
+}  // namespace skyrise

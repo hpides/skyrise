@@ -46,6 +46,7 @@ set(
     lib/storage/backend/testdata_storage.cpp
     lib/storage/backend/testdata_storage.hpp
 
+    lib/storage/formats/csv_reader_test.cpp
     lib/storage/formats/csv_writer_test.cpp
     lib/storage/formats/orc_reader_test.cpp
     lib/storage/formats/orc_writer_test.cpp

@@ -33,6 +33,8 @@ set(
     storage/formats/abstract_format_reader.hpp
     storage/formats/abstract_format_writer.cpp
     storage/formats/abstract_format_writer.hpp
+    storage/formats/csv_reader.cpp
+    storage/formats/csv_reader.hpp
     storage/formats/csv_writer.cpp
     storage/formats/csv_writer.hpp
     storage/formats/orc_reader.cpp
