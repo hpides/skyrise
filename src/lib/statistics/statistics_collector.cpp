@@ -1,100 +1,8 @@
 #include "statistics_collector.hpp"
 
-#include <ctime>
-#include <sstream>
-
 namespace skyrise {
 
-namespace detail {
-
-std::string GetDateFromOrcTimestamp(int32_t days_since_1970) {
-  time_t seconds_since_1970 = static_cast<time_t>(days_since_1970) * (60 * 60 * 24);
-  tm calendar_date{};
-  std::array<char, 11> buffer = {0};  // YYYY-mm-dd + '\0'
-  localtime_r(&seconds_since_1970, &calendar_date);
-  strftime(buffer.data(), 11, "%Y-%m-%d", &calendar_date);
-  return std::string(buffer.data());
-}
-
-DataType ConvertOrcTypeToSkyriseType(orc::TypeKind type) {
-  switch (type) {
-    case orc::FLOAT:
-      return DataType::kFloat;
-
-    case orc::DOUBLE:
-    case orc::DECIMAL:
-      return DataType::kDouble;
-
-    case orc::INT:
-    case orc::BYTE:
-    case orc::BOOLEAN:
-    case orc::SHORT:
-      return DataType::kInt;
-
-    case orc::LONG:
-    case orc::TIMESTAMP:
-      return DataType::kLong;
-
-    case orc::STRING:
-    case orc::CHAR:
-    case orc::VARCHAR:
-    case orc::BINARY:
-    case orc::DATE:
-      return DataType::kString;
-
-    default:
-      std::stringstream fail_message;
-      fail_message << "Encountered unsupported type: " << magic_enum::enum_name(type);
-      Fail(fail_message.str());
-  }
-}
-
-OrcInputStream::OrcInputStream(const std::shared_ptr<Storage>& storage, const std::string& object_identifier) {
-  ObjectStatus status = storage->GetStatus(object_identifier);
-  if (status.GetError()) {
-    error_ = true;
-    throw orc::ParseError("Could not stat file.");
-    return;
-  }
-  InitWithStatus(storage, status);
-}
-
-void OrcInputStream::InitWithStatus(const std::shared_ptr<Storage>& storage, const ObjectStatus& status) {
-  file_size_ = status.GetSize();
-  reader_ = storage->OpenForReading(status.GetIdentifier());
-  object_identifier_ = status.GetIdentifier();
-}
-
-OrcInputStream::OrcInputStream(const std::shared_ptr<Storage>& storage, const ObjectStatus& status) {
-  InitWithStatus(storage, status);
-}
-
-void OrcInputStream::read(void* buffer, uint64_t length, uint64_t offset) {
-  if (error_) {
-    throw orc::ParseError("Could not read from file.");
-  }
-
-  size_t read_so_far = 0;
-  StorageError error = reader_->Read(offset, offset + length - 1, [&](const char* data, size_t length) {
-    memcpy(&static_cast<char*>(buffer)[read_so_far], data, length);
-    read_so_far += length;
-  });
-
-  if (error) {
-    error_ = true;
-    throw orc::ParseError("Could not read from file.");
-  }
-}
-
-}  // namespace detail
-
-void StatisticsCollector::InitReader(const ObjectStatus& object) {
-  auto orc_input = std::make_unique<detail::OrcInputStream>(storage_, object);
-  orc::ReaderOptions options;
-  orc_reader_ = orc::createReader(std::move(orc_input), options);
-}
-
-ObjectStatistics StatisticsCollector::GetAllStatistics() {
+ObjectStatistics StatisticsOrcFormatReader::GetAllStatistics() const {
   size_t num_rows = GetNumColumns();
   std::vector<size_t> null_count;
   std::vector<std::pair<AllTypeVariant, AllTypeVariant>> minmax;
@@ -114,8 +22,8 @@ ObjectStatistics StatisticsCollector::GetAllStatistics() {
                           minmax};
 }
 
-size_t StatisticsCollector::GetNumColumns() {
-  const auto& type = orc_reader_->getType();
+size_t StatisticsOrcFormatReader::GetNumColumns() const {
+  const auto& type = reader_->getType();
   if (type.getKind() == orc::STRUCT) {
     return type.getSubtypeCount();
   } else {
@@ -154,26 +62,27 @@ std::pair<AllTypeVariant, AllTypeVariant> GetMinMaxNumeric(const std::unique_ptr
   return std::make_pair(minimum, maximum);
 }
 
-size_t StatisticsCollector::GetNullCountForColumn(size_t column_index) {
-  const orc::Type* orc_type = orc_reader_->getType().getSubtype(column_index);
-  std::unique_ptr<orc::ColumnStatistics> stats = orc_reader_->getColumnStatistics(orc_type->getColumnId());
+size_t StatisticsOrcFormatReader::GetNullCountForColumn(size_t column_index) const {
+  const orc::Type* orc_type = reader_->getType().getSubtype(column_index);
+  std::unique_ptr<orc::ColumnStatistics> stats = reader_->getColumnStatistics(orc_type->getColumnId());
   return GetNumRows() - stats->getNumberOfValues();
 }
 
-std::pair<AllTypeVariant, AllTypeVariant> ConvertDate(std::pair<AllTypeVariant, AllTypeVariant> minmax) {
+std::pair<AllTypeVariant, AllTypeVariant> StatisticsOrcFormatReader::ConvertDate(
+    std::pair<AllTypeVariant, AllTypeVariant> minmax) {
   if (!std::holds_alternative<NullValue>(minmax.first)) {
-    minmax.first = detail::GetDateFromOrcTimestamp(std::get<int32_t>(minmax.first));
+    minmax.first = OrcTimestampToDateString(std::get<int32_t>(minmax.first));
   }
   if (!std::holds_alternative<NullValue>(minmax.second)) {
-    minmax.second = detail::GetDateFromOrcTimestamp(std::get<int32_t>(minmax.second));
+    minmax.second = OrcTimestampToDateString(std::get<int32_t>(minmax.second));
   }
 
   return minmax;
 }
 
-std::pair<AllTypeVariant, AllTypeVariant> StatisticsCollector::GetMinMaxForColumn(size_t column_index) {
-  const orc::Type* orc_type = orc_reader_->getType().getSubtype(column_index);
-  std::unique_ptr<orc::ColumnStatistics> stats = orc_reader_->getColumnStatistics(orc_type->getColumnId());
+std::pair<AllTypeVariant, AllTypeVariant> StatisticsOrcFormatReader::GetMinMaxForColumn(size_t column_index) const {
+  const orc::Type* orc_type = reader_->getType().getSubtype(column_index);
+  std::unique_ptr<orc::ColumnStatistics> stats = reader_->getColumnStatistics(orc_type->getColumnId());
 
   switch (orc_type->getKind()) {
     case orc::INT:
@@ -211,15 +120,15 @@ std::pair<AllTypeVariant, AllTypeVariant> StatisticsCollector::GetMinMaxForColum
   }
 }
 
-size_t StatisticsCollector::GetNumRows() { return orc_reader_->getNumberOfRows(); }
+size_t StatisticsOrcFormatReader::GetNumRows() const { return reader_->getNumberOfRows(); }
 
-std::shared_ptr<TableColumnDefinitions> StatisticsCollector::GetSchema() {
+std::shared_ptr<TableColumnDefinitions> StatisticsOrcFormatReader::GetSchema() const {
   auto schema = std::make_shared<TableColumnDefinitions>();
 
-  const auto& type = orc_reader_->getType();
+  const auto& type = reader_->getType();
   for (size_t i = 0; i < type.getSubtypeCount(); i++) {
     const orc::Type* orc_type = type.getSubtype(i);
-    DataType skyrise_type = detail::ConvertOrcTypeToSkyriseType(orc_type->getKind());
+    DataType skyrise_type = OrcTypeKindToDataType(orc_type->getKind());
 
     // The current ORC definition has no information about whether or not NULL values are allowed for a column.
     bool nullable = false;

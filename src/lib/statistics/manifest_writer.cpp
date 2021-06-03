@@ -1,13 +1,21 @@
 #include "statistics/manifest_writer.hpp"
 
+#include "serialization/schema_serialization.hpp"
+
 namespace skyrise {
 
 ManifestWriter::ManifestWriter(std::unique_ptr<ObjectWriter> writer)
-    : writer_(std::move(writer)), error_(StorageError::Success()) {}
+    : OrcFormatWriter(OrcFormatWriterOptions()), writer_(std::move(writer)), error_(StorageError::Success()) {
+  SetOutputHandler([this](const char* data, size_t length) {
+    if (!error_) {
+      error_ = this->writer_->Write(data, length);
+    }
+  });
+}
 
 bool ManifestWriter::WritePartition(const ObjectStatistics& statistics) {
   if (!partition_schema_) {
-    partition_schema_ = statistics.schema;
+    SetSchema(statistics.schema);
   } else if (*partition_schema_ != *statistics.schema) {
     return false;
   }
@@ -17,8 +25,20 @@ bool ManifestWriter::WritePartition(const ObjectStatistics& statistics) {
 
 std::string ManifestWriter::GetManifestVersion() { return std::to_string(kManifestVersion); }
 
-void ManifestWriter::SetSchema(std::shared_ptr<TableColumnDefinitions> partition_schema) {
+void ManifestWriter::SetSchema(std::shared_ptr<const TableColumnDefinitions> partition_schema) {
   partition_schema_ = std::move(partition_schema);
+
+  Initialize(GetManifestSchema());
+  InitManifestSegments();
+
+  AddMetadata("columns", std::to_string(partition_schema_->size()));
+  AddMetadata("version", std::to_string(kManifestVersion));
+
+  auto buffer = std::make_shared<std::stringstream>();
+  BinarySerializationStream serializer(buffer);
+  serializer << *partition_schema_;
+  AddMetadata("schema", buffer->str());
+  AddMetadata("prefix", table_prefix_);
 }
 
 void ManifestWriter::SetTablePrefix(std::string table_prefix) { table_prefix_ = std::move(table_prefix); }
@@ -75,44 +95,18 @@ void ManifestWriter::InitManifestSegments() {
   }
 }
 
-void ManifestWriter::AssertOutputStream() {
-  if (formatter_) {
-    return;
-  }
-
-  OrcFormatWriterOptions options;
-  formatter_ = std::make_unique<OrcFormatWriter>(options);
-  formatter_->SetOutputHandler([this](const char* data, size_t length) {
-    if (!error_) {
-      error_ = this->writer_->Write(data, length);
-    }
-  });
-  formatter_->Initialize(GetManifestSchema());
-  formatter_->AddMetadata("columns", std::to_string(partition_schema_->size()));
-  formatter_->AddMetadata("version", std::to_string(kManifestVersion));
-
-  auto buffer = std::make_shared<std::stringstream>();
-  BinarySerializationStream serializer(buffer);
-  serializer << *partition_schema_;
-  formatter_->AddMetadata("schema", buffer->str());
-  formatter_->AddMetadata("prefix", table_prefix_);
-
-  InitManifestSegments();
-}
-
 void ManifestWriter::Flush() {
   Segments segments;
   for (auto& current_segment : current_segments_) {
     segments.emplace_back(std::move(current_segment));
   }
 
-  formatter_->ProcessChunk(Chunk(segments));
+  Chunk chunk(segments);
+  ProcessChunk(chunk);
   InitManifestSegments();
 }
 
 bool ManifestWriter::WritePartitionToStorage(const ObjectStatistics& statistics) {
-  AssertOutputStream();
-
   if (current_segments_[0]->Size() >= kMaxCapacity) {
     Flush();
   }
@@ -133,13 +127,11 @@ bool ManifestWriter::WritePartitionToStorage(const ObjectStatistics& statistics)
 }
 
 bool ManifestWriter::Close() {
-  AssertOutputStream();
   Flush();
-  formatter_->Finalize();
+  Finalize();
   if (error_.IsError()) {
     return error_.IsError();
   }
-
   return !writer_->Close().IsError();
 }
 

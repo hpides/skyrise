@@ -49,7 +49,7 @@ aws::lambda_runtime::invocation_response FunctionStatisticsCollector::OnHandleRe
 
     try {
       // Collect statistics for object.
-      StatisticsCollector collector(source_storage, status);
+      StatisticsOrcFormatReader collector(source_storage, status);
       ObjectStatistics statistics = collector.GetAllStatistics();
       // Write statistics into assigned output manifest object.
       if (!writer.WritePartition(statistics)) {

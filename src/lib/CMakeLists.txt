@@ -53,6 +53,18 @@ set(
 )
 
 set(
+    STATISTICS_SOURCES
+    statistics/manifest_reader.hpp
+    statistics/manifest_reader.cpp
+    statistics/manifest_writer.hpp
+    statistics/manifest_writer.cpp
+    statistics/manifest_merger.hpp
+    statistics/manifest_merger.cpp
+    statistics/statistics_collector.cpp
+    statistics/statistics_collector.hpp
+)
+
+set(
     SHARED_SOURCES
     all_type_variant.hpp
     expression/abstract_expression.cpp

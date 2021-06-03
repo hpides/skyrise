@@ -144,17 +144,12 @@ class StatisticsCollectorTest : public ::testing::Test {
 
     ObjectStatus status = storage_->GetStatus(kTestFile);
     EXPECT_FALSE(status.GetError());
-    collector_ = std::make_shared<StatisticsCollector>(storage_, status);
+    collector_ = std::make_shared<StatisticsOrcFormatReader>(storage_, status);
   };
   std::shared_ptr<MockStorage> storage_;
-  std::shared_ptr<StatisticsCollector> collector_;
+  std::shared_ptr<StatisticsOrcFormatReader> collector_;
   inline static const std::string kTestFile{"files/lineitem.orc"};
 };
-
-TEST_F(StatisticsCollectorTest, OrcDateConversion) {
-  EXPECT_EQ(detail::GetDateFromOrcTimestamp(0), "1970-01-01");
-  EXPECT_EQ(detail::GetDateFromOrcTimestamp(18652), "2021-01-25");
-}
 
 TEST_F(StatisticsCollectorTest, GetNumRowsAndColumns) {
   EXPECT_EQ(collector_->GetNumRows(), 6);
@@ -226,8 +221,8 @@ TEST_F(StatisticsCollectorTest, GetSchema) {
       "returnflag", "linestatus", "shipdate", "commitdate", "receiptdate", "shipinstruct",  "shipmode", "comment"};
   std::vector<DataType> expected_types = {DataType::kLong,   DataType::kLong,   DataType::kLong,   DataType::kLong,
                                           DataType::kDouble, DataType::kDouble, DataType::kDouble, DataType::kDouble,
-                                          DataType::kString, DataType::kString, DataType::kString, DataType::kString,
-                                          DataType::kString, DataType::kString, DataType::kString, DataType::kString};
+                                          DataType::kString, DataType::kString, DataType::kLong,   DataType::kLong,
+                                          DataType::kLong,   DataType::kString, DataType::kString, DataType::kString};
 
   EXPECT_EQ(schema->size(), 16);
   EXPECT_EQ(schema->size(), expected_names.size());
@@ -237,23 +232,6 @@ TEST_F(StatisticsCollectorTest, GetSchema) {
     EXPECT_EQ((*schema)[column_id].name, expected_names[column_id]);
     EXPECT_EQ((*schema)[column_id].data_type, expected_types[column_id]);
   }
-}
-
-TEST_F(StatisticsCollectorTest, TestConvertOrcTypeToSkyriseType) {
-  EXPECT_EQ(detail::ConvertOrcTypeToSkyriseType(orc::FLOAT), DataType::kFloat);
-  EXPECT_EQ(detail::ConvertOrcTypeToSkyriseType(orc::DOUBLE), DataType::kDouble);
-  EXPECT_EQ(detail::ConvertOrcTypeToSkyriseType(orc::DECIMAL), DataType::kDouble);
-  EXPECT_EQ(detail::ConvertOrcTypeToSkyriseType(orc::INT), DataType::kInt);
-  EXPECT_EQ(detail::ConvertOrcTypeToSkyriseType(orc::BYTE), DataType::kInt);
-  EXPECT_EQ(detail::ConvertOrcTypeToSkyriseType(orc::BOOLEAN), DataType::kInt);
-  EXPECT_EQ(detail::ConvertOrcTypeToSkyriseType(orc::SHORT), DataType::kInt);
-  EXPECT_EQ(detail::ConvertOrcTypeToSkyriseType(orc::LONG), DataType::kLong);
-  EXPECT_EQ(detail::ConvertOrcTypeToSkyriseType(orc::TIMESTAMP), DataType::kLong);
-  EXPECT_EQ(detail::ConvertOrcTypeToSkyriseType(orc::STRING), DataType::kString);
-  EXPECT_EQ(detail::ConvertOrcTypeToSkyriseType(orc::CHAR), DataType::kString);
-  EXPECT_EQ(detail::ConvertOrcTypeToSkyriseType(orc::VARCHAR), DataType::kString);
-  EXPECT_EQ(detail::ConvertOrcTypeToSkyriseType(orc::BINARY), DataType::kString);
-  EXPECT_EQ(detail::ConvertOrcTypeToSkyriseType(orc::DATE), DataType::kString);
 }
 
 }  // namespace skyrise

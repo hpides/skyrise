@@ -28,6 +28,13 @@ set(
     lib/statistics/manifest_writer_test.cpp
     lib/statistics/statistics_collector_test.cpp
 
+    lib/statistics/statistics_collector_test.cpp
+    lib/statistics/manifest_shared.cpp
+    lib/statistics/manifest_shared.hpp
+    lib/statistics/manifest_reader_test.cpp
+    lib/statistics/manifest_writer_test.cpp
+    lib/statistics/manifest_merger_test.cpp
+
     lib/storage/backend/abstract_provider.hpp
     lib/storage/backend/filesystem_provider.hpp
     lib/storage/backend/mock_storage.cpp

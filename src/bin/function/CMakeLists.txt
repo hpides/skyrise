@@ -13,3 +13,19 @@ target_link_libraries(
 )
 
 aws_lambda_package_target(skyriseFunctionStatisticsCollector)
+
+add_executable(
+    skyriseFunctionManifestMerger
+
+    function_manifest_merger.cpp
+    function_manifest_merger.hpp
+)
+
+target_link_libraries(
+    skyriseFunctionManifestMerger
+
+    PRIVATE
+    skyriseWorker
+)
+
+aws_lambda_package_target(skyriseFunctionManifestMerger)

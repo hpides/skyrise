@@ -12,10 +12,10 @@ class ManifestReaderTest : public ManifestTest {
     WriteMockPartition(1);
   };
 
-  void WriteMockPartition(size_t number_of_fragments) {
+  void WriteMockPartition(size_t num_fragments) {
     manifest_writer_ = std::make_shared<ManifestWriter>(storage_->OpenForWriting(kMetadataFile));
     manifest_writer_->SetTablePrefix(kTablePrefix);
-    for (size_t i = 0; i < number_of_fragments; i++) {
+    for (size_t i = 0; i < num_fragments; i++) {
       manifest_writer_->WritePartition(statistics_);
     }
     manifest_writer_->Close();
@@ -27,9 +27,9 @@ class ManifestReaderTest : public ManifestTest {
 };
 
 TEST_F(ManifestReaderTest, ReadOriginalSchema) {
-  ManifestReader reader(storage_, kMetadataFile);
+  ManifestReader reader(storage_->OpenForReading(kMetadataFile));
 
-  std::shared_ptr<TableColumnDefinitions> original_schema = reader.GetOriginalSchema();
+  auto original_schema = reader.GetOriginalSchema();
   EXPECT_EQ(original_schema->size(), schema_->size());
 
   EXPECT_EQ(*original_schema, *schema_);
@@ -37,25 +37,25 @@ TEST_F(ManifestReaderTest, ReadOriginalSchema) {
 }
 
 TEST_F(ManifestReaderTest, ReadSchema) {
-  ManifestReader reader(storage_, kMetadataFile);
+  ManifestReader reader(storage_->OpenForReading(kMetadataFile));
 
   EXPECT_EQ(*reader.GetOriginalSchema(), *statistics_.schema);
 }
 
 TEST_F(ManifestReaderTest, ReadTablePrefix) {
-  ManifestReader reader(storage_, kMetadataFile);
+  ManifestReader reader(storage_->OpenForReading(kMetadataFile));
 
   EXPECT_EQ(reader.GetTablePrefix(), kTablePrefix);
 }
 
 TEST_F(ManifestReaderTest, ReadManifestVersion) {
-  ManifestReader reader(storage_, kMetadataFile);
+  ManifestReader reader(storage_->OpenForReading(kMetadataFile));
 
   EXPECT_EQ(reader.GetManifestVersion(), manifest_writer_->GetManifestVersion());
 }
 
 TEST_F(ManifestReaderTest, ReadObjectStatistic) {
-  ManifestReader reader(storage_, kMetadataFile);
+  ManifestReader reader(storage_->OpenForReading(kMetadataFile));
 
   EXPECT_EQ(reader.GetNumberOfPartitions(), 1);
   EXPECT_TRUE(reader.HasNextPartition());
@@ -72,13 +72,13 @@ TEST_F(ManifestReaderTest, ReadObjectStatistic) {
 }
 
 TEST_F(ManifestReaderTest, MultipleReadBatchesRequired) {
-  size_t number_of_fragments = ManifestReader::kMaxiumBatchSize + 10;
-  WriteMockPartition(number_of_fragments);
+  size_t num_partitions = 100000;
+  WriteMockPartition(num_partitions);
 
-  ManifestReader reader(storage_, kMetadataFile);
+  ManifestReader reader(storage_->OpenForReading(kMetadataFile));
 
-  EXPECT_EQ(reader.GetNumberOfPartitions(), number_of_fragments);
-  for (size_t i = 0; i < number_of_fragments; i++) {
+  EXPECT_EQ(reader.GetNumberOfPartitions(), num_partitions);
+  for (size_t i = 0; i < num_partitions; i++) {
     EXPECT_TRUE(reader.HasNextPartition());
     reader.ReadNextPartition();
   }

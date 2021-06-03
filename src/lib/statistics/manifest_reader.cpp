@@ -1,101 +1,102 @@
 #include "manifest_reader.hpp"
 
+#include "serialization/schema_serialization.hpp"
+#include "storage/table/value_segment.hpp"
+#include "utils/assert.hpp"
+
 namespace skyrise {
 
-ManifestReader::ManifestReader(const std::shared_ptr<Storage>& storage, const std::string& object_identifier) {
-  auto input_stream = std::make_unique<detail::OrcInputStream>(storage, object_identifier);
-  orc::ReaderOptions options;
-
-  reader_ = orc::createReader(std::move(input_stream), options);
-
-  schema_ = std::make_shared<TableColumnDefinitions>();
-  auto input_buffer = std::make_shared<std::stringstream>(reader_->getMetadataValue("schema"));
-  BinarySerializationStream deserializer(input_buffer);
-  deserializer >> *schema_;
-
-  number_of_partitions_ = reader_->getNumberOfRows();
-  row_reader_ = reader_->createRowReader(row_reader_options_);
-  reader_batch_ = row_reader_->createRowBatch(std::min(number_of_partitions_, 256LU));
-  current_batch_ = dynamic_cast<orc::StructVectorBatch*>(reader_batch_.get());
-
-  Assert(current_batch_ != nullptr, "Found invalid schema");
+ManifestReader::ManifestReader(std::unique_ptr<ObjectReader> source) : OrcFormatReader(std::move(source)) {
+  current_partition_index_ = 0;
+  ReconstructStatisticsFromChunk(Next());
 }
 
-size_t ManifestReader::GetNumberOfPartitions() const { return number_of_partitions_; }
+size_t ManifestReader::GetNumberOfPartitions() const { return reader_->getNumberOfRows(); }
 
 std::string ManifestReader::GetTablePrefix() { return reader_->getMetadataValue("prefix"); }
 
 std::string ManifestReader::GetManifestVersion() { return reader_->getMetadataValue("version"); }
 
-std::shared_ptr<TableColumnDefinitions> ManifestReader::GetOriginalSchema() { return schema_; }
+std::shared_ptr<const TableColumnDefinitions> ManifestReader::GetOriginalSchema() {
+  if (!partition_schema_) {
+    partition_schema_ = std::make_shared<TableColumnDefinitions>();
+    auto input_buffer = std::make_shared<std::stringstream>(reader_->getMetadataValue("schema"));
+    BinarySerializationStream deserializer(input_buffer);
+    deserializer >> *partition_schema_;
+  }
 
-bool ManifestReader::HasNextPartition() const { return current_partition_index_ < number_of_partitions_; }
+  return partition_schema_;
+}
 
-template <typename BatchType, typename SkyriseType>
-static std::pair<AllTypeVariant, AllTypeVariant> ExtractMinMaxValues(orc::ColumnVectorBatch* min_batch,
-                                                                     orc::ColumnVectorBatch* max_batch,
-                                                                     size_t row_index) {
-  auto* column_min_value = dynamic_cast<BatchType*>(min_batch);
-  auto* column_max_value = dynamic_cast<BatchType*>(max_batch);
-  AllTypeVariant min_value = static_cast<SkyriseType>(column_min_value->data[row_index]);
-  AllTypeVariant max_value = static_cast<SkyriseType>(column_max_value->data[row_index]);
+bool ManifestReader::HasNextPartition() { return current_partition_index_ < parsed_statistics_.size() || HasNext(); }
+
+template <typename SkyriseType>
+static std::pair<SkyriseType, SkyriseType> ExtractMinMaxValues(AbstractSegment* min_batch, AbstractSegment* max_batch,
+                                                               uint32_t row_index) {
+  auto* column_min_value = dynamic_cast<ValueSegment<SkyriseType>*>(min_batch);
+  auto* column_max_value = dynamic_cast<ValueSegment<SkyriseType>*>(max_batch);
+  SkyriseType min_value = column_min_value->get(row_index);
+  SkyriseType max_value = column_max_value->get(row_index);
   return std::make_pair(min_value, max_value);
 }
 
-void ManifestReader::ReconstructStatistics() {
+void ManifestReader::ReconstructStatisticsFromChunk(std::unique_ptr<Chunk> chunk) {
   parsed_statistics_.clear();
 
+  if (chunk == nullptr) {
+    return;
+  }
+
   // First, handle all dynamic casts that do not need to happen for every individual row.
-  auto* identifier_column = dynamic_cast<orc::StringVectorBatch*>(current_batch_->fields[0]);
-  auto* format_column = dynamic_cast<orc::StringVectorBatch*>(current_batch_->fields[1]);
-  auto* etag_column = dynamic_cast<orc::StringVectorBatch*>(current_batch_->fields[2]);
-  auto* timestamp_column = dynamic_cast<orc::LongVectorBatch*>(current_batch_->fields[3]);
-  auto* size_column = dynamic_cast<orc::LongVectorBatch*>(current_batch_->fields[4]);
-  auto* records_column = dynamic_cast<orc::LongVectorBatch*>(current_batch_->fields[5]);
+  auto* identifier_column = dynamic_cast<ValueSegment<std::string>*>(chunk->GetSegment(0).get());
+  auto* format_column = dynamic_cast<ValueSegment<std::string>*>(chunk->GetSegment(1).get());
+  auto* etag_column = dynamic_cast<ValueSegment<std::string>*>(chunk->GetSegment(2).get());
+  auto* timestamp_column = dynamic_cast<ValueSegment<int64_t>*>(chunk->GetSegment(3).get());
+  auto* size_column = dynamic_cast<ValueSegment<int64_t>*>(chunk->GetSegment(4).get());
+  auto* records_column = dynamic_cast<ValueSegment<int64_t>*>(chunk->GetSegment(5).get());
 
   // We can pre-cast the null-count column for every column in the schema since all columns of this kind have the same
   // fixed type (long). This is not possible with MinMax since these statistics depends on the type of column (long,
   // string, ...) they relates to.
-  std::vector<orc::LongVectorBatch*> null_value_counts;
+  std::vector<ValueSegment<int64_t>*> null_value_counts;
   for (size_t i = 0; i < GetOriginalSchema()->size(); i++) {
-    const size_t start_index = 6 + (3 * i);
-    null_value_counts.push_back(dynamic_cast<orc::LongVectorBatch*>(current_batch_->fields[start_index + 2]));
+    // The null value statistic is the third one (index 2) for each column of the original schema after min and max.
+    const size_t null_value_index = 6 + (3 * i) + 2;
+    null_value_counts.push_back(dynamic_cast<ValueSegment<int64_t>*>(chunk->GetSegment(null_value_index).get()));
   }
 
   // Create new object statistics and fill with non-dynamic statistics.
-  for (size_t row_index = 0; row_index < current_batch_->numElements; row_index++) {
+  for (size_t row_index = 0; row_index < chunk->Size(); row_index++) {
     ObjectStatistics statistics;
-    statistics.object_identifier =
-        std::string(identifier_column->data[row_index], identifier_column->length[row_index]);
-    statistics.format = std::string(format_column->data[row_index], format_column->length[row_index]);
-    statistics.etag = std::string(etag_column->data[row_index], etag_column->length[row_index]);
-    statistics.last_modified = timestamp_column->data[row_index];
-    statistics.filesize = size_column->data[row_index];
-    statistics.num_rows = records_column->data[row_index];
+    statistics.object_identifier = identifier_column->get(row_index);
+    statistics.format = format_column->get(row_index);
+    statistics.etag = etag_column->get(row_index);
+    statistics.last_modified = timestamp_column->get(row_index);
+    statistics.filesize = size_column->get(row_index);
+    statistics.num_rows = records_column->get(row_index);
     statistics.null_count.reserve(schema_->size());
     statistics.schema = GetOriginalSchema();
 
     for (size_t schema_index = 0; schema_index < statistics.schema->size(); schema_index++) {
       const size_t start_index = 6 + (3 * schema_index);
-      statistics.null_count.push_back(null_value_counts[schema_index]->data[row_index]);
+      statistics.null_count.push_back(null_value_counts[schema_index]->get(row_index));
 
-      if (statistics.schema->at(schema_index).data_type == DataType::kLong) {
-        statistics.minmax.emplace_back(ExtractMinMaxValues<orc::LongVectorBatch, int64_t>(
-            current_batch_->fields[start_index], current_batch_->fields[start_index + 1], row_index));
-      } else if (statistics.schema->at(schema_index).data_type == DataType::kInt) {
-        statistics.minmax.emplace_back(ExtractMinMaxValues<orc::LongVectorBatch, int32_t>(
-            current_batch_->fields[start_index], current_batch_->fields[start_index + 1], row_index));
-      } else if (statistics.schema->at(schema_index).data_type == DataType::kFloat) {
-        statistics.minmax.emplace_back(ExtractMinMaxValues<orc::DoubleVectorBatch, float>(
-            current_batch_->fields[start_index], current_batch_->fields[start_index + 1], row_index));
-      } else if (statistics.schema->at(schema_index).data_type == DataType::kDouble) {
-        statistics.minmax.emplace_back(ExtractMinMaxValues<orc::DoubleVectorBatch, double>(
-            current_batch_->fields[start_index], current_batch_->fields[start_index + 1], row_index));
-      } else if (statistics.schema->at(schema_index).data_type == DataType::kString) {
-        auto* column_min_value = dynamic_cast<orc::StringVectorBatch*>(current_batch_->fields[start_index]);
-        auto* column_max_value = dynamic_cast<orc::StringVectorBatch*>(current_batch_->fields[start_index + 1]);
-        AllTypeVariant min_value = std::string(column_min_value->data[row_index], column_min_value->length[row_index]);
-        AllTypeVariant max_value = std::string(column_max_value->data[row_index], column_max_value->length[row_index]);
+      auto* min_column = chunk->GetSegment(start_index).get();
+      auto* max_column = chunk->GetSegment(start_index + 1).get();
+
+      if (max_column->GetDataType() == DataType::kLong) {
+        statistics.minmax.emplace_back(ExtractMinMaxValues<int64_t>(min_column, max_column, row_index));
+      } else if (max_column->GetDataType() == DataType::kInt) {
+        statistics.minmax.emplace_back(ExtractMinMaxValues<int32_t>(min_column, max_column, row_index));
+      } else if (max_column->GetDataType() == DataType::kFloat) {
+        statistics.minmax.emplace_back(ExtractMinMaxValues<float>(min_column, max_column, row_index));
+      } else if (max_column->GetDataType() == DataType::kDouble) {
+        statistics.minmax.emplace_back(ExtractMinMaxValues<double>(min_column, max_column, row_index));
+      } else if (max_column->GetDataType() == DataType::kString) {
+        auto* column_min_value = dynamic_cast<ValueSegment<std::string>*>(min_column);
+        auto* column_max_value = dynamic_cast<ValueSegment<std::string>*>(max_column);
+        AllTypeVariant min_value = column_min_value->get(row_index);
+        AllTypeVariant max_value = column_max_value->get(row_index);
         statistics.minmax.emplace_back(std::make_pair(min_value, max_value));
       } else {
         Fail("Type not supported.");
@@ -110,15 +111,12 @@ ObjectStatistics ManifestReader::ReadNextPartition() {
   Assert(HasNextPartition(), "HasNextPartition() has to be true");
 
   // Fill batch with new data.
-  if (current_partition_index_ == 0 || current_batch_index_ >= reader_batch_->numElements) {
-    row_reader_->next(*reader_batch_);
-    current_batch_index_ = 0;
-    Assert(reader_batch_->numElements > 0, "Read empty batch");
-    ReconstructStatistics();
+  if (current_partition_index_ >= parsed_statistics_.size()) {
+    current_partition_index_ = 0;
+    ReconstructStatisticsFromChunk(Next());
   }
 
-  current_partition_index_++;
-  return parsed_statistics_[current_batch_index_++];
+  return parsed_statistics_[current_partition_index_++];
 }
 
 }  // namespace skyrise

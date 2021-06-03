@@ -276,7 +276,7 @@ std::pair<std::vector<ObjectStatus>, StorageError> S3Storage::List(const std::st
     auto result = outcome.GetResult();
 
     if (result.GetIsTruncated()) {
-      continuation_token = result.GetContinuationToken();
+      continuation_token = result.GetNextContinuationToken();
     } else {
       has_more = false;
     }
