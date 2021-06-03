@@ -27,6 +27,7 @@ Checks: '
         -llvm-include-order,
         -llvmlibc-*,
         -misc-no-recursion,
+        -modernize-concat-nested-namespaces,
         -modernize-pass-by-value,
         -modernize-use-trailing-return-type,
         -readability-function-cognitive-complexity
@@ -59,6 +60,7 @@ Checks: '
 #   llvm-include-order                                      We use #pragma once
 #   llvmlibc-*                                              We do not use LLVM's libc++, but GCC's libstdc++
 #   misc-no-recursion                                       Recursion is useful when parsing data nested structures
+#   modernize-concat-nested-namespaces                      We want clearly separated namespaces
 #   modernize-pass-by-value                                 We do not trust people to properly use std::move
 #   modernize-use-trailing-return-type                      We do not want to use trailing return types
 #   readability-function-cognitive-complexity               We nest code extensively in our parameterizable benchmarks

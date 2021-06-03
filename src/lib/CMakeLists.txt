@@ -77,6 +77,8 @@ set(
     expression/between_expression.hpp
     expression/binary_predicate_expression.cpp
     expression/binary_predicate_expression.hpp
+    expression/expression_functional.cpp
+    expression/expression_functional.hpp
     expression/expression_precedence.hpp
     expression/expression_utils.cpp
     expression/expression_utils.hpp
