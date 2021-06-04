@@ -10,6 +10,7 @@
 #include "benchmark_helper.hpp"
 #include "benchmark_runner.hpp"
 #include "utils/costs/cost_calculator.hpp"
+#include "utils/string.hpp"
 #include "utils/unit_conversion.hpp"
 
 namespace skyrise {
@@ -54,7 +55,10 @@ class NetworkBenchmark : public Benchmark {
 
   static constexpr size_t kMaxObjectsPerPrefix = 1000;
   const size_t kMaxMemoryUsageBytes = GbToByte(2);  // TODO(julianmenzler) C++20: Use consteval & constexpr
-  inline static const Aws::String kBucketPrefix{"network-benchmark-"};
+
+  // Add random bucket prefix to support running multiple NetworkBenchmarks concurrently
+  inline static const Aws::String kBucketPrefix{RandomString(8, kCharacterSetLower + kCharacterSetDecimal) +
+                                                "-network-benchmark-"};
 };
 
 }  // namespace skyrise
