@@ -1,7 +1,6 @@
 /**
  * Taken and modified from our sister project Hyrise (https://github.com/hyrise/hyrise)
  */
-
 #pragma once
 
 #include <algorithm>
@@ -21,11 +20,20 @@ inline const std::string kCharacterSetLower{"abcdefghijklmnopqrstuvwxyz"};
 inline const std::string kCharacterSetDecimal{"0123456789"};
 inline const std::string kCharacterSetHex{"0123456789abcdef"};
 
-// Crop a source file path to ensure readable assert messages (e.g., "/long/path/1234/src/lib/file.cpp" becomes
-// "src/lib/file.cpp")
-std::string TrimSourceFilePath(const std::string& path);
+/**
+ * Crops @param file_path to ensure readable Assert messages.
+ * E.g., "/long/path/1234/src/lib/file.cpp" becomes "src/lib/file.cpp"
+ */
+std::string TrimSourceFilePath(const std::string& file_path);
 
-// Convert a stream to a string
+/**
+ * @returns a vector of substrings from @param string using @param delimiter.
+ */
+std::vector<std::string> SplitStringByDelimiter(const std::string& string, const char delimiter);
+
+/**
+ * Converts the given @param stream to a string.
+ */
 template <typename T>
 std::string StreamToString(T* stream) {
   std::ostringstream string_stream;
@@ -35,13 +43,15 @@ std::string StreamToString(T* stream) {
   return string_stream.str();
 }
 
-// Convert a vector to a string
+/**
+ * Converts @param vector to a string using @param delimiter.
+ */
 template <typename T>
-std::string VectorToString(const std::vector<T>& vector, const std::string& deliminter) {
+std::string VectorToString(const std::vector<T>& vector, const std::string& delimiter) {
   std::ostringstream string_stream;
 
   if (!vector.empty()) {
-    std::copy(vector.cbegin(), vector.cend() - 1, std::ostream_iterator<T>(string_stream, deliminter.c_str()));
+    std::copy(vector.cbegin(), vector.cend() - 1, std::ostream_iterator<T>(string_stream, delimiter.c_str()));
 
     string_stream << vector.back();
   }
@@ -49,7 +59,9 @@ std::string VectorToString(const std::vector<T>& vector, const std::string& deli
   return string_stream.str();
 }
 
-// Create a randomly generated string
+/**
+ * @returns A randomly generated string.
+ */
 std::string RandomString(const size_t length, const std::string& character_set = kCharacterSetUpper +
                                                                                  kCharacterSetLower +
                                                                                  kCharacterSetDecimal);

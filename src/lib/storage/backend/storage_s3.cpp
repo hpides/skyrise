@@ -437,12 +437,12 @@ void S3ObjectReader::SetRange(Aws::S3::Model::GetObjectRequest& request, size_t 
     return;
   }
 
-  std::stringstream ss;
-  ss << "bytes=" << first_byte << "-";
+  std::stringstream stream;
+  stream << "bytes=" << first_byte << "-";
   if (last_byte != kLastByteInFile) {
-    ss << last_byte;
+    stream << last_byte;
   }
-  request.SetRange(ss.str());
+  request.SetRange(stream.str());
 }
 
 StorageError S3ObjectReader::Close() { return StorageError::Success(); }

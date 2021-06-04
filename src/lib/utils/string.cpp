@@ -11,10 +11,22 @@
 
 namespace skyrise {
 
-std::string TrimSourceFilePath(const std::string& path) {
-  const auto src_position = path.find("/src/");
+std::string TrimSourceFilePath(const std::string& file_path) {
+  const auto src_position = file_path.find("/src/");
 
-  return src_position == std::string::npos ? path : path.substr(src_position + 1);
+  return src_position == std::string::npos ? file_path : file_path.substr(src_position + 1);
+}
+
+std::vector<std::string> SplitStringByDelimiter(const std::string& string, const char delimiter) {
+  std::stringstream stream(string);
+  std::string token;
+  std::vector<std::string> substrings;
+
+  while (std::getline(stream, token, delimiter)) {
+    substrings.emplace_back(token);
+  }
+
+  return substrings;
 }
 
 std::string RandomString(const size_t length, const std::string& character_set) {

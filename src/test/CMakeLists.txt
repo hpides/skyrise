@@ -61,8 +61,12 @@ set(
     lib/utils/costs/costs_test_utils.hpp
     lib/utils/costs/pricing_test.cpp
     lib/utils/profiling/function_host_information_test.cpp
+    lib/utils/string_test.cpp
 
     lib/testing/aws_test.hpp
+
+    utils/string_test_utils.cpp
+    utils/string_test_utils.hpp
 )
 
 # Libraries
