@@ -19,7 +19,7 @@
 
 namespace skyrise {
 
-class FunctionSegmentsAnalyzerTest : public ::testing::Test {
+class AwsFunctionSegmentsAnalyzerTest : public ::testing::Test {
  protected:
   void SetUp() override {
     std::function<void()> api_executable = [&]() {
@@ -54,7 +54,7 @@ class FunctionSegmentsAnalyzerTest : public ::testing::Test {
   const std::string function_name_ = kPackageName + RandomString(8);
 };
 
-TEST_F(FunctionSegmentsAnalyzerTest, GetCalculatedSegments) {
+TEST_F(AwsFunctionSegmentsAnalyzerTest, GetCalculatedSegments) {
   std::function<void()> api_function = [&]() {
     const auto end_time = std::chrono::system_clock::now();
 
@@ -96,7 +96,7 @@ TEST_F(FunctionSegmentsAnalyzerTest, GetCalculatedSegments) {
   ExecuteInsideAPI(api_function);
 }
 
-TEST_F(FunctionSegmentsAnalyzerTest, GetCalculatedSegmentsFail) {
+TEST_F(AwsFunctionSegmentsAnalyzerTest, GetCalculatedSegmentsFail) {
   std::function<void()> api_function = [&]() {
     const auto end_time = std::chrono::system_clock::now();
 

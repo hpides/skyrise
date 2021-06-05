@@ -11,7 +11,7 @@
 namespace skyrise {
 
 template <typename Provider>
-class BaseStorageTest : public ::testing::Test {
+class AwsBaseStorageTest : public ::testing::Test {
  protected:
   void SetUp() override {
     storage_ = &provider_.GetStorage();
@@ -59,14 +59,14 @@ class BaseStorageTest : public ::testing::Test {
 };
 
 template <typename Provider>
-Provider BaseStorageTest<Provider>::provider_;
+Provider AwsBaseStorageTest<Provider>::provider_;
 
 using StorageProviderTypes = ::testing::Types<FilesystemStorageProvider, S3StorageProvider>;
 
-TYPED_TEST_SUITE(BaseStorageTest, StorageProviderTypes, );
+TYPED_TEST_SUITE(AwsBaseStorageTest, StorageProviderTypes, );
 // Trailing comma on purpose (https://github.com/google/googletest/issues/1419)
 
-TYPED_TEST(BaseStorageTest, CreateReadDeleteSmallObject) {
+TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteSmallObject) {
   static const std::string kFilename{"small.txt"};
   static const std::string kFileContent{"abcd"};
   constexpr size_t kFileSize = 4;
@@ -123,7 +123,7 @@ TYPED_TEST(BaseStorageTest, CreateReadDeleteSmallObject) {
   this->WaitForObjectToVanish(kFilename);
 }
 
-TYPED_TEST(BaseStorageTest, CreateReadDeleteBigObject) {
+TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteBigObject) {
   constexpr size_t kChunkSize = 16_KB;
   constexpr size_t kTestFileSize = 31_MB;
   static const std::string kFilename{"big.txt"};
@@ -156,7 +156,7 @@ TYPED_TEST(BaseStorageTest, CreateReadDeleteBigObject) {
   this->WaitForObjectToVanish(kFilename);
 }
 
-TYPED_TEST(BaseStorageTest, ListObjects) {
+TYPED_TEST(AwsBaseStorageTest, ListObjects) {
   static const std::string kFilename1{"file1.txt"};
   static const std::string kFilename2{"file2.txt"};
   static const std::string kFileContent1{"abcd"};

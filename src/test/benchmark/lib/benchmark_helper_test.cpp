@@ -18,9 +18,9 @@
 
 namespace skyrise {
 
-class BenchmarkHelperTest : public ::testing::Test {};
+class AwsBenchmarkHelperTest : public ::testing::Test {};
 
-TEST_F(BenchmarkHelperTest, GenerateJsonOutput) {
+TEST_F(AwsBenchmarkHelperTest, GenerateJsonOutput) {
   Aws::SDKOptions options;
 
   Aws::InitAPI(options);

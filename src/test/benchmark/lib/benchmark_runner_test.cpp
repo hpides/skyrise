@@ -12,7 +12,7 @@ namespace skyrise {
 inline static const std::string kFunctionName{"skyriseFunctionSimple"};
 inline constexpr size_t kMemorySize = 128;
 
-class BenchmarkRunnerTest : public ::testing::Test {
+class AwsBenchmarkRunnerTest : public ::testing::Test {
  protected:
   void RunConfig(const BenchmarkConfig& benchmark_config) {
     const auto result = benchmark_runner_.RunConfig(benchmark_config);
@@ -56,7 +56,7 @@ class BenchmarkRunnerTest : public ::testing::Test {
   BenchmarkRunner benchmark_runner_ = BenchmarkRunner(clients_);
 };
 
-TEST_F(BenchmarkRunnerTest, SyncIntegrationTest) {
+TEST_F(AwsBenchmarkRunnerTest, SyncIntegrationTest) {
   size_t after_repetition_count = 0;
 
   // TODO(d-justen): Test configuration with XRay and S3-resident function packages
@@ -75,7 +75,7 @@ TEST_F(BenchmarkRunnerTest, SyncIntegrationTest) {
   EXPECT_EQ(after_repetition_count, 1);
 }
 
-TEST_F(BenchmarkRunnerTest, AsyncIntegrationTest) {
+TEST_F(AwsBenchmarkRunnerTest, AsyncIntegrationTest) {
   const BenchmarkConfig benchmark_config(kFunctionName, kMemorySize, 3, 2, WarmUp::kNone,
                                          UseOneFunctionPerRepetition::kNo, UseEventQueue::kYes, {});
 

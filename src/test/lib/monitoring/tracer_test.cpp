@@ -19,7 +19,7 @@
 
 namespace skyrise {
 
-class TracerTest : public ::testing::Test {
+class AwsTracerTest : public ::testing::Test {
  protected:
   void SetUp() override {
     std::function<void()> api_executable = [&]() {
@@ -52,7 +52,7 @@ class TracerTest : public ::testing::Test {
   const std::string function_name_ = kPackageName + RandomString(8);
 };
 
-TEST_F(TracerTest, GetTrace) {
+TEST_F(AwsTracerTest, GetTrace) {
   const auto executable = [&] {
     FunctionSegmentsAnalyzer function_segments_analyzer(client_->GetXRayClient());
     const auto trace_ids = function_segments_analyzer.GetTraceIds({function_name_}, start_time_, end_time_);

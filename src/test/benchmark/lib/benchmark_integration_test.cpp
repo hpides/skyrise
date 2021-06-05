@@ -19,7 +19,7 @@
 
 namespace skyrise {
 
-class BenchmarkIntegrationTest : public ::testing::Test {
+class AwsBenchmarkIntegrationTest : public ::testing::Test {
  protected:
   void SetUp() override {
     Aws::InitAPI(sdk_options_);
@@ -47,7 +47,7 @@ class BenchmarkIntegrationTest : public ::testing::Test {
   std::shared_ptr<skyrise::BenchmarkHelper> benchmark_helper_;
 };
 
-TEST_F(BenchmarkIntegrationTest, FunctionColocationBenchmark) {
+TEST_F(AwsBenchmarkIntegrationTest, FunctionColocationBenchmark) {
   const std::vector<size_t> function_instance_mb_sizes = {128, 1024};
   const std::vector<size_t> invocation_counts = {16};
   const std::vector<size_t> sleep_min_durations = {1};
@@ -64,7 +64,7 @@ TEST_F(BenchmarkIntegrationTest, FunctionColocationBenchmark) {
 
 // TODO(maltenbergert): Add test for FunctionWarmUpContinuousBenchmark
 
-TEST_F(BenchmarkIntegrationTest, IdleAvailabilityBenchmark) {
+TEST_F(AwsBenchmarkIntegrationTest, IdleAvailabilityBenchmark) {
   const std::vector<size_t> function_instance_mb_sizes = {128};
   const std::vector<size_t> invocation_counts = {16};
   const std::vector<size_t> sleep_min_durations = {1};
@@ -77,7 +77,7 @@ TEST_F(BenchmarkIntegrationTest, IdleAvailabilityBenchmark) {
   EXPECT_EQ(benchmark_result.GetLength(), 1);
 }
 
-TEST_F(BenchmarkIntegrationTest, skyriseBenchmarkIdleLifetime) {
+TEST_F(AwsBenchmarkIntegrationTest, skyriseBenchmarkIdleLifetime) {
   const std::vector<size_t> function_instance_mb_sizes = {128};
   const std::vector<size_t> invocation_counts = {16};
   const std::vector<size_t> sleep_min_durations = {1, 2, 3};
@@ -92,7 +92,7 @@ TEST_F(BenchmarkIntegrationTest, skyriseBenchmarkIdleLifetime) {
 
 // TODO(maltenbergert): Add test for InvocationLatencyBenchmark
 
-TEST_F(BenchmarkIntegrationTest, InvocationThroughputBenchmark) {
+TEST_F(AwsBenchmarkIntegrationTest, InvocationThroughputBenchmark) {
   const std::vector<size_t> function_instance_mb_sizes = {128};
   const std::vector<size_t> invocation_counts = {16};
   const std::vector<size_t> function_payload_byte_sizes = {128};
@@ -106,7 +106,7 @@ TEST_F(BenchmarkIntegrationTest, InvocationThroughputBenchmark) {
   EXPECT_EQ(benchmark_result.GetLength(), 2);
 }
 
-TEST_F(BenchmarkIntegrationTest, NetworkLatencyBenchmark) {
+TEST_F(AwsBenchmarkIntegrationTest, NetworkLatencyBenchmark) {
   const std::vector<size_t> function_instance_mb_sizes = {128};
   const std::vector<size_t> object_byte_sizes = {1024};
   const std::vector<size_t> batch_sizes = {2};
@@ -120,7 +120,7 @@ TEST_F(BenchmarkIntegrationTest, NetworkLatencyBenchmark) {
   EXPECT_EQ(benchmark_result.GetLength(), 2);
 }
 
-TEST_F(BenchmarkIntegrationTest, NetworkThroughputBenchmark) {
+TEST_F(AwsBenchmarkIntegrationTest, NetworkThroughputBenchmark) {
   const std::vector<size_t> function_instance_mb_sizes = {128};
   const std::vector<size_t> object_byte_sizes = {16384};
   const std::vector<size_t> batch_sizes = {2};
@@ -136,7 +136,7 @@ TEST_F(BenchmarkIntegrationTest, NetworkThroughputBenchmark) {
   EXPECT_EQ(benchmark_result.GetLength(), 2);
 }
 
-TEST_F(BenchmarkIntegrationTest, NetworkThroughputParallelBenchmark) {
+TEST_F(AwsBenchmarkIntegrationTest, NetworkThroughputParallelBenchmark) {
   const std::vector<size_t> function_instance_mb_sizes = {128};
   const std::vector<size_t> object_byte_sizes = {16384};
   const std::vector<size_t> batch_sizes = {2};

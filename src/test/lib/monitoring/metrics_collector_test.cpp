@@ -16,7 +16,7 @@
 
 namespace skyrise {
 
-class MetricsCollectorTest : public ::testing::Test {
+class AwsMetricsCollectorTest : public ::testing::Test {
  protected:
   void SetUp() override {
     std::function<void()> api_executable = [&] {
@@ -55,7 +55,7 @@ class MetricsCollectorTest : public ::testing::Test {
   const std::string queue_name_ = "skyrise-test-metrics-collector" + RandomString(8);
 };
 
-TEST_F(MetricsCollectorTest, SendMetric) {
+TEST_F(AwsMetricsCollectorTest, SendMetric) {
   std::function<void()> api_executable = [&] {
     {
       MetricsCollector metrics_collector(client_->GetSQSClient(), queue_url_, SubqueryFragmentIdentifier{});

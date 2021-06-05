@@ -10,9 +10,9 @@
 
 namespace skyrise {
 
-class PricingTest : public ::testing::Test {};
+class AwsPricingTest : public ::testing::Test {};
 
-TEST_F(PricingTest, PricingLambda) {
+TEST_F(AwsPricingTest, PricingLambda) {
   const std::function<void()> func = []() {
     const auto clients = std::make_shared<Client>();
     Pricing pricing(clients);
@@ -36,7 +36,7 @@ TEST_F(PricingTest, PricingLambda) {
   InitAndShutDownAPI(func);
 }
 
-TEST_F(PricingTest, PricingS3) {
+TEST_F(AwsPricingTest, PricingS3) {
   const std::function<void()> func = []() {
     const auto clients = std::make_shared<Client>();
     Pricing pricing(clients);
@@ -63,7 +63,7 @@ TEST_F(PricingTest, PricingS3) {
   InitAndShutDownAPI(func);
 }
 
-TEST_F(PricingTest, PricingXray) {
+TEST_F(AwsPricingTest, PricingXray) {
   const std::function<void()> func = []() {
     const auto clients = std::make_shared<Client>();
     Pricing pricing(clients);

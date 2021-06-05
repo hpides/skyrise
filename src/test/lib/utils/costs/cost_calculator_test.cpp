@@ -13,9 +13,9 @@
 
 namespace skyrise {
 
-class CostCalculatorTest : public ::testing::Test {};
+class AwsCostCalculatorTest : public ::testing::Test {};
 
-TEST_F(CostCalculatorTest, CalculateCostLambda) {
+TEST_F(AwsCostCalculatorTest, CalculateCostLambda) {
   const std::function<void()> func = []() {
     const auto clients = std::make_shared<Client>();
     Pricing pricing(clients);
@@ -58,7 +58,7 @@ TEST_F(CostCalculatorTest, CalculateCostLambda) {
   InitAndShutDownAPI(func);
 }
 
-TEST_F(CostCalculatorTest, CalculateCostS3StorageMonthly) {
+TEST_F(AwsCostCalculatorTest, CalculateCostS3StorageMonthly) {
   const std::function<void()> func = []() {
     const auto clients = std::make_shared<Client>();
     Pricing pricing(clients);
@@ -79,7 +79,7 @@ TEST_F(CostCalculatorTest, CalculateCostS3StorageMonthly) {
   InitAndShutDownAPI(func);
 }
 
-TEST_F(CostCalculatorTest, CalculateCostS3Requests) {
+TEST_F(AwsCostCalculatorTest, CalculateCostS3Requests) {
   const std::function<void()> func = []() {
     const auto clients = std::make_shared<Client>();
     Pricing pricing(clients);
@@ -94,7 +94,7 @@ TEST_F(CostCalculatorTest, CalculateCostS3Requests) {
   InitAndShutDownAPI(func);
 }
 
-TEST_F(CostCalculatorTest, CalculateCostS3Select) {
+TEST_F(AwsCostCalculatorTest, CalculateCostS3Select) {
   const std::function<void()> func = []() {
     const auto clients = std::make_shared<Client>();
     Pricing pricing(clients);
@@ -115,7 +115,7 @@ TEST_F(CostCalculatorTest, CalculateCostS3Select) {
   InitAndShutDownAPI(func);
 }
 
-TEST_F(CostCalculatorTest, CalculateCostXray) {
+TEST_F(AwsCostCalculatorTest, CalculateCostXray) {
   const std::function<void()> func = []() {
     const auto clients = std::make_shared<Client>();
 

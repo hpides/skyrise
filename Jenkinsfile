@@ -48,9 +48,9 @@ pipeline {
                     sh 'ninja-build all -j$(nproc)'
                   }
                 }
-                stage("Test") {
+                stage("Test w/o Aws") {
                   dir('cmake-build-debug') {
-                    sh 'LLVM_PROFILE_FILE=skyriseTest.profraw bin/skyriseTest --gtest_output="xml:test-results.xml"'
+                    sh 'LLVM_PROFILE_FILE=skyriseTest_without_aws.profraw bin/skyriseTest --gtest_filter=-Aws* --gtest_output="xml:test-results-without-aws.xml"'
                   }
                   xunit(
                     thresholds: [
@@ -58,13 +58,31 @@ pipeline {
                       failed(failureThreshold: '0')
                     ],
                     tools: [
-                      GoogleTest(pattern: 'cmake-build-debug/test-results.xml')
+                      GoogleTest(pattern: 'cmake-build-debug/test-results-without-aws.xml')
                     ]
                   )
                 }
+                stage("Test w/ Aws") {
+                  if (FULL_CI == true) {
+                    dir('cmake-build-debug') {
+                      sh 'LLVM_PROFILE_FILE=skyriseTest_with_aws.profraw bin/skyriseTest --gtest_filter=Aws* --gtest_output="xml:test-results-with-aws.xml"'
+                    }
+                    xunit(
+                      thresholds: [
+                        skipped(failureThreshold: '0'),
+                        failed(failureThreshold: '0')
+                      ],
+                      tools: [
+                        GoogleTest(pattern: 'cmake-build-debug/test-results-with-aws.xml')
+                      ]
+                    )
+                  } else {
+                    Utils.markStageSkippedForConditional("Test w/ Aws")
+                  }
+                }
                 stage("Coverage") {
                   dir('cmake-build-debug') {
-                    sh '''llvm-profdata merge -sparse skyriseTest.profraw -o skyriseTest.profdata &&
+                    sh '''llvm-profdata merge -sparse skyriseTest_without_aws.profraw skyriseTest_with_aws.profraw -o skyriseTest.profdata &&
                         llvm-cov show -format=html -ignore-filename-regex="(third_party|test)" -output-dir=coverage \
                         -instr-profile=skyriseTest.profdata bin/skyriseTest'''
                     
