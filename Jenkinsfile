@@ -81,30 +81,34 @@ pipeline {
                   }
                 }
                 stage("Coverage") {
-                  dir('cmake-build-debug') {
-                    sh '''llvm-profdata merge -sparse skyriseTest_without_aws.profraw skyriseTest_with_aws.profraw -o skyriseTest.profdata &&
-                        llvm-cov show -format=html -ignore-filename-regex="(third_party|test)" -output-dir=coverage \
-                        -instr-profile=skyriseTest.profdata bin/skyriseTest'''
-                    
-                    publishHTML([
-                      allowMissing: false,
-                      alwaysLinkToLastBuild: false,
-                      keepAll: true,
-                      reportDir: 'coverage',
-                      reportFiles: 'index.html',
-                      reportName: 'LLVM-Coverage-Report',
-                      reportTitles: ''
-                    ])
-                    
-                    sh 'llvm-cov report -summary-only -ignore-filename-regex="(third_party|test)" \
-                        -instr-profile=skyriseTest.profdata bin/skyriseTest | tail -n1 -c47 | head -c6 \
-                        > coverage_percentage.txt'
-                    archiveArtifacts 'coverage_percentage.txt'
+                  if (FULL_CI == true) {
+                    dir('cmake-build-debug') {
+                      sh '''llvm-profdata merge -sparse skyriseTest_without_aws.profraw skyriseTest_with_aws.profraw -o skyriseTest.profdata &&
+                          llvm-cov show -format=html -ignore-filename-regex="(third_party|test)" -output-dir=coverage \
+                          -instr-profile=skyriseTest.profdata bin/skyriseTest'''
 
-                    output = sh script: '../script/compare_coverage.sh', returnStdout: true
-                    (coverage_status, coverage_message) = output.trim().tokenize(';')
-                    githubNotify context: 'llvm-cov', description: "$coverage_message", status: "$coverage_status", \
-                      targetUrl: "${env.BUILD_URL}LLVM-Coverage-Report/index.html"
+                      publishHTML([
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: false,
+                        keepAll: true,
+                        reportDir: 'coverage',
+                        reportFiles: 'index.html',
+                        reportName: 'LLVM-Coverage-Report',
+                        reportTitles: ''
+                      ])
+                    
+                      sh 'llvm-cov report -summary-only -ignore-filename-regex="(third_party|test)" \
+                          -instr-profile=skyriseTest.profdata bin/skyriseTest | tail -n1 -c47 | head -c6 \
+                          > coverage_percentage.txt'
+                      archiveArtifacts 'coverage_percentage.txt'
+
+                      output = sh script: '../script/compare_coverage.sh', returnStdout: true
+                      (coverage_status, coverage_message) = output.trim().tokenize(';')
+                      githubNotify context: 'llvm-cov', description: "$coverage_message", status: "$coverage_status", \
+                        targetUrl: "${env.BUILD_URL}LLVM-Coverage-Report/index.html"
+                    }
+                  } else {
+                    Utils.markStageSkippedForConditional("Coverage")
                   }
                 }
               }
