@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# This script builds our project inside a Docker container (using image PREFIX/skyrise:build). The project directory is
-# mounted into the Docker container, and the output of the build process is stored in subdirectory (BUILD_DIR). The
-# script assumes the user to be in the Unix group docker.
+# This script builds our project inside a Docker container (using the image {PREFIX}/skyrise:amazonlinux2-{IMAGE_DATE}).
+# The project directory is mounted into the Docker container, and the output of the build process is stored in the
+# subdirectory (BUILD_DIR). The script assumes the user to be in the Unix group docker.
 #
 # The script is configurable via the following parameters:
 #   -b/--build-dir    BUILD_DIR     [default="cmake-build-debug"]  The subdirectory of the project root where output files are stored
 #   -c/--cmake        CMAKE_OPTIONS                                A string of options that is passed to CMake
 #                                                                  (e.g. '-DONE_OPTION=ON -DOTHER_OPTION=OFF')
-#   -d/--date         DATE          [default="20210423"] (latest)  The creation date of the Docker image
+#   -d/--date         IMAGE_DATE    [default="20210423"] (latest)  The creation date of the Docker image
 #   -f/--cmake-force                                               Forced re-run of CMake to ignore CMakeCache.txt files
 #   -k                NINJA_K_JOBS  [default="1"]                  Sets the number of failed jobs after which ninja aborts the build
 #   -m/--make-target  MAKE_TARGET   [default="all"]                The target for make
@@ -22,7 +22,7 @@ exitWithError() {
     echo $1
     echo -e "Usage: script/docker/build_project.sh    [-b|--build-dir    BUILD_DIR    ]" $newline \
                                                      "[-c|--cmake        CMAKE_OPTIONS]" $newline \
-                                                     "[-d|--date         DATE         ]" $newline \
+                                                     "[-d|--date         IMAGE_DATE   ]" $newline \
                                                      "[-f|--cmake-force               ]" $newline \
                                                      "[-k                NINJA_K_JOBS ]" $newline \
                                                      "[-m|--make-target  MAKE_TARGET  ]" $newline \
@@ -34,7 +34,7 @@ exitWithError() {
 
 BUILD_DIR="cmake-build-debug"
 CMAKE_OPTIONS=''
-DATE="20210423"
+IMAGE_DATE="20210423"
 CMAKE_FORCE="false"
 NINJA_K_JOBS="1"
 MAKE_TARGET="all"
@@ -46,7 +46,7 @@ while [ "$#" -gt 0 ]; do
     case $1 in
         -b|--build-dir)   BUILD_DIR="$2";            shift ;;
         -c|--cmake)       CMAKE_OPTIONS="$2";        shift ;;
-        -d|--date)        DATE="$2";                 shift ;;
+        -d|--date)        IMAGE_DATE="$2";           shift ;;
         -f|--cmake-force) CMAKE_FORCE=true;          shift ;;
         -k)               NINJA_K_JOBS="$2";         shift ;;
         -m|--make-target) MAKE_TARGET="$2";          shift ;;
@@ -85,7 +85,7 @@ GROUP="$(id -g)"
 COMMAND="docker run --rm -it \
                     --user ${USER}:${GROUP} \
                     --volume ${SOURCE_DIR}:${PROJECT_MOUNT_POINT} \
-                    ${PREFIX}/skyrise:amazonlinux2-${DATE} bash -c \"${BUILD_COMMAND}\""
+                    ${PREFIX}/skyrise:amazonlinux2-${IMAGE_DATE} bash -c \"${BUILD_COMMAND}\""
 
 if [ "$VERBOSE" = true ]; then
     echo "Executing build command: ${COMMAND}"

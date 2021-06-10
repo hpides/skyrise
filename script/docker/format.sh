@@ -4,14 +4,16 @@
 COMMAND="python3 script/run_clang_format.py --clang_format_binary clang-format --source_dir src --fix"
 
 PREFIX="hpiepic"
-IMAGE="skyrise:build"
+IMAGE_DATE="20210423"
+IMAGE="skyrise:amazonlinux2-${IMAGE_DATE}"
 
-USER_ID="$(id -u)"
+USER="$(id -u)"
+GROUP="$(id -g)"
 SOURCE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../"; pwd)
 PROJECT_MOUNT_POINT="/var/skyrise"
 
 DOCKER_COMMAND="docker run --rm -it \
-                           --user ${USER_ID} \
+                           --user ${USER}:${GROUP} \
                            --volume ${SOURCE_DIR}:${PROJECT_MOUNT_POINT} \
                            ${PREFIX}/${IMAGE} bash -c \"cd ${PROJECT_MOUNT_POINT} && ${COMMAND}\""
 
