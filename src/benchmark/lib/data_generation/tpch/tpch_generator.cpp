@@ -89,8 +89,8 @@ DSSType CallDbgenRowGenerator(size_t idx,
 
 }  // namespace detail
 
-TPCHGenerator::TPCHGenerator(TableWriterFactory table_writer_factory, float scale_factor)
-    : AbstractDataGenerator(std::move(table_writer_factory)), scale_factor_(scale_factor) {}
+TPCHGenerator::TPCHGenerator(PartitionedChunkWriterFactory chunk_writer_factory, float scale_factor)
+    : AbstractDataGenerator(std::move(chunk_writer_factory)), scale_factor_(scale_factor) {}
 
 void TPCHGenerator::EnableTable(TpchTable table) { tables_enabled_[table] = true; }
 
@@ -117,7 +117,7 @@ void TPCHGenerator::DisableAllTables() { tables_enabled_.clear(); }
 
 void TPCHGenerator::Generate() {
   auto null_writer_factory = [](const std::string& /*name*/,
-                                const TableColumnDefinitions& /*schema*/) -> std::shared_ptr<TableWriter> {
+                                const TableColumnDefinitions& /*schema*/) -> std::shared_ptr<PartitionedChunkWriter> {
     return nullptr;
   };
 
@@ -133,7 +133,7 @@ void TPCHGenerator::Generate() {
   const auto region_count = static_cast<size_t>(tdefs[REGION].base);
 
   if (IsTableEnabled(TpchTable::kCustomer)) {
-    TableBuilder builder(GetTableWriterFactory(), detail::tpch_table_names.at(TpchTable::kCustomer),
+    TableBuilder builder(GetPartitionedChunkWriterFactory(), detail::tpch_table_names.at(TpchTable::kCustomer),
                          detail::kCustomerColumnTypes, detail::kCustomerColumnNames);
     for (size_t row_idx = 0; row_idx < customer_count; row_idx++) {
       auto customer = detail::CallDbgenRowGenerator<customer_t>(row_idx + 1, mk_cust, TpchTable::kCustomer);
@@ -143,12 +143,12 @@ void TPCHGenerator::Generate() {
   }
 
   if (IsTableEnabled(TpchTable::kOrders) || IsTableEnabled(TpchTable::kLineItem)) {
-    TableBuilder order_builder(IsTableEnabled(TpchTable::kOrders) ? GetTableWriterFactory() : null_writer_factory,
-                               detail::tpch_table_names.at(TpchTable::kOrders), detail::kOrderColumnTypes,
-                               detail::kOrderColumnNames);
-    TableBuilder lineitem_builder(IsTableEnabled(TpchTable::kLineItem) ? GetTableWriterFactory() : null_writer_factory,
-                                  detail::tpch_table_names.at(TpchTable::kLineItem), detail::kLineitemColumnTypes,
-                                  detail::kLineitemColumnNames);
+    TableBuilder order_builder(
+        IsTableEnabled(TpchTable::kOrders) ? GetPartitionedChunkWriterFactory() : null_writer_factory,
+        detail::tpch_table_names.at(TpchTable::kOrders), detail::kOrderColumnTypes, detail::kOrderColumnNames);
+    TableBuilder lineitem_builder(
+        IsTableEnabled(TpchTable::kLineItem) ? GetPartitionedChunkWriterFactory() : null_writer_factory,
+        detail::tpch_table_names.at(TpchTable::kLineItem), detail::kLineitemColumnTypes, detail::kLineitemColumnNames);
 
     for (size_t order_idx = 0; order_idx < order_count; ++order_idx) {
       const auto order = detail::CallDbgenRowGenerator<order_t>(order_idx + 1, mk_order, TpchTable::kOrders, 0l);
@@ -171,12 +171,12 @@ void TPCHGenerator::Generate() {
   }
 
   if (IsTableEnabled(TpchTable::kPart) || IsTableEnabled(TpchTable::kPartSupp)) {
-    TableBuilder part_builder(IsTableEnabled(TpchTable::kPart) ? GetTableWriterFactory() : null_writer_factory,
-                              detail::tpch_table_names.at(TpchTable::kPart), detail::kPartColumnTypes,
-                              detail::kPartColumnNames);
-    TableBuilder partsupp_builder(IsTableEnabled(TpchTable::kPartSupp) ? GetTableWriterFactory() : null_writer_factory,
-                                  detail::tpch_table_names.at(TpchTable::kPartSupp), detail::kPartsuppColumnTypes,
-                                  detail::kPartsuppColumnNames);
+    TableBuilder part_builder(
+        IsTableEnabled(TpchTable::kPart) ? GetPartitionedChunkWriterFactory() : null_writer_factory,
+        detail::tpch_table_names.at(TpchTable::kPart), detail::kPartColumnTypes, detail::kPartColumnNames);
+    TableBuilder partsupp_builder(
+        IsTableEnabled(TpchTable::kPartSupp) ? GetPartitionedChunkWriterFactory() : null_writer_factory,
+        detail::tpch_table_names.at(TpchTable::kPartSupp), detail::kPartsuppColumnTypes, detail::kPartsuppColumnNames);
 
     for (size_t part_idx = 0; part_idx < part_count; ++part_idx) {
       const auto part = detail::CallDbgenRowGenerator<part_t>(part_idx + 1, mk_part, TpchTable::kPart);
@@ -214,7 +214,7 @@ void TPCHGenerator::Generate() {
   }
 
   if (IsTableEnabled(TpchTable::kSupplier)) {
-    TableBuilder builder(GetTableWriterFactory(), detail::tpch_table_names.at(TpchTable::kSupplier),
+    TableBuilder builder(GetPartitionedChunkWriterFactory(), detail::tpch_table_names.at(TpchTable::kSupplier),
                          detail::kSupplierColumnTypes, detail::kSupplierColumnNames);
     for (size_t supplier_idx = 0; supplier_idx < supplier_count; ++supplier_idx) {
       const auto supplier = detail::CallDbgenRowGenerator<supplier_t>(supplier_idx + 1, mk_supp, TpchTable::kSupplier);
@@ -225,7 +225,7 @@ void TPCHGenerator::Generate() {
   }
 
   if (IsTableEnabled(TpchTable::kNation)) {
-    TableBuilder builder(GetTableWriterFactory(), detail::tpch_table_names.at(TpchTable::kNation),
+    TableBuilder builder(GetPartitionedChunkWriterFactory(), detail::tpch_table_names.at(TpchTable::kNation),
                          detail::kNationColumnTypes, detail::kNationColumnNames);
     for (size_t nation_idx = 0; nation_idx < nation_count; ++nation_idx) {
       const auto nation = detail::CallDbgenRowGenerator<code_t>(nation_idx + 1, mk_nation, TpchTable::kNation);
@@ -234,7 +234,7 @@ void TPCHGenerator::Generate() {
   }
 
   if (IsTableEnabled(TpchTable::kRegion)) {
-    TableBuilder builder(GetTableWriterFactory(), detail::tpch_table_names.at(TpchTable::kRegion),
+    TableBuilder builder(GetPartitionedChunkWriterFactory(), detail::tpch_table_names.at(TpchTable::kRegion),
                          detail::kRegionColumnTypes, detail::kRegionColumnNames);
     for (size_t region_idx = 0; region_idx < region_count; ++region_idx) {
       const auto region = detail::CallDbgenRowGenerator<code_t>(region_idx + 1, mk_region, TpchTable::kRegion);

@@ -11,7 +11,7 @@ enum class TpchTable { kPart, kPartSupp, kSupplier, kCustomer, kOrders, kLineIte
 
 class TPCHGenerator : public AbstractDataGenerator {
  public:
-  TPCHGenerator(TableWriterFactory table_writer_factory, float scale_factor);
+  TPCHGenerator(PartitionedChunkWriterFactory chunk_writer_factory, float scale_factor);
   void EnableTable(TpchTable table);
   bool IsTableEnabled(TpchTable table);
   void DisableTable(TpchTable table);

@@ -43,10 +43,10 @@ struct OrcFormatWriterOptions {
 class OrcFormatWriter : public AbstractFormatWriter {
  public:
   using Configuration = OrcFormatWriterOptions;
-  OrcFormatWriter(OrcFormatWriterOptions config);
+  explicit OrcFormatWriter(OrcFormatWriterOptions config);
 
   void Initialize(const TableColumnDefinitions& schema) override;
-  void ProcessChunk(const Chunk& chunk) override;
+  void ProcessChunk(std::shared_ptr<Chunk> chunk) override;
   void Finalize() override;
 
   void AddMetadata(std::string key, std::string value);

@@ -11,7 +11,7 @@ namespace skyrise {
 
 class OrcFormatReaderTest : public ::testing::Test {
  protected:
-  static Chunk CreateChunkWithMockData() {
+  static std::shared_ptr<Chunk> CreateChunkWithMockData() {
     // Create some dummy data
     auto int_column_of_ones = std::make_shared<ValueSegment<int32_t>>();
     int_column_of_ones->Values().insert(int_column_of_ones->Values().begin(), kChunkDefaultSize, 1);
@@ -35,7 +35,7 @@ class OrcFormatReaderTest : public ::testing::Test {
     segments.emplace_back(std::move(double_column_of_fours));
     segments.emplace_back(std::move(string_column_of_fives));
 
-    return Chunk(segments);
+    return std::make_shared<Chunk>(segments);
   }
 
   static TableColumnDefinitions CreateSchemaForChunk() {
@@ -52,7 +52,7 @@ class OrcFormatReaderTest : public ::testing::Test {
   void WriteMockOrc() {
     OrcFormatWriterOptions options;
     auto object_writer = storage_.OpenForWriting(kOrcObjectName);
-    Chunk chunk = CreateChunkWithMockData();
+    auto chunk = CreateChunkWithMockData();
     OrcFormatWriter orc_writer(options);
     orc_writer.SetOutputHandler(
         [&object_writer](const char* data, size_t length) { object_writer->Write(data, length); });

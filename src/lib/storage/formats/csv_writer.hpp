@@ -23,10 +23,10 @@ class CsvFormatWriter : public AbstractFormatWriter {
  public:
   using Configuration = CsvFormatWriterOptions;
 
-  CsvFormatWriter(CsvFormatWriterOptions options = CsvFormatWriterOptions());
+  explicit CsvFormatWriter(CsvFormatWriterOptions options = CsvFormatWriterOptions());
 
   void Initialize(const TableColumnDefinitions& schema) override;
-  void ProcessChunk(const Chunk& chunk) override;
+  void ProcessChunk(std::shared_ptr<Chunk> chunk) override;
   void Finalize() override;
 
  private:

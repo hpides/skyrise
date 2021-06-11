@@ -1,45 +1,31 @@
-#include "table_writer.hpp"
+#include "chunk_writer.hpp"
 
 namespace skyrise {
 
-TableWriter::TableWriter(TableWriterConfig config, std::shared_ptr<Storage> storage)
-    : config_(std::move(config)), queue_(config.queue_capacity), storage_(std::move(storage)) {
+PartitionedChunkWriter::PartitionedChunkWriter(PartitionedChunkWriterConfig config, std::shared_ptr<Storage> storage)
+    : config_(std::move(config)), queue_(config.queue_capacity), storage_(std::move(storage)) {}
+
+void PartitionedChunkWriter::Initialize(const TableColumnDefinitions& schema) {
+  schema_ = schema;
   StartWorkers(config_.num_threads);
 }
 
-void TableWriter::StartWorkers(size_t n) {
-  for (size_t i = 0; i < n; i++) {
-    threads_.emplace_back(&TableWriter::ProcessChunkLoop, this);
+void PartitionedChunkWriter::StartWorkers(size_t num_workers) {
+  for (size_t i = 0; i < num_workers; i++) {
+    threads_.emplace_back(&PartitionedChunkWriter::ProcessChunkLoop, this);
   }
 }
 
-TableWriter::~TableWriter() { NonVirtualFinalize(); }
+PartitionedChunkWriter::~PartitionedChunkWriter() { NonVirtualFinalize(); }
 
-void TableWriter::ReportError(const StorageError& error) {
-  if (has_error_ || !error) {
-    return;
-  }
-
-  std::lock_guard<std::mutex> guard(error_mutex_);
-  if (!error_) {
-    error_ = error;
-    has_error_ = true;
-  }
-}
-
-StorageError TableWriter::GetError() {
-  std::lock_guard<std::mutex> guard(error_mutex_);
-  return error_;
-}
-
-void TableWriter::WriteChunk(std::shared_ptr<Chunk> chunk) {
+void PartitionedChunkWriter::ProcessChunk(std::shared_ptr<Chunk> chunk) {
   // Because `nullptr` will cause the worker to exit, we don't want to put `nullptr`s in the queue here.
   if (chunk) {
     queue_.Push(std::move(chunk));
   }
 }
 
-void TableWriter::NonVirtualFinalize() {
+void PartitionedChunkWriter::NonVirtualFinalize() {
   for (size_t i = 0; i < threads_.size(); i++) {
     // `nullptr` will signal the worker to stop.
     queue_.Push(nullptr);
@@ -55,9 +41,9 @@ void TableWriter::NonVirtualFinalize() {
   threads_.clear();
 }
 
-void TableWriter::Finalize() { NonVirtualFinalize(); }
+void PartitionedChunkWriter::Finalize() { NonVirtualFinalize(); }
 
-void TableWriter::ProcessChunkLoop() {
+void PartitionedChunkWriter::ProcessChunkLoop() {
   size_t num_rows_written = 0;
   std::unique_ptr<skyrise::AbstractFormatWriter> formatter;
   std::unique_ptr<ObjectWriter> output_object;
@@ -69,11 +55,11 @@ void TableWriter::ProcessChunkLoop() {
   auto flush = [&]() {
     formatter->Finalize();
     if (error) {
-      ReportError(error);
+      SetError(error);
     }
     error = output_object->Close();
     if (error) {
-      ReportError(error);
+      SetError(error);
     }
     formatter.reset(nullptr);
     output_object.reset(nullptr);
@@ -90,7 +76,7 @@ void TableWriter::ProcessChunkLoop() {
 
     // If any worker reported an error, we stay in the loop to flush the queue. This way, we make sure
     // that a synchronized exit will happen.
-    if (has_error_) {
+    if (HasError()) {
       continue;
     }
 
@@ -99,12 +85,12 @@ void TableWriter::ProcessChunkLoop() {
       output_object = storage_->OpenForWriting(config_.naming_strategy(object_id_counter_++));
       formatter = config_.format_factory->Get();
       formatter->SetOutputHandler(writer_callback);
-      formatter->Initialize(config_.schema);
+      formatter->Initialize(schema_);
     }
 
-    formatter->ProcessChunk(*chunk);
+    formatter->ProcessChunk(chunk);
     if (error) {
-      ReportError(error);
+      SetError(error);
       continue;
     }
 
@@ -121,7 +107,7 @@ void TableWriter::ProcessChunkLoop() {
   }
 }
 
-void MemoryTableWriter::WriteChunk(std::shared_ptr<Chunk> chunk) {
+void MemoryChunkWriter::ProcessChunk(std::shared_ptr<Chunk> chunk) {
   std::lock_guard<std::mutex> guard(write_mutex_);
   chunks_.emplace_back(std::move(chunk));
 }

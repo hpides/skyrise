@@ -15,21 +15,9 @@
 
 namespace skyrise {
 
-class AbstractTableWriter {
- public:
-  virtual ~AbstractTableWriter() = default;
-  virtual void Finalize() = 0;
-  virtual void WriteChunk(std::shared_ptr<Chunk> chunk) = 0;
-  virtual StorageError GetError() = 0;
-  virtual bool HasError() = 0;
-};
-
-struct TableWriterConfig {
+struct PartitionedChunkWriterConfig {
   // Required object that provides configurations to create formatters.
   std::shared_ptr<AbstractFormatWriterFactory> format_factory;
-
-  // The schema of the table. Every chunk must follow the same schema.
-  TableColumnDefinitions schema;
 
   // A thread-safe function that generates an object name, given the partition number. The numbers start with 0. This
   // function will return something like "lineitem/part00000.orc" for part=0, "lineitem/part00001.orc" for
@@ -49,57 +37,43 @@ struct TableWriterConfig {
   size_t num_threads = 1;
 };
 
-// TableWriter provides a high level interface to write chunks in a specified format to a given storage.
+// PartitionedChunkWriter provides a high level interface to write chunks in a specified format to a given storage.
 // Once constructed the methods `WriteChunk`, `GetError` and `HasError` can be called concurrently from multiple
 // threads. Any other method is not thread-safe.
-class TableWriter : public AbstractTableWriter {
+class PartitionedChunkWriter : public AbstractChunkWriter {
  public:
-  TableWriter(TableWriterConfig config, std::shared_ptr<Storage> storage);
-  TableWriter(const TableWriter&) = delete;
-  ~TableWriter();
+  explicit PartitionedChunkWriter(PartitionedChunkWriterConfig config, std::shared_ptr<Storage> storage);
+  ~PartitionedChunkWriter() override;
 
-  void operator=(const TableWriter&) = delete;
+  void Initialize(const TableColumnDefinitions& schema) override;
 
   // Flushes all pending write operations. There must not be any pending calls to `WriteChunk` when this function is
   // called. Also after calling this function, it is not allowed to call `WriteChunk` again since this could result in
   // the function to block forever.
-  void Finalize();
+  void Finalize() override;
 
   // Adds the given chunk to a pool of chunks that will be processed asynchronously. This function is thread-safe but
   // may not be called after `Finalize` has been called.
-  void WriteChunk(std::shared_ptr<Chunk> chunk);
-
-  // Returns the error state. This function is thread-safe. However, to only check if an error occurred, `HasError`
-  // should be used, since this can be done lock-free.
-  StorageError GetError();
-
-  // Returns true, if an error occurred. This function is thread-safe.
-  bool HasError() { return has_error_.load(); };
+  void ProcessChunk(std::shared_ptr<Chunk> chunk) override;
 
  private:
-  void ReportError(const StorageError& error);
   void StartWorkers(size_t n);
   void ProcessChunkLoop();
   void NonVirtualFinalize();
 
- private:
-  TableWriterConfig config_;
+  PartitionedChunkWriterConfig config_;
   Queue<std::shared_ptr<Chunk>> queue_;
   std::vector<std::thread> threads_;
   std::shared_ptr<Storage> storage_;
   std::atomic<size_t> object_id_counter_ = 0;
-
-  StorageError error_ = StorageError::Success();
-  std::atomic<bool> has_error_ = false;
-  std::mutex error_mutex_;
+  TableColumnDefinitions schema_;
 };
 
-class MemoryTableWriter : public AbstractTableWriter {
+class MemoryChunkWriter : public AbstractChunkWriter {
  public:
-  void Finalize() {}
-  void WriteChunk(std::shared_ptr<Chunk> chunk);
-  StorageError GetError() { return StorageError::Success(); }
-  bool HasError() { return false; }
+  void Finalize() override {}
+  void Initialize(const TableColumnDefinitions& /*schema*/) override{};
+  void ProcessChunk(std::shared_ptr<Chunk> chunk) override;
   const std::vector<std::shared_ptr<Chunk>>& GetChunks() { return chunks_; }
 
  private:
@@ -107,7 +81,7 @@ class MemoryTableWriter : public AbstractTableWriter {
   std::vector<std::shared_ptr<Chunk>> chunks_;
 };
 
-using TableWriterFactory =
-    std::function<std::shared_ptr<AbstractTableWriter>(const std::string& name, const TableColumnDefinitions& schema)>;
+using PartitionedChunkWriterFactory =
+    std::function<std::shared_ptr<AbstractChunkWriter>(const std::string& name, const TableColumnDefinitions& schema)>;
 
 }  // namespace skyrise

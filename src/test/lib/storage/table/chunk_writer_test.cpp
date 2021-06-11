@@ -1,4 +1,4 @@
-#include "storage/table/table_writer.hpp"
+#include "storage/table/chunk_writer.hpp"
 
 #include <gtest/gtest.h>
 
@@ -9,7 +9,7 @@
 
 namespace skyrise {
 
-class TableWriterTest : public ::testing::Test {
+class PartitionedChunkWriterTest : public ::testing::Test {
  protected:
   static constexpr size_t kNumRowsPerChunk = 2;
   static constexpr size_t kCSVPartLength = 13;
@@ -38,7 +38,6 @@ class TableWriterTest : public ::testing::Test {
     config_.format_factory = csv_factory_;
     config_.num_threads = 4;
     config_.queue_capacity = 4;
-    config_.schema = schema_;
     config_.split_rows = kNumRowsPerChunk * kNumChunksPerObject;
     config_.naming_strategy = [](size_t part) -> std::string {
       auto ss = std::stringstream();
@@ -61,16 +60,17 @@ class TableWriterTest : public ::testing::Test {
   TableColumnDefinitions schema_;
   CsvFormatWriterOptions options_;
   std::shared_ptr<FormatterFactory<CsvFormatWriter>> csv_factory_;
-  TableWriterConfig config_;
+  PartitionedChunkWriterConfig config_;
 };
 
-TEST_F(TableWriterTest, WriteTable) {
+TEST_F(PartitionedChunkWriterTest, WriteTable) {
   std::shared_ptr<MockStorage> storage = std::make_shared<MockStorage>();
-  TableWriter writer(config_, storage);
+  PartitionedChunkWriter writer(config_, storage);
+  writer.Initialize(schema_);
 
   auto producer = [&]() {
     for (size_t i = 0; i < kNumChunksPerThread; i++) {
-      writer.WriteChunk(chunk_);
+      writer.ProcessChunk(chunk_);
     }
   };
 
@@ -106,14 +106,15 @@ TEST_F(TableWriterTest, WriteTable) {
   ASSERT_EQ(chunks_found, kNumThreads * kNumChunksPerThread);
 }
 
-TEST_F(TableWriterTest, WriteTableErrorCase) {
+TEST_F(PartitionedChunkWriterTest, WriteTableErrorCase) {
   std::shared_ptr<MockStorage> storage = std::make_shared<MockStorage>();
   storage->SetSimulateWriteErrorAfter(10);  // The 10th ObjectWriter will cause an error
-  TableWriter writer(config_, storage);
+  PartitionedChunkWriter writer(config_, storage);
+  writer.Initialize(schema_);
 
   auto producer = [&]() {
     for (size_t i = 0; i < kNumChunksPerThread; i++) {
-      writer.WriteChunk(chunk_);
+      writer.ProcessChunk(chunk_);
     }
   };
 

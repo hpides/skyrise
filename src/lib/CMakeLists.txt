@@ -23,6 +23,8 @@ set(
 set(
     STORAGE_SOURCES
     storage/backend/abstract_storage.hpp
+    storage/backend/errors.cpp
+    storage/backend/errors.hpp
     storage/backend/storage_filesystem.cpp
     storage/backend/storage_filesystem.hpp
     storage/backend/storage_s3.cpp
@@ -50,8 +52,8 @@ set(
     storage/table/table_column_definition.hpp
     storage/table/value_segment.cpp
     storage/table/value_segment.hpp
-    storage/table/table_writer.cpp
-    storage/table/table_writer.hpp
+    storage/table/chunk_writer.cpp
+    storage/table/chunk_writer.hpp
 )
 
 set(

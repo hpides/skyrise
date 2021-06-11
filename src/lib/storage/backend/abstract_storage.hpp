@@ -6,42 +6,9 @@
 #include <memory>
 #include <string>
 
+#include "errors.hpp"
+
 namespace skyrise {
-
-enum class StorageErrorType {
-  kNoError = 0,
-  kAlreadyExist,
-  kNotFound,
-  kNotReady,
-  kInternalError,
-  kInvalidArgument,
-  kInvalidState,
-  kIOError,
-  kOperationNotSupported,
-  kPermissionDenied,
-  kTemporary,
-  kUninitialized,
-  kUnknown
-};
-
-class StorageError {
- public:
-  static StorageError Success() { return StorageError(StorageErrorType::kNoError); }
-
-  explicit StorageError(StorageErrorType type) : type_(type) {}
-  StorageError(StorageErrorType type, const std::string& message) : type_(type), message_(message) {}
-  StorageError(StorageErrorType type, std::string&& message) : type_(type), message_(std::move(message)) {}
-
-  [[nodiscard]] StorageErrorType GetType() const { return type_; }
-  [[nodiscard]] const std::string& GetMessage() const { return message_; }
-
-  bool IsError() const { return type_ != StorageErrorType::kNoError; }
-  explicit operator bool() const { return IsError(); }
-
- private:
-  StorageErrorType type_;
-  std::string message_;
-};
 
 class ObjectStatus {
  public:

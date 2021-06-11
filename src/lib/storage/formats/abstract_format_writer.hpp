@@ -1,22 +1,28 @@
 #pragma once
 
+#include <atomic>
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <mutex>
 
+#include "storage/backend/errors.hpp"
 #include "storage/table/chunk.hpp"
 #include "storage/table/table_column_definition.hpp"
 
 namespace skyrise {
+
 /**
- * AbstractFormatWriter provides the interface for converting Chunks to a file format, such as CSV or ORC.
- * The output is either written to a Lambda function or a std::iostream object. To use this class in a factory class, a
- * struct type holding configurations should be made available under the name Configuration. Concrete implementations
- * are not thread-safe.
+ * AbstractChunkWriter provides the interface for converting Chunks to a file format, such as CSV or ORC.
+ * To use this class in a factory class, a struct type holding configurations should be made available under the name
+ * Configuration. Concrete implementations may not be thread-safe.
  */
-class AbstractFormatWriter {
+class AbstractChunkWriter {
  public:
-  virtual ~AbstractFormatWriter() = default;
+  virtual ~AbstractChunkWriter() = default;
+  AbstractChunkWriter() = default;
+  AbstractChunkWriter(const AbstractChunkWriter&) = delete;
+  void operator=(const AbstractChunkWriter&) = delete;
 
   /**
    * Initialize the formatter with a given schema. must be called exactly once before any calls to ProcessChunk() or
@@ -28,7 +34,7 @@ class AbstractFormatWriter {
    * ProcessChunk formats the given chunk and may write data to the output. Initialize() must be called before
    * any call to this function occurs.
    */
-  virtual void ProcessChunk(const Chunk& chunk) = 0;
+  virtual void ProcessChunk(std::shared_ptr<Chunk> chunk) = 0;
 
   /**
    * Finalize may write pending buffers or file footers to the output. It is invalid to call Initialize() or
@@ -36,6 +42,22 @@ class AbstractFormatWriter {
    */
   virtual void Finalize() = 0;
 
+  /**
+   * Errors are handled thread-safe.
+   */
+  bool HasError() const { return error_.HasError(); }
+  const StorageError& GetError() const { return error_.GetError(); }
+
+ protected:
+  void SetError(const StorageError& error) { error_.SetError(error); }
+
+ private:
+  // The error state needs special care to allow multiple workers to report errors concurrently.
+  ConcurrentErrorState error_;
+};
+
+class AbstractFormatWriter : public AbstractChunkWriter {
+ public:
   void SetOutputHandler(std::function<void(const char* data, size_t length)> callback);
 
  protected:
@@ -54,7 +76,7 @@ class AbstractFormatWriterFactory {
 template <typename Formatter>
 class FormatterFactory : public AbstractFormatWriterFactory {
  public:
-  FormatterFactory(const typename Formatter::Configuration& config) : config_(config) {}
+  explicit FormatterFactory(const typename Formatter::Configuration& config) : config_(config) {}
 
   std::unique_ptr<AbstractFormatWriter> Get() override { return std::make_unique<Formatter>(config_); }
 

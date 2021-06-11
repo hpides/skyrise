@@ -53,7 +53,7 @@ set(
 
     lib/storage/table/chunk_test.cpp
     lib/storage/table/table_column_definition_test.cpp
-    lib/storage/table/table_writer_test.cpp
+    lib/storage/table/chunk_writer_test.cpp
     lib/storage/table/value_segment_test.cpp
 
     lib/utils/costs/cost_calculator_test.cpp

@@ -3,7 +3,7 @@
 #include "data_generation/tpch/tpch_generator.hpp"
 #include "lib/storage/backend/mock_storage.hpp"
 #include "storage/formats/csv_writer.hpp"
-#include "storage/table/table_writer.hpp"
+#include "storage/table/chunk_writer.hpp"
 
 namespace skyrise {
 
@@ -21,21 +21,22 @@ class TpchDataGeneratorTest : public ::testing::Test {
     storage_ = std::make_shared<MockStorage>();
 
     // Define how to obtain a table writer for a given table
-    get_table_writer_ = [this](const std::string& name,
-                               const TableColumnDefinitions& schema) -> std::shared_ptr<TableWriter> {
-      TableWriterConfig writer_config;
+    get_chunk_writer_ = [this](const std::string& name,
+                               const TableColumnDefinitions& schema) -> std::shared_ptr<PartitionedChunkWriter> {
+      PartitionedChunkWriterConfig writer_config;
       writer_config.naming_strategy = [name](size_t /*part*/) { return name + ".csv"; };
       writer_config.format_factory = csv_factory_;
       writer_config.num_threads = 1;
       writer_config.queue_capacity = 1;
-      writer_config.schema = schema;
-      return std::make_shared<TableWriter>(writer_config, storage_);
+      auto chunk_writer = std::make_shared<PartitionedChunkWriter>(writer_config, storage_);
+      chunk_writer->Initialize(schema);
+      return chunk_writer;
     };
   }
 
   std::shared_ptr<MockStorage> storage_;
   std::shared_ptr<AbstractFormatWriterFactory> csv_factory_;
-  TableWriterFactory get_table_writer_;
+  PartitionedChunkWriterFactory get_chunk_writer_;
 };
 
 TEST_F(TpchDataGeneratorTest, GenerateRegionTable) {
@@ -44,7 +45,7 @@ TEST_F(TpchDataGeneratorTest, GenerateRegionTable) {
   ASSERT_TRUE(status.GetError());
 
   // Now generate table
-  TPCHGenerator generator(get_table_writer_, kScaleFactor);
+  TPCHGenerator generator(get_chunk_writer_, kScaleFactor);
   generator.DisableAllTables();
   generator.EnableTable(TpchTable::kRegion);
   generator.Generate();
@@ -70,7 +71,7 @@ TEST_F(TpchDataGeneratorTest, GenerateAlmostAllTables) {
   const std::vector<std::string> tables = {"partsupp.csv", "supplier.csv", "customer.csv",
                                            "orders.csv",   "nation.csv",   "region.csv"};
 
-  TPCHGenerator generator(get_table_writer_, kScaleFactor);
+  TPCHGenerator generator(get_chunk_writer_, kScaleFactor);
   generator.EnableAllTables();
   generator.DisableTable(TpchTable::kLineItem);
   generator.DisableTable(TpchTable::kPart);
@@ -90,7 +91,7 @@ TEST_F(TpchDataGeneratorTest, GenerateAllTables) {
   const std::vector<std::string> tables = {"part.csv",   "partsupp.csv", "supplier.csv", "customer.csv",
                                            "orders.csv", "nation.csv",   "region.csv",   "lineitem.csv"};
 
-  TPCHGenerator generator(get_table_writer_, kScaleFactor);
+  TPCHGenerator generator(get_chunk_writer_, kScaleFactor);
   generator.EnableAllTables();
   generator.Generate();
 

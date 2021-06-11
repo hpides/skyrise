@@ -23,17 +23,17 @@ void CsvFormatWriter::Initialize(const TableColumnDefinitions& schema) {
   }
 }
 
-void CsvFormatWriter::ProcessChunk(const Chunk& chunk) {
+void CsvFormatWriter::ProcessChunk(std::shared_ptr<Chunk> chunk) {
   if (num_fields_ == 0) {
     return;
   }
 
-  Assert(chunk.GetColumnCount() == num_fields_, "All chunks must have the same number of columns");
+  Assert(chunk->GetColumnCount() == num_fields_, "All chunks must have the same number of columns");
 
   std::stringstream buffer;
-  for (size_t row_id = 0; row_id < chunk.Size(); row_id++) {
+  for (size_t row_id = 0; row_id < chunk->Size(); row_id++) {
     for (size_t column_id = 0; column_id < num_fields_; column_id++) {
-      std::shared_ptr<AbstractSegment> column = chunk.GetSegment(column_id);
+      std::shared_ptr<AbstractSegment> column = chunk->GetSegment(column_id);
       AllTypeVariant value = (*column)[row_id];
       if (column_id != 0) {
         buffer << options_.field_separator;

@@ -39,15 +39,15 @@ void OrcFormatWriter::Initialize(const TableColumnDefinitions& schema) {
   writer_ = orc::createWriter(*type_, &output_proxy_, options);
 }
 
-void OrcFormatWriter::ProcessChunk(const Chunk& chunk) {
-  if (!batch_ || batch_->capacity < chunk.Size()) {
-    batch_ = writer_->createRowBatch(chunk.Size());
+void OrcFormatWriter::ProcessChunk(std::shared_ptr<Chunk> chunk) {
+  if (!batch_ || batch_->capacity < chunk->Size()) {
+    batch_ = writer_->createRowBatch(chunk->Size());
   }
 
   auto* struct_vector = dynamic_cast<orc::StructVectorBatch*>(batch_.get());
-  struct_vector->numElements = chunk.Size();
-  for (size_t i = 0; i < chunk.GetColumnCount(); i++) {
-    CopySegmentToOrcColumn(chunk.GetSegment(i), struct_vector->fields[i]);
+  struct_vector->numElements = chunk->Size();
+  for (size_t i = 0; i < chunk->GetColumnCount(); i++) {
+    CopySegmentToOrcColumn(chunk->GetSegment(i), struct_vector->fields[i]);
   }
 
   writer_->add(*batch_);

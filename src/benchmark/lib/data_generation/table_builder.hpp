@@ -12,8 +12,8 @@
 
 #include "storage/storage_types.hpp"
 #include "storage/table/chunk.hpp"
+#include "storage/table/chunk_writer.hpp"
 #include "storage/table/table_column_definition.hpp"
-#include "storage/table/table_writer.hpp"
 #include "storage/table/value_segment.hpp"
 
 namespace skyrise {
@@ -72,7 +72,7 @@ template <typename... DataTypes>
 class TableBuilder {
  public:
   template <typename Names>
-  TableBuilder(const TableWriterFactory& writer_factory, const std::string& table_name,
+  TableBuilder(const PartitionedChunkWriterFactory& writer_factory, const std::string& table_name,
                const std::tuple<DataTypes...>& types, const Names& names) {
     writer_ = writer_factory(table_name, GetSchemaFromTypesAndNames(types, names));
 
@@ -121,7 +121,7 @@ class TableBuilder {
     std::apply([add_column_to_segment](auto&... vectors) { ((add_column_to_segment(vectors)), ...); }, value_vectors_);
 
     auto chunk = std::make_shared<Chunk>(segments);
-    writer_->WriteChunk(chunk);
+    writer_->ProcessChunk(chunk);
 
     if (writer_->HasError()) {
       has_error_ = true;
@@ -135,7 +135,7 @@ class TableBuilder {
   }
 
   std::tuple<std::vector<DataTypes>...> value_vectors_;
-  std::shared_ptr<AbstractTableWriter> writer_;
+  std::shared_ptr<AbstractChunkWriter> writer_;
   size_t row_count_ = 0;
   bool has_error_ = false;
 };

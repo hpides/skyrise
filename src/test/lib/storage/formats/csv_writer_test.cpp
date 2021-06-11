@@ -23,7 +23,7 @@ TEST_F(CsvFormatWriterTest, FormatChunkAsCSV) {
   formatter.SetOutputHandler([&output_ptr](const char* data, size_t size) { output_ptr->write(data, size); });
 
   formatter.Initialize(schema_);
-  formatter.ProcessChunk(*chunk_);
+  formatter.ProcessChunk(chunk_);
   formatter.Finalize();
 
   ASSERT_EQ("id,text\n4,Hello\n6,world\n3,!\n", output.str());

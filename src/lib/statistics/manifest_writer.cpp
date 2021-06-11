@@ -101,8 +101,7 @@ void ManifestWriter::Flush() {
     segments.emplace_back(std::move(current_segment));
   }
 
-  Chunk chunk(segments);
-  ProcessChunk(chunk);
+  ProcessChunk(std::make_shared<Chunk>(segments));
   InitManifestSegments();
 }
 

@@ -22,7 +22,7 @@ TEST_F(OrcFormatWriterTest, FormatChunkAsOrc) {
   formatter.SetOutputHandler([&output_ptr](const char* data, size_t size) { output_ptr->write(data, size); });
 
   formatter.Initialize(schema_);
-  formatter.ProcessChunk(*chunk_);
+  formatter.ProcessChunk(chunk_);
   formatter.Finalize();
 
   // We are going to check for the magic string, and since we chose uncompressed data, the string examples must be
