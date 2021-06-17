@@ -95,12 +95,10 @@ Aws::Utils::Json::JsonValue BenchmarkHelper::GenerateJsonOutput(
   return json_output;
 }
 
-long double BenchmarkHelper::CreateS3BucketIfNotExists(const Aws::String& bucket_name) const {
+void BenchmarkHelper::CreateS3BucketIfNotExists(const Aws::String& bucket_name) const {
   const auto& s3_client = client_->GetS3Client();
 
   const auto list_buckets_outcome = s3_client.ListBuckets();
-
-  const long double cost = cost_calculator_.CalculateCostS3Requests(1, 0);
 
   if (!list_buckets_outcome.IsSuccess()) {
     Fail(list_buckets_outcome.GetError().GetMessage());
@@ -119,21 +117,19 @@ long double BenchmarkHelper::CreateS3BucketIfNotExists(const Aws::String& bucket
       Fail(create_bucket_outcome.GetError().GetMessage());
     }
   }
-
-  return cost;
 }
 
 std::shared_ptr<Aws::IOStream> BenchmarkHelper::GenerateRandomObject(const size_t num_bytes) {
   return std::make_shared<Aws::StringStream>(RandomString(num_bytes));
 }
 
-long double BenchmarkHelper::UploadObjectToS3(const Aws::String& object_key,
-                                              const std::shared_ptr<Aws::IOStream>& object_value,
-                                              const size_t object_byte_size, const Aws::String& bucket_name) const {
-  return UploadObjectsToS3Parallel({{object_key, object_value, object_byte_size}}, bucket_name);
+void BenchmarkHelper::UploadObjectToS3(const Aws::String& object_key,
+                                       const std::shared_ptr<Aws::IOStream>& object_value,
+                                       const size_t object_byte_size, const Aws::String& bucket_name) const {
+  UploadObjectsToS3Parallel({{object_key, object_value, object_byte_size}}, bucket_name);
 }
 
-long double BenchmarkHelper::UploadObjectsToS3Parallel(
+void BenchmarkHelper::UploadObjectsToS3Parallel(
     const std::vector<std::tuple<Aws::String, std::shared_ptr<Aws::IOStream>, size_t>>& objects,
     const Aws::String& bucket_name) const {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Uploading objects to S3...");
@@ -143,14 +139,11 @@ long double BenchmarkHelper::UploadObjectsToS3Parallel(
   std::vector<Aws::S3::Model::PutObjectOutcomeCallable> callables;
   callables.reserve(objects.size());
 
-  size_t num_bytes_total = 0;
-
   // TODO(anyone): Introduce a client-side thread pool
   for (const auto& [object_key, object, num_bytes] : objects) {
     auto put_object_request = Aws::S3::Model::PutObjectRequest().WithBucket(bucket_name).WithKey(object_key);
     put_object_request.SetBody(object);
     callables.emplace_back(s3_client.PutObjectCallable(put_object_request));
-    num_bytes_total += num_bytes;
   }
 
   size_t num_errors = 0;
@@ -170,22 +163,12 @@ long double BenchmarkHelper::UploadObjectsToS3Parallel(
   if (num_errors > 0) {
     Fail(std::to_string(num_errors) + " errors during multi-threaded upload to S3.");
   }
-
-  // TODO(d-justen): Find a way to track actual hours. For now, we assume that S3 objects will be deleted within an
-  // hour.
-  const long double storage_cost = cost_calculator_.CalculateCostS3StorageMonthly(num_bytes_total, 1);
-  const long double request_cost = cost_calculator_.CalculateCostS3Requests(callables.size(), 0);
-
-  return storage_cost + request_cost;
 }
 
-long double BenchmarkHelper::EmptyS3Bucket(const Aws::String& bucket_name) const {
+void BenchmarkHelper::EmptyS3Bucket(const Aws::String& bucket_name) const {
   const auto& s3_client = client_->GetS3Client();
 
-  long double cost = 0.0L;
-
   while (true) {
-    cost = cost_calculator_.CalculateCostS3Requests(1, 0);
     const auto list_objects_outcome =
         s3_client.ListObjects(Aws::S3::Model::ListObjectsRequest().WithBucket(bucket_name));
     Assert(list_objects_outcome.IsSuccess(), list_objects_outcome.GetError().GetMessage());
@@ -212,16 +195,12 @@ long double BenchmarkHelper::EmptyS3Bucket(const Aws::String& bucket_name) const
       break;
     }
   }
-
-  return cost;
 }
 
-long double BenchmarkHelper::EmptyAndDeleteS3Bucket(const Aws::String& bucket_name) const {
-  const long double cost = EmptyS3Bucket(bucket_name);
+void BenchmarkHelper::EmptyAndDeleteS3Bucket(const Aws::String& bucket_name) const {
+  EmptyS3Bucket(bucket_name);
   const auto& s3_client = client_->GetS3Client();
   s3_client.DeleteBucket(Aws::S3::Model::DeleteBucketRequest().WithBucket(bucket_name));
-
-  return cost;
 }
 
 }  // namespace skyrise

@@ -127,7 +127,7 @@ Aws::Utils::Json::JsonValue FunctionWarmUpContinuousBenchmark::GenerateResultOut
   numeric_metrics.emplace_back("warm_function_percentage_std_dev",
                                warm_function_percentages_aggregates.GetStandardDeviation());
   numeric_metrics.emplace_back("warm_up_cost_usd", benchmark_result->GetWarmUpCost());
-  numeric_metrics.emplace_back("function_cost_usd",
+  numeric_metrics.emplace_back("benchmark_cost_usd",
                                static_cast<double>(CalculateOverallFunctionCost(
                                    benchmark_result, benchmark_parameters.function_instance_mb_size)));
 

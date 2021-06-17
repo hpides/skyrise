@@ -32,7 +32,6 @@ InvocationLatencyBenchmark::InvocationLatencyBenchmark(
       sleep_ms_durations_(sleep_ms_durations),
       repetition_count_(repetition_count),
       benchmark_cost_(0),
-      cost_overhead_(0),
       function_segments_analyzer_(std::make_shared<FunctionSegmentsAnalyzer>(client_->GetXRayClient())) {}
 
 Aws::Utils::Array<Aws::Utils::Json::JsonValue> InvocationLatencyBenchmark::Run(
@@ -132,9 +131,9 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> InvocationLatencyBenchmark::Run(
   }
 
   benchmark_cost_ += CalculateBenchmarkCost(benchmark_results);
-  cost_overhead_ += helper_->EmptyS3Bucket(kBenchmarkName);
+  helper_->EmptyS3Bucket(kBenchmarkName);
 
-  AWS_LOGSTREAM_INFO(kTag.c_str(), "Benchmark cost: $" + std::to_string(benchmark_cost_ + cost_overhead_) + ".");
+  AWS_LOGSTREAM_INFO(kTag.c_str(), "Benchmark cost: $" + std::to_string(benchmark_cost_) + ".");
 
   Teardown();
 
@@ -182,7 +181,7 @@ void InvocationLatencyBenchmark::Setup() {
     }
   }
 
-  cost_overhead_ += helper_->CreateS3BucketIfNotExists(kBenchmarkName);
+  helper_->CreateS3BucketIfNotExists(kBenchmarkName);
 
   std::vector<std::tuple<Aws::String, std::shared_ptr<Aws::IOStream>, size_t>> s3_objects;
   s3_objects.reserve(s3_package_names.size());
@@ -200,7 +199,7 @@ void InvocationLatencyBenchmark::Setup() {
     s3_objects.emplace_back(s3_package_name, package_file, file_size);
   }
 
-  cost_overhead_ += helper_->UploadObjectsToS3Parallel(s3_objects, kBenchmarkName);
+  helper_->UploadObjectsToS3Parallel(s3_objects, kBenchmarkName);
 }
 
 void InvocationLatencyBenchmark::Teardown() {
@@ -208,7 +207,6 @@ void InvocationLatencyBenchmark::Teardown() {
   benchmark_configs_.shrink_to_fit();
   function_segments_analyzer_ = std::make_shared<FunctionSegmentsAnalyzer>(client_->GetXRayClient());
   benchmark_cost_ = 0;
-  cost_overhead_ = 0;
 }
 
 long double InvocationLatencyBenchmark::CalculateBenchmarkCost(
@@ -289,7 +287,6 @@ Aws::Utils::Json::JsonValue InvocationLatencyBenchmark::GenerateResultOutput(
   }
 
   aggregated_metrics.emplace_back("benchmark_cost_usd", static_cast<double>(benchmark_cost_));
-  aggregated_metrics.emplace_back("benchmark_cost_overhead_usd", static_cast<double>(cost_overhead_));
   aggregated_metrics.emplace_back("warm_up_cost_usd", static_cast<double>(benchmark_result->GetWarmUpCost()));
 
   auto json_output = BenchmarkHelper::GenerateJsonOutput(benchmark_name.str(), aggregated_metrics, {}, benchmark_result,

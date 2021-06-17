@@ -127,9 +127,9 @@ Aws::Utils::Json::JsonValue FunctionWarmUpBenchmark::GenerateResultOutput(
        {"warm_function_percentage_percentile_10", warm_function_percentages_aggregates.GetPercentile(10)},
        {"warm_function_percentage_std_dev", warm_function_percentages_aggregates.GetStandardDeviation()},
        {"warm_up_cost_usd", benchmark_result->GetWarmUpCost()},
-       {"function_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
-                                 benchmark_result, benchmark_parameters.function_instance_mb_size,
-                                 benchmark_parameters.warm_up_strategy == "ProvisionedConcurrencyWarmUpStrategy"))}},
+       {"benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
+                                  benchmark_result, benchmark_parameters.function_instance_mb_size,
+                                  benchmark_parameters.warm_up_strategy == "ProvisionedConcurrencyWarmUpStrategy"))}},
       {/*aggregated string metrics*/}, benchmark_result, {/*extract double metric functions*/},
       {[&](const InvokeResult& invoke_result) {
         return std::make_tuple("is_warm_function", is_warm_function(invoke_result) ? "true" : "false");

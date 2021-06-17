@@ -51,8 +51,6 @@ class NetworkBenchmark : public Benchmark {
 
   std::vector<std::pair<NetworkBenchmarkParameters, BenchmarkConfig>> benchmark_configs_;
 
-  long double cost_overhead_;
-
   static constexpr size_t kMaxObjectsPerPrefix = 1000;
   const size_t kMaxMemoryUsageBytes = GbToByte(2);  // TODO(julianmenzler) C++20: Use consteval & constexpr
 

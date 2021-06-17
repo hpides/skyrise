@@ -79,8 +79,7 @@ Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
        {"latency_ms_percentile_99.99", aggregates.GetPercentile(99.99)},
        {"latency_ms_std_dev", aggregates.GetStandardDeviation()},
        {"benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
-                                  benchmark_result, benchmark_parameters.function_instance_mb_size))},
-       {"benchmark_cost_overhead_usd", static_cast<double>(cost_overhead_ / benchmark_configs_.size())}},
+                                  benchmark_result, benchmark_parameters.function_instance_mb_size))}},
       {/*aggregated string metrics*/}, benchmark_result,
       {[&](const InvokeResult& invoke_result) {
          return std::make_tuple("billed_lambda_duration_ms", invoke_result.GetLogResult()->GetBilledDurationMs());

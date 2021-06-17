@@ -14,10 +14,7 @@ namespace skyrise {
 NetworkBenchmark::NetworkBenchmark(std::shared_ptr<BenchmarkHelper> helper,
                                    std::shared_ptr<CostCalculator> cost_calculator,
                                    const std::vector<size_t>& bucket_counts)
-    : Benchmark(std::move(cost_calculator)),
-      helper_(std::move(helper)),
-      bucket_counts_(bucket_counts),
-      cost_overhead_(0) {
+    : Benchmark(std::move(cost_calculator)), helper_(std::move(helper)), bucket_counts_(bucket_counts) {
   Assert(!bucket_counts_.empty(), "Bucket counts must not be empty.");
 }
 
@@ -47,8 +44,8 @@ void NetworkBenchmark::Setup() {
   const size_t bucket_count = *std::max_element(bucket_counts_.cbegin(), bucket_counts_.cend());
 
   for (size_t i = 0; i < bucket_count; i++) {
-    cost_overhead_ += helper_->CreateS3BucketIfNotExists(kBucketPrefix + std::to_string(i));
-    cost_overhead_ += helper_->EmptyS3Bucket(kBucketPrefix + std::to_string(i));
+    helper_->CreateS3BucketIfNotExists(kBucketPrefix + std::to_string(i));
+    helper_->EmptyS3Bucket(kBucketPrefix + std::to_string(i));
   }
 }
 
@@ -56,7 +53,7 @@ void NetworkBenchmark::Teardown() {
   const size_t bucket_count = *std::max_element(bucket_counts_.cbegin(), bucket_counts_.cend());
 
   for (size_t i = 0; i < bucket_count; i++) {
-    cost_overhead_ += helper_->EmptyAndDeleteS3Bucket(kBucketPrefix + std::to_string(i));
+    helper_->EmptyAndDeleteS3Bucket(kBucketPrefix + std::to_string(i));
   }
 }
 

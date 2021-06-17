@@ -47,7 +47,6 @@ class InvocationLatencyBenchmark : public Benchmark {
   const size_t repetition_count_;
 
   long double benchmark_cost_;
-  long double cost_overhead_;
   std::shared_ptr<FunctionSegmentsAnalyzer> function_segments_analyzer_;
   std::vector<std::pair<InvocationLatencyBenchmarkParameters, BenchmarkConfig>> benchmark_configs_;
 
