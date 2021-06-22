@@ -43,7 +43,7 @@ class TemporaryS3Bucket {
 class S3TestResources {
  public:
   S3TestResources() : client_(std::make_shared<const Aws::S3::S3Client>()), bucket_(client_) {}
-  AwsAPI aws_;
+  AwsApi aws_api_;
   std::shared_ptr<const Aws::S3::S3Client> client_;
   TemporaryS3Bucket bucket_;
 };

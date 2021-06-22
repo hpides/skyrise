@@ -9,9 +9,9 @@
 
 namespace skyrise {
 
-class AwsBenchmarkResultTest : public ::testing::Test {};
+class BenchmarkResultTest : public ::testing::Test {};
 
-TEST_F(AwsBenchmarkResultTest, InvokeResultAndLogResult) {
+TEST_F(BenchmarkResultTest, InvokeResultAndLogResult) {
   InvokeResult invoke_result_0("0");
 
   EXPECT_FALSE(invoke_result_0.IsComplete());
@@ -86,7 +86,7 @@ TEST_F(AwsBenchmarkResultTest, InvokeResultAndLogResult) {
   EXPECT_EQ(invoke_result_1.GetResponseBody().GetString("sqs_message"), "hello");
 }
 
-TEST_F(AwsBenchmarkResultTest, ConcurrencyStressTest) {
+TEST_F(BenchmarkResultTest, ConcurrencyStressTest) {
   static constexpr size_t kRepetitionCount = 10;
   static constexpr size_t kInvocationCount = 1000;
 
@@ -149,7 +149,7 @@ TEST_F(AwsBenchmarkResultTest, ConcurrencyStressTest) {
   EXPECT_EQ(benchmark_repetitions[3].GetInvokeResults()[2].GetResponseBody().AsString(), "abc");
 }
 
-TEST_F(AwsBenchmarkResultTest, FunctionWarmingCost) {
+TEST_F(BenchmarkResultTest, FunctionWarmingCost) {
   static constexpr size_t kRepetitionCount = 10;
   static constexpr size_t kInvocationCount = 10;
   BenchmarkResult result(kRepetitionCount, kInvocationCount);

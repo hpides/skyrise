@@ -4,10 +4,13 @@
 
 namespace skyrise {
 
-class AwsAPI {
+class AwsApi {
  public:
-  AwsAPI() { Aws::InitAPI(options_); }
-  ~AwsAPI() { Aws::ShutdownAPI(options_); }
+  AwsApi() {
+    options_.httpOptions.installSigPipeHandler = true;
+    Aws::InitAPI(options_);
+  }
+  ~AwsApi() { Aws::ShutdownAPI(options_); }
 
  private:
   Aws::SDKOptions options_;

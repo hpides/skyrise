@@ -22,8 +22,6 @@ namespace skyrise {
 class AwsBenchmarkIntegrationTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    Aws::InitAPI(sdk_options_);
-
     client_ = std::make_shared<skyrise::Client>();
 
     benchmark_helper_ = std::make_shared<skyrise::BenchmarkHelper>(client_);
@@ -31,15 +29,13 @@ class AwsBenchmarkIntegrationTest : public ::testing::Test {
     cost_calculator_ = std::make_shared<skyrise::CostCalculator>(client_);
   }
 
-  void TearDown() override { Aws::ShutdownAPI(sdk_options_); }
-
   [[nodiscard]] std::shared_ptr<skyrise::Client> GetClient() const { return client_; }
   [[nodiscard]] std::shared_ptr<skyrise::CostCalculator> GetCostCalculator() const { return cost_calculator_; }
   [[nodiscard]] std::shared_ptr<skyrise::BenchmarkRunner> GetBenchmarkRunner() const { return benchmark_runner_; }
   [[nodiscard]] std::shared_ptr<skyrise::BenchmarkHelper> GetBenchmarkHelper() const { return benchmark_helper_; }
 
  private:
-  Aws::SDKOptions sdk_options_;
+  const AwsApi aws_api_;
 
   std::shared_ptr<skyrise::Client> client_;
   std::shared_ptr<skyrise::CostCalculator> cost_calculator_;

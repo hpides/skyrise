@@ -15,15 +15,6 @@
 
 namespace skyrise {
 
-void ExecuteInsideAPI(const std::function<void()>& function) {
-  Aws::SDKOptions options;
-  Aws::InitAPI(options);
-
-  function();
-
-  Aws::ShutdownAPI(options);
-}
-
 // TODO(anyone): Consolidate common utility functions in lib/utils
 void UploadFunction(const std::shared_ptr<Client>& client, const std::string& package_name,
                     const std::string& function_name, const std::string& role_name, bool enable_tracing) {

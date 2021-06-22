@@ -51,7 +51,7 @@ class AwsBenchmarkRunnerTest : public ::testing::Test {
     }
   }
 
-  const AwsAPI aws_api_;
+  const AwsApi aws_api_;
   const std::shared_ptr<Client> clients_ = std::make_shared<Client>();
   BenchmarkRunner benchmark_runner_ = BenchmarkRunner(clients_);
 };

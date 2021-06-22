@@ -6,8 +6,6 @@
 
 namespace skyrise {
 
-void ExecuteInsideAPI(const std::function<void()>& function);
-
 void UploadFunction(const std::shared_ptr<Client>& client, const std::string& package_name,
                     const std::string& function_name, const std::string& role_name, bool enable_tracing = false);
 

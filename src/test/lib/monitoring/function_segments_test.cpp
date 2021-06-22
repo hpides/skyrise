@@ -13,6 +13,7 @@
 #include <gtest/gtest.h>
 
 #include "client/client.hpp"
+#include "lib/testing/aws_test.hpp"
 #include "monitoring_test_utils.hpp"
 #include "utils/assert.hpp"
 #include "utils/string.hpp"
@@ -22,25 +23,20 @@ namespace skyrise {
 class AwsFunctionSegmentsAnalyzerTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    std::function<void()> api_executable = [&]() {
-      client_ = std::make_shared<skyrise::Client>();
-
-      UploadFunction(client_, kPackageName, function_name_, kRoleName, kEnableTracing);
-      const auto time_points = InvokeFunction(client_, function_name_);
-
-      lambda_start_time_ = time_points.first;
-      lambda_end_time_ = time_points.second;
-    };
-
     start_time_ = std::chrono::system_clock::now();
-    ExecuteInsideAPI(api_executable);
+
+    client_ = std::make_shared<skyrise::Client>();
+
+    UploadFunction(client_, kPackageName, function_name_, kRoleName, kEnableTracing);
+    const auto time_points = InvokeFunction(client_, function_name_);
+
+    lambda_start_time_ = time_points.first;
+    lambda_end_time_ = time_points.second;
   }
 
-  void TearDown() override {
-    std::function<void()> api_executable = [&]() { DeleteFunction(client_, function_name_); };
+  void TearDown() override { DeleteFunction(client_, function_name_); }
 
-    ExecuteInsideAPI(api_executable);
-  }
+  const AwsApi aws_api_;
 
   std::chrono::time_point<std::chrono::system_clock> lambda_start_time_;
   std::chrono::time_point<std::chrono::system_clock> lambda_end_time_;
@@ -55,85 +51,77 @@ class AwsFunctionSegmentsAnalyzerTest : public ::testing::Test {
 };
 
 TEST_F(AwsFunctionSegmentsAnalyzerTest, GetCalculatedSegments) {
-  std::function<void()> api_function = [&]() {
-    const auto end_time = std::chrono::system_clock::now();
+  const auto end_time = std::chrono::system_clock::now();
 
-    FunctionSegmentsAnalyzer analyzer(client_->GetXRayClient());
-    const auto trace_ids = analyzer.GetTraceIds({function_name_}, start_time_, end_time);
+  FunctionSegmentsAnalyzer analyzer(client_->GetXRayClient());
+  const auto trace_ids = analyzer.GetTraceIds({function_name_}, start_time_, end_time);
 
-    EXPECT_FALSE(trace_ids.at(function_name_).empty());
+  EXPECT_FALSE(trace_ids.at(function_name_).empty());
 
-    Aws::XRay::Model::Trace trace;
-    for (const auto& trace_id : trace_ids.at(function_name_)) {
-      trace = analyzer.GetTraces({trace_id})[trace_id];
-      EXPECT_FALSE(trace.GetSegments().empty());
-    }
+  Aws::XRay::Model::Trace trace;
+  for (const auto& trace_id : trace_ids.at(function_name_)) {
+    trace = analyzer.GetTraces({trace_id})[trace_id];
+    EXPECT_FALSE(trace.GetSegments().empty());
+  }
 
-    const auto segments = FunctionSegmentsAnalyzer::GetSegments(trace);
-    EXPECT_FALSE(segments.empty());
+  const auto segments = FunctionSegmentsAnalyzer::GetSegments(trace);
+  EXPECT_FALSE(segments.empty());
 
-    const auto lambda_segments =
-        FunctionSegmentsAnalyzer::CalculateLambdaSegmentDurations(segments, lambda_start_time_, lambda_end_time_);
+  const auto lambda_segments =
+      FunctionSegmentsAnalyzer::CalculateLambdaSegmentDurations(segments, lambda_start_time_, lambda_end_time_);
 
-    EXPECT_FALSE(lambda_segments.empty());
-    // Allow some clock skew between test machine and data center.
-    EXPECT_GT(lambda_segments.at("total").count(), -0.1);
-    EXPECT_GT(lambda_segments.at("function_total").count(), -0.1);
-    EXPECT_GT(lambda_segments.at("network_total").count(), -0.1);
-    EXPECT_GT(lambda_segments.at("network_call").count(), -0.1);
-    EXPECT_GT(lambda_segments.at("network_return").count(), -0.1);
-    EXPECT_GT(lambda_segments.at("initialization_total").count(), -0.1);
-    EXPECT_GT(lambda_segments.at("initialization").count(), -0.1);
-    EXPECT_GT(lambda_segments.at("initialization_remainder").count(), -0.1);
-    EXPECT_GT(lambda_segments.at("function_execution").count(), -0.1);
-    EXPECT_GT(lambda_segments.at("function_overhead").count(), -0.1);
-    EXPECT_GT(lambda_segments.at("function_remainder").count(), -0.1);
+  EXPECT_FALSE(lambda_segments.empty());
+  // Allow some clock skew between test machine and data center.
+  EXPECT_GT(lambda_segments.at("total").count(), -0.1);
+  EXPECT_GT(lambda_segments.at("function_total").count(), -0.1);
+  EXPECT_GT(lambda_segments.at("network_total").count(), -0.1);
+  EXPECT_GT(lambda_segments.at("network_call").count(), -0.1);
+  EXPECT_GT(lambda_segments.at("network_return").count(), -0.1);
+  EXPECT_GT(lambda_segments.at("initialization_total").count(), -0.1);
+  EXPECT_GT(lambda_segments.at("initialization").count(), -0.1);
+  EXPECT_GT(lambda_segments.at("initialization_remainder").count(), -0.1);
+  EXPECT_GT(lambda_segments.at("function_execution").count(), -0.1);
+  EXPECT_GT(lambda_segments.at("function_overhead").count(), -0.1);
+  EXPECT_GT(lambda_segments.at("function_remainder").count(), -0.1);
 
-    EXPECT_GT(analyzer.GetNumAccessedTraces(), 0);
-    EXPECT_GT(analyzer.GetNumScannedTraces(), 0);
-  };
-
-  ExecuteInsideAPI(api_function);
+  EXPECT_GT(analyzer.GetNumAccessedTraces(), 0);
+  EXPECT_GT(analyzer.GetNumScannedTraces(), 0);
 }
 
 TEST_F(AwsFunctionSegmentsAnalyzerTest, GetCalculatedSegmentsFail) {
-  std::function<void()> api_function = [&]() {
-    const auto end_time = std::chrono::system_clock::now();
+  const auto end_time = std::chrono::system_clock::now();
 
-    FunctionSegmentsAnalyzer analyzer(client_->GetXRayClient());
-    const auto trace_ids = analyzer.GetTraceIds({}, start_time_, end_time);
+  FunctionSegmentsAnalyzer analyzer(client_->GetXRayClient());
+  const auto trace_ids = analyzer.GetTraceIds({}, start_time_, end_time);
 
-    EXPECT_TRUE(trace_ids.empty());
+  EXPECT_TRUE(trace_ids.empty());
 
-    std::map<Aws::String, Aws::XRay::Model::Trace> traces = analyzer.GetTraces({});
+  std::map<Aws::String, Aws::XRay::Model::Trace> traces = analyzer.GetTraces({});
 
-    EXPECT_TRUE(traces.empty());
+  EXPECT_TRUE(traces.empty());
 
-    const auto segments = FunctionSegmentsAnalyzer::GetSegments(Aws::XRay::Model::Trace{});
+  const auto segments = FunctionSegmentsAnalyzer::GetSegments(Aws::XRay::Model::Trace{});
 
-    EXPECT_TRUE(segments.empty());
+  EXPECT_TRUE(segments.empty());
 
-    const auto lambda_segments =
-        FunctionSegmentsAnalyzer::CalculateLambdaSegmentDurations(segments, lambda_start_time_, lambda_end_time_);
+  const auto lambda_segments =
+      FunctionSegmentsAnalyzer::CalculateLambdaSegmentDurations(segments, lambda_start_time_, lambda_end_time_);
 
-    EXPECT_FALSE(lambda_segments.empty());
-    EXPECT_EQ(lambda_segments.at("total").count(), 0.0);
-    EXPECT_EQ(lambda_segments.at("function_total").count(), 0.0);
-    EXPECT_EQ(lambda_segments.at("network_total").count(), 0.0);
-    EXPECT_EQ(lambda_segments.at("network_call").count(), 0.0);
-    EXPECT_EQ(lambda_segments.at("network_return").count(), 0.0);
-    EXPECT_EQ(lambda_segments.at("initialization_total").count(), 0.0);
-    EXPECT_EQ(lambda_segments.at("initialization").count(), 0.0);
-    EXPECT_EQ(lambda_segments.at("initialization_remainder").count(), 0.0);
-    EXPECT_EQ(lambda_segments.at("function_execution").count(), 0.0);
-    EXPECT_EQ(lambda_segments.at("function_overhead").count(), 0.0);
-    EXPECT_EQ(lambda_segments.at("function_remainder").count(), 0.0);
+  EXPECT_FALSE(lambda_segments.empty());
+  EXPECT_EQ(lambda_segments.at("total").count(), 0.0);
+  EXPECT_EQ(lambda_segments.at("function_total").count(), 0.0);
+  EXPECT_EQ(lambda_segments.at("network_total").count(), 0.0);
+  EXPECT_EQ(lambda_segments.at("network_call").count(), 0.0);
+  EXPECT_EQ(lambda_segments.at("network_return").count(), 0.0);
+  EXPECT_EQ(lambda_segments.at("initialization_total").count(), 0.0);
+  EXPECT_EQ(lambda_segments.at("initialization").count(), 0.0);
+  EXPECT_EQ(lambda_segments.at("initialization_remainder").count(), 0.0);
+  EXPECT_EQ(lambda_segments.at("function_execution").count(), 0.0);
+  EXPECT_EQ(lambda_segments.at("function_overhead").count(), 0.0);
+  EXPECT_EQ(lambda_segments.at("function_remainder").count(), 0.0);
 
-    EXPECT_EQ(analyzer.GetNumAccessedTraces(), 0);
-    EXPECT_EQ(analyzer.GetNumScannedTraces(), 0);
-  };
-
-  ExecuteInsideAPI(api_function);
+  EXPECT_EQ(analyzer.GetNumAccessedTraces(), 0);
+  EXPECT_EQ(analyzer.GetNumScannedTraces(), 0);
 }
 
 }  // namespace skyrise

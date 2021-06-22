@@ -57,8 +57,6 @@ set(
     lib/storage/table/value_segment_test.cpp
 
     lib/utils/costs/cost_calculator_test.cpp
-    lib/utils/costs/costs_test_utils.cpp
-    lib/utils/costs/costs_test_utils.hpp
     lib/utils/costs/pricing_test.cpp
     lib/utils/profiling/function_host_information_test.cpp
     lib/utils/string_test.cpp
