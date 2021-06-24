@@ -30,7 +30,7 @@ ColumnCount Chunk::GetColumnCount() const { return segments_.size(); }
 
 ChunkOffset Chunk::Size() const { return segments_.empty() ? 0 : GetSegment(0)->Size(); }
 
-size_t Chunk::MemoryUsage() const {
+size_t Chunk::MemoryUsageBytes() const {
   auto bytes = size_t{sizeof(*this)};
 
   for (const auto& segment : segments_) {

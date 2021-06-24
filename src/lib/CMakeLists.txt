@@ -48,6 +48,8 @@ set(
     storage/table/base_value_segment.hpp
     storage/table/chunk.cpp
     storage/table/chunk.hpp
+    storage/table/table.cpp
+    storage/table/table.hpp
     storage/table/table_column_definition.cpp
     storage/table/table_column_definition.hpp
     storage/table/value_segment.cpp

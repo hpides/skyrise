@@ -46,7 +46,7 @@ class Chunk {
   std::shared_ptr<AbstractSegment> GetSegment(ColumnId column_id) const;
 
   // Makes an estimation about the memory used by this chunk and its segments
-  size_t MemoryUsage() const;
+  size_t MemoryUsageBytes() const;
 
  private:
   Segments segments_;
