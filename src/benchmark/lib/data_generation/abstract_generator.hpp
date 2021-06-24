@@ -1,7 +1,7 @@
 #pragma once
 
 #include "storage/backend/abstract_storage.hpp"
-#include "storage/formats/abstract_format_writer.hpp"
+#include "storage/formats/abstract_chunk_writer.hpp"
 #include "storage/table/chunk_writer.hpp"
 #include "table_builder.hpp"
 

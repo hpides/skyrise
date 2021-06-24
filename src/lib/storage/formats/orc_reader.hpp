@@ -2,7 +2,7 @@
 
 #include <orc/OrcFile.hh>
 
-#include "abstract_format_reader.hpp"
+#include "abstract_chunk_reader.hpp"
 #include "storage/backend/abstract_storage.hpp"
 
 namespace skyrise {
@@ -19,7 +19,7 @@ struct OrcFormatReaderOptions {
  * types such as arrays and will fail parsing those files. This class also does not support null-values. If null-values
  * are present, default values (0 or empty string) will be returned instead. This class is not thread-safe.
  */
-class OrcFormatReader : public AbstractFormatReader {
+class OrcFormatReader : public AbstractChunkReader {
  public:
   using Configuration = OrcFormatReaderOptions;
   explicit OrcFormatReader(std::unique_ptr<ObjectReader> source, Configuration configuration = Configuration());

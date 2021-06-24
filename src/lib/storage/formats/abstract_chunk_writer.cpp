@@ -1,4 +1,4 @@
-#include "abstract_format_writer.hpp"
+#include "abstract_chunk_writer.hpp"
 
 namespace skyrise {
 

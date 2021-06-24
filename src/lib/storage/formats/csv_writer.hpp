@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 
-#include "abstract_format_writer.hpp"
+#include "abstract_chunk_writer.hpp"
 #include "storage/table/chunk.hpp"
 #include "storage/table/table_column_definition.hpp"
 

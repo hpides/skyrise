@@ -7,15 +7,15 @@
 namespace skyrise {
 
 /**
- * AbstractFormatReader provides a common interface to read Chunks from data files.
+ * AbstractChunkReader provides a common interface to read Chunks from data files.
  * To use this class in a factory, a struct type holding configurations should be made available under the name
  * Configuration. Concrete implementations are not thread-safe.
  */
-class AbstractFormatReader {
+class AbstractChunkReader {
  public:
-  AbstractFormatReader();
+  AbstractChunkReader();
 
-  virtual ~AbstractFormatReader() = default;
+  virtual ~AbstractChunkReader() = default;
 
   const std::shared_ptr<const TableColumnDefinitions>& GetSchema() const;
   virtual bool HasNext() = 0;

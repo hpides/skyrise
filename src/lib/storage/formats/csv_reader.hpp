@@ -4,7 +4,7 @@
 #include <string_view>
 #include <vector>
 
-#include "abstract_format_reader.hpp"
+#include "abstract_chunk_reader.hpp"
 #include "storage/backend/abstract_storage.hpp"
 #include "storage/table/table_column_definition.hpp"
 #include "utils/literal.hpp"
@@ -25,7 +25,7 @@ struct CsvFormatReaderOptions {
 /*
  * CsvFormatReader reads formatted data from text files.
  */
-class CsvFormatReader : public AbstractFormatReader {
+class CsvFormatReader : public AbstractChunkReader {
  public:
   using Configuration = CsvFormatReaderOptions;
   using Lines = std::vector<std::string_view>;
