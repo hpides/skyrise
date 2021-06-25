@@ -26,8 +26,6 @@ class TpchDataGeneratorTest : public ::testing::Test {
       PartitionedChunkWriterConfig writer_config;
       writer_config.naming_strategy = [name](size_t /*part*/) { return name + ".csv"; };
       writer_config.format_factory = csv_factory_;
-      writer_config.num_threads = 1;
-      writer_config.queue_capacity = 1;
       auto chunk_writer = std::make_shared<PartitionedChunkWriter>(writer_config, storage_);
       chunk_writer->Initialize(schema);
       return chunk_writer;

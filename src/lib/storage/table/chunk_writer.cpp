@@ -3,113 +3,62 @@
 namespace skyrise {
 
 PartitionedChunkWriter::PartitionedChunkWriter(PartitionedChunkWriterConfig config, std::shared_ptr<Storage> storage)
-    : config_(std::move(config)), queue_(config.queue_capacity), storage_(std::move(storage)) {}
+    : config_(std::move(config)), storage_(std::move(storage)) {}
 
-void PartitionedChunkWriter::Initialize(const TableColumnDefinitions& schema) {
-  schema_ = schema;
-  StartWorkers(config_.num_threads);
-}
-
-void PartitionedChunkWriter::StartWorkers(size_t num_workers) {
-  for (size_t i = 0; i < num_workers; i++) {
-    threads_.emplace_back(&PartitionedChunkWriter::ProcessChunkLoop, this);
-  }
-}
+void PartitionedChunkWriter::Initialize(const TableColumnDefinitions& schema) { schema_ = schema; }
 
 PartitionedChunkWriter::~PartitionedChunkWriter() { NonVirtualFinalize(); }
 
-void PartitionedChunkWriter::ProcessChunk(std::shared_ptr<Chunk> chunk) {
-  // Because `nullptr` will cause the worker to exit, we don't want to put `nullptr`s in the queue here.
-  if (chunk) {
-    queue_.Push(std::move(chunk));
+void PartitionedChunkWriter::Flush() {
+  current_formatter_->Finalize();
+  StorageError error = current_output_object_->Close();
+  if (error) {
+    SetError(error);
   }
+  current_formatter_ = nullptr;
+  current_output_object_ = nullptr;
 }
 
-void PartitionedChunkWriter::NonVirtualFinalize() {
-  for (size_t i = 0; i < threads_.size(); i++) {
-    // `nullptr` will signal the worker to stop.
-    queue_.Push(nullptr);
+void PartitionedChunkWriter::ProcessChunk(std::shared_ptr<Chunk> chunk) {
+  if (!chunk || HasError()) {
+    return;
   }
 
-  for (auto& thread : threads_) {
-    if (thread.joinable()) {
-      thread.join();
+  auto writer_callback = [this](const char* data, size_t length) {
+    StorageError error = current_output_object_->Write(data, length);
+    if (error) {
+      this->SetError(error);
     }
+  };
+
+  if (!current_formatter_) {
+    // Iff `formatter` is a `nullptr`, `output_object` is a `nullptr` too.
+    current_output_object_ = storage_->OpenForWriting(config_.naming_strategy(object_id_counter_++));
+    current_formatter_ = config_.format_factory->Get();
+    current_formatter_->SetOutputHandler(writer_callback);
+    current_formatter_->Initialize(schema_);
   }
 
-  queue_.Close();
-  threads_.clear();
+  current_formatter_->ProcessChunk(chunk);
+  if (HasError()) {
+    return;
+  }
+
+  num_rows_written_ += chunk->Size();
+  if (config_.split_rows != 0 && num_rows_written_ >= config_.split_rows) {
+    Flush();
+    num_rows_written_ = 0;
+  }
 }
 
 void PartitionedChunkWriter::Finalize() { NonVirtualFinalize(); }
 
-void PartitionedChunkWriter::ProcessChunkLoop() {
-  size_t num_rows_written = 0;
-  std::unique_ptr<skyrise::AbstractFormatWriter> formatter;
-  std::unique_ptr<ObjectWriter> output_object;
-  StorageError error = StorageError::Success();
-
-  auto writer_callback = [&output_object, &error](const char* data, size_t length) {
-    error = output_object->Write(data, length);
-  };
-  auto flush = [&]() {
-    formatter->Finalize();
-    if (error) {
-      SetError(error);
-    }
-    error = output_object->Close();
-    if (error) {
-      SetError(error);
-    }
-    formatter.reset(nullptr);
-    output_object.reset(nullptr);
-  };
-
-  std::shared_ptr<Chunk> chunk;
-  while (true) {
-    queue_.Pop(&chunk);
-
-    // A `nullptr` in the queue is the *only* way how a worker can be stopped.
-    if (!chunk) {
-      break;
-    }
-
-    // If any worker reported an error, we stay in the loop to flush the queue. This way, we make sure
-    // that a synchronized exit will happen.
-    if (HasError()) {
-      continue;
-    }
-
-    if (!formatter) {
-      // Iff `formatter` is a `nullptr`, `output_object` is a `nullptr` too.
-      output_object = storage_->OpenForWriting(config_.naming_strategy(object_id_counter_++));
-      formatter = config_.format_factory->Get();
-      formatter->SetOutputHandler(writer_callback);
-      formatter->Initialize(schema_);
-    }
-
-    formatter->ProcessChunk(chunk);
-    if (error) {
-      SetError(error);
-      continue;
-    }
-
-    num_rows_written += chunk->Size();
-
-    if (config_.split_rows != 0 && num_rows_written >= config_.split_rows) {
-      flush();
-      num_rows_written = 0;
-    }
-  }
-
-  if (formatter) {
-    flush();
+void PartitionedChunkWriter::NonVirtualFinalize() {
+  if (current_formatter_) {
+    Flush();
   }
 }
 
-void MemoryChunkWriter::ProcessChunk(std::shared_ptr<Chunk> chunk) {
-  std::lock_guard<std::mutex> guard(write_mutex_);
-  chunks_.emplace_back(std::move(chunk));
-}
+void MemoryChunkWriter::ProcessChunk(std::shared_ptr<Chunk> chunk) { chunks_.emplace_back(std::move(chunk)); }
 
 }  // namespace skyrise

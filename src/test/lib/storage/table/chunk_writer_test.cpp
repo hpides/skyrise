@@ -13,8 +13,8 @@ class PartitionedChunkWriterTest : public ::testing::Test {
  protected:
   static constexpr size_t kNumRowsPerChunk = 2;
   static constexpr size_t kCSVPartLength = 13;
-  static constexpr size_t kNumThreads = 3;
-  static constexpr size_t kNumChunksPerThread = 100;
+  static constexpr size_t kNumSequentialTasks = 3;
+  static constexpr size_t kNumChunksPerTask = 100;
   static constexpr size_t kNumChunksPerObject = 2;
 
   void SetUp() override {
@@ -36,8 +36,6 @@ class PartitionedChunkWriterTest : public ::testing::Test {
     csv_factory_ = std::make_shared<FormatterFactory<CsvFormatWriter>>(options_);
 
     config_.format_factory = csv_factory_;
-    config_.num_threads = 4;
-    config_.queue_capacity = 4;
     config_.split_rows = kNumRowsPerChunk * kNumChunksPerObject;
     config_.naming_strategy = [](size_t part) -> std::string {
       auto ss = std::stringstream();
@@ -69,20 +67,13 @@ TEST_F(PartitionedChunkWriterTest, WriteTable) {
   writer.Initialize(schema_);
 
   auto producer = [&]() {
-    for (size_t i = 0; i < kNumChunksPerThread; i++) {
+    for (size_t i = 0; i < kNumChunksPerTask; i++) {
       writer.ProcessChunk(chunk_);
     }
   };
 
-  std::vector<std::thread> threads(kNumThreads);
-  for (size_t i = 0; i < kNumThreads; i++) {
-    threads[i] = std::thread(producer);
-  }
-
-  for (auto& thread : threads) {
-    if (thread.joinable()) {
-      thread.join();
-    }
+  for (size_t i = 0; i < kNumSequentialTasks; i++) {
+    producer();
   }
 
   writer.Finalize();
@@ -103,7 +94,7 @@ TEST_F(PartitionedChunkWriterTest, WriteTable) {
     }
   }
 
-  ASSERT_EQ(chunks_found, kNumThreads * kNumChunksPerThread);
+  ASSERT_EQ(chunks_found, kNumSequentialTasks * kNumChunksPerTask);
 }
 
 TEST_F(PartitionedChunkWriterTest, WriteTableErrorCase) {
@@ -113,20 +104,13 @@ TEST_F(PartitionedChunkWriterTest, WriteTableErrorCase) {
   writer.Initialize(schema_);
 
   auto producer = [&]() {
-    for (size_t i = 0; i < kNumChunksPerThread; i++) {
+    for (size_t i = 0; i < kNumChunksPerTask; i++) {
       writer.ProcessChunk(chunk_);
     }
   };
 
-  std::vector<std::thread> threads(kNumThreads);
-  for (size_t i = 0; i < kNumThreads; i++) {
-    threads[i] = std::thread(producer);
-  }
-
-  for (auto& thread : threads) {
-    if (thread.joinable()) {
-      thread.join();
-    }
+  for (size_t i = 0; i < kNumSequentialTasks; i++) {
+    producer();
   }
 
   writer.Finalize();

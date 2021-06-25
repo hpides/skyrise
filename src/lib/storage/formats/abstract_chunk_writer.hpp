@@ -42,18 +42,14 @@ class AbstractChunkWriter {
    */
   virtual void Finalize() = 0;
 
-  /**
-   * Errors are handled thread-safe.
-   */
-  bool HasError() const { return error_.HasError(); }
-  const StorageError& GetError() const { return error_.GetError(); }
+  bool HasError() const { return error_.IsError(); }
+  const StorageError& GetError() const { return error_; }
 
  protected:
-  void SetError(const StorageError& error) { error_.SetError(error); }
+  void SetError(const StorageError& error) { error_ = error; }
 
  private:
-  // The error state needs special care to allow multiple workers to report errors concurrently.
-  ConcurrentErrorState error_;
+  StorageError error_{StorageErrorType::kNoError};
 };
 
 class AbstractFormatWriter : public AbstractChunkWriter {
