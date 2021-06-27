@@ -105,6 +105,8 @@ set(
     expression/evaluation/expression_functors.hpp
     expression/evaluation/expression_result.hpp
     expression/evaluation/expression_result_views.hpp
+    operator/abstract_operator.cpp
+    operator/abstract_operator.hpp
     scheduler/scheduler_types.hpp
     types.hpp
     utils/array.hpp
