@@ -16,6 +16,7 @@ FunctionWarmUpBenchmark::FunctionWarmUpBenchmark(std::shared_ptr<CostCalculator>
                                                  const std::vector<size_t>& invocation_counts,
                                                  const std::vector<size_t>& sleep_ms_durations,
                                                  const std::vector<double>& provisioning_factors,
+                                                 const bool enable_provisioned_concurrency,
                                                  const size_t repetition_count)
     : Benchmark(std::move(cost_calculator)) {
   benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size() *
@@ -41,22 +42,24 @@ FunctionWarmUpBenchmark::FunctionWarmUpBenchmark(std::shared_ptr<CostCalculator>
 
           benchmark_configs_.emplace_back(
               FunctionWarmUpBenchmarkParameters{function_instance_mb_size, invocation_count, repetition_count,
-                                                sleep_ms_duration, provisioning_factor,
+                                                sleep_ms_duration, provisioning_factor, enable_provisioned_concurrency,
                                                 config.warm_up_strategy_->GetName()},
               config);
         }
       }
 
-      BenchmarkConfig config(kFunctionName, function_instance_mb_size, repetition_count, invocation_count,
-                             WarmUp::kDefaultOncePerRepetition, UseOneFunctionPerRepetition::kYes);
-      config.warm_up_strategy_ = std::make_shared<ProvisionedConcurrencyWarmUpStrategy>();
+      if (enable_provisioned_concurrency) {
+        BenchmarkConfig config(kFunctionName, function_instance_mb_size, repetition_count, invocation_count,
+                               WarmUp::kDefaultOncePerRepetition, UseOneFunctionPerRepetition::kYes);
+        config.warm_up_strategy_ = std::make_shared<ProvisionedConcurrencyWarmUpStrategy>();
 
-      config.SetOnePayloadForAllFunctions(std::make_shared<Aws::StringStream>(payload_value.View().WriteCompact()));
+        config.SetOnePayloadForAllFunctions(std::make_shared<Aws::StringStream>(payload_value.View().WriteCompact()));
 
-      benchmark_configs_.emplace_back(
-          FunctionWarmUpBenchmarkParameters{function_instance_mb_size, invocation_count, repetition_count, 0, 1.0,
-                                            config.warm_up_strategy_->GetName()},
-          config);
+        benchmark_configs_.emplace_back(
+            FunctionWarmUpBenchmarkParameters{function_instance_mb_size, invocation_count, repetition_count, 0, 1.0,
+                                              enable_provisioned_concurrency, config.warm_up_strategy_->GetName()},
+            config);
+      }
     }
   }
 }
@@ -84,7 +87,8 @@ Aws::Utils::Json::JsonValue FunctionWarmUpBenchmark::GenerateResultOutput(
   Aws::StringStream benchmark_name;
   benchmark_name << "FunctionWarmUpBenchmark/" << benchmark_parameters.function_instance_mb_size << "/"
                  << benchmark_parameters.invocation_count << "/" << benchmark_parameters.sleep_ms_duration << "/"
-                 << benchmark_parameters.provisioning_factor << "/" << benchmark_parameters.warm_up_strategy;
+                 << benchmark_parameters.provisioning_factor << "/"
+                 << benchmark_parameters.enable_provisioned_concurrency << "/" << benchmark_parameters.warm_up_strategy;
 
   const auto is_warm_function = [&](const InvokeResult& invoke_result) {
     return !invoke_result.GetLogResult()->HasInitDuration() ||

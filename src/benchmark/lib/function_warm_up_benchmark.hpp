@@ -18,6 +18,7 @@ struct FunctionWarmUpBenchmarkParameters {
   size_t repetition_count;
   size_t sleep_ms_duration;
   double provisioning_factor;
+  bool enable_provisioned_concurrency;
   std::string warm_up_strategy;
 };
 
@@ -26,7 +27,8 @@ class FunctionWarmUpBenchmark : public Benchmark {
   FunctionWarmUpBenchmark(std::shared_ptr<CostCalculator> cost_calculator,
                           const std::vector<size_t>& function_instance_mb_sizes,
                           const std::vector<size_t>& invocation_counts, const std::vector<size_t>& sleep_ms_durations,
-                          const std::vector<double>& provisioning_factors, const size_t repetition_count);
+                          const std::vector<double>& provisioning_factors, const bool enable_provisioned_concurrency,
+                          const size_t repetition_count);
 
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> Run(const std::shared_ptr<BenchmarkRunner>& benchmark_runner);
 
