@@ -5,10 +5,12 @@ project(skyrise
     LANGUAGES C CXX)
 
 option(SKYRISE_ENABLE_CCACHE "Enable build caching with Ccache" ON)
-option(SKYRISE_ENABLE_CLANG_FORMAT "Enable formatting with clang-format" OFF)
-option(SKYRISE_ENABLE_CLANG_TIDY "Enable static analysis with clang-tidy" OFF)
-option(SKYRISE_ENABLE_CPPCHECK "Enable static analysis with cppcheck" OFF)
-option(SKYRISE_ENABLE_CPPLINT "Enable static analysis with cpplint" OFF)
+option(SKYRISE_ENABLE_CLANG_FORMAT "Enable formatting with Clang-Format" OFF)
+option(SKYRISE_ENABLE_CLANG_TIDY "Enable static analysis with Clang-Tidy" OFF)
+option(SKYRISE_ENABLE_CPPCHECK "Enable static analysis with Cppcheck" OFF)
+option(SKYRISE_ENABLE_CPPLINT "Enable static analysis with Cpplint" OFF)
+option(SKYRISE_ENABLE_GOOGLE_ADDRESS_SANITIZER "Enable memory corruption detection with ASan" OFF)
+option(SKYRISE_ENABLE_GOOGLE_LEAK_SANITIZER "Enable memory leak detection with LSan" OFF)
 option(SKYRISE_ENABLE_LLVM_COV "Enable code coverage with llvm-cov" OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -28,9 +30,10 @@ add_subdirectory(third_party EXCLUDE_FROM_ALL)
 set(aws-lambda-runtime_DIR cmake)
 find_package(aws-lambda-runtime CONFIG REQUIRED)
 
-# Set formatter and static analyzers just for Skyrise sources
+# Set formatter as well as static and dynamic analyzers just for Skyrise sources
 include(cmake/Formatter.cmake)
 include(cmake/StaticAnalyzers.cmake)
+include(cmake/DynamicAnalyzers.cmake)
 
 # Sources
 add_subdirectory(src)
