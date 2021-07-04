@@ -12,9 +12,8 @@
 namespace skyrise {
 
 AbstractPredicateExpression::AbstractPredicateExpression(
-    const PredicateCondition init_predicate_condition,
-    const std::vector<std::shared_ptr<AbstractExpression>>& init_arguments)
-    : AbstractExpression(ExpressionType::kPredicate, init_arguments), predicate_condition_(init_predicate_condition) {}
+    const PredicateCondition predicate_condition, const std::vector<std::shared_ptr<AbstractExpression>>& arguments)
+    : AbstractExpression(ExpressionType::kPredicate, arguments), predicate_condition_(predicate_condition) {}
 
 DataType AbstractPredicateExpression::GetDataType() const {
   // TODO(maltenbergert): Revisit DataType once the ExpressionEvaluator is introduced.

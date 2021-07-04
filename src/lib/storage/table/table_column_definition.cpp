@@ -5,8 +5,8 @@
 
 namespace skyrise {
 
-TableColumnDefinition::TableColumnDefinition(std::string init_name, DataType init_data_type, bool init_nullable)
-    : name(std::move(init_name)), data_type(init_data_type), nullable(init_nullable) {}
+TableColumnDefinition::TableColumnDefinition(std::string name, DataType data_type, bool nullable)
+    : name(std::move(name)), data_type(data_type), nullable(nullable) {}
 
 bool TableColumnDefinition::operator==(const TableColumnDefinition& rhs) const {
   return name == rhs.name && data_type == rhs.data_type && nullable == rhs.nullable;

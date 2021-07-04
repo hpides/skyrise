@@ -11,8 +11,8 @@
 
 namespace skyrise {
 
-ValueExpression::ValueExpression(const AllTypeVariant& init_value)
-    : AbstractExpression(ExpressionType::kValue, {}), value_(init_value) {}
+ValueExpression::ValueExpression(const AllTypeVariant& value)
+    : AbstractExpression(ExpressionType::kValue, {}), value_(value) {}
 
 std::shared_ptr<AbstractExpression> ValueExpression::DeepCopy() const {
   return std::make_shared<ValueExpression>(value_);

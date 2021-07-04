@@ -13,7 +13,7 @@ namespace skyrise {
  */
 class ValueExpression : public AbstractExpression {
  public:
-  explicit ValueExpression(const AllTypeVariant& init_value);
+  explicit ValueExpression(const AllTypeVariant& value);
 
   std::shared_ptr<AbstractExpression> DeepCopy() const override;
   bool RequiresComputation() const override;

@@ -11,8 +11,7 @@ namespace skyrise {
 
 class IsNullExpression : public AbstractPredicateExpression {
  public:
-  IsNullExpression(const PredicateCondition init_predicate_condition,
-                   const std::shared_ptr<AbstractExpression>& operand);
+  IsNullExpression(const PredicateCondition predicate_condition, const std::shared_ptr<AbstractExpression>& operand);
 
   const std::shared_ptr<AbstractExpression>& Operand() const;
 

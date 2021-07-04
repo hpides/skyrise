@@ -12,7 +12,7 @@ namespace skyrise {
  */
 class InExpression : public AbstractPredicateExpression {
  public:
-  InExpression(const PredicateCondition init_predicate_condition, const std::shared_ptr<AbstractExpression>& value,
+  InExpression(const PredicateCondition predicate_condition, const std::shared_ptr<AbstractExpression>& value,
                const std::shared_ptr<AbstractExpression>& set);
 
   std::string Description(const DescriptionMode mode) const override;

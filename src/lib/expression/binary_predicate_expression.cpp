@@ -10,10 +10,10 @@
 
 namespace skyrise {
 
-BinaryPredicateExpression::BinaryPredicateExpression(const PredicateCondition init_predicate_condition,
+BinaryPredicateExpression::BinaryPredicateExpression(const PredicateCondition predicate_condition,
                                                      const std::shared_ptr<AbstractExpression>& left_operand,
                                                      const std::shared_ptr<AbstractExpression>& right_operand)
-    : AbstractPredicateExpression(init_predicate_condition, {left_operand, right_operand}) {
+    : AbstractPredicateExpression(predicate_condition, {left_operand, right_operand}) {
   if constexpr (SKYRISE_DEBUG) {
     const std::vector<PredicateCondition> valid_predicate_conditions = {
         PredicateCondition::kEquals,      PredicateCondition::kNotEquals,

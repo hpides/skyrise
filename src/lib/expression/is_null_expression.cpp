@@ -9,9 +9,9 @@
 
 namespace skyrise {
 
-IsNullExpression::IsNullExpression(const PredicateCondition init_predicate_condition,
+IsNullExpression::IsNullExpression(const PredicateCondition predicate_condition,
                                    const std::shared_ptr<AbstractExpression>& operand)
-    : AbstractPredicateExpression(init_predicate_condition, {operand}) {
+    : AbstractPredicateExpression(predicate_condition, {operand}) {
   Assert(predicate_condition_ == PredicateCondition::kIsNull || predicate_condition_ == PredicateCondition::kIsNotNull,
          "IsNullExpression only supports PredicateCondition::kIsNull and PredicateCondition::kIsNotNull");
 }

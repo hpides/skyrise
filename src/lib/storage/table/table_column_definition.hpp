@@ -13,7 +13,7 @@ namespace skyrise {
 
 struct TableColumnDefinition final {
   TableColumnDefinition() = default;
-  TableColumnDefinition(std::string init_name, DataType init_data_type, bool init_nullable);
+  TableColumnDefinition(std::string name, DataType data_type, bool nullable);
 
   bool operator==(const TableColumnDefinition& rhs) const;
 

@@ -23,11 +23,11 @@ std::ostream& operator<<(std::ostream& stream, const LogicalOperator logical_ope
   return stream;
 }
 
-LogicalExpression::LogicalExpression(const LogicalOperator init_logical_operator,
+LogicalExpression::LogicalExpression(const LogicalOperator logical_operator,
                                      const std::shared_ptr<AbstractExpression>& left_operand,
                                      const std::shared_ptr<AbstractExpression>& right_operand)
     : AbstractExpression(ExpressionType::kLogical, {left_operand, right_operand}),
-      logical_operator_(init_logical_operator) {}
+      logical_operator_(logical_operator) {}
 
 const std::shared_ptr<AbstractExpression>& LogicalExpression::LeftOperand() const { return arguments_[0]; }
 
