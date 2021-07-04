@@ -3,16 +3,19 @@
 #include <chrono>
 #include <thread>
 
+#include <aws/core/utils/logging/ConsoleLogSystem.h>
+#include <aws/core/utils/logging/LogLevel.h>
+#include <aws/lambda-runtime/runtime.h>
+
+#include "utils/profiling/function_host_information.hpp"
+#include "utils/unit_conversion.hpp"
+
 #if SKYRISE_DEBUG
 #include <cstdlib>
 #include <iostream>
 
 #include "utils/string.hpp"
 #endif
-
-#include <aws/core/utils/logging/ConsoleLogSystem.h>
-#include <aws/core/utils/logging/LogLevel.h>
-#include <aws/lambda-runtime/runtime.h>
 
 namespace skyrise {
 
@@ -35,7 +38,24 @@ aws::lambda_runtime::invocation_response Function::HandlerFunction(
   return OnHandleRequest(json_view);
 }
 
+void Function::MemoryAllocationExceptionHandler() {
+  std::set_new_handler(nullptr);
+
+  // We forward the output to stderr instead of AWS logging to prevent further dynamic memory allocation.
+  std::cerr << kTag << "\tMemory allocation failed\n";
+
+  FunctionHostInformationCollector collector;
+  const auto resource_usage = collector.CollectInformationResourceUsage();
+
+  std::cerr << kTag << "\tSystem Available Memory: " << KbToMb(resource_usage.system_available_memory_kb) << " MB"
+            << "\tSystem Free Memory " << KbToMb(resource_usage.system_free_memory_kb) << " MB\n"
+            << "\tProcess-used Memory: " << KbToMb(resource_usage.process_used_memory_kb) << " MB"
+            << "\tProcess-used Memory in RAM: " << KbToMb(resource_usage.process_used_memory_in_ram_kb) << " MB";
+}
+
 void Function::HandleRequest() const {
+  std::set_new_handler(MemoryAllocationExceptionHandler);
+
   Aws::SDKOptions options;
   options.httpOptions.installSigPipeHandler = true;
   options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Info;

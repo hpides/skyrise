@@ -3,6 +3,7 @@
 #include <array>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -63,6 +64,22 @@ struct FunctionHostInformationResources {
   size_t ram_size_mb;
 };
 
+struct FunctionHostInformationResourceUsage {
+  size_t process_used_memory_in_ram_kb;
+  size_t process_used_memory_kb;
+  size_t system_available_memory_kb;
+  size_t system_free_memory_kb;
+};
+struct SystemMemoryUsage {
+  size_t available_memory_kb;
+  size_t free_memory_kb;
+};
+
+struct ProcessMemoryUsage {
+  size_t physical_memory_kb;
+  size_t virtual_memory_kb;
+};
+
 // The default configuration is suitable for the AWS Lambda execution environment
 struct FunctionHostInformationCollectorConfiguration {
   std::string cgroup_path = "/proc/self/cgroup";
@@ -77,6 +94,7 @@ struct FunctionHostInformationCollectorConfiguration {
 
   std::string cpuinfo_path = "/proc/cpuinfo";
   std::string meminfo_path = "/proc/meminfo";
+  std::string self_status_path = "/proc/self/status";
 
   bool readableJson = false;
 };
@@ -89,6 +107,8 @@ class FunctionHostInformationCollector {
   FunctionHostInformationIdentification CollectInformationIdentification();
   FunctionHostInformationEnvironment CollectInformationEnvironment();
   FunctionHostInformationResources CollectInformationResources();
+  FunctionHostInformationResourceUsage CollectInformationResourceUsage();
+
   std::string CollectJson();
   std::string AsJson(const FunctionHostInformationIdentification& information_identification,
                      const FunctionHostInformationEnvironment& information_environment,
@@ -115,9 +135,13 @@ class FunctionHostInformationCollector {
   CpuInfo_ CpuInformation() const;
   size_t RamSizeMb() const;
 
-  static std::vector<std::string> FindFirst(const std::string& regex_string, const std::string& search_string);
+  SystemMemoryUsage GetSystemMemoryUsage() const;
+  ProcessMemoryUsage GetProcessMemoryUsage() const;
+
+  static std::optional<std::string> FindFirst(const std::string& regex_string, const std::string& search_string);
   static std::vector<std::vector<std::string>> FindAll(const std::string& regex_string, std::string search_string);
   static std::string ReadFileContent(const std::string& filename);
   static std::string ReadStdout(const std::string& command);
+  static size_t GetKbMemorySizeFromFile(const std::string& attribute, const std::string& file_content);
 };
 }  // namespace skyrise

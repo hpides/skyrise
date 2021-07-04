@@ -18,4 +18,6 @@ inline long double ByteToGb(unsigned long long n) { return n / 1024.0L / 1024.0L
 
 inline long double ByteToTb(unsigned long long n) { return n / 1024.0L / 1024.0L / 1024.0L / 1024.0L; }
 
+inline long double KbToMb(unsigned long long n) { return n / 1024.0L; }
+
 }  // namespace skyrise

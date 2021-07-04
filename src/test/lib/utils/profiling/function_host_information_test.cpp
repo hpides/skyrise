@@ -16,15 +16,17 @@ class FunctionHostInformationTest : public ::testing::Test {
   void SetUp() override {
     CreateFile("2:cpu,cpuacct:/sandbox-root-pQEzKi/sandbox-service-c53732/sandbox-f22810\n1:blkio:/\n",
                config_.cgroup_path);
+    mkdir(config_.tmp_path.c_str(), 0777);
+    CreateFile("1234.56 789.10\n", "tmp/testTmpFile");
     CreateFile("ctxt 9999999\nbtime 123456\n", config_.stat_path);
     CreateFile("1234.56 789.10\n", config_.uptime_path);
     CreateFile(
         "processor\t: 0\nmodel name\t: CpuModelName\nflags\t: three test flags\n\n"
         "processor\t: 1\nmodel name\t: CpuModelName\nflags\t: three test flags\n",
         config_.cpuinfo_path);
-    CreateFile("MemTotal:      123456 kB\nMemFree:        7890 kB\n", config_.meminfo_path);
-    mkdir(config_.tmp_path.c_str(), 0777);
-    CreateFile("1234.56 789.10\n", "tmp/testTmpFile");
+    CreateFile("MemTotal:      123456 kB\nMemFree:        7890 kB\nMemAvailable:      123456 kB\n",
+               config_.meminfo_path);
+    CreateFile("VmRSS:       232 kB\nVmSize:   114660 kB\n", config_.self_status_path);
   }
 
   void TearDown() override {
@@ -35,6 +37,7 @@ class FunctionHostInformationTest : public ::testing::Test {
     remove(config_.uptime_path.c_str());
     remove(config_.stat_path.c_str());
     remove(config_.cgroup_path.c_str());
+    remove(config_.self_status_path.c_str());
   }
 
   FunctionHostInformationCollectorConfiguration config_{"/tmp/exampleCgroupFile.txt",
@@ -47,6 +50,7 @@ class FunctionHostInformationTest : public ::testing::Test {
                                                         "/tmp/exampleUptimeFile",
                                                         "/tmp/exampleCpuinfoFile",
                                                         "/tmp/exampleMeminfoFile",
+                                                        "/tmp/exampleSelfstatusFile",
                                                         true};
 };
 
@@ -120,6 +124,16 @@ TEST_F(FunctionHostInformationTest, FunctionHostInformationTestJson) {
                                                                           information_identification.ip_public};
   auto json = collector.AsJson(mocked_information_identification, information_environment, information_resources);
   EXPECT_EQ(json, expected_json);
+}
+
+TEST_F(FunctionHostInformationTest, FunctionInformationResourceUsage) {
+  FunctionHostInformationCollector collector(config_);
+  auto resource_usage = collector.CollectInformationResourceUsage();
+
+  EXPECT_EQ(resource_usage.system_available_memory_kb, 123456);
+  EXPECT_EQ(resource_usage.system_free_memory_kb, 7890);
+  EXPECT_EQ(resource_usage.process_used_memory_kb, 114660);
+  EXPECT_EQ(resource_usage.process_used_memory_in_ram_kb, 232);
 }
 
 }  // namespace skyrise

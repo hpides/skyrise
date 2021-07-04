@@ -55,6 +55,14 @@ FunctionHostInformationResources FunctionHostInformationCollector::CollectInform
   return FunctionHostInformationResources{cpu_info.cpu_count, cpu_info.cpu_model, cpu_info.cpu_features, RamSizeMb()};
 }
 
+FunctionHostInformationResourceUsage FunctionHostInformationCollector::CollectInformationResourceUsage() {
+  const SystemMemoryUsage system_memory = GetSystemMemoryUsage();
+  const ProcessMemoryUsage process_memory = GetProcessMemoryUsage();
+
+  return {process_memory.physical_memory_kb, process_memory.virtual_memory_kb, system_memory.available_memory_kb,
+          system_memory.free_memory_kb};
+}
+
 std::string FunctionHostInformationCollector::CollectJson() {
   const auto information_identification = CollectInformationIdentification();
   const auto information_environment = CollectInformationEnvironment();
@@ -97,7 +105,7 @@ std::string FunctionHostInformationCollector::Id() const {
   const std::string regex{"[0-9]+:cpu,cpuacct:/sandbox-root-([0-9a-zA-Z]{6})"};
   const auto file_content = ReadFileContent(config_.cgroup_path);
   const auto match = FindFirst(regex, file_content);
-  return match.empty() ? "" : match.front();
+  return match ? *match : "";
 }
 
 std::string FunctionHostInformationCollector::IpPrivate() {
@@ -120,7 +128,7 @@ std::string FunctionHostInformationCollector::IpPublic() const {
   const std::string regex{"([0-9]+.[0-9]+.[0-9]+.[0-9]+)"};
   const auto command_output = ReadStdout(config_.ip_public_command);
   const auto match = FindFirst(regex, command_output);
-  return match.empty() ? "" : match.front();
+  return match ? *match : "";
 }
 
 std::string FunctionHostInformationCollector::OperatingSystemDetails() const {
@@ -145,14 +153,14 @@ size_t FunctionHostInformationCollector::BootTimeSeconds() const {
   const std::string regex{"btime ([^[:space:]]*)"};
   const auto file_content = ReadFileContent(config_.stat_path);
   const auto match = FindFirst(regex, file_content);
-  return match.empty() ? 0 : stoul(match.front());
+  return match ? std::stoull(*match) : 0;
 }
 
 size_t FunctionHostInformationCollector::UptimeSeconds() const {
   const std::string regex{"([0-9]*).[0-9]{2} [0-9]*.[0-9]{2}"};
   const auto file_content = ReadFileContent(config_.uptime_path);
   const auto match = FindFirst(regex, file_content);
-  return match.empty() ? 0 : stoul(match.front());
+  return match ? std::stoull(*match) : 0;
 }
 
 FunctionHostInformationCollector::CpuInfo_ FunctionHostInformationCollector::CpuInformation() const {
@@ -164,11 +172,11 @@ FunctionHostInformationCollector::CpuInfo_ FunctionHostInformationCollector::Cpu
 
   constexpr auto kCpuModelRegex = R"(model name\s+:\s(.+)\n)";
   const auto cpu_model_match = FindFirst(kCpuModelRegex, file_content);
-  const auto cpu_model = cpu_model_match.empty() ? "" : cpu_model_match.front();
+  const auto cpu_model = cpu_model_match ? *cpu_model_match : "";
 
   constexpr auto kCpuFeaturesRegex = R"(flags\s+:\s(.+)\n)";
   const auto cpu_features_match = FindFirst(kCpuFeaturesRegex, file_content);
-  const auto cpu_features = cpu_features_match.empty() ? "" : cpu_features_match.front();
+  const auto cpu_features = cpu_features_match ? *cpu_features_match : "";
 
   return {cpu_count, cpu_model, cpu_features};
 }
@@ -177,22 +185,21 @@ size_t FunctionHostInformationCollector::RamSizeMb() const {
   const std::string regex{R"(MemTotal:\s+([0-9]+)(\skB)?\n)"};
   const auto file_content = ReadFileContent(config_.meminfo_path);
   const auto match = FindFirst(regex, file_content);
-  const auto ram_size_kb = match.empty() ? 0 : stoul(match.front());
-  return ByteToMb(KbToByte(ram_size_kb));
+  const auto ram_size_kb = match ? std::stoull(*match) : 0;
+  return KbToMb(ram_size_kb);
 }
 
-std::vector<std::string> FunctionHostInformationCollector::FindFirst(const std::string& regex_string,
-                                                                     const std::string& search_string) {
+std::optional<std::string> FunctionHostInformationCollector::FindFirst(const std::string& regex_string,
+                                                                       const std::string& search_string) {
   std::smatch matches;
   const std::regex regex(regex_string);
   regex_search(search_string, matches, regex);
 
-  std::vector<std::string> result;
-  for (const auto& match : matches) {
-    result.push_back(match);
+  if (matches.size() >= 2) {
+    return matches[1];
+  } else {
+    return std::nullopt;
   }
-  result.erase(result.begin());
-  return result;
 }
 
 std::vector<std::vector<std::string>> FunctionHostInformationCollector::FindAll(const std::string& regex_string,
@@ -240,6 +247,37 @@ std::string FunctionHostInformationCollector::ReadStdout(const std::string& comm
     throw std::runtime_error("Command " + command + " exited with return code " + std::to_string(return_code));
   }
   return command_stdout;
+}
+
+size_t FunctionHostInformationCollector::GetKbMemorySizeFromFile(const std::string& attribute,
+                                                                 const std::string& file_content) {
+  const auto match = FindFirst(attribute + R"(:\s+([0-9]+)\skB?\n)", file_content);
+  return match ? std::stoull(*match) : -1;
+}
+
+/**
+ * Returns a struct that contains the free and available memory size in KB.
+ * - Free memory is unallocated memory.
+ * - Available memory includes free memory and currently allocated memory that
+ *   could be made available (e.g., buffers and caches).
+ *   This is not equivalent to the total memory size, since certain data cannot
+ *   be paged.
+ */
+SystemMemoryUsage FunctionHostInformationCollector::GetSystemMemoryUsage() const {
+  const auto file_content = ReadFileContent(config_.meminfo_path);
+
+  return {GetKbMemorySizeFromFile("MemAvailable", file_content), GetKbMemorySizeFromFile("MemFree", file_content)};
+}
+
+/**
+ * Returns a struct that contains the virtual and physical memory used by this process in KB.
+ * - Virtual memory is the total memory usage of the process.
+ * - Physical memory is the resident set size (RSS), the portion of memory that is held in RAM.
+ */
+ProcessMemoryUsage FunctionHostInformationCollector::GetProcessMemoryUsage() const {
+  const auto file_content = ReadFileContent(config_.self_status_path);
+
+  return {GetKbMemorySizeFromFile("VmRSS", file_content), GetKbMemorySizeFromFile("VmSize", file_content)};
 }
 
 }  // namespace skyrise
