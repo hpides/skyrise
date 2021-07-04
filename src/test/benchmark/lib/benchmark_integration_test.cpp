@@ -56,7 +56,21 @@ TEST_F(AwsBenchmarkIntegrationTest, FunctionColocationBenchmark) {
   EXPECT_EQ(benchmark_result.GetLength(), 2);
 }
 
-// TODO(maltenbergert): Add test for FunctionWarmUpBenchmark
+TEST_F(AwsBenchmarkIntegrationTest, FunctionWarmUpBenchmark) {
+  const std::vector<size_t> function_instance_mb_sizes = {128};
+  const std::vector<size_t> invocation_counts = {16};
+  const std::vector<size_t> sleep_ms_durations = {400};
+  const std::vector<double> provisioning_factors = {1.2};
+  const bool enable_provisioned_concurrency = false;
+  const size_t repetition_count = 1;
+
+  auto benchmark = std::make_shared<skyrise::FunctionWarmUpBenchmark>(
+      GetCostCalculator(), function_instance_mb_sizes, invocation_counts, sleep_ms_durations, provisioning_factors,
+      enable_provisioned_concurrency, repetition_count);
+
+  const auto benchmark_result = benchmark->Run(GetBenchmarkRunner());
+  EXPECT_EQ(benchmark_result.GetLength(), 1);
+}
 
 // TODO(maltenbergert): Add test for FunctionWarmUpContinuousBenchmark
 
