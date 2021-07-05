@@ -54,6 +54,8 @@ set(
     storage/table/table_column_definition.hpp
     storage/table/value_segment.cpp
     storage/table/value_segment.hpp
+    storage/table/chunk_reader.cpp
+    storage/table/chunk_reader.hpp
     storage/table/chunk_writer.cpp
     storage/table/chunk_writer.hpp
 )

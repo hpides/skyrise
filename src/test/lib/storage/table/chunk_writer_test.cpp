@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include "../backend/mock_storage.hpp"
+#include "storage/backend/mock_storage.hpp"
 #include "storage/formats/csv_writer.hpp"
 #include "storage/table/table_column_definition.hpp"
 #include "storage/table/value_segment.hpp"

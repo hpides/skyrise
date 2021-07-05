@@ -25,8 +25,9 @@ class AbstractChunkReader {
   const StorageError& GetError() const;
 
  protected:
-  std::shared_ptr<const TableColumnDefinitions> schema_;
   void SetError(StorageError error);
+
+  std::shared_ptr<const TableColumnDefinitions> schema_;
 
  private:
   StorageError error_;

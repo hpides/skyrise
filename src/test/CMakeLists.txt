@@ -1,5 +1,6 @@
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib
     ${PROJECT_SOURCE_DIR}/third_party/googletest/googletest/include
 )
 
@@ -50,11 +51,14 @@ set(
 
     lib/storage/formats/csv_reader_test.cpp
     lib/storage/formats/csv_writer_test.cpp
+    lib/storage/formats/mock_chunk_reader.cpp
+    lib/storage/formats/mock_chunk_reader.hpp
     lib/storage/formats/orc_reader_test.cpp
     lib/storage/formats/orc_writer_test.cpp
 
     lib/storage/table/chunk_test.cpp
     lib/storage/table/table_column_definition_test.cpp
+    lib/storage/table/chunk_reader_test.cpp
     lib/storage/table/chunk_writer_test.cpp
     lib/storage/table/value_segment_test.cpp
 

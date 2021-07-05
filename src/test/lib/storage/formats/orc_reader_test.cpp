@@ -2,8 +2,8 @@
 
 #include <gtest/gtest.h>
 
-#include "../backend/mock_storage.hpp"
-#include "../backend/testdata_storage.hpp"
+#include "storage/backend/mock_storage.hpp"
+#include "storage/backend/testdata_storage.hpp"
 #include "storage/formats/orc_writer.hpp"
 #include "storage/table/value_segment.hpp"
 
