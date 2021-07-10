@@ -10,9 +10,9 @@
 
 namespace skyrise {
 
-MetricsCollector::MetricsCollector(const Aws::SQS::SQSClient& client_sqs, const std::string& queue_url,
+MetricsCollector::MetricsCollector(std::shared_ptr<const Aws::SQS::SQSClient> sqs_client, const std::string& queue_url,
                                    const SubqueryFragmentIdentifier& subquery_fragment_identifier)
-    : client_sqs_(client_sqs),
+    : sqs_client_(std::move(sqs_client)),
       queue_url_(queue_url),
       subquery_fragment_identifier_(subquery_fragment_identifier),
       instance_start_(std::chrono::system_clock::now()) {}
@@ -91,7 +91,7 @@ void MetricsCollector::SendMetrics() {
   for (const auto& messages : message_batches) {
     Aws::SQS::Model::SendMessageBatchRequest send_message_batch_request;
     send_message_batch_request.WithQueueUrl(queue_url_).WithEntries(messages);
-    const auto outcome = client_sqs_.SendMessageBatch(send_message_batch_request);
+    const auto outcome = sqs_client_->SendMessageBatch(send_message_batch_request);
 
     if (!outcome.IsSuccess()) {
       AWS_LOGSTREAM_ERROR(kTag.c_str(), outcome.GetError().GetMessage());

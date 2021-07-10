@@ -30,7 +30,7 @@ std::map<Aws::String, std::unordered_set<Aws::String>> FunctionSegmentsAnalyzer:
 
     do {
       get_trace_summaries_request.WithStartTime(start_time).WithEndTime(end_time).WithNextToken(next_token);
-      const auto outcome = client_.GetTraceSummaries(get_trace_summaries_request);
+      const auto outcome = xray_client_->GetTraceSummaries(get_trace_summaries_request);
 
       if (!outcome.IsSuccess()) {
         AWS_LOGSTREAM_ERROR(kTag.c_str(), outcome.GetError().GetMessage());
@@ -74,7 +74,7 @@ std::map<Aws::String, Aws::XRay::Model::Trace> FunctionSegmentsAnalyzer::GetTrac
     Aws::XRay::Model::BatchGetTracesRequest batch_get_traces_request;
     batch_get_traces_request.WithTraceIds(remaining_trace_ids);
 
-    const auto outcome = client_.BatchGetTraces(batch_get_traces_request);
+    const auto outcome = xray_client_->BatchGetTraces(batch_get_traces_request);
 
     if (!outcome.IsSuccess()) {
       AWS_LOGSTREAM_ERROR(kTag.c_str(), outcome.GetError().GetMessage());

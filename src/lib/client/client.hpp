@@ -22,26 +22,26 @@ class Client {
   Client(const Client&) = delete;
   const Client& operator=(const Client&) = delete;
 
-  const Aws::CloudWatch::CloudWatchClient& GetCloudWatchClient() const;
-  const Aws::IAM::IAMClient& GetIAMClient() const;
-  const Aws::Lambda::LambdaClient& GetLambdaClient() const;
-  const Aws::Pricing::PricingClient& GetPricingClient() const;
-  const Aws::S3::S3Client& GetS3Client() const;
-  const Aws::SQS::SQSClient& GetSQSClient() const;
-  const Aws::XRay::XRayClient& GetXRayClient() const;
+  std::shared_ptr<const Aws::CloudWatch::CloudWatchClient> GetCloudWatchClient() const;
+  std::shared_ptr<const Aws::IAM::IAMClient> GetIAMClient() const;
+  std::shared_ptr<const Aws::Lambda::LambdaClient> GetLambdaClient() const;
+  std::shared_ptr<const Aws::Pricing::PricingClient> GetPricingClient() const;
+  std::shared_ptr<const Aws::S3::S3Client> GetS3Client() const;
+  std::shared_ptr<const Aws::SQS::SQSClient> GetSQSClient() const;
+  std::shared_ptr<const Aws::XRay::XRayClient> GetXRayClient() const;
 
   const Aws::String& GetClientRegion() const;
 
  private:
   static Aws::Client::ClientConfiguration GenerateClientConfig();
 
-  std::unique_ptr<Aws::CloudWatch::CloudWatchClient> cloudwatch_client_;
-  std::unique_ptr<Aws::IAM::IAMClient> iam_client_;
-  std::unique_ptr<Aws::Lambda::LambdaClient> lambda_client_;
-  std::unique_ptr<Aws::Pricing::PricingClient> pricing_client_;
-  std::unique_ptr<Aws::S3::S3Client> s3_client_;
-  std::unique_ptr<Aws::SQS::SQSClient> sqs_client_;
-  std::unique_ptr<Aws::XRay::XRayClient> xray_client_;
+  std::shared_ptr<const Aws::CloudWatch::CloudWatchClient> cloudwatch_client_;
+  std::shared_ptr<const Aws::IAM::IAMClient> iam_client_;
+  std::shared_ptr<const Aws::Lambda::LambdaClient> lambda_client_;
+  std::shared_ptr<const Aws::Pricing::PricingClient> pricing_client_;
+  std::shared_ptr<const Aws::S3::S3Client> s3_client_;
+  std::shared_ptr<const Aws::SQS::SQSClient> sqs_client_;
+  std::shared_ptr<const Aws::XRay::XRayClient> xray_client_;
 
   Aws::String client_region_;
 

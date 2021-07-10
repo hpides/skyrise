@@ -96,9 +96,9 @@ Aws::Utils::Json::JsonValue BenchmarkHelper::GenerateJsonOutput(
 }
 
 void BenchmarkHelper::CreateS3BucketIfNotExists(const Aws::String& bucket_name) const {
-  const auto& s3_client = client_->GetS3Client();
+  const auto s3_client = client_->GetS3Client();
 
-  const auto list_buckets_outcome = s3_client.ListBuckets();
+  const auto list_buckets_outcome = s3_client->ListBuckets();
 
   if (!list_buckets_outcome.IsSuccess()) {
     Fail(list_buckets_outcome.GetError().GetMessage());
@@ -111,7 +111,7 @@ void BenchmarkHelper::CreateS3BucketIfNotExists(const Aws::String& bucket_name) 
 
   if (contains_bucket_iterator == buckets.cend()) {
     const auto create_bucket_outcome =
-        s3_client.CreateBucket(Aws::S3::Model::CreateBucketRequest().WithBucket(bucket_name));
+        s3_client->CreateBucket(Aws::S3::Model::CreateBucketRequest().WithBucket(bucket_name));
 
     if (!create_bucket_outcome.IsSuccess()) {
       Fail(create_bucket_outcome.GetError().GetMessage());
@@ -134,7 +134,7 @@ void BenchmarkHelper::UploadObjectsToS3Parallel(
     const Aws::String& bucket_name) const {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Uploading objects to S3...");
 
-  const auto& s3_client = client_->GetS3Client();
+  const auto s3_client = client_->GetS3Client();
 
   std::vector<Aws::S3::Model::PutObjectOutcomeCallable> callables;
   callables.reserve(objects.size());
@@ -143,7 +143,7 @@ void BenchmarkHelper::UploadObjectsToS3Parallel(
   for (const auto& [object_key, object, num_bytes] : objects) {
     auto put_object_request = Aws::S3::Model::PutObjectRequest().WithBucket(bucket_name).WithKey(object_key);
     put_object_request.SetBody(object);
-    callables.emplace_back(s3_client.PutObjectCallable(put_object_request));
+    callables.emplace_back(s3_client->PutObjectCallable(put_object_request));
   }
 
   size_t num_errors = 0;
@@ -166,11 +166,11 @@ void BenchmarkHelper::UploadObjectsToS3Parallel(
 }
 
 void BenchmarkHelper::EmptyS3Bucket(const Aws::String& bucket_name) const {
-  const auto& s3_client = client_->GetS3Client();
+  const auto s3_client = client_->GetS3Client();
 
   while (true) {
     const auto list_objects_outcome =
-        s3_client.ListObjects(Aws::S3::Model::ListObjectsRequest().WithBucket(bucket_name));
+        s3_client->ListObjects(Aws::S3::Model::ListObjectsRequest().WithBucket(bucket_name));
     Assert(list_objects_outcome.IsSuccess(), list_objects_outcome.GetError().GetMessage());
 
     const auto& list_objects_result = list_objects_outcome.GetResult();
@@ -185,9 +185,9 @@ void BenchmarkHelper::EmptyS3Bucket(const Aws::String& bucket_name) const {
                    [](const auto& object) { return Aws::S3::Model::ObjectIdentifier().WithKey(object.GetKey()); });
 
     const auto delete_objects_outcome =
-        s3_client.DeleteObjects(Aws::S3::Model::DeleteObjectsRequest()
-                                    .WithBucket(bucket_name)
-                                    .WithDelete(Aws::S3::Model::Delete().WithObjects(objects_to_delete)));
+        s3_client->DeleteObjects(Aws::S3::Model::DeleteObjectsRequest()
+                                     .WithBucket(bucket_name)
+                                     .WithDelete(Aws::S3::Model::Delete().WithObjects(objects_to_delete)));
 
     Assert(delete_objects_outcome.IsSuccess(), delete_objects_outcome.GetError().GetMessage());
 
@@ -199,8 +199,8 @@ void BenchmarkHelper::EmptyS3Bucket(const Aws::String& bucket_name) const {
 
 void BenchmarkHelper::EmptyAndDeleteS3Bucket(const Aws::String& bucket_name) const {
   EmptyS3Bucket(bucket_name);
-  const auto& s3_client = client_->GetS3Client();
-  s3_client.DeleteBucket(Aws::S3::Model::DeleteBucketRequest().WithBucket(bucket_name));
+  const auto s3_client = client_->GetS3Client();
+  s3_client->DeleteBucket(Aws::S3::Model::DeleteBucketRequest().WithBucket(bucket_name));
 }
 
 }  // namespace skyrise

@@ -56,7 +56,7 @@ std::map<Aws::String, long double> Pricing::FetchPricing(const Aws::String& serv
   request.SetServiceCode(service_code);
   request.SetFilters(filters);
 
-  const auto outcome = client_->GetPricingClient().GetProducts(request);
+  const auto outcome = client_->GetPricingClient()->GetProducts(request);
   Assert(outcome.IsSuccess(), "Price List API call was unsuccessful: " + outcome.GetError().GetMessage());
 
   std::map<Aws::String, long double> prices_map;

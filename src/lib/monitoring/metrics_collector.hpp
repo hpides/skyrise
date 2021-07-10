@@ -35,7 +35,7 @@ struct RuntimeMetrics {
 
 class MetricsCollector {
  public:
-  MetricsCollector(const Aws::SQS::SQSClient& client_sqs, const std::string& queue_url,
+  MetricsCollector(std::shared_ptr<const Aws::SQS::SQSClient> sqs_client, const std::string& queue_url,
                    const SubqueryFragmentIdentifier& subquery_fragment_identifier);
   ~MetricsCollector();
 
@@ -53,7 +53,7 @@ class MetricsCollector {
   std::pair<std::string, std::chrono::time_point<std::chrono::system_clock>> operator_;
   std::pair<std::string, std::chrono::time_point<std::chrono::system_clock>> stage_;
 
-  const Aws::SQS::SQSClient client_sqs_;
+  const std::shared_ptr<const Aws::SQS::SQSClient> sqs_client_;
   const std::string queue_url_;
   const SubqueryFragmentIdentifier subquery_fragment_identifier_;
   const std::chrono::time_point<std::chrono::system_clock> instance_start_;

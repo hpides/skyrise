@@ -52,7 +52,7 @@ long double ConfigurableWarmUpStrategy::WarmUpFunctions(const std::shared_ptr<Cl
   invoke_outcome_callables.reserve(concurrency_count);
 
   for (const auto& invoke_request : invoke_requests) {
-    invoke_outcome_callables.emplace_back(client->GetLambdaClient().InvokeCallable(invoke_request));
+    invoke_outcome_callables.emplace_back(client->GetLambdaClient()->InvokeCallable(invoke_request));
   }
 
   is_warmed_up_ = true;
@@ -97,12 +97,12 @@ long double ConfigurableWarmUpStrategy::CalculateWarmUpCost(
 long double ProvisionedConcurrencyWarmUpStrategy::WarmUpFunctions(const std::shared_ptr<Client>& client,
                                                                   const FunctionConfig& function_config,
                                                                   const size_t concurrency_count) {
-  const auto& lambda_client = client->GetLambdaClient();
+  const auto lambda_client = client->GetLambdaClient();
 
   const auto get_config_outcome =
-      lambda_client.GetProvisionedConcurrencyConfig(Aws::Lambda::Model::GetProvisionedConcurrencyConfigRequest()
-                                                        .WithFunctionName(function_config.function_name)
-                                                        .WithQualifier("1"));
+      lambda_client->GetProvisionedConcurrencyConfig(Aws::Lambda::Model::GetProvisionedConcurrencyConfigRequest()
+                                                         .WithFunctionName(function_config.function_name)
+                                                         .WithQualifier("1"));
   if (get_config_outcome.IsSuccess() &&
       get_config_outcome.GetResult().GetStatus() == Aws::Lambda::Model::ProvisionedConcurrencyStatusEnum::READY) {
     const auto now = std::chrono::steady_clock::now();
@@ -115,10 +115,10 @@ long double ProvisionedConcurrencyWarmUpStrategy::WarmUpFunctions(const std::sha
   } else {
     provisioned_concurrency_started_ = std::chrono::steady_clock::now();
     const auto put_config_outcome =
-        lambda_client.PutProvisionedConcurrencyConfig(Aws::Lambda::Model::PutProvisionedConcurrencyConfigRequest()
-                                                          .WithFunctionName(function_config.function_name)
-                                                          .WithProvisionedConcurrentExecutions(concurrency_count)
-                                                          .WithQualifier("1"));
+        lambda_client->PutProvisionedConcurrencyConfig(Aws::Lambda::Model::PutProvisionedConcurrencyConfigRequest()
+                                                           .WithFunctionName(function_config.function_name)
+                                                           .WithProvisionedConcurrentExecutions(concurrency_count)
+                                                           .WithQualifier("1"));
     Assert(put_config_outcome.IsSuccess(), put_config_outcome.GetError().GetMessage());
 
     auto status = Aws::Lambda::Model::ProvisionedConcurrencyStatusEnum::NOT_SET;
@@ -126,9 +126,9 @@ long double ProvisionedConcurrencyWarmUpStrategy::WarmUpFunctions(const std::sha
     while (status != Aws::Lambda::Model::ProvisionedConcurrencyStatusEnum::READY) {
       std::this_thread::sleep_for(std::chrono::seconds(10));
       const auto get_config_outcome =
-          lambda_client.GetProvisionedConcurrencyConfig(Aws::Lambda::Model::GetProvisionedConcurrencyConfigRequest()
-                                                            .WithFunctionName(function_config.function_name)
-                                                            .WithQualifier("1"));
+          lambda_client->GetProvisionedConcurrencyConfig(Aws::Lambda::Model::GetProvisionedConcurrencyConfigRequest()
+                                                             .WithFunctionName(function_config.function_name)
+                                                             .WithQualifier("1"));
 
       Assert(get_config_outcome.IsSuccess(), get_config_outcome.GetError().GetMessage());
       const auto& config_result = get_config_outcome.GetResult();

@@ -38,7 +38,7 @@ inline const std::string kTag{"SKYRISE/BENCHMARK/BENCHMARK_RUNNER"};
 
 BenchmarkRunner::BenchmarkRunner(std::shared_ptr<Client> client) : client_(std::move(client)) {
   const auto get_role_outcome =
-      client_->GetIAMClient().GetRole(Aws::IAM::Model::GetRoleRequest().WithRoleName(kFunctionRoleName));
+      client_->GetIAMClient()->GetRole(Aws::IAM::Model::GetRoleRequest().WithRoleName(kFunctionRoleName));
 
   Assert(get_role_outcome.IsSuccess(), get_role_outcome.GetError().GetMessage());
 
@@ -77,7 +77,7 @@ void BenchmarkRunner::Setup() {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Creating functions...");
 
   // TODO(d-justen): Employ custom Lambda client if parallel function upload gets us in trouble
-  const auto& lambda_client = client_->GetLambdaClient();
+  const auto lambda_client = client_->GetLambdaClient();
 
   std::vector<Aws::Lambda::Model::CreateFunctionOutcomeCallable> outcome_callables;
 
@@ -98,14 +98,14 @@ void BenchmarkRunner::Setup() {
           Aws::Lambda::Model::TracingConfig().WithMode(Aws::Lambda::Model::TracingMode::Active));
     }
 
-    outcome_callables.emplace_back(lambda_client.CreateFunctionCallable(create_function_request));
+    outcome_callables.emplace_back(lambda_client->CreateFunctionCallable(create_function_request));
   }
 
   for (auto& outcome_callable : outcome_callables) {
     const auto& outcome = outcome_callable.get();
     Assert(outcome.IsSuccess(), outcome.GetError().GetMessage());
 
-    const auto publish_version_outcome = lambda_client.PublishVersion(
+    const auto publish_version_outcome = lambda_client->PublishVersion(
         Aws::Lambda::Model::PublishVersionRequest().WithFunctionName(outcome.GetResult().GetFunctionName()));
     Assert(publish_version_outcome.IsSuccess(), publish_version_outcome.GetError().GetMessage());
   }
@@ -124,11 +124,11 @@ void BenchmarkRunner::SetupEventQueue() {
 
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Creating queue " << queue_name << "...");
 
-  const auto& sqs_client = client_->GetSQSClient();
-  const auto& lambda_client = client_->GetLambdaClient();
+  const auto sqs_client = client_->GetSQSClient();
+  const auto lambda_client = client_->GetLambdaClient();
 
   const auto create_queue_outcome =
-      sqs_client.CreateQueue(Aws::SQS::Model::CreateQueueRequest().WithQueueName(queue_name));
+      sqs_client->CreateQueue(Aws::SQS::Model::CreateQueueRequest().WithQueueName(queue_name));
 
   Assert(create_queue_outcome.IsSuccess(), create_queue_outcome.GetError().GetMessage());
 
@@ -136,10 +136,10 @@ void BenchmarkRunner::SetupEventQueue() {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Queue " << queue_name << " created.");
 
   const auto queue_attributes_outcome =
-      sqs_client.GetQueueAttributes(Aws::SQS::Model::GetQueueAttributesRequest()
-                                        .WithQueueUrl(*sqs_queue_url_)
-                                        .WithAttributeNames(std::vector<Aws::SQS::Model::QueueAttributeName>(
-                                            1, Aws::SQS::Model::QueueAttributeName::QueueArn)));
+      sqs_client->GetQueueAttributes(Aws::SQS::Model::GetQueueAttributesRequest()
+                                         .WithQueueUrl(*sqs_queue_url_)
+                                         .WithAttributeNames(std::vector<Aws::SQS::Model::QueueAttributeName>(
+                                             1, Aws::SQS::Model::QueueAttributeName::QueueArn)));
 
   Assert(queue_attributes_outcome.IsSuccess(), queue_attributes_outcome.GetError().GetMessage());
 
@@ -147,7 +147,7 @@ void BenchmarkRunner::SetupEventQueue() {
       queue_attributes_outcome.GetResult().GetAttributes().at(Aws::SQS::Model::QueueAttributeName::QueueArn);
 
   for (const auto& function_config : config_->function_configs_) {
-    lambda_client.PutFunctionEventInvokeConfig(
+    lambda_client->PutFunctionEventInvokeConfig(
         Aws::Lambda::Model::PutFunctionEventInvokeConfigRequest()
             .WithFunctionName(function_config.function_name)
             .WithQualifier("1")
@@ -162,7 +162,7 @@ void BenchmarkRunner::Teardown() {
     AWS_LOGSTREAM_INFO(kTag.c_str(), "Deleting queue " << *sqs_queue_url_ << "...");
 
     const auto outcome =
-        client_->GetSQSClient().DeleteQueue(Aws::SQS::Model::DeleteQueueRequest().WithQueueUrl(*sqs_queue_url_));
+        client_->GetSQSClient()->DeleteQueue(Aws::SQS::Model::DeleteQueueRequest().WithQueueUrl(*sqs_queue_url_));
     if (outcome.IsSuccess()) {
       AWS_LOGSTREAM_INFO(kTag.c_str(), "Queue " << *sqs_queue_url_ << " deleted.");
     } else {
@@ -176,7 +176,7 @@ void BenchmarkRunner::Teardown() {
 void BenchmarkRunner::InvokeFunctions() {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Invoking functions concurrently...");
 
-  const auto& lambda_client = client_->GetLambdaClient();
+  const auto lambda_client = client_->GetLambdaClient();
 
   benchmark_result_ =
       std::make_shared<BenchmarkResult>(config_->repetition_count_, config_->concurrent_invocation_count_);
@@ -196,9 +196,9 @@ void BenchmarkRunner::InvokeFunctions() {
       }();
 
       const auto put_function_concurrency_outcome =
-          lambda_client.PutFunctionConcurrency(Aws::Lambda::Model::PutFunctionConcurrencyRequest()
-                                                   .WithFunctionName(config_->function_configs_[i].function_name)
-                                                   .WithReservedConcurrentExecutions(function_concurrency));
+          lambda_client->PutFunctionConcurrency(Aws::Lambda::Model::PutFunctionConcurrencyRequest()
+                                                    .WithFunctionName(config_->function_configs_[i].function_name)
+                                                    .WithReservedConcurrentExecutions(function_concurrency));
       Assert(put_function_concurrency_outcome.IsSuccess(), put_function_concurrency_outcome.GetError().GetMessage());
     }
 
@@ -211,7 +211,7 @@ void BenchmarkRunner::InvokeFunctions() {
     for (size_t j = 0; j < invoke_requests_[i].size(); j++) {
       benchmark_result_->RegisterInvocation(i, j, invoke_requests_[i][j].first);
 
-      lambda_client.InvokeAsync(
+      lambda_client->InvokeAsync(
           invoke_requests_[i][j].second,
           [&](const Aws::Lambda::LambdaClient* /*unused*/, const Aws::Lambda::Model::InvokeRequest& /*unused*/,
               Aws::Lambda::Model::InvokeOutcome outcome,
@@ -245,7 +245,7 @@ void BenchmarkRunner::InvokeFunctions() {
       AWS_LOGSTREAM_INFO(kTag.c_str(),
                          "Delete function " << config_->function_configs_[function_index].function_name << "...");
 
-      lambda_client.DeleteFunction(Aws::Lambda::Model::DeleteFunctionRequest().WithFunctionName(
+      lambda_client->DeleteFunction(Aws::Lambda::Model::DeleteFunctionRequest().WithFunctionName(
           config_->function_configs_[function_index].function_name));
 
       AWS_LOGSTREAM_INFO(kTag.c_str(), "Function deleted.");
@@ -314,16 +314,16 @@ void BenchmarkRunner::CreateInvokeRequests() {
 }
 
 void BenchmarkRunner::CollectSqsMessages(const size_t invocation_count) {
-  const auto& sqs_client = client_->GetSQSClient();
+  const auto sqs_client = client_->GetSQSClient();
   size_t receive_message_requests = 0;
   size_t sqs_message_count = 0;
 
   while (sqs_message_count < invocation_count && receive_message_requests < kLambdaFunctionTimeoutSeconds) {
     receive_message_requests++;
-    const auto receive_message_outcome = sqs_client.ReceiveMessage(Aws::SQS::Model::ReceiveMessageRequest()
-                                                                       .WithQueueUrl(*sqs_queue_url_)
-                                                                       .WithWaitTimeSeconds(1)
-                                                                       .WithMaxNumberOfMessages(10));
+    const auto receive_message_outcome = sqs_client->ReceiveMessage(Aws::SQS::Model::ReceiveMessageRequest()
+                                                                        .WithQueueUrl(*sqs_queue_url_)
+                                                                        .WithWaitTimeSeconds(1)
+                                                                        .WithMaxNumberOfMessages(10));
     const auto messages = receive_message_outcome.GetResult().GetMessages();
 
     for (const auto& message : messages) {
@@ -336,9 +336,9 @@ void BenchmarkRunner::CollectSqsMessages(const size_t invocation_count) {
 
       benchmark_result_->UpdateSQSMessageBody(repetition, invoke_index, message.GetBody());
 
-      const auto delete_message_outcome = sqs_client.DeleteMessage(Aws::SQS::Model::DeleteMessageRequest()
-                                                                       .WithQueueUrl(*sqs_queue_url_)
-                                                                       .WithReceiptHandle(message.GetReceiptHandle()));
+      const auto delete_message_outcome = sqs_client->DeleteMessage(Aws::SQS::Model::DeleteMessageRequest()
+                                                                        .WithQueueUrl(*sqs_queue_url_)
+                                                                        .WithReceiptHandle(message.GetReceiptHandle()));
 
       Assert(delete_message_outcome.IsSuccess(), delete_message_outcome.GetError().GetMessage());
     }

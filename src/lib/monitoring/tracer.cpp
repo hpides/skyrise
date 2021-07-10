@@ -11,9 +11,9 @@
 
 namespace skyrise {
 
-Tracer::Tracer(const Aws::XRay::XRayClient& client_xray, const std::string& xray_trace_id,
+Tracer::Tracer(std::shared_ptr<const Aws::XRay::XRayClient> xray_client, const std::string& xray_trace_id,
                const SubqueryFragmentIdentifier& subquery_fragment_identifier)
-    : client_xray_(client_xray),
+    : xray_client_(std::move(xray_client)),
       subquery_fragment_identifier_(subquery_fragment_identifier),
       current_operator_id_("Undefined") {
   std::regex trace_id_regex(kTraceIdRegex);
@@ -82,7 +82,7 @@ void Tracer::SendTrace() {
             .WriteCompact());
   }
 
-  const auto outcome = client_xray_.PutTraceSegments(put_trace_segments_request);
+  const auto outcome = xray_client_->PutTraceSegments(put_trace_segments_request);
 
   if (!outcome.IsSuccess()) {
     AWS_LOGSTREAM_ERROR(kTag.c_str(), outcome.GetError().GetMessage());

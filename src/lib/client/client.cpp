@@ -29,19 +29,21 @@ Client::Client() {
   std::vector<std::function<void()>> initializers{
       [&]() {
         cloudwatch_client_ =
-            std::make_unique<Aws::CloudWatch::CloudWatchClient>(credentials_provider, client_configuration);
+            std::make_shared<const Aws::CloudWatch::CloudWatchClient>(credentials_provider, client_configuration);
       },
-      [&]() { iam_client_ = std::make_unique<Aws::IAM::IAMClient>(credentials_provider, client_configuration); },
+      [&]() { iam_client_ = std::make_shared<const Aws::IAM::IAMClient>(credentials_provider, client_configuration); },
       [&]() {
-        lambda_client_ = std::make_unique<Aws::Lambda::LambdaClient>(credentials_provider, client_configuration);
+        lambda_client_ = std::make_shared<const Aws::Lambda::LambdaClient>(credentials_provider, client_configuration);
       },
       [&]() {
         pricing_client_ =
-            std::make_unique<Aws::Pricing::PricingClient>(credentials_provider, client_configuration_pricing);
+            std::make_shared<const Aws::Pricing::PricingClient>(credentials_provider, client_configuration_pricing);
       },
-      [&]() { s3_client_ = std::make_unique<Aws::S3::S3Client>(credentials_provider, client_configuration_s3); },
-      [&]() { sqs_client_ = std::make_unique<Aws::SQS::SQSClient>(credentials_provider, client_configuration); },
-      [&]() { xray_client_ = std::make_unique<Aws::XRay::XRayClient>(credentials_provider, client_configuration); }};
+      [&]() { s3_client_ = std::make_shared<const Aws::S3::S3Client>(credentials_provider, client_configuration_s3); },
+      [&]() { sqs_client_ = std::make_shared<const Aws::SQS::SQSClient>(credentials_provider, client_configuration); },
+      [&]() {
+        xray_client_ = std::make_shared<const Aws::XRay::XRayClient>(credentials_provider, client_configuration);
+      }};
 
   std::vector<std::future<void>> client_futures;
   client_futures.reserve(initializers.size());
@@ -55,19 +57,21 @@ Client::Client() {
   }
 }
 
-const Aws::CloudWatch::CloudWatchClient& Client::GetCloudWatchClient() const { return *cloudwatch_client_; }
+std::shared_ptr<const Aws::CloudWatch::CloudWatchClient> Client::GetCloudWatchClient() const {
+  return cloudwatch_client_;
+}
 
-const Aws::IAM::IAMClient& Client::GetIAMClient() const { return *iam_client_; }
+std::shared_ptr<const Aws::IAM::IAMClient> Client::GetIAMClient() const { return iam_client_; }
 
-const Aws::Lambda::LambdaClient& Client::GetLambdaClient() const { return *lambda_client_; }
+std::shared_ptr<const Aws::Lambda::LambdaClient> Client::GetLambdaClient() const { return lambda_client_; }
 
-const Aws::Pricing::PricingClient& Client::GetPricingClient() const { return *pricing_client_; }
+std::shared_ptr<const Aws::Pricing::PricingClient> Client::GetPricingClient() const { return pricing_client_; }
 
-const Aws::S3::S3Client& Client::GetS3Client() const { return *s3_client_; }
+std::shared_ptr<const Aws::S3::S3Client> Client::GetS3Client() const { return s3_client_; }
 
-const Aws::SQS::SQSClient& Client::GetSQSClient() const { return *sqs_client_; }
+std::shared_ptr<const Aws::SQS::SQSClient> Client::GetSQSClient() const { return sqs_client_; }
 
-const Aws::XRay::XRayClient& Client::GetXRayClient() const { return *xray_client_; }
+std::shared_ptr<const Aws::XRay::XRayClient> Client::GetXRayClient() const { return xray_client_; }
 
 const Aws::String& Client::GetClientRegion() const { return client_region_; }
 

@@ -39,7 +39,7 @@ struct Subsegment {
 
 class Tracer {
  public:
-  Tracer(const Aws::XRay::XRayClient& client_xray, const std::string& xray_trace_id,
+  Tracer(std::shared_ptr<const Aws::XRay::XRayClient> xray_client, const std::string& xray_trace_id,
          const SubqueryFragmentIdentifier& subquery_fragment_identifier);
   ~Tracer();
 
@@ -49,7 +49,7 @@ class Tracer {
  private:
   void SendTrace();
 
-  const Aws::XRay::XRayClient client_xray_;
+  const std::shared_ptr<const Aws::XRay::XRayClient> xray_client_;
   const SubqueryFragmentIdentifier subquery_fragment_identifier_;
 
   std::string current_operator_id_;

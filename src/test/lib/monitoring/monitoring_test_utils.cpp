@@ -31,7 +31,7 @@ void UploadFunction(const std::shared_ptr<Client>& client, const std::string& pa
 
   Aws::IAM::Model::GetRoleRequest get_role_request;
   get_role_request.WithRoleName(role_name);
-  const auto get_role_outcome = client->GetIAMClient().GetRole(get_role_request);
+  const auto get_role_outcome = client->GetIAMClient()->GetRole(get_role_request);
   const auto role = get_role_outcome.GetResult().GetRole();
 
   Assert(get_role_outcome.IsSuccess(), get_role_outcome.GetError().GetMessage());
@@ -46,7 +46,7 @@ void UploadFunction(const std::shared_ptr<Client>& client, const std::string& pa
                              ? Aws::Lambda::Model::TracingConfig().WithMode(Aws::Lambda::Model::TracingMode::Active)
                              : Aws::Lambda::Model::TracingConfig());
 
-  const auto create_function_outcome = client->GetLambdaClient().CreateFunction(create_function_request);
+  const auto create_function_outcome = client->GetLambdaClient()->CreateFunction(create_function_request);
 
   Assert(create_function_outcome.IsSuccess(), create_function_outcome.GetError().GetMessage());
 }
@@ -57,7 +57,7 @@ InvokeFunction(const std::shared_ptr<Client>& client, const std::string& functio
   invoke_request.WithFunctionName(function_name);
 
   const auto start_time = std::chrono::system_clock::now();
-  const auto invoke_function_outcome = client->GetLambdaClient().Invoke(invoke_request);
+  const auto invoke_function_outcome = client->GetLambdaClient()->Invoke(invoke_request);
   const auto end_time = std::chrono::system_clock::now();
 
   Assert(invoke_function_outcome.IsSuccess(), invoke_function_outcome.GetError().GetMessage());
@@ -68,7 +68,7 @@ InvokeFunction(const std::shared_ptr<Client>& client, const std::string& functio
 void DeleteFunction(const std::shared_ptr<Client>& client, const std::string& function_name) {
   Aws::Lambda::Model::DeleteFunctionRequest delete_request;
   delete_request.WithFunctionName(function_name);
-  const auto delete_function_outcome = client->GetLambdaClient().DeleteFunction(delete_request);
+  const auto delete_function_outcome = client->GetLambdaClient()->DeleteFunction(delete_request);
 
   Assert(delete_function_outcome.IsSuccess(), delete_function_outcome.GetError().GetMessage());
 }
