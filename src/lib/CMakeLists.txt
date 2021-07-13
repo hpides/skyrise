@@ -75,6 +75,18 @@ set(
 set(
     SHARED_SOURCES
     all_type_variant.hpp
+
+    compiler/physical_query_plan/abstract_operator_proxy.cpp
+    compiler/physical_query_plan/abstract_operator_proxy.hpp
+    compiler/physical_query_plan/export_operator_proxy.cpp
+    compiler/physical_query_plan/export_operator_proxy.hpp
+    compiler/physical_query_plan/import_operator_proxy.cpp
+    compiler/physical_query_plan/import_operator_proxy.hpp
+    compiler/physical_query_plan/pqp_deserializer.cpp
+    compiler/physical_query_plan/pqp_deserializer.hpp
+    compiler/physical_query_plan/pqp_serializer.cpp
+    compiler/physical_query_plan/pqp_serializer.hpp
+
     expression/abstract_expression.cpp
     expression/abstract_expression.hpp
     expression/abstract_predicate_expression.cpp
@@ -107,10 +119,13 @@ set(
     expression/evaluation/expression_functors.hpp
     expression/evaluation/expression_result.hpp
     expression/evaluation/expression_result_views.hpp
+    
     operator/abstract_operator.cpp
     operator/abstract_operator.hpp
+
     scheduler/scheduler_types.hpp
     types.hpp
+
     utils/array.hpp
     utils/assert.hpp
     utils/concurrent/queue.hpp
@@ -119,6 +134,7 @@ set(
     utils/git_metadata.cpp
     utils/git_metadata.hpp
     utils/invalid_input_exception.hpp
+    utils/json.hpp
     utils/literal.hpp
     utils/map.hpp
     utils/random.hpp
@@ -128,6 +144,7 @@ set(
     utils/time.hpp
     utils/unit_conversion.hpp
     utils/vector.hpp
+
     ${SERIALIZATION_SOURCES}
     ${STATISTICS_SOURCES}
     ${STORAGE_SOURCES}

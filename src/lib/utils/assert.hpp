@@ -59,6 +59,13 @@ namespace detail {
   throw InvalidInputException(std::string("Error: Invalid input; ") + message);
 }
 
+// StaticFail allows compile-time errors in combination with if constexpr.
+// See https://stackoverflow.com/questions/38304847/constexpr-if-and-static-assert.
+template <bool flag = false>
+void StaticFail() {
+  static_assert(flag, "Static assertion failed.");
+}
+
 }  // namespace skyrise
 
 #define Assert(expression, message)     \
