@@ -6,38 +6,10 @@
 	path = third_party/aws-sdk-cpp
 	url = https://github.com/aws/aws-sdk-cpp.git
 	shallow = true
-[submodule "third_party/boost/assert"]
-	path = third_party/boost/assert
-	url = https://github.com/boostorg/assert.git
-	shallow = true
-[submodule "third_party/boost/config"]
-	path = third_party/boost/config
-	url = https://github.com/boostorg/config.git
-	shallow = true
-[submodule "third_party/boost/container_hash"]
-	path = third_party/boost/container_hash
-	url = https://github.com/boostorg/container_hash.git
-	shallow = true
-[submodule "third_party/boost/core"]
-	path = third_party/boost/core
-	url = https://github.com/boostorg/core.git
-	shallow = true
-[submodule "third_party/boost/detail"]
-	path = third_party/boost/detail
-	url = https://github.com/boostorg/detail.git
-	shallow = true
-[submodule "third_party/boost/integer"]
-	path = third_party/boost/integer
-	url = https://github.com/boostorg/integer.git
-	shallow = true
-[submodule "third_party/boost/static_assert"]
-	path = third_party/boost/static_assert
-	url = https://github.com/boostorg/static_assert.git
-	shallow = true
-[submodule "third_party/boost/type_traits"]
-	path = third_party/boost/type_traits
-	url = https://github.com/boostorg/type_traits.git
-	shallow = true
+[submodule "third_party/boost"]
+	path = third_party/boost
+	url = https://github.com/boostorg/boost.git
+    shallow = true
 [submodule "third_party/cmake-git-version-tracking"]
 	path = third_party/cmake-git-version-tracking
 	url = https://github.com/andrew-hardin/cmake-git-version-tracking.git
