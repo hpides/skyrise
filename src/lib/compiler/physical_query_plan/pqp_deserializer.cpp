@@ -7,6 +7,7 @@
 
 #include "export_operator_proxy.hpp"
 #include "import_operator_proxy.hpp"
+#include "partition_operator_proxy.hpp"
 #include "pqp_serialization_constants.hpp"
 
 namespace skyrise {
@@ -28,6 +29,8 @@ std::shared_ptr<AbstractOperatorProxy> PqpDeserializer::DeserializeSingleOperato
       return ImportOperatorProxy::FromJson(operator_payload, storage_factory_);
     case OperatorType::kExport:
       return ExportOperatorProxy::FromJson(operator_payload, storage_factory_);
+    case OperatorType::kPartition:
+      return PartitionOperatorProxy::FromJson(operator_payload);
     default:
       Fail("Unknown operator type.");
   }

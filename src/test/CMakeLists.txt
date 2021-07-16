@@ -24,6 +24,7 @@ set(
     lib/monitoring/monitoring_test_utils.cpp
     lib/monitoring/monitoring_test_utils.hpp
 
+    lib/operator/partition_operator_test.cpp
     lib/operator/table_wrapper.hpp
 
     lib/serialization/schema_serialization_test.cpp

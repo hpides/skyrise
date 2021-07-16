@@ -82,6 +82,8 @@ set(
     compiler/physical_query_plan/export_operator_proxy.hpp
     compiler/physical_query_plan/import_operator_proxy.cpp
     compiler/physical_query_plan/import_operator_proxy.hpp
+    compiler/physical_query_plan/partition_operator_proxy.cpp
+    compiler/physical_query_plan/partition_operator_proxy.hpp
     compiler/physical_query_plan/pqp_deserializer.cpp
     compiler/physical_query_plan/pqp_deserializer.hpp
     compiler/physical_query_plan/pqp_serializer.cpp
@@ -122,8 +124,11 @@ set(
     
     operator/abstract_operator.cpp
     operator/abstract_operator.hpp
+    operator/partition_operator.cpp
+    operator/partition_operator.hpp
 
     scheduler/scheduler_types.hpp
+    resolve_type.hpp
     types.hpp
 
     utils/array.hpp

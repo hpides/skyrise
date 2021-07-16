@@ -2,7 +2,9 @@
 
 #include "compiler/physical_query_plan/export_operator_proxy.hpp"
 #include "compiler/physical_query_plan/import_operator_proxy.hpp"
+#include "compiler/physical_query_plan/partition_operator_proxy.hpp"
 #include "compiler/physical_query_plan/pqp_serialization_constants.hpp"
+#include "operator/partition_operator.hpp"
 #include "types.hpp"
 
 namespace skyrise {
@@ -59,6 +61,15 @@ TEST(ProxyOperatorTest, ExportOperatorProxyTest) {
 
   // TODO(anyone): Second type has to be ExportOperator.
   TestProxy<ExportOperatorProxy, ExportOperatorProxy>(export_proxy);
+}
+
+TEST(ProxyOperatorTest, PartitionOperatorProxyTest) {
+  const size_t partition_count = 10;
+  const std::set<ColumnId> partition_column_ids{0, 1};
+
+  auto partition_proxy = std::make_shared<const PartitionOperatorProxy>(partition_count, partition_column_ids);
+
+  TestProxy<PartitionOperatorProxy, PartitionOperator>(partition_proxy);
 }
 
 }  // namespace skyrise

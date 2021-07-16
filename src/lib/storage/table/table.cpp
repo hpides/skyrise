@@ -148,20 +148,6 @@ void Table::AppendChunk(const Segments& segments) {
   AssertInput(static_cast<ColumnCount>(segments.size()) == GetColumnCount(),
               "Input does not have the same number of columns.");
 
-  if constexpr (SKYRISE_DEBUG) {
-    // Check that existing chunks are not empty
-    const size_t chunk_count = chunks_.size();
-    for (ChunkId chunk_id = 0; chunk_id < chunk_count; ++chunk_id) {
-      const auto chunk = GetChunk(chunk_id);
-      if (!chunk) {
-        continue;
-      }
-
-      // An empty chunk at the end is fine, but in that case, AppendChunk() should not be called.
-      DebugAssert(chunk->Size() > 0, "AppendChunk() called on a table that has an empty chunk.");
-    }
-  }
-
   auto new_chunk = chunks_.emplace_back(nullptr);
   std::atomic_store(&new_chunk, std::make_shared<Chunk>(segments));
 }
