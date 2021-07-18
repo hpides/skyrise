@@ -20,6 +20,7 @@ struct ObjectStatistics {
   // MinMax statistics.
   std::vector<std::pair<AllTypeVariant, AllTypeVariant>> minmax;
 };
+
 class StatisticsOrcFormatReader : public OrcFormatReader {
  public:
   inline static const std::string kFormatOrc{"orc"};

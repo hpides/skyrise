@@ -5,12 +5,6 @@
 namespace skyrise {
 
 struct SubqueryFragmentIdentifier {
-  std::string subquery_fragment_id;
-  std::string timestamp;
-  std::string query_hash;
-  size_t subquery_id;
-  size_t retry_attempt;
-
   Aws::Utils::Json::JsonValue ToJson() const {
     Aws::Utils::Json::JsonValue identifier;
 
@@ -22,6 +16,12 @@ struct SubqueryFragmentIdentifier {
 
     return identifier;
   }
+
+  std::string subquery_fragment_id;
+  std::string timestamp;
+  std::string query_hash;
+  size_t subquery_id;
+  size_t retry_attempt;
 };
 
 }  // namespace skyrise

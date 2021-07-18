@@ -12,10 +12,6 @@
 namespace skyrise {
 
 struct RuntimeMetrics {
-  size_t processed_bytes;
-  size_t processed_chunks;
-  size_t processed_rows;
-
   Aws::Utils::Json::JsonValue ToJson() const {
     Aws::Utils::Json::JsonValue metrics;
 
@@ -31,6 +27,10 @@ struct RuntimeMetrics {
 
     return metrics;
   }
+
+  size_t processed_bytes;
+  size_t processed_chunks;
+  size_t processed_rows;
 };
 
 class MetricsCollector {

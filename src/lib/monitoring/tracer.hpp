@@ -15,13 +15,6 @@ struct StageInformation {
 };
 
 struct Subsegment {
-  std::string id;
-  std::string name;
-  double start_time;
-  double end_time;
-  std::string trace_id;
-  std::string parent_id;
-
   Aws::Utils::Json::JsonValue ToJson() const {
     Aws::Utils::Json::JsonValue subsegment;
 
@@ -35,6 +28,13 @@ struct Subsegment {
 
     return subsegment;
   }
+
+  std::string id;
+  std::string name;
+  double start_time;
+  double end_time;
+  std::string trace_id;
+  std::string parent_id;
 };
 
 class Tracer {
