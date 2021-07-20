@@ -2,10 +2,10 @@
 
 #include <gtest/gtest.h>
 
+#include "operator/table_wrapper.hpp"
 #include "storage/table/chunk.hpp"
 #include "storage/table/table.hpp"
 #include "storage/table/value_segment.hpp"
-#include "table_wrapper.hpp"
 
 namespace skyrise {
 

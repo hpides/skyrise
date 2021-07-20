@@ -3,7 +3,7 @@
  */
 #pragma once
 
-#include "operator/abstract_operator.hpp"
+#include "abstract_operator.hpp"
 
 namespace skyrise {
 

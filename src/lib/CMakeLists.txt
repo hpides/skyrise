@@ -126,6 +126,7 @@ set(
     operator/abstract_operator.hpp
     operator/partition_operator.cpp
     operator/partition_operator.hpp
+    operator/table_wrapper.hpp
 
     scheduler/scheduler_types.hpp
     resolve_type.hpp

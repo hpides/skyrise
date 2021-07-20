@@ -24,6 +24,10 @@ set(MINIMIZE_SIZE ON CACHE BOOL "Enable unity build and other binary size reduct
 set(TARGET_ARCH LINUX)
 add_subdirectory(aws-sdk-cpp)
 
+# benchmark
+set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Enable testing of the benchmark library.")
+add_subdirectory(benchmark)
+
 # Boost libraries
 add_subdirectory(boost)
 

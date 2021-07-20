@@ -6,6 +6,10 @@
 	path = third_party/aws-sdk-cpp
 	url = https://github.com/aws/aws-sdk-cpp.git
 	shallow = true
+[submodule "third_party/benchmark"]
+	path = third_party/benchmark
+	url = https://github.com/google/benchmark.git
+	shallow = true
 [submodule "third_party/boost"]
 	path = third_party/boost
 	url = https://github.com/boostorg/boost.git

@@ -1,3 +1,7 @@
+include_directories(
+    ${PROJECT_SOURCE_DIR}/third_party/benchmark/include
+)
+
 add_executable(
     skyriseBenchmarkFunctionColocation
 
@@ -136,6 +140,19 @@ target_link_libraries(
     skyriseBenchmarkNetworkThroughputParallel
 
     skyriseBenchmark
+)
+
+add_executable(
+    skyriseMicrobenchmarks
+
+    partition_microbenchmark.cpp
+)
+
+target_link_libraries(
+    skyriseMicrobenchmarks
+
+    skyriseBenchmark
+    benchmark::benchmark_main
 )
 
 add_subdirectory(function)
