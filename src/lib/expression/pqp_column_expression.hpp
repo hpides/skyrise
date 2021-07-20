@@ -23,7 +23,7 @@ class PqpColumnExpression : public AbstractExpression {
   std::shared_ptr<AbstractExpression> DeepCopy() const override;
   bool RequiresComputation() const override;
   std::string Description(const DescriptionMode mode) const override;
-  DataType DataType() const override;
+  DataType GetDataType() const override;
 
   const ColumnId column_id_;
 

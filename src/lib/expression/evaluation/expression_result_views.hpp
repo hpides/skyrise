@@ -3,8 +3,8 @@
  */
 #pragma once
 
-#include "types.hpp";
-#include "utils/assert.hpp";
+#include "types.hpp"
+#include "utils/assert.hpp"
 
 namespace skyrise {
 
@@ -25,7 +25,7 @@ class ExpressionResultNullableSeries {
       : values_(std::move(values)), nulls_(std::move(nulls)) {
     DebugAssert(values_ != nullptr, "Values is nullptr.");
     DebugAssert(nulls_ != nullptr, "Nulls is nullptr.");
-    DebugAssert(values.size() == nulls.size(), "Need as many values as nulls.");
+    DebugAssert(values_.size() == nulls_.size(), "Need as many values as nulls.");
   }
 
   bool IsSeries() const { return true; }
@@ -33,15 +33,15 @@ class ExpressionResultNullableSeries {
   bool IsNullable() const { return true; }
 
   const T& Value(const size_t index) const {
-    DebugAssert(index < values_.size(), "Index out of range.");
-    return values_[index];
+    DebugAssert(index < values_->size(), "Index out of range.");
+    return values_->at(index);
   }
 
-  size_t Size() const { return values_.size(); }
+  size_t Size() const { return values_->size(); }
 
   bool IsNull(const size_t index) const {
-    DebugAssert(index < nulls_.size(), "Index out of range.");
-    return nulls_[index];
+    DebugAssert(index < nulls_->size(), "Index out of range.");
+    return nulls_->at(index);
   }
 
  private:
@@ -71,7 +71,7 @@ class ExpressionResultNonNullSeries {
     return (*values_)[index];
   }
 
-  bool IsNull(const size_t index) const { return false; }
+  bool IsNull(const size_t /*index*/) const { return false; }
 
  private:
   std::shared_ptr<std::vector<T>> values_;

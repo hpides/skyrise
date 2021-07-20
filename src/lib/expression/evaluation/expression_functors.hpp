@@ -3,6 +3,8 @@
  */
 #pragma once
 
+#include <cmath>
+
 #include "all_type_variant.hpp"
 #include "expression_result.hpp"
 
@@ -21,7 +23,7 @@ constexpr bool IsLogicalOperand = std::is_same_v<int32_t, T> || std::is_same_v<N
  * Turn a bool into itself and a NULL into false.
  */
 bool ToBool(const bool value) { return value; }
-bool ToBool(const NullValue& value) { return false; }
+bool ToBool(const NullValue& /*value*/) { return false; }
 
 /**
  * Cast a value into another type.
@@ -35,7 +37,7 @@ T ToValue(const V& value) {
  * Cast a NULL into another type.
  */
 template <typename T>
-T ToValue(const NullValue& value) {
+T ToValue(const NullValue& /*value*/) {
   return T{};
 }
 
@@ -148,8 +150,8 @@ using SubtractionEvaluator = StlArithmeticFunctorWrapper<std::minus>;
 using MultiplicationEvaluator = StlArithmeticFunctorWrapper<std::multiplies>;
 
 /**
- * Modulo selects between the operator % for integrals and fmod() for floats. Custom NULL logic returns NULL if the
- * divisor is NULL.
+ * Modulo selects between the operator % for integrals and std::fmod() for floats. Custom NULL logic returns NULL if
+ * the divisor is NULL.
  */
 struct ModuloEvaluator {
   template <typename Result, typename ArgA, typename ArgB>
@@ -177,7 +179,7 @@ struct ModuloEvaluator {
         if constexpr (std::is_integral_v<ArgA> && std::is_integral_v<ArgB>) {
           result_value = static_cast<Result>(a_value % b_value);
         } else {
-          result_value = static_cast<Result>(fmod(a_value, b_value));
+          result_value = static_cast<Result>(std::fmod(a_value, b_value));
         }
       }
     }

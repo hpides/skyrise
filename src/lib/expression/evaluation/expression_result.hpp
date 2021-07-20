@@ -92,14 +92,15 @@ class ExpressionResult : public BaseExpressionResult {
    */
   template <typename Functor>
   void AsView(const Functor& functor) const {
-    if (size() == 1) {
+    if (Size() == 1) {
       functor(ExpressionResultLiteral(values_.front(), IsNullable() && nulls_.front()));
     } else if (nulls_.size() == 1 && nulls_.front()) {
       functor(ExpressionResultLiteral(T{}, true));
     } else if (!IsNullable()) {
-      functor(ExpressionResultNonNullSeries(values_));
+      functor(ExpressionResultNonNullSeries(std::make_shared<std::vector<T>>(values_)));
     } else {
-      functor(ExpressionResultNullableSeries(values_, nulls_));
+      functor(ExpressionResultNullableSeries(std::make_shared<std::vector<T>>(values_),
+                                             std::make_shared<std::vector<bool>>(nulls_)));
     }
   }
 

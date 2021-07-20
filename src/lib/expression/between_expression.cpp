@@ -5,6 +5,7 @@
 
 #include <sstream>
 
+#include "types.hpp"
 #include "utils/assert.hpp"
 
 namespace skyrise {

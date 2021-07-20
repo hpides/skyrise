@@ -114,6 +114,8 @@ set(
     expression/list_expression.hpp
     expression/logical_expression.cpp
     expression/logical_expression.hpp
+    expression/pqp_column_expression.cpp
+    expression/pqp_column_expression.hpp
     expression/unary_minus_expression.cpp
     expression/unary_minus_expression.hpp
     expression/value_expression.cpp
@@ -121,7 +123,7 @@ set(
     expression/evaluation/expression_functors.hpp
     expression/evaluation/expression_result.hpp
     expression/evaluation/expression_result_views.hpp
-    
+
     operator/abstract_operator.cpp
     operator/abstract_operator.hpp
     operator/partition_operator.cpp

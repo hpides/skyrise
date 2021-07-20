@@ -14,13 +14,13 @@ std::shared_ptr<PqpColumnExpression> PqpColumnExpression::FromTable(const Table&
                                                table.ColumnIsNullable(column_id), column_name);
 }
 
-std::shared_ptr<PqpColumnExpression> PqpColumnExpression::FromTable(const Table& table, const ColumnID column_id) {
+std::shared_ptr<PqpColumnExpression> PqpColumnExpression::FromTable(const Table& table, const ColumnId column_id) {
   return PqpColumnExpression::FromTable(table, table.ColumnName(column_id));
 }
 
 PqpColumnExpression::PqpColumnExpression(const ColumnId column_id, const DataType data_type, const bool is_nullable,
                                          const std::string& column_name)
-    : AbstractExpression(ExpressionType::PqpColumn, {}),
+    : AbstractExpression(ExpressionType::kPqpColumn, {}),
       column_id_(column_id),
       data_type_(data_type),
       is_nullable_(is_nullable),
@@ -32,7 +32,7 @@ std::shared_ptr<AbstractExpression> PqpColumnExpression::DeepCopy() const {
 
 std::string PqpColumnExpression::Description(const DescriptionMode /*mode*/) const { return column_name_; }
 
-DataType PqpColumnExpression::DataType() const { return data_type_; }
+DataType PqpColumnExpression::GetDataType() const { return data_type_; }
 
 bool PqpColumnExpression::RequiresComputation() const { return false; }
 

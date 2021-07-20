@@ -9,8 +9,10 @@
 #include "arithmetic_expression.hpp"
 #include "between_expression.hpp"
 #include "binary_predicate_expression.hpp"
+#include "extract_expression.hpp"
 #include "in_expression.hpp"
 #include "is_null_expression.hpp"
+#include "list_expression.hpp"
 #include "logical_expression.hpp"
 #include "unary_minus_expression.hpp"
 #include "value_expression.hpp"
@@ -113,6 +115,11 @@ std::vector<std::shared_ptr<AbstractExpression>> ExpressionVector_(Args&&... arg
   return std::vector<std::shared_ptr<AbstractExpression>>({ToExpression(args)...});
 }
 
+template <typename F>
+std::shared_ptr<ExtractExpression> Extract_(const DatetimeComponent datetime_component, const F& from) {
+  return std::make_shared<ExtractExpression>(datetime_component, ToExpression(from));
+}
+
 template <typename V, typename S>
 std::shared_ptr<InExpression> In_(const V& v, const S& s) {
   return std::make_shared<InExpression>(PredicateCondition::kIn, ToExpression(v), ToExpression(s));
@@ -126,6 +133,11 @@ std::shared_ptr<InExpression> NotIn_(const V& v, const S& s) {
 template <typename Argument>
 std::shared_ptr<UnaryMinusExpression> UnaryMinus_(const Argument& argument) {
   return std::make_shared<UnaryMinusExpression>(ToExpression(argument));
+}
+
+template <typename... Args>
+std::shared_ptr<ListExpression> List_(Args&&... args) {
+  return std::make_shared<ListExpression>(ExpressionVector_(std::forward<Args>(args)...));
 }
 
 }  // namespace expression_functional
