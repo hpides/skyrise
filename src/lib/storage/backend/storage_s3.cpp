@@ -12,7 +12,8 @@ time_t ConvertAwsDateTime(const Aws::Utils::DateTime aws_datetime) {
 
 class ProxyStreamBuffer : public std::streambuf {
  public:
-  explicit ProxyStreamBuffer(const std::function<void(const char* data, size_t n)>& callback) : callback_(callback) {}
+  explicit ProxyStreamBuffer(std::function<void(const char* data, size_t n)> callback)
+      : callback_(std::move(callback)) {}
 
  protected:
   std::streamsize xsputn(const char_type* s, std::streamsize n) override {
@@ -21,13 +22,13 @@ class ProxyStreamBuffer : public std::streambuf {
   }
 
  private:
-  const std::function<void(const char* data, size_t n)>& callback_;
+  const std::function<void(const char* data, size_t n)> callback_;
 };
 
 class ProxyStream : public std::iostream {
  public:
-  explicit ProxyStream(const std::function<void(const char* data, size_t n)>& callback)
-      : std::iostream(nullptr), buffer_(std::make_unique<ProxyStreamBuffer>(callback)) {
+  explicit ProxyStream(std::function<void(const char* data, size_t n)> callback)
+      : std::iostream(nullptr), buffer_(std::make_unique<ProxyStreamBuffer>(std::move(callback))) {
     rdbuf(buffer_.get());
   }
 
@@ -398,7 +399,8 @@ StorageError S3ObjectReader::Read(size_t first_byte, size_t last_byte,
   SetRange(request, first_byte, last_byte);
 
   // The AWS SDK will free the resource
-  request.SetResponseStreamFactory([&callback]() { return new detail::ProxyStream(callback); });
+  request.SetResponseStreamFactory(
+      [callback = std::move(callback)]() mutable { return new detail::ProxyStream(std::move(callback)); });
 
   auto outcome = client_->GetObject(request);
   if (!outcome.IsSuccess()) {

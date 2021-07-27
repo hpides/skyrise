@@ -41,8 +41,8 @@ class InvocationLatencyBenchmark : public Benchmark {
   const std::shared_ptr<BenchmarkHelper> helper_;
   const std::shared_ptr<CostCalculator> cost_calculator_;
   const std::vector<size_t> function_instance_mb_sizes_;
-  const std::vector<size_t>& invocation_counts_;
-  const std::vector<bool>& warm_modes_;
+  const std::vector<size_t> invocation_counts_;
+  const std::vector<bool> warm_modes_;
   const std::vector<size_t> sleep_ms_durations_;
   const size_t repetition_count_;
 
