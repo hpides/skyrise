@@ -34,14 +34,14 @@ class ExpressionResultNullableSeries {
 
   const T& Value(const size_t index) const {
     DebugAssert(index < values_->size(), "Index out of range.");
-    return values_->at(index);
+    return (*values_)[index];
   }
 
   size_t Size() const { return values_->size(); }
 
   bool IsNull(const size_t index) const {
     DebugAssert(index < nulls_->size(), "Index out of range.");
-    return nulls_->at(index);
+    return (*nulls_)[index];
   }
 
  private:

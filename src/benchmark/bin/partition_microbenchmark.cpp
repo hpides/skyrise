@@ -16,7 +16,7 @@ class PartitionMicrobenchmarkFixture : public benchmark::Fixture {
  public:
   void SetUp(benchmark::State& state) override {
     std::vector<int> ascending_numbers(state.range(0));
-    std::generate(ascending_numbers.begin(), ascending_numbers.end(), [n = 0]() mutable { return n++; });
+    std::iota(ascending_numbers.begin(), ascending_numbers.end(), 0);
 
     const auto value_segment = std::make_shared<ValueSegment<int>>(std::move(ascending_numbers));
     std::vector<std::shared_ptr<Chunk>> chunk = {std::make_shared<Chunk>(Segments({value_segment}))};

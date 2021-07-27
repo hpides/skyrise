@@ -25,7 +25,7 @@ ValueSegment<T>::ValueSegment(std::vector<T>&& values, std::vector<bool>&& null_
 template <typename T>
 AllTypeVariant ValueSegment<T>::operator[](const ChunkOffset chunk_offset) const {
   // Segment supports NULL values and value is NULL
-  if (IsNullable() && null_values_->at(chunk_offset)) {
+  if (IsNullable() && (*null_values_)[chunk_offset]) {
     return kNullValue;
   }
 
