@@ -131,12 +131,12 @@ Aws::Utils::Json::JsonValue FunctionWarmUpContinuousBenchmark::GenerateResultOut
                                static_cast<double>(CalculateOverallFunctionCost(
                                    benchmark_result, benchmark_parameters.function_instance_mb_size)));
 
-  return BenchmarkHelper::GenerateJsonOutput(
-      benchmark_name.str(), numeric_metrics, {/*aggregated string metrics*/}, benchmark_result,
-      {/*extract double metric functions*/}, {[&](const InvokeResult& invoke_result) {
-        return std::make_tuple("is_warm_function", is_warm_function(invoke_result) ? "true" : "false");
-      }},
-      {/*extract object metric functions*/});
+  return GenerateJsonOutput(benchmark_name.str(), numeric_metrics, {/*aggregated string metrics*/}, benchmark_result,
+                            {/*extract double metric functions*/}, {[&](const InvokeResult& invoke_result) {
+                              return std::make_tuple("is_warm_function",
+                                                     is_warm_function(invoke_result) ? "true" : "false");
+                            }},
+                            {/*extract object metric functions*/});
 }
 
 }  // namespace skyrise

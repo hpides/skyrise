@@ -78,7 +78,7 @@ Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
 
   const BenchmarkResultAggregate aggregates(throughputs);
 
-  return BenchmarkHelper::GenerateJsonOutput(
+  return GenerateJsonOutput(
       benchmark_name.str(),
       {{"throughput_mb_per_s_minimum", aggregates.GetMinimum()},
        {"throughput_mb_per_s_maximum", aggregates.GetMaximum()},

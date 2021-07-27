@@ -67,7 +67,7 @@ Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
 
   const BenchmarkResultAggregate aggregates(latencies);
 
-  return BenchmarkHelper::GenerateJsonOutput(
+  return GenerateJsonOutput(
       benchmark_name.str(),
       {{"latency_ms_minimum", aggregates.GetMinimum()},
        {"latency_ms_maximum", aggregates.GetMaximum()},

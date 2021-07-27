@@ -100,7 +100,7 @@ Aws::Utils::Json::JsonValue IdleLifetimeBenchmark::GenerateResultOutput(
 
   const BenchmarkResultAggregate aggregates(idle_lifetime_percentages);
 
-  return BenchmarkHelper::GenerateJsonOutput(
+  return GenerateJsonOutput(
       benchmark_name.str(),
       {{"idle_lifetime_percentage_minimum", aggregates.GetMinimum()},
        {"idle_lifetime_percentage_maximum", aggregates.GetMaximum()},

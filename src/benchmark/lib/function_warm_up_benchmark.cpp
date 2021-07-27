@@ -119,7 +119,7 @@ Aws::Utils::Json::JsonValue FunctionWarmUpBenchmark::GenerateResultOutput(
 
   const BenchmarkResultAggregate warm_function_percentages_aggregates(warm_function_percentages);
 
-  return BenchmarkHelper::GenerateJsonOutput(
+  return GenerateJsonOutput(
       benchmark_name.str(),
       {{"warm_function_percentage_minimum", warm_function_percentages_aggregates.GetMinimum()},
        {"warm_function_percentage_maximum", warm_function_percentages_aggregates.GetMaximum()},

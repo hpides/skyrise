@@ -90,7 +90,7 @@ Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
 
   const BenchmarkResultAggregate aggregates(invocation_throughputs);
 
-  return BenchmarkHelper::GenerateJsonOutput(
+  return GenerateJsonOutput(
       benchmark_name.str(),
       {{"invocation_throughput_functions_per_s_minimum", aggregates.GetMinimum()},
        {"invocation_throughput_functions_per_s_maximum", aggregates.GetMaximum()},

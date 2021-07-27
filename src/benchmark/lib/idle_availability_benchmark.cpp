@@ -144,7 +144,7 @@ Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
   const BenchmarkResultAggregate unavailable_phases_counts_aggregates(unavailable_phases_counts);
   const BenchmarkResultAggregate unavailable_phases_lengths_aggregates(unavailable_phases_lengths);
 
-  return BenchmarkHelper::GenerateJsonOutput(
+  return GenerateJsonOutput(
       benchmark_name.str(),
       {{"availability_percentage_minimum", availability_percentages_aggregates.GetMinimum()},
        {"availability_percentage_maximum", availability_percentages_aggregates.GetMaximum()},

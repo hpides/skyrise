@@ -58,7 +58,9 @@ set(
     aws-cpp-sdk-s3
     aws-cpp-sdk-sqs
     aws-cpp-sdk-xray
+    gtest_main
     tpch-dbgen
+
     skyriseShared
 )
 

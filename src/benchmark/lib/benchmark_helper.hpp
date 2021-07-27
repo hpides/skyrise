@@ -12,20 +12,10 @@
 
 namespace skyrise {
 
+// TODO(maltenbergert): Refactor BenchmarkHelper into an S3Helper
 class BenchmarkHelper {
  public:
   BenchmarkHelper(std::shared_ptr<Client> client) : client_(client) {}
-
-  static Aws::Utils::Json::JsonValue GenerateJsonOutput(
-      const Aws::String& benchmark_name, const std::vector<std::tuple<Aws::String, double>>& aggregated_numeric_metrics,
-      const std::vector<std::tuple<Aws::String, Aws::String>>& aggregated_alphabetic_metrics,
-      const std::shared_ptr<BenchmarkResult>& benchmark_result,
-      const std::vector<std::function<std::tuple<Aws::String, double>(const InvokeResult&)>>&
-          extract_numeric_metric_functions,
-      const std::vector<std::function<std::tuple<Aws::String, Aws::String>(const InvokeResult&)>>&
-          extract_alphabetic_metric_functions,
-      const std::vector<std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const InvokeResult&)>>&
-          extract_object_metric_functions);
 
   void CreateS3BucketIfNotExists(const Aws::String& bucket_name) const;
   static std::shared_ptr<Aws::IOStream> GenerateRandomObject(const size_t num_bytes);

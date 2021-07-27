@@ -289,8 +289,8 @@ Aws::Utils::Json::JsonValue InvocationLatencyBenchmark::GenerateResultOutput(
   aggregated_metrics.emplace_back("benchmark_cost_usd", static_cast<double>(benchmark_cost_));
   aggregated_metrics.emplace_back("warm_up_cost_usd", static_cast<double>(benchmark_result->GetWarmUpCost()));
 
-  auto json_output = BenchmarkHelper::GenerateJsonOutput(benchmark_name.str(), aggregated_metrics, {}, benchmark_result,
-                                                         extract_metric_functions, {}, {});
+  auto json_output = GenerateJsonOutput(benchmark_name.str(), aggregated_metrics, {}, benchmark_result,
+                                        extract_metric_functions, {}, {});
 
   return json_output;
 }

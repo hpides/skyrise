@@ -98,7 +98,7 @@ Aws::Utils::Json::JsonValue FunctionColocationBenchmark::GenerateResultOutput(
 
   const BenchmarkResultAggregate aggregates(colocation_counts);
 
-  return BenchmarkHelper::GenerateJsonOutput(
+  return GenerateJsonOutput(
       benchmark_name.str(),
       {{"colocation_counts_minimum", aggregates.GetMinimum()},
        {"colocation_counts_maximum", aggregates.GetMaximum()},

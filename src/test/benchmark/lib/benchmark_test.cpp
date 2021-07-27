@@ -1,4 +1,4 @@
-#include "benchmark_helper.hpp"
+#include "benchmark.hpp"
 
 #include <chrono>
 #include <functional>
@@ -19,12 +19,12 @@
 
 namespace skyrise {
 
-class AwsBenchmarkHelperTest : public ::testing::Test {
+class AwsBenchmarkTest : public ::testing::Test {
  private:
   const AwsApi aws_api_;
 };
 
-TEST_F(AwsBenchmarkHelperTest, GenerateJsonOutput) {
+TEST_F(AwsBenchmarkTest, GenerateJsonOutput) {
   const auto benchmark_result = std::make_shared<BenchmarkResult>(1, 3);
 
   for (size_t i = 0; i < 3; i++) {
@@ -74,7 +74,7 @@ TEST_F(AwsBenchmarkHelperTest, GenerateJsonOutput) {
             return std::make_tuple("object_metric_2", Aws::Utils::Json::JsonValue().AsBool(b.IsSuccess()));
           }};
 
-  const auto json_value = BenchmarkHelper::GenerateJsonOutput(
+  const auto json_value = Benchmark::GenerateJsonOutput(
       "benchmark", aggregated_numeric_metrics, aggregated_alphabetic_metrics, benchmark_result,
       extract_numeric_metric_functions, extract_alphabetic_metric_functions, extract_object_metric_functions);
   const auto json_view = json_value.View();
