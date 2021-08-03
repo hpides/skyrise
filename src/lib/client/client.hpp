@@ -21,7 +21,11 @@ class Client {
  public:
   Client();
   Client(const Client&) = delete;
+  Client(Client&&) = default;
   const Client& operator=(const Client&) = delete;
+  Client& operator=(Client&&) = default;
+
+  ~Client() = default;
 
   std::shared_ptr<const Aws::CloudWatch::CloudWatchClient> GetCloudWatchClient() const;
   std::shared_ptr<const Aws::IAM::IAMClient> GetIAMClient() const;
@@ -51,7 +55,7 @@ class Client {
   static constexpr size_t kConnectTimeoutMs = 10'000;
   static constexpr bool kEnableTcpKeepAlive = false;
   static constexpr size_t kMaxConnections = 20'000;
-  inline static Aws::String kPricingEndpoint = Aws::Region::US_EAST_1;
+  inline static const Aws::String kPricingEndpoint = Aws::Region::US_EAST_1;
   static constexpr size_t kRequestTimeoutMs = 900'000;
   // TODO(anyone): Base the pool size on the underlying number of cores available
   static constexpr size_t kS3ExecutorPoolSize = 32;

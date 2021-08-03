@@ -9,12 +9,14 @@ Checks: '
         -*-non-private-member-variables-in-classes,
         -*-uppercase-literal-suffix,
         -abseil-string-find-startswith,
+        -altera-struct-pack-align,
         -cert-dcl16-c,
         -cert-dcl58-cpp,
         -cert-env33-c,
         -cert-err58-cpp,
         -cppcoreguidelines-avoid-non-const-global-variables,
         -cppcoreguidelines-interfaces-global-init,
+        -cppcoreguidelines-macro-usage,
         -cppcoreguidelines-owning-memory,
         -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
         -cppcoreguidelines-pro-bounds-constant-array-index,
@@ -22,15 +24,20 @@ Checks: '
         -cppcoreguidelines-pro-type-reinterpret-cast,
         -fuchsia-overloaded-operator,
         -fuchsia-statically-constructed-objects,
+        -fuchsia-trailing-return,
         -google-runtime-int,
         -hicpp-no-array-decay,
+        -llvm-header-guard,
         -llvm-include-order,
         -llvmlibc-*,
         -misc-no-recursion,
         -modernize-concat-nested-namespaces,
         -modernize-pass-by-value,
+        -modernize-use-nodiscard,
         -modernize-use-trailing-return-type,
-        -readability-function-cognitive-complexity
+        -readability-avoid-const-params-in-decls,
+        -readability-function-cognitive-complexity,
+        -readability-implicit-bool-conversion
         '
 
 # Explanation of disabled checks
@@ -43,11 +50,13 @@ Checks: '
 #   *-non-private-member-variables-in-classes               We use public member variables
 #   *-uppercase-literal-suffix                              Using 1.0f instead of 1.0F is fine for us
 #   abseil-string-find-startswith                           We do not use abseil
+#   altera-struct-pack-align                                We do not use alignment annotations
 #   cert-dcl16-c                                            Using 1.0f instead of 1.0F is fine for us
 #   cert-env33-c                                            We use popen()
 #   cert-err58-cpp                                          We are okay with uncaught errors
 #   cppcoreguidelines-avoid-non-const-global-variables      Does not like Google Test
 #   cppcoreguidelines-interfaces-global-init                Does not like std::vector<std::function<void()>> a{[]() { std::cout << "a"; }};
+#   cppcoreguidelines-macro-usage                           We use macros for Assert/Fail/...
 #   cppcoreguidelines-owning-memory                         Does not like Google Test
 #   cppcoreguidelines-pro-bounds-array-to-pointer-decay     Does not like Pricing pricing(Aws::Region::US_EAST_1);
 #   cppcoreguidelines-pro-bounds-constant-array-index       We have some c-style arrays
@@ -55,15 +64,20 @@ Checks: '
 #   cppcoreguidelines-pro-type-reinterpret-cast             We use reinterpret_cast
 #   fuchsia-overloaded-operator                             We overload operators
 #   fuchsia-statically-constructed-objects                  Does not like Google Test
+#   fuchsia-trailing-return                                 Gives various false positives
 #   google-runtime-int                                      We want to use "long long" instead of int64_t, because of tpch-dbgen
 #   hicpp-no-array-decay                                    Does not like Pricing pricing(Aws::Region::US_EAST_1);
+#   llvm-header-guard                                       We do not use LLVM header guards
 #   llvm-include-order                                      We use #pragma once
 #   llvmlibc-*                                              We do not use LLVM's libc++, but GCC's libstdc++
 #   misc-no-recursion                                       Recursion is useful when parsing data nested structures
 #   modernize-concat-nested-namespaces                      We want clearly separated namespaces
 #   modernize-pass-by-value                                 We do not trust people to properly use std::move
+#   modernize-use-nodiscard                                 We do not enforce the use of [[nodiscard]]
 #   modernize-use-trailing-return-type                      We do not want to use trailing return types
+#   readability-avoid-const-params-in-decls                 This is used in Hyrise and we do not want to enforce changes
 #   readability-function-cognitive-complexity               We nest code extensively in our parameterizable benchmarks
+#   readability-implicit-bool-conversion                    We use some C-functions like unlink, isalpha, ...
 
 CheckOptions:
   - { key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor, value: 1          }
@@ -86,7 +100,6 @@ CheckOptions:
   - { key: readability-identifier-naming.NamespaceCase,                     value: lower_case }
   - { key: readability-identifier-naming.PrivateMemberSuffix,               value: _          }
   - { key: readability-identifier-naming.ProtectedMemberSuffix,             value: _          }
-  - { key: readability-identifier-naming.PublicMemberSuffix,                value: _          }
   - { key: readability-identifier-naming.StaticConstantCase,                value: CamelCase  }
   - { key: readability-identifier-naming.StaticConstantPrefix,              value: k          }
   - { key: readability-identifier-naming.StructCase,                        value: CamelCase  }
