@@ -22,25 +22,28 @@ namespace skyrise {
 class AwsBenchmarkIntegrationTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    client_ = std::make_shared<skyrise::Client>();
+    client_ = std::make_shared<Client>();
 
-    benchmark_helper_ = std::make_shared<skyrise::BenchmarkHelper>(client_);
-    benchmark_runner_ = std::make_shared<skyrise::BenchmarkRunner>(client_);
-    cost_calculator_ = std::make_shared<skyrise::CostCalculator>(client_);
+    cost_calculator_ = std::make_shared<CostCalculator>(client_->GetPricingClient(), client_->GetClientRegion());
+    benchmark_runner_ = std::make_shared<BenchmarkRunner>(client_->GetIAMClient(), client_->GetLambdaClient(),
+                                                          client_->GetSQSClient(), cost_calculator_);
+    benchmark_helper_ = std::make_shared<BenchmarkHelper>(client_->GetS3Client());
   }
 
-  [[nodiscard]] std::shared_ptr<skyrise::Client> GetClient() const { return client_; }
-  [[nodiscard]] std::shared_ptr<skyrise::CostCalculator> GetCostCalculator() const { return cost_calculator_; }
-  [[nodiscard]] std::shared_ptr<skyrise::BenchmarkRunner> GetBenchmarkRunner() const { return benchmark_runner_; }
-  [[nodiscard]] std::shared_ptr<skyrise::BenchmarkHelper> GetBenchmarkHelper() const { return benchmark_helper_; }
+  [[nodiscard]] const Client& GetClient() const { return *client_; }
+
+  [[nodiscard]] std::shared_ptr<CostCalculator> GetCostCalculator() const { return cost_calculator_; }
+  [[nodiscard]] std::shared_ptr<BenchmarkRunner> GetBenchmarkRunner() const { return benchmark_runner_; }
+  [[nodiscard]] std::shared_ptr<BenchmarkHelper> GetBenchmarkHelper() const { return benchmark_helper_; }
 
  private:
   const AwsApi aws_api_;
 
-  std::shared_ptr<skyrise::Client> client_;
-  std::shared_ptr<skyrise::CostCalculator> cost_calculator_;
-  std::shared_ptr<skyrise::BenchmarkRunner> benchmark_runner_;
-  std::shared_ptr<skyrise::BenchmarkHelper> benchmark_helper_;
+  std::shared_ptr<Client> client_;
+
+  std::shared_ptr<CostCalculator> cost_calculator_;
+  std::shared_ptr<BenchmarkRunner> benchmark_runner_;
+  std::shared_ptr<BenchmarkHelper> benchmark_helper_;
 };
 
 TEST_F(AwsBenchmarkIntegrationTest, FunctionColocationBenchmark) {

@@ -16,6 +16,7 @@
 
 namespace skyrise {
 
+// TODO(https://github.com/hpi-epic/skyrise/issues/549): Introduce lazy initialization
 class Client {
  public:
   Client();

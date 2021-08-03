@@ -12,7 +12,7 @@
 namespace skyrise {
 
 FunctionWarmUpContinuousBenchmark::FunctionWarmUpContinuousBenchmark(
-    std::shared_ptr<CostCalculator> cost_calculator, const std::vector<size_t>& function_instance_mb_sizes,
+    std::shared_ptr<const CostCalculator> cost_calculator, const std::vector<size_t>& function_instance_mb_sizes,
     const std::vector<size_t>& invocation_counts, const std::vector<size_t>& sleep_ms_durations,
     const std::vector<double>& provisioning_factors, const std::vector<size_t>& warm_up_min_intervals,
     const size_t repetition_count)

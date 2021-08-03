@@ -23,9 +23,10 @@ ConfigurableWarmUpStrategy::ConfigurableWarmUpStrategy(const bool warm_up_once, 
                                                        const double provisioning_factor)
     : warm_up_once_(warm_up_once), sleep_ms_duration_(sleep_ms_duration), provisioning_factor_(provisioning_factor) {}
 
-long double ConfigurableWarmUpStrategy::WarmUpFunctions(const std::shared_ptr<Client>& client,
-                                                        const FunctionConfig& function_config,
-                                                        const size_t concurrency_count) {
+long double ConfigurableWarmUpStrategy::WarmUpFunctions(
+    const std::shared_ptr<const Aws::Lambda::LambdaClient>& lambda_client,
+    const std::shared_ptr<const CostCalculator>& cost_calculator, const FunctionConfig& function_config,
+    const size_t concurrency_count) {
   if (warm_up_once_ && is_warmed_up_) {
     return 0.0L;
   }
@@ -52,23 +53,19 @@ long double ConfigurableWarmUpStrategy::WarmUpFunctions(const std::shared_ptr<Cl
   invoke_outcome_callables.reserve(concurrency_count);
 
   for (const auto& invoke_request : invoke_requests) {
-    invoke_outcome_callables.emplace_back(client->GetLambdaClient()->InvokeCallable(invoke_request));
+    invoke_outcome_callables.emplace_back(lambda_client->InvokeCallable(invoke_request));
   }
 
   is_warmed_up_ = true;
 
-  return CalculateWarmUpCost(client, function_config, &invoke_outcome_callables);
+  return CalculateWarmUpCost(cost_calculator, function_config, &invoke_outcome_callables);
 }
 
 std::string ConfigurableWarmUpStrategy::GetName() const { return "ConfigurableWarmUpStrategy"; }
 
 long double ConfigurableWarmUpStrategy::CalculateWarmUpCost(
-    const std::shared_ptr<Client>& client, const FunctionConfig& function_config,
+    const std::shared_ptr<const CostCalculator>& cost_calculator, const FunctionConfig& function_config,
     std::vector<Aws::Lambda::Model::InvokeOutcomeCallable>* invoke_outcome_callables) {
-  if (!cost_calculator_) {
-    cost_calculator_ = std::make_unique<CostCalculator>(client);
-  }
-
   long double function_warm_up_cost = 0;
 
   for (auto& outcome_callable : *invoke_outcome_callables) {
@@ -87,18 +84,17 @@ long double ConfigurableWarmUpStrategy::CalculateWarmUpCost(
       std::regex_search(log_result, metric_match, metric_regex);
 
       function_warm_up_cost +=
-          cost_calculator_->CalculateCostLambda(std::stod(metric_match[1]), function_config.memory_size);
+          cost_calculator->CalculateCostLambda(std::stod(metric_match[1]), function_config.memory_size);
     }
   }
 
   return function_warm_up_cost;
 }
 
-long double ProvisionedConcurrencyWarmUpStrategy::WarmUpFunctions(const std::shared_ptr<Client>& client,
-                                                                  const FunctionConfig& function_config,
-                                                                  const size_t concurrency_count) {
-  const auto lambda_client = client->GetLambdaClient();
-
+long double ProvisionedConcurrencyWarmUpStrategy::WarmUpFunctions(
+    const std::shared_ptr<const Aws::Lambda::LambdaClient>& lambda_client,
+    const std::shared_ptr<const CostCalculator>& cost_calculator, const FunctionConfig& function_config,
+    const size_t concurrency_count) {
   const auto get_config_outcome =
       lambda_client->GetProvisionedConcurrencyConfig(Aws::Lambda::Model::GetProvisionedConcurrencyConfigRequest()
                                                          .WithFunctionName(function_config.function_name)
@@ -110,8 +106,8 @@ long double ProvisionedConcurrencyWarmUpStrategy::WarmUpFunctions(const std::sha
         std::chrono::duration_cast<std::chrono::milliseconds>(now - provisioned_concurrency_last_visited_).count();
     provisioned_concurrency_last_visited_ = now;
 
-    return cost_calculator_->CalculateCostLambdaProvisionedConcurrency(duration_ms, function_config.memory_size,
-                                                                       concurrency_count);
+    return cost_calculator->CalculateCostLambdaProvisionedConcurrency(duration_ms, function_config.memory_size,
+                                                                      concurrency_count);
   } else {
     provisioned_concurrency_started_ = std::chrono::steady_clock::now();
     const auto put_config_outcome =
@@ -147,9 +143,8 @@ long double ProvisionedConcurrencyWarmUpStrategy::WarmUpFunctions(const std::sha
                                    provisioned_concurrency_last_visited_ - provisioned_concurrency_started_)
                                    .count();
 
-    cost_calculator_ = std::make_unique<CostCalculator>(client);
-    return cost_calculator_->CalculateCostLambdaProvisionedConcurrency(duration_ms, function_config.memory_size,
-                                                                       concurrency_count);
+    return cost_calculator->CalculateCostLambdaProvisionedConcurrency(duration_ms, function_config.memory_size,
+                                                                      concurrency_count);
   }
 }
 

@@ -21,8 +21,9 @@ struct InvocationLatencyBenchmarkParameters {
 
 class InvocationLatencyBenchmark : public Benchmark {
  public:
-  InvocationLatencyBenchmark(std::shared_ptr<Client> client, std::shared_ptr<BenchmarkHelper> helper,
-                             std::shared_ptr<CostCalculator> cost_calculator,
+  InvocationLatencyBenchmark(std::shared_ptr<const Aws::XRay::XRayClient> xray_client,
+                             std::shared_ptr<const BenchmarkHelper> helper,
+                             std::shared_ptr<const CostCalculator> cost_calculator,
                              const std::vector<size_t>& function_instance_mb_sizes,
                              const std::vector<size_t>& invocation_counts, const std::vector<bool>& warm_modes,
                              const std::vector<size_t>& sleep_ms_durations, const size_t repetition_count);
@@ -37,9 +38,9 @@ class InvocationLatencyBenchmark : public Benchmark {
       const std::shared_ptr<BenchmarkResult>& benchmark_result, const InvocationLatencyBenchmarkParameters& parameters,
       const std::shared_ptr<std::unordered_map<Aws::String, LambdaSegmentDurations>>& result_segments) const;
 
-  const std::shared_ptr<Client> client_;
-  const std::shared_ptr<BenchmarkHelper> helper_;
-  const std::shared_ptr<CostCalculator> cost_calculator_;
+  const std::shared_ptr<const Aws::XRay::XRayClient> xray_client_;
+  const std::shared_ptr<const BenchmarkHelper> helper_;
+  const std::shared_ptr<const CostCalculator> cost_calculator_;
   const std::vector<size_t> function_instance_mb_sizes_;
   const std::vector<size_t> invocation_counts_;
   const std::vector<bool> warm_modes_;

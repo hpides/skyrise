@@ -8,7 +8,8 @@
 
 namespace skyrise {
 
-Benchmark::Benchmark(std::shared_ptr<CostCalculator> cost_calculator) : cost_calculator_(std::move(cost_calculator)) {}
+Benchmark::Benchmark(std::shared_ptr<const CostCalculator> cost_calculator)
+    : cost_calculator_(std::move(cost_calculator)) {}
 
 long double Benchmark::CalculateOverallFunctionCost(const std::shared_ptr<BenchmarkResult>& benchmark_result,
                                                     const size_t function_instance_mb_size,

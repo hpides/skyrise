@@ -60,16 +60,17 @@ inline const std::string XrayTracesStored{"XRay-TracesStored"};
 
 class Pricing {
  public:
-  Pricing(std::shared_ptr<Client> client);
+  Pricing(std::shared_ptr<const Aws::Pricing::PricingClient> pricing_client, const std::string& client_region);
 
-  const std::shared_ptr<PricingLambda>& GetLambdaPricing();
-  const std::shared_ptr<PricingS3>& GetS3Pricing();
-  const std::shared_ptr<PricingXray>& GetXrayPricing();
+  const std::shared_ptr<PricingLambda>& GetLambdaPricing() const;
+  const std::shared_ptr<PricingS3>& GetS3Pricing() const;
+  const std::shared_ptr<PricingXray>& GetXrayPricing() const;
 
  private:
   std::map<Aws::String, long double> FetchPricing(const Aws::String& service_code) const;
 
-  std::shared_ptr<Client> client_;
+  const std::shared_ptr<const Aws::Pricing::PricingClient> pricing_client_;
+  const std::string client_region_;
 
   std::shared_ptr<PricingLambda> pricing_lambda_;
   std::shared_ptr<PricingS3> pricing_s3_;

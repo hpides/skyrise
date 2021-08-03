@@ -32,7 +32,7 @@ class NetworkBenchmark : public Benchmark {
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> Run(const std::shared_ptr<BenchmarkRunner>& benchmark_runner);
 
  protected:
-  NetworkBenchmark(std::shared_ptr<BenchmarkHelper> helper, std::shared_ptr<CostCalculator> cost_calculator,
+  NetworkBenchmark(std::shared_ptr<const BenchmarkHelper> helper, std::shared_ptr<const CostCalculator> cost_calculator,
                    const std::vector<size_t>& bucket_counts = {1});
 
   virtual Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<BenchmarkResult>& result,
@@ -45,7 +45,7 @@ class NetworkBenchmark : public Benchmark {
                                        const size_t thread_index);
   static std::vector<std::shared_ptr<Aws::IOStream>> GeneratePayloads(const NetworkBenchmarkParameters& parameters);
 
-  const std::shared_ptr<BenchmarkHelper> helper_;
+  const std::shared_ptr<const BenchmarkHelper> helper_;
 
   const std::vector<size_t> bucket_counts_;
 

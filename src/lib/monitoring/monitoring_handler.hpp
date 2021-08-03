@@ -10,12 +10,13 @@ namespace skyrise {
 
 class MonitoringHandler {
  public:
-  MonitoringHandler(const std::shared_ptr<Client>& client,
+  MonitoringHandler(std::shared_ptr<const Aws::SQS::SQSClient> sqs_client,
+                    std::shared_ptr<const Aws::XRay::XRayClient> xray_client,
                     const SubqueryFragmentIdentifier& subquery_fragment_identifier, const std::string& xray_trace_id,
                     const std::string& queue_url)
       : metrics_collector_(
-            std::make_shared<MetricsCollector>(client->GetSQSClient(), queue_url, subquery_fragment_identifier)),
-        tracer_(std::make_shared<Tracer>(client->GetXRayClient(), xray_trace_id, subquery_fragment_identifier)){};
+            std::make_shared<MetricsCollector>(std::move(sqs_client), queue_url, subquery_fragment_identifier)),
+        tracer_(std::make_shared<Tracer>(std::move(xray_client), xray_trace_id, subquery_fragment_identifier)){};
 
   void EnterOperator(const std::string& operator_id);
   template <typename Stages>

@@ -53,13 +53,17 @@ cxxopts::ParseResult& BenchmarkExecutable::GetParseResult(
   return cli_parse_result_;
 }
 
-std::shared_ptr<skyrise::Client> BenchmarkExecutable::GetClient() const { return client_; }
+const skyrise::Client& BenchmarkExecutable::GetClient() const { return *client_; }
 
-std::shared_ptr<skyrise::CostCalculator> BenchmarkExecutable::GetCostCalculator() const { return cost_calculator_; }
+std::shared_ptr<const skyrise::CostCalculator> BenchmarkExecutable::GetCostCalculator() const {
+  return cost_calculator_;
+}
+
+std::shared_ptr<const skyrise::BenchmarkHelper> BenchmarkExecutable::GetBenchmarkHelper() const {
+  return benchmark_helper_;
+}
 
 std::shared_ptr<skyrise::BenchmarkRunner> BenchmarkExecutable::GetBenchmarkRunner() const { return benchmark_runner_; }
-
-std::shared_ptr<skyrise::BenchmarkHelper> BenchmarkExecutable::GetBenchmarkHelper() const { return benchmark_helper_; }
 
 void BenchmarkExecutable::ExecuteBenchmark(const std::shared_ptr<skyrise::Benchmark>& benchmark) {
   const auto benchmark_result = benchmark->Run(benchmark_runner_);
@@ -81,9 +85,12 @@ void BenchmarkExecutable::InitializeClients() {
 
   client_ = std::make_shared<skyrise::Client>();
 
-  benchmark_helper_ = std::make_shared<skyrise::BenchmarkHelper>(client_);
-  benchmark_runner_ = std::make_shared<skyrise::BenchmarkRunner>(client_);
-  cost_calculator_ = std::make_shared<skyrise::CostCalculator>(client_);
+  cost_calculator_ =
+      std::make_shared<const skyrise::CostCalculator>(client_->GetPricingClient(), client_->GetClientRegion());
+  benchmark_helper_ = std::make_shared<const skyrise::BenchmarkHelper>(client_->GetS3Client());
+
+  benchmark_runner_ = std::make_shared<skyrise::BenchmarkRunner>(client_->GetIAMClient(), client_->GetLambdaClient(),
+                                                                 client_->GetSQSClient(), cost_calculator_);
 }
 
 void BenchmarkExecutable::DeinitializeClients() { Aws::ShutdownAPI(sdk_options_); }

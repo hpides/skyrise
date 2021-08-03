@@ -12,7 +12,8 @@
 
 namespace skyrise {
 
-Pricing::Pricing(std::shared_ptr<Client> client) : client_(std::move(client)) {
+Pricing::Pricing(std::shared_ptr<const Aws::Pricing::PricingClient> pricing_client, const std::string& client_region)
+    : pricing_client_(std::move(pricing_client)), client_region_(client_region) {
   const auto pricing_lambda_map = FetchPricing("AWSLambda");
   pricing_lambda_ = std::make_shared<PricingLambda>(PricingLambda{
       pricing_lambda_map.at(UsageTypeLambda::Request), pricing_lambda_map.at(UsageTypeLambda::LambdaGBSecond),
@@ -30,21 +31,18 @@ Pricing::Pricing(std::shared_ptr<Client> client) : client_(std::move(client)) {
                                                             pricing_xray_map.at(UsageTypeXray::XrayTracesStored)});
 }
 
-const std::shared_ptr<PricingLambda>& Pricing::GetLambdaPricing() { return pricing_lambda_; }
+const std::shared_ptr<PricingLambda>& Pricing::GetLambdaPricing() const { return pricing_lambda_; }
 
-const std::shared_ptr<PricingS3>& Pricing::GetS3Pricing() { return pricing_s3_; }
+const std::shared_ptr<PricingS3>& Pricing::GetS3Pricing() const { return pricing_s3_; }
 
-const std::shared_ptr<PricingXray>& Pricing::GetXrayPricing() { return pricing_xray_; }
+const std::shared_ptr<PricingXray>& Pricing::GetXrayPricing() const { return pricing_xray_; }
 
 std::map<Aws::String, long double> Pricing::FetchPricing(const Aws::String& service_code) const {
   // Determine location from region
-  const Aws::String& region = client_->GetClientRegion();
+  Assert(kRegionToLocation.find(client_region_) != kRegionToLocation.cend(),
+         "AWS region " + client_region_ + " not supported.");
 
-  if (kRegionToLocation.count(region) == 0) {
-    Fail("AWS region " + region + " not supported.");
-  }
-
-  const Aws::String& location = kRegionToLocation.at(region);
+  const Aws::String& location = kRegionToLocation.at(client_region_);
 
   // Create filters for Price List Service API
   Aws::Vector<Aws::Pricing::Model::Filter> filters = {Aws::Pricing::Model::Filter()
@@ -56,7 +54,7 @@ std::map<Aws::String, long double> Pricing::FetchPricing(const Aws::String& serv
   request.SetServiceCode(service_code);
   request.SetFilters(filters);
 
-  const auto outcome = client_->GetPricingClient()->GetProducts(request);
+  const auto outcome = pricing_client_->GetProducts(request);
   Assert(outcome.IsSuccess(), "Price List API call was unsuccessful: " + outcome.GetError().GetMessage());
 
   std::map<Aws::String, long double> prices_map;

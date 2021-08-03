@@ -18,12 +18,12 @@
 namespace skyrise {
 
 InvocationLatencyBenchmark::InvocationLatencyBenchmark(
-    std::shared_ptr<Client> client, std::shared_ptr<BenchmarkHelper> helper,
-    std::shared_ptr<CostCalculator> cost_calculator, const std::vector<size_t>& function_instance_mb_sizes,
+    std::shared_ptr<const Aws::XRay::XRayClient> xray_client, std::shared_ptr<const BenchmarkHelper> helper,
+    std::shared_ptr<const CostCalculator> cost_calculator, const std::vector<size_t>& function_instance_mb_sizes,
     const std::vector<size_t>& invocation_counts, const std::vector<bool>& warm_modes,
     const std::vector<size_t>& sleep_ms_durations, const size_t repetition_count)
     : Benchmark(cost_calculator),
-      client_(std::move(client)),
+      xray_client_(std::move(xray_client)),
       helper_(std::move(helper)),
       cost_calculator_(std::move(cost_calculator)),
       function_instance_mb_sizes_(function_instance_mb_sizes),
@@ -32,7 +32,7 @@ InvocationLatencyBenchmark::InvocationLatencyBenchmark(
       sleep_ms_durations_(sleep_ms_durations),
       repetition_count_(repetition_count),
       benchmark_cost_(0),
-      function_segments_analyzer_(std::make_shared<FunctionSegmentsAnalyzer>(client_->GetXRayClient())) {}
+      function_segments_analyzer_(std::make_shared<FunctionSegmentsAnalyzer>(xray_client_)) {}
 
 Aws::Utils::Array<Aws::Utils::Json::JsonValue> InvocationLatencyBenchmark::Run(
     const std::shared_ptr<BenchmarkRunner>& benchmark_runner) {
@@ -205,7 +205,7 @@ void InvocationLatencyBenchmark::Setup() {
 void InvocationLatencyBenchmark::Teardown() {
   benchmark_configs_.clear();
   benchmark_configs_.shrink_to_fit();
-  function_segments_analyzer_ = std::make_shared<FunctionSegmentsAnalyzer>(client_->GetXRayClient());
+  function_segments_analyzer_ = std::make_shared<FunctionSegmentsAnalyzer>(xray_client_);
   benchmark_cost_ = 0;
 }
 

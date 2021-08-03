@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     cxxopts::ParseResult& parse_result = executable.GetParseResult(argc, argv);
 
     auto benchmark = std::make_shared<skyrise::InvocationLatencyBenchmark>(
-        executable.GetClient(), executable.GetBenchmarkHelper(), executable.GetCostCalculator(),
+        executable.GetClient().GetXRayClient(), executable.GetBenchmarkHelper(), executable.GetCostCalculator(),
         parse_result["function_instance_mb_sizes"].as<std::vector<size_t>>(),
         parse_result["invocation_counts"].as<std::vector<size_t>>(), parse_result["warm_modes"].as<std::vector<bool>>(),
         parse_result["sleep_ms_durations"].as<std::vector<size_t>>(), parse_result["repetition_count"].as<size_t>());

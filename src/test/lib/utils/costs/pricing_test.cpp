@@ -16,8 +16,8 @@ class AwsPricingTest : public ::testing::Test {
 };
 
 TEST_F(AwsPricingTest, PricingLambda) {
-  const auto clients = std::make_shared<Client>();
-  Pricing pricing(clients);
+  Client client;
+  Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
 
   const auto& lambda_pricing1 = pricing.GetLambdaPricing();
 
@@ -36,8 +36,8 @@ TEST_F(AwsPricingTest, PricingLambda) {
 }
 
 TEST_F(AwsPricingTest, PricingS3) {
-  const auto clients = std::make_shared<Client>();
-  Pricing pricing(clients);
+  Client client;
+  Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
 
   const auto& s3_pricing1 = pricing.GetS3Pricing();
 
@@ -59,15 +59,15 @@ TEST_F(AwsPricingTest, PricingS3) {
 }
 
 TEST_F(AwsPricingTest, PricingXray) {
-  const auto clients = std::make_shared<Client>();
-  Pricing pricing(clients);
+  Client client;
+  Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
 
-  const auto xray_pricing_1 = pricing.GetXrayPricing();
+  const auto& xray_pricing_1 = pricing.GetXrayPricing();
 
   EXPECT_GT(xray_pricing_1->price_per_stored_trace, 0);
   EXPECT_GT(xray_pricing_1->price_per_accessed_trace, 0);
 
-  const auto xray_pricing_2 = pricing.GetXrayPricing();
+  const auto& xray_pricing_2 = pricing.GetXrayPricing();
 
   EXPECT_EQ(xray_pricing_1->price_per_stored_trace, xray_pricing_2->price_per_stored_trace);
   EXPECT_EQ(xray_pricing_1->price_per_accessed_trace, xray_pricing_2->price_per_accessed_trace);

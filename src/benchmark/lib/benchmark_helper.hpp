@@ -15,7 +15,7 @@ namespace skyrise {
 // TODO(maltenbergert): Refactor BenchmarkHelper into an S3Helper
 class BenchmarkHelper {
  public:
-  BenchmarkHelper(std::shared_ptr<Client> client) : client_(client) {}
+  BenchmarkHelper(std::shared_ptr<const Aws::S3::S3Client> s3_client) : s3_client_(std::move(s3_client)) {}
 
   void CreateS3BucketIfNotExists(const Aws::String& bucket_name) const;
   static std::shared_ptr<Aws::IOStream> GenerateRandomObject(const size_t num_bytes);
@@ -29,7 +29,7 @@ class BenchmarkHelper {
   void EmptyAndDeleteS3Bucket(const Aws::String& bucket_name) const;
 
  private:
-  const std::shared_ptr<Client> client_;
+  const std::shared_ptr<const Aws::S3::S3Client> s3_client_;
 };
 
 }  // namespace skyrise

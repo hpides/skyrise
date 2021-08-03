@@ -14,12 +14,10 @@ class WarmUpStrategy {
  public:
   virtual ~WarmUpStrategy() {}
 
-  virtual long double WarmUpFunctions(const std::shared_ptr<Client>& client, const FunctionConfig& function_config,
-                                      const size_t concurrency_count) = 0;
+  virtual long double WarmUpFunctions(const std::shared_ptr<const Aws::Lambda::LambdaClient>& lambda_client,
+                                      const std::shared_ptr<const CostCalculator>& cost_calculator,
+                                      const FunctionConfig& function_config, const size_t concurrency_count) = 0;
   virtual std::string GetName() const = 0;
-
- protected:
-  std::unique_ptr<CostCalculator> cost_calculator_;
 };
 
 class ConfigurableWarmUpStrategy : public WarmUpStrategy {
@@ -28,12 +26,14 @@ class ConfigurableWarmUpStrategy : public WarmUpStrategy {
                                       const size_t sleep_ms_duration = kDefaultSleepMsDuration,
                                       const double provisioning_factor = kDefaultProvisioningFactor);
 
-  long double WarmUpFunctions(const std::shared_ptr<Client>& client, const FunctionConfig& function_config,
-                              const size_t concurrency_count) override;
+  long double WarmUpFunctions(const std::shared_ptr<const Aws::Lambda::LambdaClient>& lambda_client,
+                              const std::shared_ptr<const CostCalculator>& cost_calculator,
+                              const FunctionConfig& function_config, const size_t concurrency_count) override;
   std::string GetName() const override;
 
-  long double CalculateWarmUpCost(const std::shared_ptr<Client>& client, const FunctionConfig& function_config,
-                                  std::vector<Aws::Lambda::Model::InvokeOutcomeCallable>* invoke_outcome_callables);
+  static long double CalculateWarmUpCost(
+      const std::shared_ptr<const CostCalculator>& cost_calculator, const FunctionConfig& function_config,
+      std::vector<Aws::Lambda::Model::InvokeOutcomeCallable>* invoke_outcome_callables);
 
   static constexpr bool kDefaultWarmUpOnce = true;
   static constexpr size_t kDefaultSleepMsDuration = 4'000;
@@ -49,8 +49,9 @@ class ConfigurableWarmUpStrategy : public WarmUpStrategy {
 
 class ProvisionedConcurrencyWarmUpStrategy : public WarmUpStrategy {
  public:
-  long double WarmUpFunctions(const std::shared_ptr<Client>& client, const FunctionConfig& function_config,
-                              const size_t concurrency_count) override;
+  long double WarmUpFunctions(const std::shared_ptr<const Aws::Lambda::LambdaClient>& lambda_client,
+                              const std::shared_ptr<const CostCalculator>& cost_calculator,
+                              const FunctionConfig& function_config, const size_t concurrency_count) override;
   std::string GetName() const override;
 
  private:

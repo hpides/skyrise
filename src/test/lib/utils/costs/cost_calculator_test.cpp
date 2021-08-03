@@ -19,9 +19,10 @@ class AwsCostCalculatorTest : public ::testing::Test {
 };
 
 TEST_F(AwsCostCalculatorTest, CalculateCostLambda) {
-  const auto clients = std::make_shared<Client>();
-  Pricing pricing(clients);
-  const CostCalculator cost_calculator(clients);
+  Client client;
+  Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
+  const CostCalculator cost_calculator(client.GetPricingClient(), client.GetClientRegion());
+
   const auto& lambda_pricing = pricing.GetLambdaPricing();
 
   const long double lambda_cost1 = cost_calculator.CalculateCostLambda(998, 512);
@@ -57,9 +58,10 @@ TEST_F(AwsCostCalculatorTest, CalculateCostLambda) {
 }
 
 TEST_F(AwsCostCalculatorTest, CalculateCostS3StorageMonthly) {
-  const auto clients = std::make_shared<Client>();
-  Pricing pricing(clients);
-  const CostCalculator cost_calculator(clients);
+  Client client;
+  Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
+  const CostCalculator cost_calculator(client.GetPricingClient(), client.GetClientRegion());
+
   const auto& s3_pricing = pricing.GetS3Pricing();
 
   const long double storage_cost1 = cost_calculator.CalculateCostS3StorageMonthly(MbToByte(1023), 1);
@@ -73,9 +75,10 @@ TEST_F(AwsCostCalculatorTest, CalculateCostS3StorageMonthly) {
 }
 
 TEST_F(AwsCostCalculatorTest, CalculateCostS3Requests) {
-  const auto clients = std::make_shared<Client>();
-  Pricing pricing(clients);
-  const CostCalculator cost_calculator(clients);
+  Client client;
+  Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
+  const CostCalculator cost_calculator(client.GetPricingClient(), client.GetClientRegion());
+
   const auto& s3_pricing = pricing.GetS3Pricing();
 
   const long double requests_cost = cost_calculator.CalculateCostS3Requests(700, 800);
@@ -84,9 +87,10 @@ TEST_F(AwsCostCalculatorTest, CalculateCostS3Requests) {
 }
 
 TEST_F(AwsCostCalculatorTest, CalculateCostS3Select) {
-  const auto clients = std::make_shared<Client>();
-  Pricing pricing(clients);
-  const CostCalculator cost_calculator(clients);
+  Client client;
+  Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
+  const CostCalculator cost_calculator(client.GetPricingClient(), client.GetClientRegion());
+
   const auto& s3_pricing = pricing.GetS3Pricing();
 
   const long double select_cost1 = cost_calculator.CalculateCostS3Select(1048576, 1048576);
@@ -101,12 +105,11 @@ TEST_F(AwsCostCalculatorTest, CalculateCostS3Select) {
 }
 
 TEST_F(AwsCostCalculatorTest, CalculateCostXray) {
-  const auto clients = std::make_shared<Client>();
+  Client client;
+  Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
+  const CostCalculator cost_calculator(client.GetPricingClient(), client.GetClientRegion());
 
-  const CostCalculator cost_calculator(clients);
-  Pricing pricing(clients);
-
-  const auto xray_pricing = pricing.GetXrayPricing();
+  const auto& xray_pricing = pricing.GetXrayPricing();
 
   const long double traces_cost = cost_calculator.CalculateCostXray(1000, 10000, 1000);
   const long double expected_cost =

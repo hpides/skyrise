@@ -52,8 +52,10 @@ class AwsBenchmarkRunnerTest : public ::testing::Test {
   }
 
   const AwsApi aws_api_;
-  const std::shared_ptr<Client> clients_ = std::make_shared<Client>();
-  BenchmarkRunner benchmark_runner_ = BenchmarkRunner(clients_);
+  const Client client_;
+  BenchmarkRunner benchmark_runner_ =
+      BenchmarkRunner(client_.GetIAMClient(), client_.GetLambdaClient(), client_.GetSQSClient(),
+                      std::make_shared<CostCalculator>(client_.GetPricingClient(), client_.GetClientRegion()));
 };
 
 TEST_F(AwsBenchmarkRunnerTest, SyncIntegrationTest) {

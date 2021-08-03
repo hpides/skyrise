@@ -14,7 +14,7 @@
 
 namespace skyrise {
 
-IdleLifetimeBenchmark::IdleLifetimeBenchmark(std::shared_ptr<CostCalculator> cost_calculator,
+IdleLifetimeBenchmark::IdleLifetimeBenchmark(std::shared_ptr<const CostCalculator> cost_calculator,
                                              const std::vector<size_t>& function_instance_mb_sizes,
                                              const std::vector<size_t>& invocation_counts,
                                              const std::vector<size_t>& sleep_min_durations,

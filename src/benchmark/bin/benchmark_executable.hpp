@@ -17,10 +17,12 @@ class BenchmarkExecutable {
   cxxopts::OptionAdder& GetOptionAdder();
   cxxopts::ParseResult& GetParseResult(int argc, char* argv[]);
 
-  std::shared_ptr<skyrise::Client> GetClient() const;
-  std::shared_ptr<skyrise::CostCalculator> GetCostCalculator() const;
+  const skyrise::Client& GetClient() const;
+
+  std::shared_ptr<const skyrise::CostCalculator> GetCostCalculator() const;
+  std::shared_ptr<const skyrise::BenchmarkHelper> GetBenchmarkHelper() const;
+
   std::shared_ptr<skyrise::BenchmarkRunner> GetBenchmarkRunner() const;
-  std::shared_ptr<skyrise::BenchmarkHelper> GetBenchmarkHelper() const;
 
   void ExecuteBenchmark(const std::shared_ptr<skyrise::Benchmark>& benchmark);
 
@@ -35,7 +37,9 @@ class BenchmarkExecutable {
   Aws::SDKOptions sdk_options_;
 
   std::shared_ptr<skyrise::Client> client_;
-  std::shared_ptr<skyrise::CostCalculator> cost_calculator_;
+
+  std::shared_ptr<const skyrise::CostCalculator> cost_calculator_;
+  std::shared_ptr<const skyrise::BenchmarkHelper> benchmark_helper_;
+
   std::shared_ptr<skyrise::BenchmarkRunner> benchmark_runner_;
-  std::shared_ptr<skyrise::BenchmarkHelper> benchmark_helper_;
 };

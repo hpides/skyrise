@@ -11,8 +11,8 @@
 
 namespace skyrise {
 
-NetworkBenchmark::NetworkBenchmark(std::shared_ptr<BenchmarkHelper> helper,
-                                   std::shared_ptr<CostCalculator> cost_calculator,
+NetworkBenchmark::NetworkBenchmark(std::shared_ptr<const BenchmarkHelper> helper,
+                                   std::shared_ptr<const CostCalculator> cost_calculator,
                                    const std::vector<size_t>& bucket_counts)
     : Benchmark(std::move(cost_calculator)), helper_(std::move(helper)), bucket_counts_(bucket_counts) {
   Assert(!bucket_counts_.empty(), "Bucket counts must not be empty.");

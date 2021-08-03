@@ -13,7 +13,7 @@ using LambdaSegmentDurations = std::map<Aws::String, std::chrono::duration<doubl
 class FunctionSegmentsAnalyzer {
  public:
   FunctionSegmentsAnalyzer(std::shared_ptr<const Aws::XRay::XRayClient> xray_client)
-      : xray_client_(std::move(xray_client)), num_accessed_traces_(0), num_scanned_traces_(0){};
+      : xray_client_(std::move(xray_client)){};
 
   std::map<Aws::String, std::unordered_set<Aws::String>> GetTraceIds(
       const std::vector<Aws::String>& function_names,
@@ -35,9 +35,10 @@ class FunctionSegmentsAnalyzer {
   size_t GetNumScannedTraces() { return num_scanned_traces_; };
 
  private:
-  std::shared_ptr<const Aws::XRay::XRayClient> xray_client_;
-  size_t num_accessed_traces_;
-  size_t num_scanned_traces_;
+  const std::shared_ptr<const Aws::XRay::XRayClient> xray_client_;
+
+  size_t num_accessed_traces_ = 0;
+  size_t num_scanned_traces_ = 0;
 
   static constexpr size_t kRetries = 10;
   static constexpr size_t kSleepRetryMs = 1000;

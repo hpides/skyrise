@@ -12,7 +12,8 @@ namespace skyrise {
 
 class CostCalculator {
  public:
-  CostCalculator(std::shared_ptr<Client> client) : pricing_(std::make_unique<Pricing>(client)) {}
+  CostCalculator(std::shared_ptr<const Aws::Pricing::PricingClient> pricing_client, const std::string& client_region)
+      : pricing_(std::move(pricing_client), client_region) {}
 
   // AWS rounds up the compute duration to the nearest 100ms
   long double CalculateCostLambda(const size_t compute_ms_duration, const size_t function_instance_mb_size,
@@ -36,7 +37,7 @@ class CostCalculator {
   long double CalculateCostS3Select(const size_t returned_bytes, const size_t scanned_bytes) const;
 
  private:
-  std::unique_ptr<Pricing> pricing_;
+  Pricing pricing_;
 };
 
 }  // namespace skyrise

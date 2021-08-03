@@ -23,7 +23,7 @@ struct FunctionWarmUpContinuousBenchmarkParameters {
 
 class FunctionWarmUpContinuousBenchmark : public Benchmark {
  public:
-  FunctionWarmUpContinuousBenchmark(std::shared_ptr<CostCalculator> cost_calculator,
+  FunctionWarmUpContinuousBenchmark(std::shared_ptr<const CostCalculator> cost_calculator,
                                     const std::vector<size_t>& function_instance_mb_sizes,
                                     const std::vector<size_t>& invocation_counts,
                                     const std::vector<size_t>& sleep_ms_durations,

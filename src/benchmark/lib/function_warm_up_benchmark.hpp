@@ -24,7 +24,7 @@ struct FunctionWarmUpBenchmarkParameters {
 
 class FunctionWarmUpBenchmark : public Benchmark {
  public:
-  FunctionWarmUpBenchmark(std::shared_ptr<CostCalculator> cost_calculator,
+  FunctionWarmUpBenchmark(std::shared_ptr<const CostCalculator> cost_calculator,
                           const std::vector<size_t>& function_instance_mb_sizes,
                           const std::vector<size_t>& invocation_counts, const std::vector<size_t>& sleep_ms_durations,
                           const std::vector<double>& provisioning_factors, const bool enable_provisioned_concurrency,

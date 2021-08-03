@@ -11,7 +11,7 @@ namespace skyrise {
 
 class Benchmark {
  public:
-  Benchmark(std::shared_ptr<CostCalculator> cost_calculator);
+  Benchmark(std::shared_ptr<const CostCalculator> cost_calculator);
 
   Benchmark(const Benchmark&) = delete;
   Benchmark& operator=(const Benchmark&) = delete;
@@ -41,7 +41,7 @@ class Benchmark {
       const std::vector<std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const InvokeResult&)>>&
           extract_object_metric_functions);
 
-  const std::shared_ptr<CostCalculator> cost_calculator_;
+  const std::shared_ptr<const CostCalculator> cost_calculator_;
 };
 
 }  // namespace skyrise

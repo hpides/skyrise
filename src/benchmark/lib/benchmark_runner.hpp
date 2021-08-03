@@ -20,7 +20,10 @@ namespace skyrise {
 
 class BenchmarkRunner {
  public:
-  BenchmarkRunner(std::shared_ptr<Client> client);
+  BenchmarkRunner(std::shared_ptr<const Aws::IAM::IAMClient> iam_client,
+                  std::shared_ptr<const Aws::Lambda::LambdaClient> lambda_client,
+                  std::shared_ptr<const Aws::SQS::SQSClient> sqs_client,
+                  std::shared_ptr<const CostCalculator> cost_calculator);
 
   std::shared_ptr<BenchmarkResult> RunConfig(const BenchmarkConfig& config);
 
@@ -46,7 +49,10 @@ class BenchmarkRunner {
 
   std::vector<std::vector<std::pair<Aws::String, Aws::Lambda::Model::InvokeRequest>>> invoke_requests_;
 
-  const std::shared_ptr<Client> client_;
+  const std::shared_ptr<const Aws::IAM::IAMClient> iam_client_;
+  const std::shared_ptr<const Aws::Lambda::LambdaClient> lambda_client_;
+  const std::shared_ptr<const Aws::SQS::SQSClient> sqs_client_;
+  const std::shared_ptr<const CostCalculator> cost_calculator_;
 
   std::shared_ptr<Aws::String> sqs_queue_url_;
 
