@@ -1,5 +1,6 @@
 #include "orc_reader.hpp"
 
+#include "serialization/binary_serialization_stream.hpp"
 #include "storage/backend/stream.hpp"
 #include "storage/table/value_segment.hpp"
 #include "utils/literal.hpp"
@@ -46,14 +47,15 @@ const std::string& OrcInputProxy::getName() const { return name_; }
 
 // Generic and specialized functions to create Skyrise segments from ORC ColumnVectorBatch objects.
 template <typename ColumnVectorBatchType, typename TargetSegmentType>
-std::shared_ptr<AbstractSegment> ColumnVectorBatchToSegment(orc::ColumnVectorBatch* column_vector_batch) {
+std::shared_ptr<AbstractSegment> ColumnVectorBatchToSegment(orc::ColumnVectorBatch* column_vector_batch,
+                                                            size_t length) {
   auto* specialized_batch = dynamic_cast<ColumnVectorBatchType*>(column_vector_batch);
   Assert(specialized_batch != nullptr, "Batch type must match type information.");
 
-  auto result = std::make_shared<ValueSegment<TargetSegmentType>>(false, specialized_batch->numElements);
+  auto result = std::make_shared<ValueSegment<TargetSegmentType>>(false, length);
   auto& destination = result->Values();
   auto* source = specialized_batch->data.data();
-  for (size_t i = 0; i < specialized_batch->numElements; i++) {
+  for (size_t i = 0; i < length; i++) {
     destination.push_back(static_cast<TargetSegmentType>(source[i]));
   }
   return result;
@@ -61,15 +63,15 @@ std::shared_ptr<AbstractSegment> ColumnVectorBatchToSegment(orc::ColumnVectorBat
 
 template <>
 std::shared_ptr<AbstractSegment> ColumnVectorBatchToSegment<orc::StringVectorBatch, std::string>(
-    orc::ColumnVectorBatch* column_vector_batch) {
+    orc::ColumnVectorBatch* column_vector_batch, size_t length) {
   auto* specialized_batch = dynamic_cast<orc::StringVectorBatch*>(column_vector_batch);
   Assert(specialized_batch != nullptr, "Batch type must match type information.");
 
-  auto result = std::make_shared<ValueSegment<std::string>>(false, specialized_batch->numElements);
+  auto result = std::make_shared<ValueSegment<std::string>>(false, length);
   auto& destination = result->Values();
   auto* source_data = specialized_batch->data.data();
   auto* source_length = specialized_batch->length.data();
-  for (size_t i = 0; i < specialized_batch->numElements; i++) {
+  for (size_t i = 0; i < length; i++) {
     destination.emplace_back(source_data[i], source_length[i]);
   }
 
@@ -78,49 +80,50 @@ std::shared_ptr<AbstractSegment> ColumnVectorBatchToSegment<orc::StringVectorBat
 
 template <>
 std::shared_ptr<AbstractSegment> ColumnVectorBatchToSegment<orc::LongVectorBatch, std::string>(
-    orc::ColumnVectorBatch* column_vector_batch) {
+    orc::ColumnVectorBatch* column_vector_batch, size_t length) {
   auto* specialized_batch = dynamic_cast<orc::LongVectorBatch*>(column_vector_batch);
   Assert(specialized_batch != nullptr, "Batch type must match type information.");
 
-  auto result = std::make_shared<ValueSegment<std::string>>(false, specialized_batch->numElements);
+  auto result = std::make_shared<ValueSegment<std::string>>(false, length);
   auto& destination = result->Values();
   auto* source_data = specialized_batch->data.data();
-  for (size_t i = 0; i < specialized_batch->numElements; i++) {
+  for (size_t i = 0; i < length; i++) {
     destination.emplace_back(OrcFormatReader::OrcTimestampToDateString(static_cast<int32_t>(source_data[i])));
   }
 
   return result;
 }
 
-std::shared_ptr<AbstractSegment> CreateSegment(orc::ColumnVectorBatch* batch, orc::TypeKind type, bool date_as_string) {
+std::shared_ptr<AbstractSegment> CreateSegment(orc::ColumnVectorBatch* batch, orc::TypeKind type, bool date_as_string,
+                                               size_t length) {
   switch (type) {
     case orc::BOOLEAN:
     case orc::BYTE:
     case orc::INT:
     case orc::SHORT:
-      return ColumnVectorBatchToSegment<orc::LongVectorBatch, int32_t>(batch);
+      return ColumnVectorBatchToSegment<orc::LongVectorBatch, int32_t>(batch, length);
 
     case orc::LONG:
-      return ColumnVectorBatchToSegment<orc::LongVectorBatch, int64_t>(batch);
+      return ColumnVectorBatchToSegment<orc::LongVectorBatch, int64_t>(batch, length);
 
     case orc::FLOAT:
-      return ColumnVectorBatchToSegment<orc::DoubleVectorBatch, float>(batch);
+      return ColumnVectorBatchToSegment<orc::DoubleVectorBatch, float>(batch, length);
 
     case orc::DOUBLE:
-      return ColumnVectorBatchToSegment<orc::DoubleVectorBatch, double>(batch);
+      return ColumnVectorBatchToSegment<orc::DoubleVectorBatch, double>(batch, length);
 
     case orc::BINARY:
     case orc::CHAR:
     case orc::VARCHAR:
     case orc::STRING:
-      return ColumnVectorBatchToSegment<orc::StringVectorBatch, std::string>(batch);
+      return ColumnVectorBatchToSegment<orc::StringVectorBatch, std::string>(batch, length);
 
     case orc::TIMESTAMP:
-      return ColumnVectorBatchToSegment<orc::TimestampVectorBatch, int64_t>(batch);
+      return ColumnVectorBatchToSegment<orc::TimestampVectorBatch, int64_t>(batch, length);
 
     case orc::DATE:
-      return date_as_string ? ColumnVectorBatchToSegment<orc::LongVectorBatch, std::string>(batch)
-                            : ColumnVectorBatchToSegment<orc::LongVectorBatch, int64_t>(batch);
+      return date_as_string ? ColumnVectorBatchToSegment<orc::LongVectorBatch, std::string>(batch, length)
+                            : ColumnVectorBatchToSegment<orc::LongVectorBatch, int64_t>(batch, length);
 
     default:
       Fail("Encountered invalid type");
@@ -134,6 +137,8 @@ namespace skyrise {
 OrcFormatReader::OrcFormatReader(std::unique_ptr<ObjectReader> source, Configuration configuration)
     : configuration_(std::move(configuration)) {
   auto input_stream = std::make_unique<OrcInputProxy>(std::move(source));
+  Assert(!(configuration_.select_partition_range.has_value() && configuration_.select_row_range.has_value()),
+         "You may only select by partion or rows.");
   orc::ReaderOptions options;
 
   try {
@@ -143,6 +148,11 @@ OrcFormatReader::OrcFormatReader(std::unique_ptr<ObjectReader> source, Configura
     // representation, push them down to orc::Reader.
     orc::RowReaderOptions row_options;
     row_reader_ = reader_->createRowReader(row_options);
+
+    if (configuration_.select_partition_range.has_value() || configuration_.select_row_range.has_value()) {
+      SeekToSelectedRows();
+    }
+
     column_vector_batch_ = row_reader_->createRowBatch(kChunkDefaultSize);
 
     // Identifies and sets schema_.
@@ -163,6 +173,69 @@ OrcFormatReader::OrcFormatReader(std::unique_ptr<ObjectReader> source, Configura
   }
 }
 
+std::vector<size_t> OrcFormatReader::ExtractPartitionInformation() {
+  std::string payload = reader_->getMetadataValue("partition_offsets");
+  Assert(!payload.empty(), "Parition information expected.");
+
+  auto stream = std::make_shared<std::stringstream>(payload);
+  BinarySerializationStream deserializer(stream);
+
+  int64_t num_partitions = 0;
+  deserializer >> num_partitions;
+
+  // In case of currupted data, we want to ensure that the following reserve() does not allocate all the RAM. We chose
+  // 2^14, since this is also related to the maximum number of AWS Lambda functions that we want to run on concurrently.
+  Assert(num_partitions >= 0 && num_partitions < 16384,
+         "Sanity check failed. Partition payload is probably corrupted.");
+
+  std::vector<size_t> partition_offsets;
+  partition_offsets.reserve(num_partitions);
+
+  int64_t deserialized_partition_offset = 0;
+  for (int64_t i = 0; i < num_partitions; ++i) {
+    deserializer >> deserialized_partition_offset;
+    Assert(deserializer.good(), "Partition payload is corrupted.");
+
+    partition_offsets.push_back(static_cast<size_t>(deserialized_partition_offset));
+  }
+
+  return partition_offsets;
+}
+
+void OrcFormatReader::SeekToSelectedRows() {
+  size_t first_row_index = 0;
+  size_t last_row_index = 0;
+
+  if (configuration_.select_row_range.has_value()) {
+    // Rows ranges a provided explicitly.
+    first_row_index = configuration_.select_row_range->first;
+    last_row_index = configuration_.select_row_range->second;
+  } else {
+    // Rows ranges are derived from partition indexes.
+    std::vector<size_t> partition_offsets = ExtractPartitionInformation();
+    const size_t first_partition_index = configuration_.select_partition_range->first;
+    const size_t last_partition_index = configuration_.select_partition_range->second;
+
+    Assert(first_partition_index < partition_offsets.size(), "Partition index out of bounds.");
+    Assert(last_partition_index < partition_offsets.size(), "Partition index out of bounds.");
+    Assert(first_partition_index <= last_partition_index, "Partition index out of bounds.");
+
+    first_row_index = first_partition_index > 0 ? partition_offsets[first_partition_index - 1] : 0;
+    last_row_index = partition_offsets[last_partition_index] - 1;
+  }
+
+  if (first_row_index > last_row_index) {
+    read_at_most_num_rows_ = 0;
+    return;
+  }
+
+  if (first_row_index > 0) {
+    row_reader_->seekToRow(first_row_index);
+  }
+
+  read_at_most_num_rows_ = last_row_index - first_row_index + 1;
+}
+
 void OrcFormatReader::ExtractSchema() {
   auto schema = std::make_shared<TableColumnDefinitions>();
   const auto& type = reader_->getType();
@@ -181,7 +254,9 @@ void OrcFormatReader::ExtractSchema() {
   schema_ = std::move(schema);
 }
 
-bool OrcFormatReader::HasNext() { return !HasError() && num_rows_read_ < reader_->getNumberOfRows(); }
+bool OrcFormatReader::HasNext() {
+  return !HasError() && num_rows_read_ < reader_->getNumberOfRows() && num_rows_read_ < read_at_most_num_rows_;
+}
 
 std::unique_ptr<Chunk> OrcFormatReader::Next() {
   Segments segments;
@@ -195,14 +270,20 @@ std::unique_ptr<Chunk> OrcFormatReader::Next() {
     return nullptr;
   }
 
-  num_rows_read_ += column_vector_batch_->numElements;
+  // Make sure to not read over selected row range boundaries.
+  size_t num_rows_read_now = column_vector_batch_->numElements;
+  if (read_at_most_num_rows_ > 0 && num_rows_read_ + num_rows_read_now > read_at_most_num_rows_) {
+    num_rows_read_now = read_at_most_num_rows_ - num_rows_read_;
+  }
+
+  num_rows_read_ += num_rows_read_now;
   auto* struct_batch = dynamic_cast<orc::StructVectorBatch*>(column_vector_batch_.get());
   const auto& type = reader_->getType();
   segments.reserve(type.getSubtypeCount());
 
   for (size_t column_id = 0; column_id < type.getSubtypeCount(); column_id++) {
     segments.emplace_back(CreateSegment(struct_batch->fields[column_id], type.getSubtype(column_id)->getKind(),
-                                        configuration_.parse_dates_as_string));
+                                        configuration_.parse_dates_as_string, num_rows_read_now));
   }
 
   return std::make_unique<Chunk>(segments);

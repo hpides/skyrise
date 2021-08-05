@@ -4,6 +4,7 @@
 #include "compiler/physical_query_plan/import_operator_proxy.hpp"
 #include "compiler/physical_query_plan/partition_operator_proxy.hpp"
 #include "compiler/physical_query_plan/pqp_serialization_constants.hpp"
+#include "operator/export_operator.hpp"
 #include "operator/partition_operator.hpp"
 #include "types.hpp"
 
@@ -12,10 +13,10 @@ namespace skyrise {
 template <typename Proxy, typename Operator>
 void TestProxy(std::shared_ptr<const Proxy> proxy) {
   std::shared_ptr<AbstractOperator> operator_instance = proxy->GetOperatorInstance();
-  // TODO(anyone): Uncomment when ImportOperator and ExportOperator are implemented.
-  // ASSERT_NE(operator_instance, nullptr);
-  // std::shared_ptr<const Operator> deserialized_import_proxy = std::dynamic_pointer_cast<const
-  // Operator>(operator_instance); ASSERT_NE(operator_instance, nullptr);
+
+  ASSERT_NE(operator_instance, nullptr);
+  std::shared_ptr<const Operator> deserialized_proxy = std::dynamic_pointer_cast<const Operator>(operator_instance);
+  ASSERT_NE(operator_instance, nullptr);
 
   Aws::Utils::Json::JsonValue proxy_json1 = proxy->ToJson();
   Aws::Utils::Json::JsonValue proxy_json2 = Proxy::FromJson(proxy_json1)->ToJson();
@@ -29,9 +30,10 @@ void TestProxy(std::shared_ptr<const Proxy> proxy) {
 TEST(ProxyOperatorTest, AbstractProxyTest) {
   // We cannot create an instance of AbstractOperatorProxy, thus we use the ExportOperatorProxy to check the correct
   // serialization.
-  auto left_child = std::make_shared<const ExportOperatorProxy>("", "");
-  auto right_child = std::make_shared<const ExportOperatorProxy>("", "");
-  auto proxy = std::make_shared<const ExportOperatorProxy>("", "", left_child, right_child);
+  auto left_child = std::make_shared<const ExportOperatorProxy>("", "", ExportOperator::OutputFormat::kOrc);
+  auto right_child = std::make_shared<const ExportOperatorProxy>("", "", ExportOperator::OutputFormat::kOrc);
+  auto proxy =
+      std::make_shared<const ExportOperatorProxy>("", "", ExportOperator::OutputFormat::kOrc, left_child, right_child);
 
   const Aws::Utils::Json::JsonValue proxy_json = proxy->ToJson();
 
@@ -40,27 +42,21 @@ TEST(ProxyOperatorTest, AbstractProxyTest) {
   ASSERT_EQ(proxy_json.View().GetString(kKeyRightInput), right_child->GetIdentity());
 }
 
-TEST(ProxyOperatorTest, ImportOperatorProxyTest) {
-  std::string bucket_name = "test_bucket";
-  std::vector<std::string> object_keys = {"a", "b", "c"};
-  std::vector<ColumnId> pruned_column_ids = {ColumnId{2}, ColumnId{3}};
-  ImportOperatorProxy::ObjectFormat object_format = ImportOperatorProxy::ObjectFormat::kOrc;
-
-  auto import_proxy =
-      std::make_shared<const ImportOperatorProxy>(bucket_name, object_keys, pruned_column_ids, object_format);
-
-  // TODO(anyone): Second type has to be ImportOperator.
-  TestProxy<ImportOperatorProxy, ImportOperatorProxy>(import_proxy);
+TEST(ProxyOperatorTest, ImportProxyTest) {
+  // PR #527 will add this test again.
 }
 
-TEST(ProxyOperatorTest, ExportOperatorProxyTest) {
+TEST(ProxyOperatorTest, ExportProxyTest) {
   std::string bucket_name = "test_bucket";
-  std::string target_object_key = "target_object_key";
+  std::string target_file = "target_file_name";
+  auto format = ExportOperator::OutputFormat::kOrc;
 
-  auto export_proxy = std::make_shared<const ExportOperatorProxy>(bucket_name, target_object_key);
+  auto export_proxy = std::make_shared<ExportOperatorProxy>(bucket_name, target_file, format);
 
-  // TODO(anyone): Second type has to be ExportOperator.
-  TestProxy<ExportOperatorProxy, ExportOperatorProxy>(export_proxy);
+  // We do not need real storage for this test.
+  export_proxy->SetStorageFactory([](const std::string& /*unused*/) { return nullptr; });
+
+  TestProxy<ExportOperatorProxy, ExportOperator>(export_proxy);
 }
 
 TEST(ProxyOperatorTest, PartitionOperatorProxyTest) {

@@ -40,7 +40,7 @@ class PartitionedChunkWriter : public AbstractChunkWriter {
 
   // Adds the given chunk to a pool of chunks that will be processed asynchronously. This function may not be called
   // after Finalize has been called.
-  void ProcessChunk(std::shared_ptr<Chunk> chunk) override;
+  void ProcessChunk(std::shared_ptr<const Chunk> chunk) override;
 
  private:
   void Flush();
@@ -59,11 +59,11 @@ class MemoryChunkWriter : public AbstractChunkWriter {
  public:
   void Finalize() override {}
   void Initialize(const TableColumnDefinitions& /*schema*/) override{};
-  void ProcessChunk(std::shared_ptr<Chunk> chunk) override;
-  const std::vector<std::shared_ptr<Chunk>>& GetChunks() { return chunks_; }
+  void ProcessChunk(std::shared_ptr<const Chunk> chunk) override;
+  const std::vector<std::shared_ptr<const Chunk>>& GetChunks() { return chunks_; }
 
  private:
-  std::vector<std::shared_ptr<Chunk>> chunks_;
+  std::vector<std::shared_ptr<const Chunk>> chunks_;
 };
 
 using PartitionedChunkWriterFactory =

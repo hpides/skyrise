@@ -34,7 +34,7 @@ class AbstractChunkWriter {
    * ProcessChunk formats the given chunk and may write data to the output. Initialize() must be called before
    * any call to this function occurs.
    */
-  virtual void ProcessChunk(std::shared_ptr<Chunk> chunk) = 0;
+  virtual void ProcessChunk(std::shared_ptr<const Chunk> chunk) = 0;
 
   /**
    * Finalize may write pending buffers or file footers to the output. It is invalid to call Initialize() or

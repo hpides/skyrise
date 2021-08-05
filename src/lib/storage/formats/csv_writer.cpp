@@ -23,7 +23,7 @@ void CsvFormatWriter::Initialize(const TableColumnDefinitions& schema) {
   }
 }
 
-void CsvFormatWriter::ProcessChunk(std::shared_ptr<Chunk> chunk) {
+void CsvFormatWriter::ProcessChunk(std::shared_ptr<const Chunk> chunk) {
   if (num_fields_ == 0) {
     return;
   }

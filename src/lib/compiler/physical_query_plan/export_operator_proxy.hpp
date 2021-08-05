@@ -4,14 +4,14 @@
 #include <string>
 
 #include "abstract_operator_proxy.hpp"
+#include "operator/export_operator.hpp"
 
 namespace skyrise {
 
 class ExportOperatorProxy : public AbstractOperatorProxy {
  public:
-  enum class ObjectFormat { kCsv, kOrc };
-
   ExportOperatorProxy(std::string bucket_name, std::string target_object_key,
+                      ExportOperator::OutputFormat output_format,
                       const std::shared_ptr<const AbstractOperatorProxy>& left = nullptr,
                       const std::shared_ptr<const AbstractOperatorProxy>& right = nullptr);
 
@@ -30,6 +30,7 @@ class ExportOperatorProxy : public AbstractOperatorProxy {
   const std::string bucket_name_;
   StorageFactory storage_factory_;
   const std::string target_object_key_;
+  const ExportOperator::OutputFormat output_format_;
 };
 
 }  // namespace skyrise

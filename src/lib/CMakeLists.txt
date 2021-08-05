@@ -126,6 +126,8 @@ set(
 
     operator/abstract_operator.cpp
     operator/abstract_operator.hpp
+    operator/export_operator.cpp
+    operator/export_operator.hpp
     operator/partition_operator.cpp
     operator/partition_operator.hpp
     operator/table_wrapper.hpp

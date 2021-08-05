@@ -1,5 +1,7 @@
 #include "orc_writer.hpp"
 
+#include "serialization/binary_serialization_stream.hpp"
+
 namespace skyrise {
 
 OrcFormatWriter::OrcFormatWriter(OrcFormatWriterOptions config)
@@ -39,7 +41,18 @@ void OrcFormatWriter::Initialize(const TableColumnDefinitions& schema) {
   writer_ = orc::createWriter(*type_, &output_proxy_, options);
 }
 
-void OrcFormatWriter::ProcessChunk(std::shared_ptr<Chunk> chunk) {
+void OrcFormatWriter::RecordChunkOffset(const std::shared_ptr<const Chunk>& chunk) {
+  size_t last_offset = 0;
+  if (!chunk_row_offsets_.empty()) {
+    last_offset = chunk_row_offsets_.back();
+  }
+
+  chunk_row_offsets_.push_back(last_offset + chunk->Size());
+}
+
+void OrcFormatWriter::ProcessChunk(std::shared_ptr<const Chunk> chunk) {
+  RecordChunkOffset(chunk);
+
   if (!batch_ || batch_->capacity < chunk->Size()) {
     batch_ = writer_->createRowBatch(chunk->Size());
   }
@@ -53,7 +66,24 @@ void OrcFormatWriter::ProcessChunk(std::shared_ptr<Chunk> chunk) {
   writer_->add(*batch_);
 }
 
+void OrcFormatWriter::AddChunkOffsetsToOutput() {
+  auto payload_stream = std::make_shared<std::stringstream>();
+  BinarySerializationStream serializer(payload_stream);
+
+  serializer << static_cast<int64_t>(chunk_row_offsets_.size());
+
+  for (size_t offset : chunk_row_offsets_) {
+    serializer << static_cast<int64_t>(offset);
+  }
+
+  writer_->addUserMetadata("partition_offsets", payload_stream->str());
+}
+
 void OrcFormatWriter::Finalize() {
+  if (config_.save_chunk_offsets) {
+    AddChunkOffsetsToOutput();
+  }
+
   writer_->close();
   writer_.reset();
 }

@@ -26,7 +26,7 @@ class CsvFormatWriter : public AbstractFormatWriter {
   explicit CsvFormatWriter(CsvFormatWriterOptions options = CsvFormatWriterOptions());
 
   void Initialize(const TableColumnDefinitions& schema) override;
-  void ProcessChunk(std::shared_ptr<Chunk> chunk) override;
+  void ProcessChunk(std::shared_ptr<const Chunk> chunk) override;
   void Finalize() override;
 
  private:

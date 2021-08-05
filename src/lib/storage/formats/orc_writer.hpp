@@ -37,7 +37,8 @@ class OrcOutputProxy : public orc::OutputStream {
 struct OrcFormatWriterOptions {
   orc::CompressionKind compression_kind = orc::CompressionKind_NONE;
   orc::CompressionStrategy compression_strategy = orc::CompressionStrategy_SPEED;
-  size_t stripe_size = 64_MB;  // orc default
+  size_t stripe_size = 64_MB;       // ORC default.
+  bool save_chunk_offsets = false;  // Used for partitioned intermediate format.
 };
 
 class OrcFormatWriter : public AbstractFormatWriter {
@@ -46,7 +47,7 @@ class OrcFormatWriter : public AbstractFormatWriter {
   explicit OrcFormatWriter(OrcFormatWriterOptions config);
 
   void Initialize(const TableColumnDefinitions& schema) override;
-  void ProcessChunk(std::shared_ptr<Chunk> chunk) override;
+  void ProcessChunk(std::shared_ptr<const Chunk> chunk) override;
   void Finalize() override;
 
   void AddMetadata(std::string key, std::string value);
@@ -57,12 +58,17 @@ class OrcFormatWriter : public AbstractFormatWriter {
                                      orc::ColumnVectorBatch* orc_column);
   template <typename SegmentT, typename VectorBatchT>
   static void GenericCopySegmentToOrcColumn(SegmentT* segment, VectorBatchT* batch);
+  void RecordChunkOffset(const std::shared_ptr<const Chunk>& chunk);
+  void AddChunkOffsetsToOutput();
 
   detail::OrcOutputProxy output_proxy_;
   OrcFormatWriterOptions config_;
   std::unique_ptr<orc::Type> type_;
   std::unique_ptr<orc::Writer> writer_;
   std::unique_ptr<orc::ColumnVectorBatch> batch_;
+
+  // Stores end offsets (exclusive) of each chunk written.
+  std::vector<size_t> chunk_row_offsets_;
 };
 
 // This specialization needs to be in the same scope as OrcFormatter

@@ -19,7 +19,7 @@ void PartitionedChunkWriter::Flush() {
   current_output_object_ = nullptr;
 }
 
-void PartitionedChunkWriter::ProcessChunk(std::shared_ptr<Chunk> chunk) {
+void PartitionedChunkWriter::ProcessChunk(std::shared_ptr<const Chunk> chunk) {
   if (!chunk || HasError()) {
     return;
   }
@@ -59,6 +59,6 @@ void PartitionedChunkWriter::NonVirtualFinalize() {
   }
 }
 
-void MemoryChunkWriter::ProcessChunk(std::shared_ptr<Chunk> chunk) { chunks_.emplace_back(std::move(chunk)); }
+void MemoryChunkWriter::ProcessChunk(std::shared_ptr<const Chunk> chunk) { chunks_.emplace_back(std::move(chunk)); }
 
 }  // namespace skyrise

@@ -12,6 +12,8 @@
 
 namespace skyrise {
 
+// TODO(anyone): When we have more operators with a stable interface, these tests should not "abuse" ImportOperatorProxy
+// and ExportOperatorProxy to form artificial plans.
 class PqpSerializerTest : public ::testing::Test {
  protected:
   std::string bucket_name_ = "test_bucket";
@@ -42,7 +44,8 @@ TEST_F(PqpSerializerTest, SingleOperatorProxySerializationTest) {
 TEST_F(PqpSerializerTest, LinearOperatorProxySerializationTest) {
   auto import_proxy =
       std::make_shared<const ImportOperatorProxy>(bucket_name_, object_keys_, pruned_column_ids_, object_format_);
-  auto export_proxy = std::make_shared<const ExportOperatorProxy>(bucket_name_, "", import_proxy);
+  auto export_proxy =
+      std::make_shared<const ExportOperatorProxy>(bucket_name_, "", ExportOperator::OutputFormat::kOrc, import_proxy);
 
   auto serializer = PqpSerializer(export_proxy);
   std::string serialized_proxy = serializer.Serialize();
@@ -68,9 +71,12 @@ TEST_F(PqpSerializerTest, LinearOperatorProxySerializationTest) {
 TEST_F(PqpSerializerTest, DagOperatorProxySerializationTest) {
   auto import_proxy =
       std::make_shared<const ImportOperatorProxy>(bucket_name_, object_keys_, pruned_column_ids_, object_format_);
-  auto export_proxy1 = std::make_shared<const ExportOperatorProxy>(bucket_name_, "", import_proxy);
-  auto export_proxy2 = std::make_shared<const ExportOperatorProxy>(bucket_name_, "", import_proxy);
-  auto export_proxy_root = std::make_shared<const ExportOperatorProxy>(bucket_name_, "", export_proxy1, export_proxy2);
+  auto export_proxy1 =
+      std::make_shared<const ExportOperatorProxy>(bucket_name_, "", ExportOperator::OutputFormat::kOrc, import_proxy);
+  auto export_proxy2 =
+      std::make_shared<const ExportOperatorProxy>(bucket_name_, "", ExportOperator::OutputFormat::kOrc, import_proxy);
+  auto export_proxy_root = std::make_shared<const ExportOperatorProxy>(
+      bucket_name_, "", ExportOperator::OutputFormat::kOrc, export_proxy1, export_proxy2);
 
   auto serializer = PqpSerializer(export_proxy_root);
   std::string serialized_proxy = serializer.Serialize();
@@ -108,9 +114,11 @@ TEST_F(PqpSerializerTest, DagOperatorProxySerializationTest) {
 }
 
 TEST_F(PqpSerializerTest, CircularOperatorProxySerializationTest) {
-  auto proxy1 = std::make_shared<ExportOperatorProxy>(bucket_name_, "");
-  auto proxy2 = std::make_shared<const ExportOperatorProxy>(bucket_name_, "", proxy1);
-  auto proxy_root = std::make_shared<const ExportOperatorProxy>(bucket_name_, "", proxy2);
+  auto proxy1 = std::make_shared<ExportOperatorProxy>(bucket_name_, "", ExportOperator::OutputFormat::kOrc);
+  auto proxy2 =
+      std::make_shared<const ExportOperatorProxy>(bucket_name_, "", ExportOperator::OutputFormat::kOrc, proxy1);
+  auto proxy_root =
+      std::make_shared<const ExportOperatorProxy>(bucket_name_, "", ExportOperator::OutputFormat::kOrc, proxy2);
   proxy1->SetLeftInput(proxy_root);
 
   auto serializer = PqpSerializer(proxy_root);
