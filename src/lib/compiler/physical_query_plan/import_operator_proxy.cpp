@@ -2,6 +2,10 @@
 
 #include <magic_enum.hpp>
 
+#include "operator/import_operator.hpp"
+#include "storage/formats/csv_reader.hpp"
+#include "storage/formats/orc_reader.hpp"
+#include "storage/table/chunk_reader.hpp"
 #include "utils/json.hpp"
 
 namespace skyrise {
@@ -12,11 +16,11 @@ const std::string& ImportOperatorProxy::Name() const {
 }
 
 ImportOperatorProxy::ImportOperatorProxy(std::string bucket_name, std::vector<std::string> objects_keys,
-                                         std::vector<ColumnId> pruned_column_ids, ObjectFormat format)
+                                         std::vector<ColumnId> column_ids, ObjectFormat format)
     : AbstractOperatorProxy(OperatorType::kImport),
       bucket_name_(std::move(bucket_name)),
       objects_keys_(std::move(objects_keys)),
-      pruned_column_ids_(std::move(pruned_column_ids)),
+      column_ids_(std::move(column_ids)),
       format_(format) {}
 
 std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::FromJson(const Aws::Utils::Json::JsonView& json,
@@ -24,9 +28,9 @@ std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::FromJson(const Aws::
   Aws::String bucket_name = json.GetString("bucket_name");
   ImportOperatorProxy::ObjectFormat format = magic_enum::enum_cast<ObjectFormat>(json.GetString("format")).value();
   std::vector<std::string> object_keys = JsonArrayToVector<std::string>(json.GetArray("object_keys"));
-  std::vector<ColumnId> prune_column_ids = JsonArrayToVector<ColumnId>(json.GetArray("pruned_column_ids"));
+  std::vector<ColumnId> column_ids = JsonArrayToVector<ColumnId>(json.GetArray("column_ids"));
 
-  auto result = std::make_shared<ImportOperatorProxy>(bucket_name, object_keys, prune_column_ids, format);
+  auto result = std::make_shared<ImportOperatorProxy>(bucket_name, object_keys, column_ids, format);
   result->SetStorageFactory(std::move(storage_factory));
 
   return result;
@@ -37,12 +41,26 @@ Aws::Utils::Json::JsonValue ImportOperatorProxy::ToJson() const {
       .WithString("bucket_name", bucket_name_)
       .WithString("format", std::string{magic_enum::enum_name(format_)})
       .WithArray("object_keys", VectorToJsonArray(objects_keys_))
-      .WithArray("pruned_column_ids", VectorToJsonArray(pruned_column_ids_));
+      .WithArray("column_ids", VectorToJsonArray(column_ids_));
 }
 
 std::shared_ptr<AbstractOperator> ImportOperatorProxy::CreateOperatorInstance() const {
-  // TODO(anyone): Replace with actual code which creates and instances of ImportOperator.
-  return nullptr;
+  Assert(storage_factory_ != nullptr,
+         "ImportOperatorProxy expects to recieve a storage factory via SetStorageFactory() or FromJson() before "
+         "the operator instantiation.");
+  std::shared_ptr<Storage> storage = storage_factory_(bucket_name_);
+
+  const auto format_reader_factory = [&]() -> std::shared_ptr<AbstractChunkReaderFactory> {
+    switch (format_) {
+      case ObjectFormat::kCsv:
+        return std::make_shared<FormatReaderFactory<CsvFormatReader>>();
+      case ObjectFormat::kOrc:
+        return std::make_shared<FormatReaderFactory<OrcFormatReader>>();
+    }
+    Fail("Encountered invalid ObjectFormat type during ImportOperator instantiation.");
+  }();
+
+  return std::make_shared<ImportOperator>(storage, objects_keys_, column_ids_, format_reader_factory);
 }
 
 void ImportOperatorProxy::SetStorageFactory(StorageFactory storage_factory) {

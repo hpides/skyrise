@@ -25,6 +25,7 @@ set(
     lib/monitoring/monitoring_test_utils.hpp
 
     lib/operator/export_operator_test.cpp
+    lib/operator/import_operator_test.cpp
     lib/operator/partition_operator_test.cpp
 
     lib/serialization/schema_serialization_test.cpp

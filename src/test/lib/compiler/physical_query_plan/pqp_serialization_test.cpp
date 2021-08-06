@@ -18,13 +18,13 @@ class PqpSerializerTest : public ::testing::Test {
  protected:
   std::string bucket_name_ = "test_bucket";
   std::vector<std::string> object_keys_{"a", "b", "c"};
-  std::vector<ColumnId> pruned_column_ids_ = {ColumnId{2}, ColumnId{3}};
+  std::vector<ColumnId> column_ids_ = {ColumnId{2}, ColumnId{3}};
   ImportOperatorProxy::ObjectFormat object_format_ = ImportOperatorProxy::ObjectFormat::kOrc;
 };
 
 TEST_F(PqpSerializerTest, SingleOperatorProxySerializationTest) {
   auto import_proxy =
-      std::make_shared<const ImportOperatorProxy>(bucket_name_, object_keys_, pruned_column_ids_, object_format_);
+      std::make_shared<const ImportOperatorProxy>(bucket_name_, object_keys_, column_ids_, object_format_);
 
   auto serializer = PqpSerializer(import_proxy);
   std::string serialized_proxy = serializer.Serialize();
@@ -43,7 +43,7 @@ TEST_F(PqpSerializerTest, SingleOperatorProxySerializationTest) {
 
 TEST_F(PqpSerializerTest, LinearOperatorProxySerializationTest) {
   auto import_proxy =
-      std::make_shared<const ImportOperatorProxy>(bucket_name_, object_keys_, pruned_column_ids_, object_format_);
+      std::make_shared<const ImportOperatorProxy>(bucket_name_, object_keys_, column_ids_, object_format_);
   auto export_proxy =
       std::make_shared<const ExportOperatorProxy>(bucket_name_, "", ExportOperator::OutputFormat::kOrc, import_proxy);
 
@@ -70,7 +70,7 @@ TEST_F(PqpSerializerTest, LinearOperatorProxySerializationTest) {
 
 TEST_F(PqpSerializerTest, DagOperatorProxySerializationTest) {
   auto import_proxy =
-      std::make_shared<const ImportOperatorProxy>(bucket_name_, object_keys_, pruned_column_ids_, object_format_);
+      std::make_shared<const ImportOperatorProxy>(bucket_name_, object_keys_, column_ids_, object_format_);
   auto export_proxy1 =
       std::make_shared<const ExportOperatorProxy>(bucket_name_, "", ExportOperator::OutputFormat::kOrc, import_proxy);
   auto export_proxy2 =

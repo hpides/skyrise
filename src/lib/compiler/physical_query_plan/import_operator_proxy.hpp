@@ -10,8 +10,8 @@ namespace skyrise {
 class ImportOperatorProxy : public AbstractOperatorProxy {
  public:
   enum class ObjectFormat : uint8_t { kCsv, kOrc };
-  ImportOperatorProxy(std::string bucket_name, std::vector<std::string> objects_keys,
-                      std::vector<ColumnId> pruned_column_ids, ObjectFormat format);
+  ImportOperatorProxy(std::string bucket_name, std::vector<std::string> objects_keys, std::vector<ColumnId> column_ids,
+                      ObjectFormat format);
 
   const std::string& Name() const override;
 
@@ -27,7 +27,7 @@ class ImportOperatorProxy : public AbstractOperatorProxy {
  private:
   const std::string bucket_name_;
   const std::vector<std::string> objects_keys_;
-  const std::vector<ColumnId> pruned_column_ids_;
+  const std::vector<ColumnId> column_ids_;
   const ObjectFormat format_;
   StorageFactory storage_factory_;
 };
