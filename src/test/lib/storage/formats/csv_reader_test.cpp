@@ -67,7 +67,7 @@ TEST_F(CsvReaderTest, LineItemContentTest) {
   auto table_definitions = CreateTableColumnDefinitions();
 
   CsvFormatReaderOptions configuration;
-  configuration.schema = table_definitions;
+  configuration.expected_schema = table_definitions;
   configuration.delimiter = '|';
   configuration.guess_delimiter = false;
   configuration.guess_has_header = false;
@@ -99,7 +99,7 @@ TEST_F(CsvReaderTest, LineItemExpectedChunksTest) {
   auto table_definitions = CreateTableColumnDefinitions();
 
   CsvFormatReaderOptions configuration;
-  configuration.schema = table_definitions;
+  configuration.expected_schema = table_definitions;
   configuration.delimiter = '|';
   configuration.guess_delimiter = false;
   configuration.guess_has_header = false;
@@ -166,7 +166,7 @@ TEST_F(CsvReaderTest, WrongSegmentTypeError) {
   table_definitions->emplace_back("text", DataType::kLong, false);
 
   CsvFormatReaderOptions configuration;
-  configuration.schema = table_definitions;
+  configuration.expected_schema = table_definitions;
   configuration.delimiter = ',';
   configuration.guess_delimiter = false;
   configuration.guess_has_header = false;

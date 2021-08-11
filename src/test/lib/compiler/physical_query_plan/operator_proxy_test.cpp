@@ -8,6 +8,8 @@
 #include "operator/import_operator.hpp"
 #include "operator/partition_operator.hpp"
 #include "storage/backend/mock_storage.hpp"
+#include "storage/formats/csv_reader.hpp"
+#include "storage/formats/orc_reader.hpp"
 #include "types.hpp"
 
 namespace skyrise {
@@ -62,16 +64,38 @@ TEST_F(ProxyOperatorTest, ImportOperatorProxyTest) {
   std::vector<std::string> object_keys = {"a", "b", "c"};
   std::vector<ColumnId> column_ids = {ColumnId{2}, ColumnId{3}};
 
-  auto import_orc_proxy = std::make_shared<ImportOperatorProxy>(bucket_name, object_keys, column_ids,
-                                                                ImportOperatorProxy::ObjectFormat::kOrc);
-  auto import_csv_proxy = std::make_shared<ImportOperatorProxy>(bucket_name, object_keys, column_ids,
-                                                                ImportOperatorProxy::ObjectFormat::kCsv);
+  auto definitions = std::make_shared<TableColumnDefinitions>();
+  definitions->emplace_back("a", DataType::kInt, false);
+
+  CsvFormatReaderOptions csv_options;
+  csv_options.expected_schema = definitions;
+
+  OrcFormatReaderOptions orc_options;
+  orc_options.expected_schema = definitions;
+  orc_options.select_partition_range = std::make_pair(1, 1);
+
+  auto import_csv_proxy = std::make_shared<ImportOperatorProxy>(
+      bucket_name, object_keys, column_ids, ImportOperatorProxy::ObjectFormat::kCsv,
+      std::make_shared<FormatReaderFactory<CsvFormatReader>>());
+  auto import_csv_proxy_custom_options = std::make_shared<ImportOperatorProxy>(
+      bucket_name, object_keys, column_ids, ImportOperatorProxy::ObjectFormat::kCsv,
+      std::make_shared<FormatReaderFactory<CsvFormatReader>>(csv_options));
+  auto import_orc_proxy = std::make_shared<ImportOperatorProxy>(
+      bucket_name, object_keys, column_ids, ImportOperatorProxy::ObjectFormat::kOrc,
+      std::make_shared<FormatReaderFactory<OrcFormatReader>>());
+  auto import_orc_proxy_custom_options = std::make_shared<ImportOperatorProxy>(
+      bucket_name, object_keys, column_ids, ImportOperatorProxy::ObjectFormat::kOrc,
+      std::make_shared<FormatReaderFactory<OrcFormatReader>>(orc_options));
 
   import_csv_proxy->SetStorageFactory(mock_storage_factory_);
+  import_csv_proxy_custom_options->SetStorageFactory(mock_storage_factory_);
   import_orc_proxy->SetStorageFactory(mock_storage_factory_);
+  import_orc_proxy_custom_options->SetStorageFactory(mock_storage_factory_);
 
-  TestProxy<ImportOperatorProxy, ImportOperator>(import_orc_proxy);
   TestProxy<ImportOperatorProxy, ImportOperator>(import_csv_proxy);
+  TestProxy<ImportOperatorProxy, ImportOperator>(import_csv_proxy_custom_options);
+  TestProxy<ImportOperatorProxy, ImportOperator>(import_orc_proxy);
+  TestProxy<ImportOperatorProxy, ImportOperator>(import_orc_proxy_custom_options);
 }
 
 TEST_F(ProxyOperatorTest, ExportOperatorProxyTest) {

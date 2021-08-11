@@ -19,7 +19,7 @@ struct CsvFormatReaderOptions {
   bool guess_has_types = true;
   bool has_header = false;
   bool has_types = false;
-  std::shared_ptr<TableColumnDefinitions> schema = nullptr;
+  std::shared_ptr<TableColumnDefinitions> expected_schema = nullptr;
 };
 
 /*

@@ -112,6 +112,7 @@ class ImportOperatorTest : public ::testing::Test {
   static constexpr size_t kSizeSegments = 100;
   static constexpr std::string_view kCsvTypesPath = "csv/with_types.csv";
   static constexpr std::string_view kOrcTypesPath = "orc/with_types.orc";
+  static constexpr std::string_view kOrcPartitionedPath = "orc/partitioned_int_string.orc";
 
   CsvFormatReaderOptions csv_options_;
   OrcFormatReaderOptions orc_options_;
@@ -202,6 +203,24 @@ TEST_F(ImportOperatorTest, ImportOrc) {
   ImportOperator import_operator(test_data_storage_, object_keys, included_column_ids, orc_factory);
 
   TestImportOperator(&import_operator, *types_schema_, 1, 1, &included_column_ids);
+}
+
+TEST_F(ImportOperatorTest, ImportPartitionedOrc) {
+  auto schema = std::make_shared<TableColumnDefinitions>();
+  schema->emplace_back("a", DataType::kInt, false);
+  schema->emplace_back("b", DataType::kString, false);
+
+  OrcFormatReaderOptions orc_options;
+  orc_options.expected_schema = schema;
+  orc_options.select_partition_range = std::make_pair(2, 3);
+
+  auto orc_factory = std::make_shared<FormatReaderFactory<OrcFormatReader>>(orc_options);
+
+  const std::vector<std::string> object_keys = {kOrcPartitionedPath.data()};
+  std::vector<ColumnId> included_column_ids = {ColumnId(0), ColumnId(1)};
+  ImportOperator import_operator(test_data_storage_, object_keys, included_column_ids, orc_factory);
+
+  TestImportOperator(&import_operator, *schema, 1, 20, &included_column_ids);
 }
 
 }  // namespace skyrise

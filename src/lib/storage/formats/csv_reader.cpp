@@ -173,7 +173,7 @@ char CsvFormatReader::GuessDelimiter(const Lines& lines) {
 
 CsvFormatReader::CsvFormatReader(std::unique_ptr<ObjectReader> source, Configuration configuration)
     : configuration_(std::move(configuration)), source_(std::move(source)) {
-  schema_ = configuration_.schema;
+  schema_ = configuration_.expected_schema;
   buffer_.reserve(configuration_.read_buffer_size);
   StorageError maybe_error = FillBuffer();
 
@@ -278,7 +278,7 @@ void CsvFormatReader::InitialSetup() {
     num_ignore_lines_in_next_chunk_++;
   }
 
-  if (configuration_.schema == nullptr) {
+  if (configuration_.expected_schema == nullptr) {
     BuildSchema();
   }
 }

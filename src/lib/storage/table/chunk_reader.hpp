@@ -25,6 +25,8 @@ class FormatReaderFactory : public AbstractChunkReaderFactory {
     return std::make_unique<Formatter>(std::move(source), configuration_);
   }
 
+  const typename Formatter::Configuration& Configuration() const { return configuration_; };
+
  private:
   typename Formatter::Configuration configuration_;
 };
