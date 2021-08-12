@@ -66,6 +66,7 @@ set(
     lib/storage/table/chunk_reader_test.cpp
     lib/storage/table/chunk_writer_test.cpp
     lib/storage/table/value_segment_test.cpp
+    lib/storage/table/table_test.cpp
 
     lib/utils/costs/cost_calculator_test.cpp
     lib/utils/costs/pricing_test.cpp

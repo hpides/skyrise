@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <numeric>
 #include <string>
 #include <utility>
@@ -99,6 +100,8 @@ class Table : private Noncopyable {
    * chunks more than once.
    */
   mutable std::optional<uint64_t> cached_row_count_;
+
+  std::mutex chunks_mutex_;
 };
 
 }  // namespace skyrise

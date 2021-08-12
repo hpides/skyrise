@@ -148,8 +148,8 @@ void Table::AppendChunk(const Segments& segments) {
   AssertInput(static_cast<ColumnCount>(segments.size()) == GetColumnCount(),
               "Input does not have the same number of columns.");
 
-  auto new_chunk = chunks_.emplace_back(nullptr);
-  std::atomic_store(&new_chunk, std::make_shared<Chunk>(segments));
+  std::lock_guard<std::mutex> lock(chunks_mutex_);
+  chunks_.push_back(std::make_shared<Chunk>(segments));
 }
 
 size_t Table::MemoryUsageBytes() const {
