@@ -2,7 +2,7 @@
 
 #include <boost/container_hash/hash.hpp>
 
-#include "resolve_type.hpp"
+#include "all_type_variant.hpp"
 #include "storage/table/base_value_segment.hpp"
 #include "storage/table/chunk.hpp"
 #include "storage/table/table_column_definition.hpp"
@@ -40,7 +40,7 @@ std::shared_ptr<const Table> PartitionOperator::OnExecute() {
 
     // Materialize column by column from original table
     for (ColumnCount column_id = 0; column_id < column_count; column_id++) {
-      ResolveType(input_table->ColumnDataType(column_id), [&](auto data_type) {
+      ResolveDataType(input_table->ColumnDataType(column_id), [&](auto data_type) {
         using ColumnDataType = decltype(data_type);
 
         std::vector<std::vector<ColumnDataType>*> input_segments;
@@ -82,7 +82,7 @@ PartitionedPositionLists PartitionOperator::GeneratePartitionedPositionLists() c
     Assert(partition_column_id < input_table->GetColumnCount(), "Column to partition is out of range.");
     Assert(!input_table->ColumnDefinitions()[partition_column_id].nullable, "Nullable columns are not supported.");
 
-    ResolveType(input_table->ColumnDataType(partition_column_id), [&](auto data_type) {
+    ResolveDataType(input_table->ColumnDataType(partition_column_id), [&](auto data_type) {
       using ColumnDataType = decltype(data_type);
 
       size_t row_index = 0;

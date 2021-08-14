@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <iostream>
 #include <string>
+#include <type_traits>
 #include <variant>
 
 #include "magic_enum.hpp"
@@ -57,6 +58,33 @@ constexpr DataType DataTypeFromType() {
     return DataType::kString;
   }
   Fail("The given type is not a valid column type.");
+}
+
+/**
+ * Resolves a data type by calling the given @param functor with a variable of the associated type.
+ */
+template <typename Functor>
+void ResolveDataType(DataType data_type, const Functor& functor) {
+  DebugAssert(data_type != DataType::kNull, "data_type must not be null.");
+  switch (data_type) {
+    case DataType::kInt:
+      functor(int32_t{});
+      break;
+    case DataType::kLong:
+      functor(int64_t{});
+      break;
+    case DataType::kFloat:
+      functor(float{});
+      break;
+    case DataType::kDouble:
+      functor(double{});
+      break;
+    case DataType::kString:
+      functor(std::string{});
+      break;
+    default:
+      Fail("Unsupported DataType cannot be resolved.");
+  }
 }
 
 inline bool VariantIsNull(const AllTypeVariant& variant) { return variant.index() == 0; }

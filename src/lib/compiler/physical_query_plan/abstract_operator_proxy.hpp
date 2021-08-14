@@ -25,8 +25,6 @@ class AbstractOperatorProxy : public std::enable_shared_from_this<AbstractOperat
 
   OperatorType Type() const;
   virtual const std::string& Name() const = 0;
-
-  enum class DescriptionMode { kSingleLine, kMultiLine };
   virtual std::string Description(DescriptionMode description_mode = DescriptionMode::kSingleLine) const;
 
   std::shared_ptr<const AbstractOperatorProxy> GetLeftInput() const;

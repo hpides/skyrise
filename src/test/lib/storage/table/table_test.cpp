@@ -13,7 +13,7 @@
 
 #include <gtest/gtest.h>
 
-#include "resolve_type.hpp"
+#include "all_type_variant.hpp"
 #include "storage/table/value_segment.hpp"
 
 namespace skyrise {

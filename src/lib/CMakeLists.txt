@@ -75,6 +75,8 @@ set(
 set(
     SHARED_SOURCES
     all_type_variant.hpp
+    constant_mappings.cpp
+    constant_mappings.hpp
 
     compiler/physical_query_plan/abstract_operator_proxy.cpp
     compiler/physical_query_plan/abstract_operator_proxy.hpp
@@ -135,7 +137,7 @@ set(
     operator/table_wrapper.hpp
 
     scheduler/scheduler_types.hpp
-    resolve_type.hpp
+    types.cpp
     types.hpp
 
     utils/array.hpp

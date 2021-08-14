@@ -43,8 +43,6 @@ class AbstractOperator : public std::enable_shared_from_this<AbstractOperator>, 
   void ClearOutput();
 
   virtual const std::string& Name() const = 0;
-
-  enum class DescriptionMode { kSingleLine, kMultiLine };
   virtual std::string Description(DescriptionMode description_mode = DescriptionMode::kSingleLine) const;
 
   /**
