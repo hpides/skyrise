@@ -74,6 +74,7 @@ set(
 
 set(
     SHARED_SOURCES
+    aggregate_traits.hpp
     all_type_variant.hpp
     constant_mappings.cpp
     constant_mappings.hpp
@@ -95,6 +96,8 @@ set(
     expression/abstract_expression.hpp
     expression/abstract_predicate_expression.cpp
     expression/abstract_predicate_expression.hpp
+    expression/aggregate_expression.cpp
+    expression/aggregate_expression.hpp
     expression/arithmetic_expression.cpp
     expression/arithmetic_expression.hpp
     expression/between_expression.cpp
