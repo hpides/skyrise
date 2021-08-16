@@ -14,6 +14,7 @@
 #include "is_null_expression.hpp"
 #include "list_expression.hpp"
 #include "logical_expression.hpp"
+#include "pqp_column_expression.hpp"
 #include "unary_minus_expression.hpp"
 #include "value_expression.hpp"
 
@@ -139,6 +140,9 @@ template <typename... Args>
 std::shared_ptr<ListExpression> List_(Args&&... args) {
   return std::make_shared<ListExpression>(ExpressionVector_(std::forward<Args>(args)...));
 }
+
+std::shared_ptr<PqpColumnExpression> PqpColumn_(const ColumnId column_id, const DataType data_type, const bool nullable,
+                                                const std::string& column_name);
 
 }  // namespace expression_functional
 

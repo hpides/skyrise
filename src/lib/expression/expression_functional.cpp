@@ -21,6 +21,11 @@ std::shared_ptr<ValueExpression> Value_(const AllTypeVariant& value) {
 
 std::shared_ptr<ValueExpression> Null_() { return std::make_shared<ValueExpression>(kNullValue); }
 
+std::shared_ptr<PqpColumnExpression> PqpColumn_(const ColumnId column_id, const DataType data_type, const bool nullable,
+                                                const std::string& column_name) {
+  return std::make_shared<PqpColumnExpression>(column_id, data_type, nullable, column_name);
+}
+
 }  // namespace expression_functional
 
 }  // namespace skyrise
