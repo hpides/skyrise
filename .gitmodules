@@ -13,7 +13,8 @@
 [submodule "third_party/boost"]
 	path = third_party/boost
 	url = https://github.com/boostorg/boost.git
-    shallow = true
+	shallow = true
+	ignore = dirty
 [submodule "third_party/cmake-git-version-tracking"]
 	path = third_party/cmake-git-version-tracking
 	url = https://github.com/andrew-hardin/cmake-git-version-tracking.git
