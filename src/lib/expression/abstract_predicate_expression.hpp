@@ -14,7 +14,7 @@ namespace skyrise {
 class AbstractPredicateExpression : public AbstractExpression {
  public:
   AbstractPredicateExpression(const PredicateCondition predicate_condition,
-                              const std::vector<std::shared_ptr<AbstractExpression>>& arguments);
+                              std::vector<std::shared_ptr<AbstractExpression>> arguments);
 
   DataType GetDataType() const override;
 

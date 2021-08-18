@@ -24,9 +24,9 @@ std::ostream& operator<<(std::ostream& stream, const LogicalOperator logical_ope
 }
 
 LogicalExpression::LogicalExpression(const LogicalOperator logical_operator,
-                                     const std::shared_ptr<AbstractExpression>& left_operand,
-                                     const std::shared_ptr<AbstractExpression>& right_operand)
-    : AbstractExpression(ExpressionType::kLogical, {left_operand, right_operand}),
+                                     std::shared_ptr<AbstractExpression> left_operand,
+                                     std::shared_ptr<AbstractExpression> right_operand)
+    : AbstractExpression(ExpressionType::kLogical, {std::move(left_operand), std::move(right_operand)}),
       logical_operator_(logical_operator) {}
 
 const std::shared_ptr<AbstractExpression>& LogicalExpression::LeftOperand() const { return arguments_[0]; }

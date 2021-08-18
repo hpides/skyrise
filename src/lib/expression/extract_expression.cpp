@@ -34,8 +34,8 @@ std::ostream& operator<<(std::ostream& stream, const DatetimeComponent datetime_
 }
 
 ExtractExpression::ExtractExpression(const DatetimeComponent datetime_component,
-                                     const std::shared_ptr<AbstractExpression>& from)
-    : AbstractExpression(ExpressionType::kExtract, {from}), datetime_component_(datetime_component) {}
+                                     std::shared_ptr<AbstractExpression> from)
+    : AbstractExpression(ExpressionType::kExtract, {std::move(from)}), datetime_component_(datetime_component) {}
 
 std::shared_ptr<AbstractExpression> ExtractExpression::From() const { return arguments_[0]; }
 

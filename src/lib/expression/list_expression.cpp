@@ -10,8 +10,8 @@
 
 namespace skyrise {
 
-ListExpression::ListExpression(const std::vector<std::shared_ptr<AbstractExpression>>& elements)
-    : AbstractExpression(ExpressionType::kList, elements) {}
+ListExpression::ListExpression(std::vector<std::shared_ptr<AbstractExpression>> elements)
+    : AbstractExpression(ExpressionType::kList, std::move(elements)) {}
 
 const std::vector<std::shared_ptr<AbstractExpression>>& ListExpression::Elements() const { return arguments_; }
 

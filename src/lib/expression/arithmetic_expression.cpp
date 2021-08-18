@@ -34,9 +34,9 @@ std::ostream& operator<<(std::ostream& stream, const ArithmeticOperator arithmet
 }
 
 ArithmeticExpression::ArithmeticExpression(const ArithmeticOperator arithmetic_operator,
-                                           const std::shared_ptr<AbstractExpression>& left_operand,
-                                           const std::shared_ptr<AbstractExpression>& right_operand)
-    : AbstractExpression(ExpressionType::kArithmetic, {left_operand, right_operand}),
+                                           std::shared_ptr<AbstractExpression> left_operand,
+                                           std::shared_ptr<AbstractExpression> right_operand)
+    : AbstractExpression(ExpressionType::kArithmetic, {std::move(left_operand), std::move(right_operand)}),
       arithmetic_operator_(arithmetic_operator) {}
 
 const std::shared_ptr<AbstractExpression>& ArithmeticExpression::LeftOperand() const { return arguments_[0]; }

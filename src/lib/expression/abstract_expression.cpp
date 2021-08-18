@@ -14,8 +14,8 @@
 namespace skyrise {
 
 AbstractExpression::AbstractExpression(const ExpressionType type,
-                                       const std::vector<std::shared_ptr<AbstractExpression>>& arguments)
-    : type_(type), arguments_(arguments) {}
+                                       std::vector<std::shared_ptr<AbstractExpression>> arguments)
+    : type_(type), arguments_(std::move(arguments)) {}
 
 bool AbstractExpression::RequiresComputation() const { return true; }
 

@@ -11,9 +11,8 @@ namespace skyrise {
 
 class BetweenExpression : public AbstractPredicateExpression {
  public:
-  BetweenExpression(const PredicateCondition predicate_condition, const std::shared_ptr<AbstractExpression>& value,
-                    const std::shared_ptr<AbstractExpression>& lower_bound,
-                    const std::shared_ptr<AbstractExpression>& upper_bound);
+  BetweenExpression(const PredicateCondition predicate_condition, std::shared_ptr<AbstractExpression> value,
+                    std::shared_ptr<AbstractExpression> lower_bound, std::shared_ptr<AbstractExpression> upper_bound);
 
   const std::shared_ptr<AbstractExpression>& Value() const;
   const std::shared_ptr<AbstractExpression>& LowerBound() const;

@@ -12,7 +12,7 @@ namespace skyrise {
  */
 class UnaryMinusExpression : public AbstractExpression {
  public:
-  explicit UnaryMinusExpression(const std::shared_ptr<AbstractExpression>& argument);
+  explicit UnaryMinusExpression(std::shared_ptr<AbstractExpression> argument);
 
   std::shared_ptr<AbstractExpression> Argument() const;
 

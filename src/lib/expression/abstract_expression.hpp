@@ -38,7 +38,7 @@ enum class ExpressionType {
  */
 class AbstractExpression : public std::enable_shared_from_this<AbstractExpression>, private Noncopyable {
  public:
-  AbstractExpression(const ExpressionType type, const std::vector<std::shared_ptr<AbstractExpression>>& arguments);
+  AbstractExpression(const ExpressionType type, std::vector<std::shared_ptr<AbstractExpression>> arguments);
   virtual ~AbstractExpression() = default;
 
   /**

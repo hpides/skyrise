@@ -14,8 +14,8 @@ std::ostream& operator<<(std::ostream& stream, const LogicalOperator logical_ope
 
 class LogicalExpression : public AbstractExpression {
  public:
-  LogicalExpression(const LogicalOperator logical_operator, const std::shared_ptr<AbstractExpression>& left_operand,
-                    const std::shared_ptr<AbstractExpression>& right_operand);
+  LogicalExpression(const LogicalOperator logical_operator, std::shared_ptr<AbstractExpression> left_operand,
+                    std::shared_ptr<AbstractExpression> right_operand);
 
   const std::shared_ptr<AbstractExpression>& LeftOperand() const;
   const std::shared_ptr<AbstractExpression>& RightOperand() const;

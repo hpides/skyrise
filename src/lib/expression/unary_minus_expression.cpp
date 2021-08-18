@@ -9,9 +9,9 @@
 
 namespace skyrise {
 
-UnaryMinusExpression::UnaryMinusExpression(const std::shared_ptr<AbstractExpression>& argument)
-    : AbstractExpression(ExpressionType::kUnaryMinus, {argument}) {
-  Assert(argument->GetDataType() != DataType::kString, "Cannot negate strings.");
+UnaryMinusExpression::UnaryMinusExpression(std::shared_ptr<AbstractExpression> argument)
+    : AbstractExpression(ExpressionType::kUnaryMinus, {std::move(argument)}) {
+  Assert(arguments_[0]->GetDataType() != DataType::kString, "Cannot negate strings.");
 }
 
 std::shared_ptr<AbstractExpression> UnaryMinusExpression::Argument() const { return arguments_[0]; }
@@ -30,7 +30,7 @@ DataType UnaryMinusExpression::GetDataType() const { return Argument()->GetDataT
 
 bool UnaryMinusExpression::ShallowEquals([[maybe_unused]] const AbstractExpression& expression) const {
   DebugAssert(dynamic_cast<const UnaryMinusExpression*>(&expression),
-              "Different expression type should have been caught by AbstractExpression::operator==");
+              "Different expression type should have been caught by AbstractExpression::operator==.");
   return true;
 }
 

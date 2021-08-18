@@ -9,10 +9,9 @@
 
 namespace skyrise {
 
-InExpression::InExpression(const PredicateCondition predicate_condition,
-                           const std::shared_ptr<AbstractExpression>& value,
-                           const std::shared_ptr<AbstractExpression>& set)
-    : AbstractPredicateExpression(predicate_condition, {value, set}) {
+InExpression::InExpression(const PredicateCondition predicate_condition, std::shared_ptr<AbstractExpression> value,
+                           std::shared_ptr<AbstractExpression> set)
+    : AbstractPredicateExpression(predicate_condition, {std::move(value), std::move(set)}) {
   DebugAssert(predicate_condition_ == PredicateCondition::kIn || predicate_condition_ == PredicateCondition::kNotIn,
               "Expected either IN or NOT IN as PredicateCondition");
 }

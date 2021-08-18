@@ -12,7 +12,7 @@ namespace skyrise {
  */
 class ListExpression : public AbstractExpression {
  public:
-  explicit ListExpression(const std::vector<std::shared_ptr<AbstractExpression>>& elements);
+  explicit ListExpression(std::vector<std::shared_ptr<AbstractExpression>> elements);
 
   const std::vector<std::shared_ptr<AbstractExpression>>& Elements() const;
 

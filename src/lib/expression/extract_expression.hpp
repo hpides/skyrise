@@ -17,7 +17,7 @@ std::ostream& operator<<(std::ostream& stream, const DatetimeComponent datetime_
  */
 class ExtractExpression : public AbstractExpression {
  public:
-  ExtractExpression(const DatetimeComponent datetime_component, const std::shared_ptr<AbstractExpression>& from);
+  ExtractExpression(const DatetimeComponent datetime_component, std::shared_ptr<AbstractExpression> from);
 
   std::shared_ptr<AbstractExpression> From() const;
 

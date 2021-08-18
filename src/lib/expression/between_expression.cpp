@@ -11,10 +11,11 @@
 namespace skyrise {
 
 BetweenExpression::BetweenExpression(const PredicateCondition predicate_condition,
-                                     const std::shared_ptr<AbstractExpression>& value,
-                                     const std::shared_ptr<AbstractExpression>& lower_bound,
-                                     const std::shared_ptr<AbstractExpression>& upper_bound)
-    : AbstractPredicateExpression(predicate_condition, {value, lower_bound, upper_bound}) {
+                                     std::shared_ptr<AbstractExpression> value,
+                                     std::shared_ptr<AbstractExpression> lower_bound,
+                                     std::shared_ptr<AbstractExpression> upper_bound)
+    : AbstractPredicateExpression(predicate_condition,
+                                  {std::move(value), std::move(lower_bound), std::move(upper_bound)}) {
   Assert(IsBetweenPredicateCondition(predicate_condition_), "Unsupported PredicateCondition.");
 }
 
