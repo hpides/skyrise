@@ -25,6 +25,7 @@ enum class DescriptionMode { kSingleLine, kMultiLine };
 
 using ColumnCount = uint32_t;
 using ColumnId = uint32_t;
+using ChunkId = uint32_t;
 
 inline constexpr ColumnId kInvalidColumnId = std::numeric_limits<ColumnId>::max();
 

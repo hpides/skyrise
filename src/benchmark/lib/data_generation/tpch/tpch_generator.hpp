@@ -9,6 +9,8 @@ namespace skyrise {
 
 enum class TpchTable { kPart, kPartSupp, kSupplier, kCustomer, kOrders, kLineItem, kNation, kRegion };
 
+TableColumnDefinitions TpchColumnDefinitionsByTable(TpchTable table);
+
 class TPCHGenerator : public AbstractDataGenerator {
  public:
   TPCHGenerator(PartitionedChunkWriterFactory chunk_writer_factory, float scale_factor);

@@ -9,6 +9,7 @@ Checks: '
         -*-non-private-member-variables-in-classes,
         -*-uppercase-literal-suffix,
         -abseil-string-find-startswith,
+        -abseil-string-find-str-contains,
         -altera-struct-pack-align,
         -cert-dcl16-c,
         -cert-dcl58-cpp,
@@ -50,6 +51,7 @@ Checks: '
 #   *-non-private-member-variables-in-classes               We use public member variables
 #   *-uppercase-literal-suffix                              Using 1.0f instead of 1.0F is fine for us
 #   abseil-string-find-startswith                           We do not use abseil
+#   abseil-string-find-str-contains                         We do not use abseil
 #   altera-struct-pack-align                                We do not use alignment annotations
 #   cert-dcl16-c                                            Using 1.0f instead of 1.0F is fine for us
 #   cert-env33-c                                            We use popen()

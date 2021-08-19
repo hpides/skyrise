@@ -129,6 +129,16 @@ set(
     expression/evaluation/expression_result.hpp
     expression/evaluation/expression_result_views.hpp
 
+    metadata/abstract_catalog.hpp
+    metadata/mock_catalog.cpp
+    metadata/mock_catalog.hpp
+    metadata/table_partition.cpp
+    metadata/table_partition.hpp
+    metadata/table_schema.cpp
+    metadata/table_schema.hpp
+    metadata/tpch_mock_catalog.cpp
+    metadata/tpch_mock_catalog.hpp
+
     operator/abstract_operator.cpp
     operator/abstract_operator.hpp
     operator/export_operator.cpp

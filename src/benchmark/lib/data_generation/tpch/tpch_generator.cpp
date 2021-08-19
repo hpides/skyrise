@@ -10,9 +10,9 @@ extern "C" {
 #include <rnd.h>
 }
 
-namespace skyrise {
+namespace {
 
-namespace detail {
+using namespace skyrise;  // NOLINT(google-build-using-namespace)
 
 const auto kCustomerColumnTypes =
     std::tuple<int32_t, std::string, std::string, int32_t, std::string, float, std::string, std::string>();
@@ -87,7 +87,32 @@ DSSType CallDbgenRowGenerator(size_t idx,
   return value;
 }
 
-}  // namespace detail
+}  // namespace
+
+namespace skyrise {
+
+TableColumnDefinitions TpchColumnDefinitionsByTable(TpchTable table) {
+  switch (table) {
+    case TpchTable::kCustomer:
+      return GetSchemaFromTypesAndNames(kCustomerColumnTypes, kCustomerColumnNames);
+    case TpchTable::kLineItem:
+      return GetSchemaFromTypesAndNames(kLineitemColumnTypes, kLineitemColumnNames);
+    case TpchTable::kNation:
+      return GetSchemaFromTypesAndNames(kNationColumnTypes, kNationColumnNames);
+    case TpchTable::kOrders:
+      return GetSchemaFromTypesAndNames(kOrderColumnTypes, kOrderColumnNames);
+    case TpchTable::kPart:
+      return GetSchemaFromTypesAndNames(kPartColumnTypes, kPartColumnNames);
+    case TpchTable::kPartSupp:
+      return GetSchemaFromTypesAndNames(kPartsuppColumnTypes, kPartsuppColumnNames);
+    case TpchTable::kRegion:
+      return GetSchemaFromTypesAndNames(kRegionColumnTypes, kRegionColumnNames);
+    case TpchTable::kSupplier:
+      return GetSchemaFromTypesAndNames(kSupplierColumnTypes, kSupplierColumnNames);
+    default:
+      Fail("Undefined for given TPC-H table.");
+  }
+}
 
 TPCHGenerator::TPCHGenerator(PartitionedChunkWriterFactory chunk_writer_factory, float scale_factor)
     : AbstractDataGenerator(std::move(chunk_writer_factory)), scale_factor_(scale_factor) {}
@@ -133,27 +158,27 @@ void TPCHGenerator::Generate() {
   const auto region_count = static_cast<size_t>(tdefs[REGION].base);
 
   if (IsTableEnabled(TpchTable::kCustomer)) {
-    TableBuilder builder(GetPartitionedChunkWriterFactory(), detail::tpch_table_names.at(TpchTable::kCustomer),
-                         detail::kCustomerColumnTypes, detail::kCustomerColumnNames);
+    TableBuilder builder(GetPartitionedChunkWriterFactory(), tpch_table_names.at(TpchTable::kCustomer),
+                         kCustomerColumnTypes, kCustomerColumnNames);
     for (size_t row_idx = 0; row_idx < customer_count; row_idx++) {
-      auto customer = detail::CallDbgenRowGenerator<customer_t>(row_idx + 1, mk_cust, TpchTable::kCustomer);
+      auto customer = CallDbgenRowGenerator<customer_t>(row_idx + 1, mk_cust, TpchTable::kCustomer);
       builder.AppendRow(customer.custkey, customer.name, customer.address, customer.nation_code, customer.phone,
-                        detail::ConvertMoney(customer.acctbal), customer.mktsegment, customer.comment);
+                        ConvertMoney(customer.acctbal), customer.mktsegment, customer.comment);
     }
   }
 
   if (IsTableEnabled(TpchTable::kOrders) || IsTableEnabled(TpchTable::kLineItem)) {
     TableBuilder order_builder(
         IsTableEnabled(TpchTable::kOrders) ? GetPartitionedChunkWriterFactory() : null_writer_factory,
-        detail::tpch_table_names.at(TpchTable::kOrders), detail::kOrderColumnTypes, detail::kOrderColumnNames);
+        tpch_table_names.at(TpchTable::kOrders), kOrderColumnTypes, kOrderColumnNames);
     TableBuilder lineitem_builder(
         IsTableEnabled(TpchTable::kLineItem) ? GetPartitionedChunkWriterFactory() : null_writer_factory,
-        detail::tpch_table_names.at(TpchTable::kLineItem), detail::kLineitemColumnTypes, detail::kLineitemColumnNames);
+        tpch_table_names.at(TpchTable::kLineItem), kLineitemColumnTypes, kLineitemColumnNames);
 
     for (size_t order_idx = 0; order_idx < order_count; ++order_idx) {
-      const auto order = detail::CallDbgenRowGenerator<order_t>(order_idx + 1, mk_order, TpchTable::kOrders, 0l);
+      const auto order = CallDbgenRowGenerator<order_t>(order_idx + 1, mk_order, TpchTable::kOrders, 0l);
       order_builder.AppendRow(order.okey, order.custkey, std::string(1, order.orderstatus),
-                              detail::ConvertMoney(order.totalprice), order.odate, order.opriority, order.clerk,
+                              ConvertMoney(order.totalprice), order.odate, order.opriority, order.clerk,
                               order.spriority, order.comment);
 
       if (!IsTableEnabled(TpchTable::kLineItem)) {
@@ -162,8 +187,8 @@ void TPCHGenerator::Generate() {
       for (size_t line_idx = 0; line_idx < static_cast<size_t>(order.lines); ++line_idx) {
         const auto& lineitem = order.l[line_idx];
         lineitem_builder.AppendRow(lineitem.okey, lineitem.partkey, lineitem.suppkey, lineitem.lcnt, lineitem.quantity,
-                                   detail::ConvertMoney(lineitem.eprice), detail::ConvertMoney(lineitem.discount),
-                                   detail::ConvertMoney(lineitem.tax), std::string(1, lineitem.rflag[0]),
+                                   ConvertMoney(lineitem.eprice), ConvertMoney(lineitem.discount),
+                                   ConvertMoney(lineitem.tax), std::string(1, lineitem.rflag[0]),
                                    std::string(1, lineitem.lstatus[0]), lineitem.sdate, lineitem.cdate, lineitem.rdate,
                                    lineitem.shipinstruct, lineitem.shipmode, lineitem.comment);
       }
@@ -173,16 +198,16 @@ void TPCHGenerator::Generate() {
   if (IsTableEnabled(TpchTable::kPart) || IsTableEnabled(TpchTable::kPartSupp)) {
     TableBuilder part_builder(
         IsTableEnabled(TpchTable::kPart) ? GetPartitionedChunkWriterFactory() : null_writer_factory,
-        detail::tpch_table_names.at(TpchTable::kPart), detail::kPartColumnTypes, detail::kPartColumnNames);
+        tpch_table_names.at(TpchTable::kPart), kPartColumnTypes, kPartColumnNames);
     TableBuilder partsupp_builder(
         IsTableEnabled(TpchTable::kPartSupp) ? GetPartitionedChunkWriterFactory() : null_writer_factory,
-        detail::tpch_table_names.at(TpchTable::kPartSupp), detail::kPartsuppColumnTypes, detail::kPartsuppColumnNames);
+        tpch_table_names.at(TpchTable::kPartSupp), kPartsuppColumnTypes, kPartsuppColumnNames);
 
     for (size_t part_idx = 0; part_idx < part_count; ++part_idx) {
-      const auto part = detail::CallDbgenRowGenerator<part_t>(part_idx + 1, mk_part, TpchTable::kPart);
+      const auto part = CallDbgenRowGenerator<part_t>(part_idx + 1, mk_part, TpchTable::kPart);
 
       part_builder.AppendRow(part.partkey, part.name, part.mfgr, part.brand, part.type, part.size, part.container,
-                             detail::ConvertMoney(part.retailprice), part.comment);
+                             ConvertMoney(part.retailprice), part.comment);
 
       // Some scale factors (e.g., 0.05) are not supported by tpch-dbgen as they produce non-unique partkey/suppkey
       // combinations. The reason is probably somewhere in the magic in PART_SUPP_BRIDGE. As the partkey is
@@ -207,37 +232,37 @@ void TPCHGenerator::Generate() {
           suppkeys.emplace_back(partsupp.suppkey);
         }
 
-        partsupp_builder.AppendRow(partsupp.partkey, partsupp.suppkey, partsupp.qty,
-                                   detail::ConvertMoney(partsupp.scost), partsupp.comment);
+        partsupp_builder.AppendRow(partsupp.partkey, partsupp.suppkey, partsupp.qty, ConvertMoney(partsupp.scost),
+                                   partsupp.comment);
       }
     }
   }
 
   if (IsTableEnabled(TpchTable::kSupplier)) {
-    TableBuilder builder(GetPartitionedChunkWriterFactory(), detail::tpch_table_names.at(TpchTable::kSupplier),
-                         detail::kSupplierColumnTypes, detail::kSupplierColumnNames);
+    TableBuilder builder(GetPartitionedChunkWriterFactory(), tpch_table_names.at(TpchTable::kSupplier),
+                         kSupplierColumnTypes, kSupplierColumnNames);
     for (size_t supplier_idx = 0; supplier_idx < supplier_count; ++supplier_idx) {
-      const auto supplier = detail::CallDbgenRowGenerator<supplier_t>(supplier_idx + 1, mk_supp, TpchTable::kSupplier);
+      const auto supplier = CallDbgenRowGenerator<supplier_t>(supplier_idx + 1, mk_supp, TpchTable::kSupplier);
 
       builder.AppendRow(supplier.suppkey, supplier.name, supplier.address, supplier.nation_code, supplier.phone,
-                        detail::ConvertMoney(supplier.acctbal), supplier.comment);
+                        ConvertMoney(supplier.acctbal), supplier.comment);
     }
   }
 
   if (IsTableEnabled(TpchTable::kNation)) {
-    TableBuilder builder(GetPartitionedChunkWriterFactory(), detail::tpch_table_names.at(TpchTable::kNation),
-                         detail::kNationColumnTypes, detail::kNationColumnNames);
+    TableBuilder builder(GetPartitionedChunkWriterFactory(), tpch_table_names.at(TpchTable::kNation),
+                         kNationColumnTypes, kNationColumnNames);
     for (size_t nation_idx = 0; nation_idx < nation_count; ++nation_idx) {
-      const auto nation = detail::CallDbgenRowGenerator<code_t>(nation_idx + 1, mk_nation, TpchTable::kNation);
+      const auto nation = CallDbgenRowGenerator<code_t>(nation_idx + 1, mk_nation, TpchTable::kNation);
       builder.AppendRow(nation.code, nation.text, nation.join, nation.comment);
     }
   }
 
   if (IsTableEnabled(TpchTable::kRegion)) {
-    TableBuilder builder(GetPartitionedChunkWriterFactory(), detail::tpch_table_names.at(TpchTable::kRegion),
-                         detail::kRegionColumnTypes, detail::kRegionColumnNames);
+    TableBuilder builder(GetPartitionedChunkWriterFactory(), tpch_table_names.at(TpchTable::kRegion),
+                         kRegionColumnTypes, kRegionColumnNames);
     for (size_t region_idx = 0; region_idx < region_count; ++region_idx) {
-      const auto region = detail::CallDbgenRowGenerator<code_t>(region_idx + 1, mk_region, TpchTable::kRegion);
+      const auto region = CallDbgenRowGenerator<code_t>(region_idx + 1, mk_region, TpchTable::kRegion);
       builder.AppendRow(region.code, region.text, region.comment);
     }
   }

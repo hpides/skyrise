@@ -12,6 +12,13 @@
 
 namespace skyrise {
 
+/**
+ * In contrast to std::map or std::unordered_map, boost::bimap provides bidirectional access to its data:
+ *  - Left values can be accessed using .left(...)
+ *  - Right values can be accessed using .right(...)
+ *
+ *  For kDataTypeToString, for example, .left contains DataType enum values and .right contains the associated strings.
+ */
 extern const boost::bimap<AggregateFunction, std::string> kAggregateFunctionToString;
 extern const boost::bimap<DataType, std::string> kDataTypeToString;
 extern const boost::bimap<JoinMode, std::string> kJoinModeToString;

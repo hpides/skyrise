@@ -18,6 +18,9 @@ set(
     lib/compiler/physical_query_plan/pqp_serialization_test.cpp
     lib/compiler/physical_query_plan/operator_proxy_test.cpp
 
+    lib/metadata/mock_catalog_test.cpp
+    lib/metadata/tpch_mock_catalog_test.cpp
+
     lib/monitoring/function_segments_test.cpp
     lib/monitoring/metrics_collector_test.cpp
     lib/monitoring/tracer_test.cpp
