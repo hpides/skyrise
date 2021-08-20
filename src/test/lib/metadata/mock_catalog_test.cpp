@@ -27,13 +27,14 @@ class MockCatalogTest : public ::testing::Test {
 TEST_F(MockCatalogTest, EmptyTableSchema) {
   // Creating / adding TableSchema without column definitions should fail.
   const TableColumnDefinitions column_definitions;
-  EXPECT_THROW(mock_catalog_.AddTableSchema("table_without_columns", std::make_shared<TableSchema>(column_definitions)),
+  EXPECT_THROW(mock_catalog_.AddTableSchema("table_without_columns",
+                                            TableSchema::FromTableColumnDefinitions(column_definitions)),
                std::logic_error);
 }
 
 TEST_F(MockCatalogTest, AddTableSchemaWithSingleColumn) {
   const TableColumnDefinitions column_definitions = {column_definition_a_};
-  mock_catalog_.AddTableSchema("table_a", std::make_shared<TableSchema>(column_definitions));
+  mock_catalog_.AddTableSchema("table_a", TableSchema::FromTableColumnDefinitions(column_definitions));
 
   ASSERT_TRUE(mock_catalog_.TableExists("table_a"));
   auto table_a_schema = mock_catalog_.GetTableSchema("table_a");
@@ -52,15 +53,15 @@ TEST_F(MockCatalogTest, AddTableSchemaWithSingleColumn) {
 
 TEST_F(MockCatalogTest, DoNotOverrideTableSchema) {
   const TableColumnDefinitions column_definitions = {column_definition_a_};
-  mock_catalog_.AddTableSchema("table", std::make_shared<TableSchema>(column_definitions));
+  mock_catalog_.AddTableSchema("table", TableSchema::FromTableColumnDefinitions(column_definitions));
   // Overriding TableSchema is forbidden.
-  EXPECT_THROW(mock_catalog_.AddTableSchema("table", std::make_shared<TableSchema>(column_definitions)),
+  EXPECT_THROW(mock_catalog_.AddTableSchema("table", TableSchema::FromTableColumnDefinitions(column_definitions)),
                std::logic_error);
 }
 
 TEST_F(MockCatalogTest, AddTableSchemaWithTwoColumns) {
   const TableColumnDefinitions column_definitions = {column_definition_x_, column_definition_y_};
-  mock_catalog_.AddTableSchema("table_xy", std::make_shared<TableSchema>(column_definitions));
+  mock_catalog_.AddTableSchema("table_xy", TableSchema::FromTableColumnDefinitions(column_definitions));
 
   ASSERT_TRUE(mock_catalog_.TableExists("table_xy"));
   auto table_xy_schema = mock_catalog_.GetTableSchema("table_xy");
@@ -127,7 +128,7 @@ TEST_F(MockCatalogTest, TableBucketName) { EXPECT_EQ(mock_catalog_.TableBucketNa
 TEST_F(MockCatalogTest, GetTablePartitionKeys) {
   const std::string table_name = "table_a";
   const TableColumnDefinitions column_definitions = {column_definition_a_};
-  mock_catalog_.AddTableSchema(table_name, std::make_shared<TableSchema>(column_definitions));
+  mock_catalog_.AddTableSchema(table_name, TableSchema::FromTableColumnDefinitions(column_definitions));
 
   EXPECT_EQ(mock_catalog_.GetTablePartitions(table_name).size(), 3);
   EXPECT_EQ(mock_catalog_.GetTablePartitions(table_name).at(0).ObjectKey(), "table_a_object01.orc");

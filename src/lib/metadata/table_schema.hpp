@@ -21,6 +21,9 @@ class TableSchema : Noncopyable {
 
   ColumnCount TableColumnCount() const;
 
+  static std::shared_ptr<const TableSchema> FromTableColumnDefinitions(
+      const TableColumnDefinitions& column_definitions);
+
  private:
   const TableColumnDefinitions column_definitions_;
 };

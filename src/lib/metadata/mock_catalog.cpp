@@ -17,7 +17,8 @@ const time_t kMockPartitionTimestamp = 0;
 
 namespace skyrise {
 
-void MockCatalog::AddTableSchema(const std::string& table_name, const std::shared_ptr<TableSchema>& table_schema) {
+void MockCatalog::AddTableSchema(const std::string& table_name,
+                                 const std::shared_ptr<const TableSchema>& table_schema) {
   bool inserted = table_schema_by_table_name_.try_emplace(table_name, table_schema).second;
   Assert(inserted, "Cannot add TableSchema for table name '" + table_name + "' because it already exists.");
 
@@ -66,7 +67,7 @@ void MockCatalog::AddTableSchemaFromFileHeader(const std::string& table_name, co
     column_definitions.emplace_back(column_names[i], data_type->second, column_nullable[i]);
   }
 
-  AddTableSchema(table_name, std::make_shared<TableSchema>(column_definitions));
+  AddTableSchema(table_name, TableSchema::FromTableColumnDefinitions(column_definitions));
 }
 
 bool MockCatalog::TableExists(const std::string& table_name) const {
@@ -74,7 +75,7 @@ bool MockCatalog::TableExists(const std::string& table_name) const {
   return table_schema_by_table_name_.find(table_name) != table_schema_by_table_name_.end();
 }
 
-std::shared_ptr<TableSchema> MockCatalog::GetTableSchema(const std::string& table_name) const {
+std::shared_ptr<const TableSchema> MockCatalog::GetTableSchema(const std::string& table_name) const {
   auto table_schema_by_table_name_iter = table_schema_by_table_name_.find(table_name);
   Assert(table_schema_by_table_name_iter != table_schema_by_table_name_.end(),
          "Could not find TableSchema for table '" + table_name + "'.");

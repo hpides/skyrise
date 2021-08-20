@@ -19,7 +19,7 @@ class AbstractCatalog {
    * @returns a pointer to the TableSchema definition for the given @param table_name.
    * @pre A table with @param table_name must exist.
    */
-  virtual std::shared_ptr<TableSchema> GetTableSchema(const std::string& table_name) const = 0;
+  virtual std::shared_ptr<const TableSchema> GetTableSchema(const std::string& table_name) const = 0;
 
   /**
    * @returns the name of the bucket in which @param table_name's partitions are stored.

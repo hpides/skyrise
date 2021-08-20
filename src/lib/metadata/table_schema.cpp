@@ -39,4 +39,9 @@ TableColumnDefinition TableSchema::GetTableColumnDefinition(const ColumnId colum
 
 ColumnCount TableSchema::TableColumnCount() const { return static_cast<ColumnCount>(column_definitions_.size()); }
 
+std::shared_ptr<const TableSchema> TableSchema::FromTableColumnDefinitions(
+    const TableColumnDefinitions& column_definitions) {
+  return std::make_shared<const TableSchema>(column_definitions);
+}
+
 }  // namespace skyrise
