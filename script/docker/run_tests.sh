@@ -12,6 +12,10 @@ else
   exit
 fi
 
+# Get AWS credentials
+AWS_ACCESS_KEY_ID=$(aws --profile default configure get aws_access_key_id)
+AWS_SECRET_ACCESS_KEY=$(aws --profile default configure get aws_secret_access_key)
+
 COMMAND="cd /var/skyrise/cmake-build-debug/ && bin/skyriseTest $GTEST_FILTER_FLAGS"
 
 PREFIX="hpiepic"
@@ -26,6 +30,8 @@ PROJECT_MOUNT_POINT="/var/skyrise"
 DOCKER_COMMAND="docker run --rm -it \
                            --user ${USER}:${GROUP} \
                            --volume ${SOURCE_DIR}:${PROJECT_MOUNT_POINT} \
+                           -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+                           -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
                            ${PREFIX}/${IMAGE} bash -c \"${COMMAND}\""
 
 eval ${DOCKER_COMMAND}
