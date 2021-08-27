@@ -1,6 +1,15 @@
 #include "csv_writer.hpp"
 
+#include <iomanip>
+#include <limits>
+
 namespace skyrise {
+
+namespace {
+
+constexpr size_t kDefaultPrecision = 6;
+
+}  // namespace
 
 CsvFormatWriter::CsvFormatWriter(CsvFormatWriterOptions options) : options_(std::move(options)) {}
 
@@ -31,6 +40,8 @@ void CsvFormatWriter::ProcessChunk(std::shared_ptr<const Chunk> chunk) {
   Assert(chunk->GetColumnCount() == num_fields_, "All chunks must have the same number of columns");
 
   std::stringstream buffer;
+  buffer << std::setprecision(kDefaultPrecision);
+
   for (size_t row_id = 0; row_id < chunk->Size(); row_id++) {
     for (size_t column_id = 0; column_id < num_fields_; column_id++) {
       std::shared_ptr<AbstractSegment> column = chunk->GetSegment(column_id);
@@ -40,7 +51,22 @@ void CsvFormatWriter::ProcessChunk(std::shared_ptr<const Chunk> chunk) {
       }
 
       // Get the type of the variant, call the lambda function with it and write it to the buffer
-      std::visit([&buffer](auto&& unpacked_value) { buffer << unpacked_value; }, value);
+      std::visit(
+          [&buffer](auto&& unpacked_value) {
+            using T = std::decay_t<decltype(unpacked_value)>;
+
+            constexpr bool kSetPrecision = std::is_floating_point_v<T>;
+            if constexpr (kSetPrecision) {
+              buffer << std::setprecision(std::numeric_limits<T>::max_digits10);
+            }
+
+            buffer << unpacked_value;
+
+            if constexpr (kSetPrecision) {
+              buffer << std::setprecision(kDefaultPrecision);
+            }
+          },
+          value);
     }
     buffer << options_.record_separator;
 
