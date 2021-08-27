@@ -77,6 +77,12 @@ set(
     lib/utils/string_test.cpp
 
     lib/testing/aws_test.hpp
+    lib/testing/check_table_equal.cpp
+    lib/testing/check_table_equal.hpp
+    lib/testing/check_table_equal_test.cpp
+    lib/testing/load_table.hpp
+    lib/testing/load_table_test.cpp
+    lib/testing/testing_assert.hpp
 
     utils/string_test_utils.cpp
     utils/string_test_utils.hpp
