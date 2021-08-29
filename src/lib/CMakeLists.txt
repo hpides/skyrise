@@ -104,6 +104,8 @@ set(
     expression/between_expression.hpp
     expression/binary_predicate_expression.cpp
     expression/binary_predicate_expression.hpp
+    expression/cast_expression.cpp
+    expression/cast_expression.hpp
     expression/expression_functional.cpp
     expression/expression_functional.hpp
     expression/expression_precedence.hpp

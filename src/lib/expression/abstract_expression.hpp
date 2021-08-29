@@ -14,11 +14,10 @@
 
 namespace skyrise {
 
-class AbstractLqpNode;
-
 enum class ExpressionType {
   kAggregate,
   kArithmetic,
+  kCast,
   kExtract,
   kList,
   kLogical,

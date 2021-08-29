@@ -9,6 +9,7 @@
 #include "arithmetic_expression.hpp"
 #include "between_expression.hpp"
 #include "binary_predicate_expression.hpp"
+#include "cast_expression.hpp"
 #include "extract_expression.hpp"
 #include "in_expression.hpp"
 #include "is_null_expression.hpp"
@@ -111,6 +112,11 @@ inline detail::Ternary<PredicateCondition::kBetweenLowerExclusive, BetweenExpres
 inline detail::Ternary<PredicateCondition::kBetweenUpperExclusive, BetweenExpression> BetweenUpperExclusive_;
 inline detail::Ternary<PredicateCondition::kBetweenExclusive, BetweenExpression> BetweenExclusive_;
 
+template <typename Argument>
+std::shared_ptr<CastExpression> Cast_(const Argument& argument, const DataType data_type) {
+  return std::make_shared<CastExpression>(to_expression(argument), data_type);
+}
+
 template <typename... Args>
 std::vector<std::shared_ptr<AbstractExpression>> ExpressionVector_(Args&&... args) {
   return std::vector<std::shared_ptr<AbstractExpression>>({ToExpression(args)...});
@@ -126,23 +132,23 @@ std::shared_ptr<InExpression> In_(const V& v, const S& s) {
   return std::make_shared<InExpression>(PredicateCondition::kIn, ToExpression(v), ToExpression(s));
 }
 
-template <typename V, typename S>
-std::shared_ptr<InExpression> NotIn_(const V& v, const S& s) {
-  return std::make_shared<InExpression>(PredicateCondition::kNotIn, ToExpression(v), ToExpression(s));
-}
-
-template <typename Argument>
-std::shared_ptr<UnaryMinusExpression> UnaryMinus_(const Argument& argument) {
-  return std::make_shared<UnaryMinusExpression>(ToExpression(argument));
-}
-
 template <typename... Args>
 std::shared_ptr<ListExpression> List_(Args&&... args) {
   return std::make_shared<ListExpression>(ExpressionVector_(std::forward<Args>(args)...));
 }
 
+template <typename V, typename S>
+std::shared_ptr<InExpression> NotIn_(const V& v, const S& s) {
+  return std::make_shared<InExpression>(PredicateCondition::kNotIn, ToExpression(v), ToExpression(s));
+}
+
 std::shared_ptr<PqpColumnExpression> PqpColumn_(const ColumnId column_id, const DataType data_type, const bool nullable,
                                                 const std::string& column_name);
+
+template <typename Argument>
+std::shared_ptr<UnaryMinusExpression> UnaryMinus_(const Argument& argument) {
+  return std::make_shared<UnaryMinusExpression>(ToExpression(argument));
+}
 
 }  // namespace expression_functional
 
