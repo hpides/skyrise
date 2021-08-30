@@ -76,6 +76,7 @@ set(
     SHARED_SOURCES
     aggregate_traits.hpp
     all_type_variant.hpp
+    all_type_variant.cpp
     constant_mappings.cpp
     constant_mappings.hpp
 

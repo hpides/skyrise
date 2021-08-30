@@ -85,7 +85,9 @@ std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::FromJson(const Aws::
   }();
 
   auto result = std::make_shared<ImportOperatorProxy>(bucket_name, object_keys, column_ids, format, reader_factory);
-  result->SetStorageFactory(std::move(storage_factory));
+  if (storage_factory != nullptr) {
+    result->SetStorageFactory(std::move(storage_factory));
+  }
 
   return result;
 }
@@ -194,6 +196,7 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> ImportOperatorProxy::WriteColumnD
 }
 
 void ImportOperatorProxy::SetStorageFactory(StorageFactory storage_factory) {
+  Assert(storage_factory != nullptr, "StorageFactory function must be provided.");
   storage_factory_ = std::move(storage_factory);
 }
 

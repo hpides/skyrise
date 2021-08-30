@@ -1,5 +1,7 @@
 #include "orc_reader.hpp"
 
+#include <magic_enum.hpp>
+
 #include "serialization/binary_serialization_stream.hpp"
 #include "storage/backend/stream.hpp"
 #include "storage/table/value_segment.hpp"

@@ -10,7 +10,6 @@
 #include <type_traits>
 #include <variant>
 
-#include "magic_enum.hpp"
 #include "utils/assert.hpp"
 
 namespace skyrise {
@@ -107,34 +106,9 @@ inline NullValue operator-(const NullValue&) { return NullValue{}; }
 /**
  * Stream operators
  */
-inline std::ostream& operator<<(std::ostream& stream, const DataType data_type) {
-  return stream << magic_enum::enum_name(data_type);
-}
-inline std::ostream& operator<<(std::ostream& stream, const NullValue) { return stream << "NULL"; }
-inline std::ostream& operator<<(std::ostream& stream, const AllTypeVariant& value) {
-  switch (DataTypeFromAllTypeVariant(value)) {
-    case DataType::kString:
-      stream << "'" << std::get<std::string>(value) << "'";
-      break;
-    case DataType::kInt:
-      stream << std::get<int32_t>(value);
-      break;
-    case DataType::kLong:
-      stream << std::get<int64_t>(value) << "L";
-      break;
-    case DataType::kFloat:
-      stream << std::get<float>(value) << "F";
-      break;
-    case DataType::kDouble:
-      stream << std::get<double>(value);
-      break;
-    default:
-      Fail("Unsupported AllTypeVariant type.");
-      break;
-  }
-
-  return stream;
-}
+std::ostream& operator<<(std::ostream& stream, const DataType data_type);
+std::ostream& operator<<(std::ostream& stream, const NullValue null_value);
+std::ostream& operator<<(std::ostream& stream, const AllTypeVariant& value);
 
 // Hash function required by Boost.ContainerHash
 inline size_t hash_value(const NullValue& /*null_value*/) {

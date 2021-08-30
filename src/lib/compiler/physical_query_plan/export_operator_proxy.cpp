@@ -1,5 +1,7 @@
 #include "export_operator_proxy.hpp"
 
+#include <magic_enum.hpp>
+
 #include "utils/json.hpp"
 
 namespace skyrise {
@@ -25,7 +27,9 @@ std::shared_ptr<AbstractOperatorProxy> ExportOperatorProxy::FromJson(const Aws::
   auto output_format = *magic_enum::enum_cast<ExportOperator::OutputFormat>(json.GetString("output_format"));
 
   auto result = std::make_shared<ExportOperatorProxy>(bucket_name, target_object_key, output_format);
-  result->SetStorageFactory(std::move(storage_factory));
+  if (storage_factory != nullptr) {
+    result->SetStorageFactory(std::move(storage_factory));
+  }
   return result;
 }
 
@@ -42,6 +46,7 @@ std::shared_ptr<AbstractOperator> ExportOperatorProxy::CreateOperatorInstance() 
 }
 
 void ExportOperatorProxy::SetStorageFactory(StorageFactory storage_factory) {
+  Assert(storage_factory != nullptr, "StorageFactory function must be provided.");
   storage_factory_ = std::move(storage_factory);
 }
 

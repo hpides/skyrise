@@ -1,6 +1,7 @@
 #pragma once
 
 #include <aws/core/utils/logging/LogMacros.h>
+#include <magic_enum.hpp>
 
 #include "client/client.hpp"
 #include "metrics_collector.hpp"

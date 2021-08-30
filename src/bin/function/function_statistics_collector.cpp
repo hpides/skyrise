@@ -1,5 +1,7 @@
 #include "function_statistics_collector.hpp"
 
+#include <magic_enum.hpp>
+
 #include "statistics/manifest_writer.hpp"
 #include "statistics/statistics_collector.hpp"
 #include "storage/backend/storage_s3.hpp"
