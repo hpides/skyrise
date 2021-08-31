@@ -14,4 +14,19 @@ bool IsSubset(const std::vector<T>& a, const std::vector<T>& b) {
   return true;
 }
 
+/**
+ * Splits the given vector @param elements into smaller vectors with a maximum size @param chunk_size.
+ */
+template <typename T>
+std::vector<std::vector<T>> SplitVectorIntoChunks(const std::vector<T>& elements, size_t chunk_size) {
+  std::vector<std::vector<T>> chunks;
+  size_t element_count = elements.size();
+  chunks.reserve(element_count / chunk_size + 1);
+  for (size_t i = 0; i < element_count; i += chunk_size) {
+    const auto j = std::min(element_count, i + chunk_size);
+    chunks.emplace_back(elements.begin() + i, elements.begin() + j);
+  }
+  return chunks;
+}
+
 }  // namespace skyrise

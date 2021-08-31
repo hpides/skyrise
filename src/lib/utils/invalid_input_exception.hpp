@@ -1,10 +1,10 @@
 /**
  * Taken and modified from our sister project Hyrise (https://github.com/hyrise/hyrise)
  */
-
 #pragma once
 
-#include <exception>
+#include <stdexcept>
+#include <string>
 
 namespace skyrise {
 
