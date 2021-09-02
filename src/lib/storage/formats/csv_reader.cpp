@@ -1,15 +1,18 @@
 #include "csv_reader.hpp"
 
 #include <cctype>
-#include <cerrno>
-#include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
 
+#include <boost/convert.hpp>
+#include <boost/convert/strtol.hpp>
+
 #include "storage/table/value_segment.hpp"
+
+struct boost::cnv::by_default : public boost::cnv::strtol {};
 
 namespace skyrise {
 
@@ -41,58 +44,14 @@ void Split(std::string_view data, char delimiter,
            (max_split_elements == 0 || split_element_counter < max_split_elements));
 }
 
-// Since we do not have std::from_chars yet, we need to implement zero-copy conversions ourself.
-float ToFloat(std::string_view data) {
-  auto* end_check = static_cast<char*>(nullptr);
-  float result = std::strtof(data.begin(), &end_check);
+template <typename NumberType>
+NumberType ToNumber(std::string_view data) {
+  boost::optional<NumberType> result = boost::convert<NumberType>(data);
 
-  if (result == HUGE_VAL || result == HUGE_VALF || result == HUGE_VALL) {
-    throw std::out_of_range("ToFloat failed.");
+  if (!result.has_value()) {
+    throw std::invalid_argument("ToNumber failed.");
   }
-
-  if (end_check != data.end()) {
-    throw std::invalid_argument("ToFloat failed.");
-  }
-
-  return result;
-}
-
-double ToDouble(std::string_view data) {
-  auto* end_check = static_cast<char*>(nullptr);
-  double result = std::strtod(data.begin(), &end_check);
-
-  if (result == HUGE_VAL || result == HUGE_VALF || result == HUGE_VALL) {
-    throw std::out_of_range("ToDouble failed.");
-  }
-
-  if (end_check != data.end()) {
-    throw std::invalid_argument("ToDouble failed.");
-  }
-
-  return result;
-}
-
-template <typename IntType>
-IntType ToInt(std::string_view data) {
-  auto* end_check = static_cast<char*>(nullptr);
-  long result = std::strtol(data.begin(), &end_check, 10);
-
-  if (errno == ERANGE) {
-    throw std::out_of_range("ToInt failed.");
-  }
-
-  if (end_check != data.end()) {
-    throw std::invalid_argument("ToInt failed.");
-  }
-
-  static_assert(sizeof(IntType) <= sizeof(long));
-  if constexpr (sizeof(IntType) < sizeof(long)) {
-    if (result > std::numeric_limits<IntType>::max() || result < std::numeric_limits<IntType>::min()) {
-      throw std::out_of_range("ToInt failed.");
-    }
-  }
-
-  return result;
+  return result.value();
 }
 
 }  // namespace
@@ -359,13 +318,25 @@ static std::shared_ptr<AbstractSegment> ParseSegmentForDataType(DataType type, s
     case DataType::kString:
       return CreateSegment<std::string>(column, skip_lines, [](std::string_view value) { return std::string(value); });
     case DataType::kLong:
-      return CreateSegment<int64_t>(column, skip_lines, [](std::string_view value) { return ToInt<int64_t>(value); });
+      return CreateSegment<int64_t>(column, skip_lines, [](std::string_view value) {
+        // NOLINTNEXTLINE(clang-analyzer-optin.cplusplus.UninitializedObject)
+        return ToNumber<int64_t>(value);
+      });
     case DataType::kInt:
-      return CreateSegment<int32_t>(column, skip_lines, [](std::string_view value) { return ToInt<int32_t>(value); });
+      return CreateSegment<int32_t>(column, skip_lines, [](std::string_view value) {
+        // NOLINTNEXTLINE(clang-analyzer-optin.cplusplus.UninitializedObject)
+        return ToNumber<int32_t>(value);
+      });
     case DataType::kFloat:
-      return CreateSegment<float>(column, skip_lines, [](std::string_view value) { return ToFloat(value); });
+      return CreateSegment<float>(column, skip_lines, [](std::string_view value) {
+        // NOLINTNEXTLINE(clang-analyzer-optin.cplusplus.UninitializedObject)
+        return ToNumber<float>(value);
+      });
     case DataType::kDouble:
-      return CreateSegment<double>(column, skip_lines, [](std::string_view value) { return ToDouble(value); });
+      return CreateSegment<double>(column, skip_lines, [](std::string_view value) {
+        // NOLINTNEXTLINE(clang-analyzer-optin.cplusplus.UninitializedObject)
+        return ToNumber<double>(value);
+      });
     default:
       Fail("Encountered invalid type");
   }

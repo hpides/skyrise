@@ -49,7 +49,7 @@ TEST_F(CsvReaderTest, TestGoodBehavedExample) {
   ASSERT_EQ(chunk->GetColumnCount(), 2);
 }
 
-TEST_F(CsvReaderTest, TypeInferenceTest) {
+TEST_F(CsvReaderTest, TypeInference) {
   CsvFormatReader csv_reader(storage_.OpenForReading(kWithTypesCsvPath));
   auto chunk = csv_reader.Next();
   ASSERT_FALSE(csv_reader.GetError());
@@ -63,7 +63,7 @@ TEST_F(CsvReaderTest, TypeInferenceTest) {
   ASSERT_EQ(std::get<std::string>((*chunk->GetSegment(4))[0]), "Hel|o");
 }
 
-TEST_F(CsvReaderTest, LineItemContentTest) {
+TEST_F(CsvReaderTest, LineItemContent) {
   auto table_definitions = CreateTableColumnDefinitions();
 
   CsvFormatReaderOptions configuration;
@@ -95,7 +95,7 @@ TEST_F(CsvReaderTest, LineItemContentTest) {
   ASSERT_FALSE(csv_reader.GetError());
 }
 
-TEST_F(CsvReaderTest, LineItemExpectedChunksTest) {
+TEST_F(CsvReaderTest, LineItemExpectedChunks) {
   auto table_definitions = CreateTableColumnDefinitions();
 
   CsvFormatReaderOptions configuration;
@@ -120,7 +120,7 @@ TEST_F(CsvReaderTest, LineItemExpectedChunksTest) {
   ASSERT_FALSE(csv_reader.GetError());
 }
 
-TEST_F(CsvReaderTest, GuessDelimiterTest) {
+TEST_F(CsvReaderTest, GuessDelimiter) {
   const std::vector<std::string_view> example_1 = {"id,text", "4,Hello", "6,world", "3,!"};
   EXPECT_EQ(CsvFormatReader::GuessDelimiter(example_1), ',');
 
@@ -179,7 +179,7 @@ TEST_F(CsvReaderTest, WrongSegmentTypeError) {
   EXPECT_TRUE(csv_reader.HasError());
 }
 
-TEST_F(CsvReaderTest, BuildSchemaNoHeaderTest) {
+TEST_F(CsvReaderTest, BuildSchemaNoHeader) {
   CsvFormatReaderOptions configuration;
   configuration.delimiter = '|';
   configuration.guess_delimiter = false;

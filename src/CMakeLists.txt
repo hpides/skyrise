@@ -29,14 +29,21 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/third_party/boost/libs/config/include
     ${PROJECT_SOURCE_DIR}/third_party/boost/libs/container_hash/include
     ${PROJECT_SOURCE_DIR}/third_party/boost/libs/core/include
+    ${PROJECT_SOURCE_DIR}/third_party/boost/libs/convert/include
     ${PROJECT_SOURCE_DIR}/third_party/boost/libs/detail/include
     ${PROJECT_SOURCE_DIR}/third_party/boost/libs/foreach/include
+    ${PROJECT_SOURCE_DIR}/third_party/boost/libs/function_types/include
     ${PROJECT_SOURCE_DIR}/third_party/boost/libs/integer/include
     ${PROJECT_SOURCE_DIR}/third_party/boost/libs/iterator/include
+    ${PROJECT_SOURCE_DIR}/third_party/boost/libs/math/include
     ${PROJECT_SOURCE_DIR}/third_party/boost/libs/move/include
     ${PROJECT_SOURCE_DIR}/third_party/boost/libs/multi_index/include
     ${PROJECT_SOURCE_DIR}/third_party/boost/libs/mpl/include
+    ${PROJECT_SOURCE_DIR}/third_party/boost/libs/mp11/include
+    ${PROJECT_SOURCE_DIR}/third_party/boost/libs/optional/include
     ${PROJECT_SOURCE_DIR}/third_party/boost/libs/preprocessor/include
+    ${PROJECT_SOURCE_DIR}/third_party/boost/libs/parameter/include
+    ${PROJECT_SOURCE_DIR}/third_party/boost/libs/range/include
     ${PROJECT_SOURCE_DIR}/third_party/boost/libs/serialization/include
     ${PROJECT_SOURCE_DIR}/third_party/boost/libs/static_assert/include
     ${PROJECT_SOURCE_DIR}/third_party/boost/libs/throw_exception/include
