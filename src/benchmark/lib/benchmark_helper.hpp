@@ -7,7 +7,6 @@
 #include <aws/core/Aws.h>
 #include <aws/core/utils/json/JsonSerializer.h>
 
-#include "benchmark_runner.hpp"
 #include "client/client.hpp"
 
 namespace skyrise {

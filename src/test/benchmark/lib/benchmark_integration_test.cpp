@@ -1,20 +1,20 @@
 #include <gtest/gtest.h>
 
-#include "benchmark.hpp"
 #include "benchmark_helper.hpp"
-#include "benchmark_runner.hpp"
 #include "client/client.hpp"
-#include "function_colocation_benchmark.hpp"
-#include "function_warm_up_benchmark.hpp"
-#include "function_warm_up_continuous_benchmark.hpp"
-#include "idle_availability_benchmark.hpp"
-#include "idle_lifetime_benchmark.hpp"
-#include "invocation_latency_benchmark.hpp"
-#include "invocation_throughput_benchmark.hpp"
+#include "lambda/function_colocation_benchmark.hpp"
+#include "lambda/function_warm_up_benchmark.hpp"
+#include "lambda/function_warm_up_continuous_benchmark.hpp"
+#include "lambda/idle_availability_benchmark.hpp"
+#include "lambda/idle_lifetime_benchmark.hpp"
+#include "lambda/invocation_latency_benchmark.hpp"
+#include "lambda/invocation_throughput_benchmark.hpp"
+#include "lambda/lambda_benchmark.hpp"
+#include "lambda/lambda_benchmark_runner.hpp"
+#include "lambda/network_latency_benchmark.hpp"
+#include "lambda/network_throughput_benchmark.hpp"
+#include "lambda/network_throughput_parallel_benchmark.hpp"
 #include "lib/testing/aws_test.hpp"
-#include "network_latency_benchmark.hpp"
-#include "network_throughput_benchmark.hpp"
-#include "network_throughput_parallel_benchmark.hpp"
 #include "utils/costs/cost_calculator.hpp"
 
 namespace skyrise {
@@ -25,15 +25,15 @@ class AwsBenchmarkIntegrationTest : public ::testing::Test {
     client_ = std::make_shared<Client>();
 
     cost_calculator_ = std::make_shared<CostCalculator>(client_->GetPricingClient(), client_->GetClientRegion());
-    benchmark_runner_ = std::make_shared<BenchmarkRunner>(client_->GetIAMClient(), client_->GetLambdaClient(),
-                                                          client_->GetSQSClient(), cost_calculator_);
+    benchmark_runner_ = std::make_shared<LambdaBenchmarkRunner>(client_->GetIAMClient(), client_->GetLambdaClient(),
+                                                                client_->GetSQSClient(), cost_calculator_);
     benchmark_helper_ = std::make_shared<BenchmarkHelper>(client_->GetS3Client());
   }
 
   [[nodiscard]] const Client& GetClient() const { return *client_; }
 
   [[nodiscard]] std::shared_ptr<CostCalculator> GetCostCalculator() const { return cost_calculator_; }
-  [[nodiscard]] std::shared_ptr<BenchmarkRunner> GetBenchmarkRunner() const { return benchmark_runner_; }
+  [[nodiscard]] std::shared_ptr<LambdaBenchmarkRunner> GetBenchmarkRunner() const { return benchmark_runner_; }
   [[nodiscard]] std::shared_ptr<BenchmarkHelper> GetBenchmarkHelper() const { return benchmark_helper_; }
 
  private:
@@ -42,7 +42,7 @@ class AwsBenchmarkIntegrationTest : public ::testing::Test {
   std::shared_ptr<Client> client_;
 
   std::shared_ptr<CostCalculator> cost_calculator_;
-  std::shared_ptr<BenchmarkRunner> benchmark_runner_;
+  std::shared_ptr<LambdaBenchmarkRunner> benchmark_runner_;
   std::shared_ptr<BenchmarkHelper> benchmark_helper_;
 };
 

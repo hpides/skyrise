@@ -205,6 +205,7 @@ set(
     COORDINATOR_SOURCES
     client/client.cpp
     client/client.hpp
+    cloud_function/function_config.hpp
     configuration.hpp
     coordinator.cpp
     coordinator.hpp

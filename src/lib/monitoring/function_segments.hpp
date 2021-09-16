@@ -4,8 +4,6 @@
 
 #include <aws/xray/XRayClient.h>
 
-#include "benchmark_runner.hpp"
-
 namespace skyrise {
 
 using LambdaSegmentDurations = std::map<Aws::String, std::chrono::duration<double>>;

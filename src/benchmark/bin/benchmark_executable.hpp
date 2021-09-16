@@ -4,10 +4,10 @@
 
 #include <cxxopts.hpp>
 
-#include "benchmark.hpp"
+#include "abstract_benchmark.hpp"
 #include "benchmark_helper.hpp"
-#include "benchmark_runner.hpp"
 #include "client/client.hpp"
+#include "lambda/lambda_benchmark_runner.hpp"
 #include "utils/costs/cost_calculator.hpp"
 
 class BenchmarkExecutable {
@@ -22,9 +22,9 @@ class BenchmarkExecutable {
   std::shared_ptr<const skyrise::CostCalculator> GetCostCalculator() const;
   std::shared_ptr<const skyrise::BenchmarkHelper> GetBenchmarkHelper() const;
 
-  std::shared_ptr<skyrise::BenchmarkRunner> GetBenchmarkRunner() const;
+  std::shared_ptr<skyrise::LambdaBenchmarkRunner> GetLambdaBenchmarkRunner() const;
 
-  void ExecuteBenchmark(const std::shared_ptr<skyrise::Benchmark>& benchmark);
+  void ExecuteBenchmark(const std::shared_ptr<skyrise::AbstractBenchmark>& benchmark);
 
  private:
   void InitializeClients();
@@ -41,5 +41,5 @@ class BenchmarkExecutable {
   std::shared_ptr<const skyrise::CostCalculator> cost_calculator_;
   std::shared_ptr<const skyrise::BenchmarkHelper> benchmark_helper_;
 
-  std::shared_ptr<skyrise::BenchmarkRunner> benchmark_runner_;
+  std::shared_ptr<skyrise::LambdaBenchmarkRunner> benchmark_runner_;
 };

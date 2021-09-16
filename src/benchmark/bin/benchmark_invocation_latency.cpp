@@ -1,5 +1,5 @@
 #include "benchmark_executable.hpp"
-#include "invocation_latency_benchmark.hpp"
+#include "lambda/invocation_latency_benchmark.hpp"
 
 int main(int argc, char* argv[]) {
   try {

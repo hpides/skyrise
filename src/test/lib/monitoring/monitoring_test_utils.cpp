@@ -18,7 +18,7 @@ namespace skyrise {
 // TODO(anyone): Consolidate common utility functions in lib/utils
 void UploadFunction(const std::shared_ptr<Client>& client, const std::string& package_name,
                     const std::string& function_name, const std::string& role_name, bool enable_tracing) {
-  // TODO(anyone): Use GetProjectDirPath() currently residing in BenchmarkConfig for more robustness
+  // TODO(anyone): Use GetProjectDirPath() currently residing in LambdaBenchmarkConfig for more robustness
   const Aws::String function_path = "./pkg/" + package_name + ".zip";
   std::ifstream infile(function_path, std::ios::in | std::ios::binary);
 

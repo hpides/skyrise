@@ -1,5 +1,5 @@
 #include "benchmark_executable.hpp"
-#include "idle_availability_benchmark.hpp"
+#include "lambda/idle_availability_benchmark.hpp"
 
 int main(int argc, char* argv[]) {
   try {

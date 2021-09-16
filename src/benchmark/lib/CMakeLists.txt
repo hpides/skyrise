@@ -1,17 +1,13 @@
 set(
     BENCHMARK_SOURCES
-    benchmark.cpp
-    benchmark.hpp
-    benchmark_config.cpp
-    benchmark_config.hpp
+    abstract_benchmark_config.hpp
+    abstract_benchmark_result.hpp
+    abstract_benchmark_runner.hpp
+    abstract_benchmark.hpp
     benchmark_helper.cpp
     benchmark_helper.hpp
     benchmark_result_aggregate.cpp
     benchmark_result_aggregate.hpp
-    benchmark_result.cpp
-    benchmark_result.hpp
-    benchmark_runner.cpp
-    benchmark_runner.hpp
     compression/compressor.cpp
     compression/compressor.hpp
     compression/decompressor.cpp
@@ -22,32 +18,39 @@ set(
     data_generation/table_builder.hpp
     data_generation/tpch/tpch_generator.hpp
     data_generation/tpch/tpch_generator.cpp
-    function_colocation_benchmark.cpp
-    function_colocation_benchmark.hpp
-    function_config.hpp
-    function_invocation_config.hpp
-    function_warm_up_benchmark.cpp
-    function_warm_up_benchmark.hpp
-    function_warm_up_continuous_benchmark.cpp
-    function_warm_up_continuous_benchmark.hpp
-    idle_availability_benchmark.cpp
-    idle_availability_benchmark.hpp
-    idle_lifetime_benchmark.cpp
-    idle_lifetime_benchmark.hpp
-    invocation_latency_benchmark.hpp
-    invocation_latency_benchmark.cpp
-    invocation_throughput_benchmark.cpp
-    invocation_throughput_benchmark.hpp
-    log_result.cpp
-    log_result.hpp
-    network_benchmark.cpp
-    network_benchmark.hpp
-    network_latency_benchmark.cpp
-    network_latency_benchmark.hpp
-    network_throughput_benchmark.cpp
-    network_throughput_benchmark.hpp
-    network_throughput_parallel_benchmark.cpp
-    network_throughput_parallel_benchmark.hpp
+    lambda/function_colocation_benchmark.cpp
+    lambda/function_colocation_benchmark.hpp
+    lambda/function_invocation_config.hpp
+    lambda/function_warm_up_benchmark.cpp
+    lambda/function_warm_up_benchmark.hpp
+    lambda/function_warm_up_continuous_benchmark.cpp
+    lambda/function_warm_up_continuous_benchmark.hpp
+    lambda/idle_availability_benchmark.cpp
+    lambda/idle_availability_benchmark.hpp
+    lambda/idle_lifetime_benchmark.cpp
+    lambda/idle_lifetime_benchmark.hpp
+    lambda/invocation_latency_benchmark.hpp
+    lambda/invocation_latency_benchmark.cpp
+    lambda/invocation_throughput_benchmark.cpp
+    lambda/invocation_throughput_benchmark.hpp
+    lambda/lambda_benchmark_config.cpp
+    lambda/lambda_benchmark_config.hpp
+    lambda/lambda_benchmark_result.cpp
+    lambda/lambda_benchmark_result.hpp
+    lambda/lambda_benchmark_runner.cpp
+    lambda/lambda_benchmark_runner.hpp
+    lambda/lambda_benchmark.cpp
+    lambda/lambda_benchmark.hpp
+    lambda/log_result.cpp
+    lambda/log_result.hpp
+    lambda/network_benchmark.cpp
+    lambda/network_benchmark.hpp
+    lambda/network_latency_benchmark.cpp
+    lambda/network_latency_benchmark.hpp
+    lambda/network_throughput_benchmark.cpp
+    lambda/network_throughput_benchmark.hpp
+    lambda/network_throughput_parallel_benchmark.cpp
+    lambda/network_throughput_parallel_benchmark.hpp
 )
 
 set(

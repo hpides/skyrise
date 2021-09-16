@@ -7,13 +7,13 @@ include_directories(
 # Sources
 set(
     TEST_SOURCES
-    benchmark/lib/benchmark_test.cpp
     benchmark/lib/benchmark_integration_test.cpp
     benchmark/lib/benchmark_result_aggregate_test.cpp
-    benchmark/lib/benchmark_result_test.cpp
-    benchmark/lib/benchmark_runner_test.cpp
     benchmark/lib/compression/compression_test.cpp
     benchmark/lib/data_generation/tpch_test.cpp
+    benchmark/lib/lambda/lambda_benchmark_result_test.cpp
+    benchmark/lib/lambda/lambda_benchmark_runner_test.cpp
+    benchmark/lib/lambda/lambda_benchmark_test.cpp
 
     lib/compiler/physical_query_plan/pqp_serialization_test.cpp
     lib/compiler/physical_query_plan/operator_proxy_test.cpp

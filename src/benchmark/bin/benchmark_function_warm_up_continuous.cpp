@@ -1,5 +1,5 @@
 #include "benchmark_executable.hpp"
-#include "function_warm_up_continuous_benchmark.hpp"
+#include "lambda/function_warm_up_continuous_benchmark.hpp"
 
 int main(int argc, char* argv[]) {
   try {
