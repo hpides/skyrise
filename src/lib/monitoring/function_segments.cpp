@@ -176,7 +176,7 @@ LambdaSegmentDurations FunctionSegmentsAnalyzer::CalculateLambdaSegmentDurations
               ? lambda_segment_durations["initialization_remainder"]
               : subsegment_start - lambda_start;
       lambda_segment_durations["function_execution"] = subsegment_end - subsegment_start;
-    } else if (subsegment_name.find_first_of("AWS::") != 0) {
+    } else if (subsegment_name.find("AWS::") != 0) {
       lambda_segment_durations[subsegment_name] = subsegment_end - subsegment_start;
     }
   }

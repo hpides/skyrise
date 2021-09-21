@@ -103,7 +103,20 @@ TEST_F(AwsBenchmarkIntegrationTest, skyriseBenchmarkIdleLifetime) {
   EXPECT_EQ(benchmark_result.GetLength(), 3);
 }
 
-// TODO(maltenbergert): Add test for InvocationLatencyBenchmark
+TEST_F(AwsBenchmarkIntegrationTest, InvocationLatencyBenchmark) {
+  const std::vector<size_t> function_instance_mb_sizes = {128};
+  const std::vector<size_t> invocation_counts = {16};
+  const std::vector<bool> warm_modes = {true, false};
+  const std::vector<size_t> sleep_ms_durations = {4000};
+  const size_t repetition_count = 1;
+
+  auto benchmark = std::make_shared<skyrise::InvocationLatencyBenchmark>(
+      GetClient().GetXRayClient(), GetBenchmarkHelper(), GetCostCalculator(), function_instance_mb_sizes,
+      invocation_counts, warm_modes, sleep_ms_durations, repetition_count);
+
+  const auto benchmark_result = benchmark->Run(GetBenchmarkRunner());
+  EXPECT_EQ(benchmark_result.GetLength(), 26);
+}
 
 TEST_F(AwsBenchmarkIntegrationTest, InvocationThroughputBenchmark) {
   const std::vector<size_t> function_instance_mb_sizes = {128};

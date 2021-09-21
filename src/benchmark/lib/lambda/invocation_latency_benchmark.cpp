@@ -95,6 +95,7 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> InvocationLatencyBenchmark::OnRun
 
     for (auto& future_segment_result : *config_result_segments_futures) {
       auto latency_segments = future_segment_result.second.get();
+
       // Use functions with initialization for coldstart testing and without initialization for warmstart testing
       if ((benchmark_parameters.warm_mode
                ? latency_segments["initialization"].count() == 0 && latency_segments["function_total"].count() > 0
@@ -228,6 +229,8 @@ long double InvocationLatencyBenchmark::CalculateBenchmarkCost(
 
   return lambda_cost + xray_cost;
 }
+
+// TODO(anyone): Add sleep_ms_duration and other benchmark parameters to JSON
 
 Aws::Utils::Json::JsonValue InvocationLatencyBenchmark::GenerateResultOutput(
     const std::shared_ptr<LambdaBenchmarkResult>& benchmark_result,

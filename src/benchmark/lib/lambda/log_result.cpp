@@ -13,7 +13,7 @@ LogResult::LogResult(const std::string& log_result_encoded) {
                                        log_result_chars.GetLength());
 
   for (const auto& log_result_key : GetAllLogResultKeys()) {
-    const std::regex metric_regex("REPORT.+?" + ToString(log_result_key) + ": ([^\\s]+)");
+    const std::regex metric_regex("REPORT[\\s\\S]+?" + ToString(log_result_key) + ": ([^\\s]+)");
     std::smatch metric_match;
     const bool is_match = std::regex_search(log_result_decoded, metric_match, metric_regex);
 
