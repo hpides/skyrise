@@ -195,6 +195,7 @@ add_dependencies(skyriseSharedLibrary check_git)
 target_link_libraries(skyriseSharedLibrary PUBLIC ${SHARED_LIBRARIES})
 
 add_library(skyriseShared INTERFACE)
+
 target_link_libraries(skyriseShared
     INTERFACE
     skyriseSharedLibrary

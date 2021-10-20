@@ -148,6 +148,13 @@ add_executable(
     partition_microbenchmark.cpp
 )
 
+target_compile_options(
+    skyriseMicrobenchmarks
+
+    PUBLIC
+    -Wno-deprecated-declarations
+)
+
 target_link_libraries(
     skyriseMicrobenchmarks
 
