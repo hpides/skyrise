@@ -49,20 +49,3 @@ Similarly, offline tests can be excluded from execution as well:
 ```bash
 script/docker/run_tests.sh --gtest_filter=Aws*
 ```
-
-## Maintainers
-
-- [Thomas Bodner](https://hpi.de/plattner/people/phd-students/thomas-bodner.html)
-
-## Contributors
-
-- [Fabian Engel](https://github.com/engelfa)
-- [David Justen](https://github.com/d-justen)
-- [Jakob Köhler](https://github.com/jkhlr)
-- [Tobias Maltenberger](https://github.com/maltenbergert)
-- [Jan Mensch](https://github.com/CAJan93)
-- [Julian Menzler](https://github.com/julianmenzler)
-- [Timon Millich](https://github.com/tmillich)
-- [Theo Radig](https://github.com/TheoRadig)
-- [Pascal Schulze](https://github.com/pscls)
-- [Jan Siebert](https://github.com/JanSiebert)
