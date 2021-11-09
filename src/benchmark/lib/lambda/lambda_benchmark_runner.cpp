@@ -7,6 +7,7 @@
 #include <mutex>
 #include <regex>
 #include <string>
+#include <thread>
 #include <utility>
 
 #include <aws/core/utils/json/JsonSerializer.h>

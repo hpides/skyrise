@@ -5,7 +5,7 @@ if (buildNumber > 1)
   milestone(buildNumber - 1)
 milestone(buildNumber)
 
-DOCKER_IMAGE_CREATION_DATE = '20210423'
+DOCKER_IMAGE_CREATION_DATE = '20211029'
 
 FULL_CI = buildWithFullCi()
 if (FULL_CI) {

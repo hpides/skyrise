@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <fstream>
+#include <thread>
 
 #include <aws/core/Aws.h>
 #include <aws/core/utils/crypto/CryptoBuf.h>

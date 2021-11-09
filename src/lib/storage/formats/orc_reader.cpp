@@ -292,13 +292,13 @@ std::unique_ptr<Chunk> OrcFormatReader::Next() {
 }
 
 std::string OrcFormatReader::OrcTimestampToDateString(int32_t num_days_since_1970) {
-  time_t seconds_since_1970 = static_cast<time_t>(num_days_since_1970) * (60 * 60 * 24);
+  time_t seconds_since_1970 = static_cast<time_t>(num_days_since_1970) * static_cast<time_t>(60 * 60 * 24);
   tm calendar_date{};
   std::array<char, 11> buffer = {0};  // YYYY-mm-dd + '\0'
   gmtime_r(&seconds_since_1970, &calendar_date);
   strftime(buffer.data(), 11, "%Y-%m-%d", &calendar_date);
 
-  return std::string(buffer.data());
+  return {buffer.data()};
 }
 
 DataType OrcFormatReader::OrcTypeKindToDataType(orc::TypeKind type, bool date_as_string) {

@@ -20,8 +20,8 @@ time_t TablePartition::LastModifiedTimestamp() const { return last_modified_time
 
 TablePartition TablePartition::FromObjectStatus(const ObjectStatus& object_status) {
   Assert(!object_status.GetError().IsError(), "ObjectStatus states errors.");
-  return TablePartition(object_status.GetIdentifier(), object_status.GetChecksum(), object_status.GetSize(),
-                        object_status.GetLastModifiedTimestamp());
+  return {object_status.GetIdentifier(), object_status.GetChecksum(), object_status.GetSize(),
+          object_status.GetLastModifiedTimestamp()};
 }
 
 }  // namespace skyrise

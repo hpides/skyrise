@@ -1,9 +1,7 @@
 add_compile_options(
-    -Wno-array-bounds
-    -Wno-extra-semi-stmt
+    -Wno-reserved-identifier
     -Wno-suggest-destructor-override
     -Wno-suggest-override
-    -Wno-unused-parameter
 )
 
 set(CMAKE_INSTALL_PREFIX ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
@@ -14,22 +12,9 @@ set(ENABLE_LTO ON CACHE BOOL "Enable LTO for AWS Lambda runtmie for C++")
 set(ENABLE_TESTS OFF CACHE BOOL "Enable tests for AWS Lambda runtime for C++")
 add_subdirectory(aws-lambda-cpp)
 
-# aws-sdk-cpp
-set(BUILD_ONLY iam;lambda;monitoring;pricing;s3;sqs;xray)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "Enable shared libraries for AWS SDK for C++")
-set(CPP_STANDARD 17)
-set(CUSTOM_MEMORY_MANAGEMENT OFF)
-set(ENABLE_TESTING OFF CACHE BOOL "Enable tests for AWS SDK for C++")
-set(MINIMIZE_SIZE ON CACHE BOOL "Enable unity build and other binary size reduction measures for AWS SDK for C++")
-set(TARGET_ARCH LINUX)
-add_subdirectory(aws-sdk-cpp)
-
 # benchmark
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Enable testing of the benchmark library.")
 add_subdirectory(benchmark)
-
-# Boost libraries
-add_subdirectory(boost)
 
 # googletest
 add_subdirectory(googletest)

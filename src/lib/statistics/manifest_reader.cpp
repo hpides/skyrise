@@ -7,7 +7,6 @@
 namespace skyrise {
 
 ManifestReader::ManifestReader(std::unique_ptr<ObjectReader> source) : OrcFormatReader(std::move(source)) {
-  current_partition_index_ = 0;
   ReconstructStatisticsFromChunk(Next());
 }
 

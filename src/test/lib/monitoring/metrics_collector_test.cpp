@@ -1,6 +1,7 @@
 #include "monitoring/metrics_collector.hpp"
 
 #include <chrono>
+#include <thread>
 
 #include <aws/core/Aws.h>
 #include <aws/sqs/SQSClient.h>

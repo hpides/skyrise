@@ -1,6 +1,7 @@
 #include "function_segments.hpp"
 
 #include <algorithm>
+#include <thread>
 
 #include <aws/core/utils/json/JsonSerializer.h>
 #include <aws/core/utils/logging/LogMacros.h>

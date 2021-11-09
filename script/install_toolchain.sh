@@ -6,33 +6,36 @@ if [[ "$unamestr" == 'Linux' ]]; then
     if [ -f /etc/lsb-release ] && cat /etc/lsb-release | grep DISTRIB_ID | grep Ubuntu >/dev/null; then
         echo "Installing toolchain..."   
         if sudo apt-get update >/dev/null; then
-            if [[ "$(lsb_release -sr)" == "21.04" ]]; then
+            if [[ "$(lsb_release -sr)" == "21.10" ]]; then
                 sudo apt-get install --no-install-recommends -y \
                 binutils-dev \
                 ca-certificates \
                 ccache \
-                clang-12 \
-                clang-format-12 \
-                clang-tidy-12 \
+                clang-13 \
+                clang-format-13 \
+                clang-tidy-13 \
                 cmake \
                 cppcheck \
                 curl \
-                g++-10 \
-                gcc-10 \
+                g++-11 \
+                gcc-11 \
                 git \
+                libboost-all-dev \
                 libcurl4-openssl-dev \
                 libssl-dev \
                 make \
+                ninja-build \
                 python3 \
                 python3-pip \
                 uuid-dev \
+                wget \
                 zip \
                 zlib1g-dev
                 
-                sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 120 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-12
-                sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-12 120
-                sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-12 120
-                sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 103 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+                sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-13 130 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-13
+                sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-13 130
+                sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-13 130
+                sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 112 --slave /usr/bin/g++ g++ /usr/bin/g++-11
 
                 pip3 install --no-input --quiet \
                 cpplint \
@@ -44,7 +47,7 @@ if [[ "$unamestr" == 'Linux' ]]; then
                 sudo mkdir -p /etc/pki/tls/certs
                 sudo ln -s /etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt
             else
-                echo "Error: Ubuntu version must be 21.04"
+                echo "Error: Ubuntu version must be 21.10"
                 exit 1
             fi
         else

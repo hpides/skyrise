@@ -53,7 +53,7 @@ static ObjectStatus GetFileStatus(const std::string& filename, size_t num_charac
   }
 
   // We do not get a proper hash at this point, so we will return the filename itself for now
-  return ObjectStatus(filename.substr(num_characters_hidden), last_modified, filename, buffer.st_size);
+  return {filename.substr(num_characters_hidden), last_modified, filename, static_cast<size_t>(buffer.st_size)};
 }
 
 FilesystemWriter::FilesystemWriter(const std::string& filename) {

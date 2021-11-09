@@ -12,13 +12,13 @@ namespace skyrise {
 NetworkInterface NetworkInterface::GetFirstInterface() {
   ifaddrs* interface_addresses = nullptr;
   if (getifaddrs(&interface_addresses) == 0) {
-    return NetworkInterface(std::shared_ptr<ifaddrs>(interface_addresses, [](ifaddrs* p) { freeifaddrs(p); }));
+    return {std::shared_ptr<ifaddrs>(interface_addresses, [](ifaddrs* p) { freeifaddrs(p); })};
   }
-  return NetworkInterface(nullptr);
+  return {nullptr};
 }
 
 NetworkInterface NetworkInterface::Next() {
-  return NetworkInterface(interface_address_list_head_, current_interface_address_->ifa_next);
+  return {interface_address_list_head_, current_interface_address_->ifa_next};
 }
 
 bool NetworkInterface::IsIpv6LinkLocalAddress() {
@@ -42,17 +42,16 @@ FunctionHostInformationCollector::FunctionHostInformationCollector(
     : config_(config) {}
 
 FunctionHostInformationIdentification FunctionHostInformationCollector::CollectInformationIdentification() {
-  return FunctionHostInformationIdentification{Id(), IpPrivate(), IpPublic()};
+  return {Id(), IpPrivate(), IpPublic()};
 }
 
 FunctionHostInformationEnvironment FunctionHostInformationCollector::CollectInformationEnvironment() {
-  return FunctionHostInformationEnvironment{OperatingSystemDetails(), FileSystemDetails(), BootTimeSeconds(),
-                                            UptimeSeconds()};
+  return {OperatingSystemDetails(), FileSystemDetails(), BootTimeSeconds(), UptimeSeconds()};
 }
 
 FunctionHostInformationResources FunctionHostInformationCollector::CollectInformationResources() {
   const auto cpu_info = CpuInformation();
-  return FunctionHostInformationResources{cpu_info.cpu_count, cpu_info.cpu_model, cpu_info.cpu_features, RamSizeMb()};
+  return {cpu_info.cpu_count, cpu_info.cpu_model, cpu_info.cpu_features, RamSizeMb()};
 }
 
 FunctionHostInformationResourceUsage FunctionHostInformationCollector::CollectInformationResourceUsage() {
