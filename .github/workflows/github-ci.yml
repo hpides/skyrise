@@ -1,0 +1,159 @@
+name: github-ci
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+jobs:
+  format-check:
+    runs-on: [self-hosted, amazonlinux2]
+    name: "Format Check"
+    steps:
+      - uses: actions/checkout@v2
+      - name: "C++ Format Check"
+        run: "python3 script/run_clang_format.py --clang_format_binary clang-format --source_dir src --quiet"
+      - name: "Python Format Check"
+        run: "yapf --diff --recursive --parallel script"
+  
+  clang-debug-build:
+    runs-on: [self-hosted, amazonlinux2]
+    name: "Clang Debug Build on Amazon Linux 2"
+    needs: format-check
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      
+      - name: "CMake Debug Configure"
+        run: |
+          mkdir cmake-build-debug
+          cd cmake-build-debug
+          cmake .. -GNinja \
+            -DCMAKE_C_COMPILER=/usr/bin/clang \
+            -DCMAKE_CXX_COMPILER=/usr/bin/clang++ \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DSKYRISE_ENABLE_CCACHE=OFF \
+            -DSKYRISE_ENABLE_CLANG_TIDY=OFF \
+            -DSKYRISE_ENABLE_LLVM_COV=ON
+      
+      - name: "Build"
+        run: |
+          cd cmake-build-debug
+          ninja-build all -j$(nproc)
+      
+      - name: "Test w/o Aws"
+        env:
+          LLVM_PROFILE_FILE: skyriseTest_without_aws.profraw
+        run: |
+          cd cmake-build-debug
+          bin/skyriseTest --gtest_filter=-Aws* --gtest_output="xml:test-results-without-aws.xml"
+      
+      # We run all tests only if we see a 'full-ci'-label or have pushed to the master.
+      - name: "Test w/ Aws"
+        if: contains(github.event.pull_request.labels.*.name, 'full-ci') || github.event_name == 'push'
+        env:
+          LLVM_PROFILE_FILE: skyriseTest_with_aws.profraw 
+        run: |
+          cd cmake-build-debug
+          bin/skyriseTest --gtest_filter=Aws* --gtest_output="xml:test-results-with-aws.xml"
+      
+      # Coverage is only determined if all tests have been run.
+      - name: "Calculate Code Coverage"
+        if: contains(github.event.pull_request.labels.*.name, 'full-ci') || github.event_name == 'push'
+        run: |
+          cd cmake-build-debug
+          llvm-profdata merge \
+            -sparse skyriseTest_without_aws.profraw skyriseTest_with_aws.profraw \
+            -o skyriseTest.profdata
+          llvm-cov show -format=html -ignore-filename-regex="(third_party|test)" \
+            -output-dir=coverage -instr-profile=skyriseTest.profdata bin/skyriseTest
+          llvm-cov report -summary-only -ignore-filename-regex="(third_party|test)" \
+              -instr-profile=skyriseTest.profdata bin/skyriseTest | tail -n1 -c47 | head -c6 \
+              > coverage_percentage.txt
+          cat coverage_percentage.txt
+      
+      # In a PR, we want to fail if we have commited a higher code coverage before.
+      - name: Compare Code Coverage
+        uses: ./.github/actions/master-coverage-check
+        if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'full-ci')
+        with:
+          coverage-file-name: cmake-build-debug/coverage_percentage.txt
+          s3-object-name: skyrise-ci-bucket/coverage_percentage.txt
+          region: us-east-1
+          mode: compare
+
+      # We commit the code coverage if we are the new master.
+      - name: Commit Code Coverage
+        uses: ./.github/actions/master-coverage-check
+        if: github.event_name == 'push'
+        with:
+          coverage-file-name: cmake-build-debug/coverage_percentage.txt
+          s3-object-name: skyrise-ci-bucket/coverage_percentage.txt
+          region: us-east-1
+          mode: commit
+
+      # In PRs, we store a summary of the code coverage.
+      - name: Archive code coverage results
+        if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'full-ci')
+        uses: actions/upload-artifact@v2
+        with:
+          name: code-coverage-report
+          path: cmake-build-debug/coverage/index.html
+  
+  clang-release-build:
+    runs-on: [self-hosted, amazonlinux2]
+    name: "Clang Release Build on Amazon Linux 2"
+    needs: format-check
+    if: contains(github.event.pull_request.labels.*.name, 'full-ci') && github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      - name: "CMake Release Configure"
+        run: |
+          mkdir cmake-build-release
+          cd cmake-build-release
+          cmake .. -GNinja \
+            -DCMAKE_C_COMPILER=/usr/bin/clang \
+            -DCMAKE_CXX_COMPILER=/usr/bin/clang++ \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DSKYRISE_ENABLE_CCACHE=OFF
+      - name: "Build"
+        run: |
+          cd cmake-build-release
+          ninja-build all -j$(nproc)
+  
+  ubuntu-debug-build:
+    runs-on: [self-hosted, ubuntu]
+    name: "GCC Debug Build on Ubuntu"
+    needs: format-check
+    if: contains(github.event.pull_request.labels.*.name, 'full-ci') && github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      - name: "GCC Debug Configure"
+        run: |
+          mkdir cmake-build-debug
+          cd cmake-build-debug
+          cmake .. -GNinja \
+            -DCMAKE_C_COMPILER=/usr/bin/gcc \
+            -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DSKYRISE_ENABLE_CCACHE=OFF
+      - name: "Build"
+        run: |
+          cd cmake-build-debug
+          ninja all -j$(nproc)
+
+  full-ci-filter:
+    runs-on: [self-hosted]
+    if: github.event_name == 'pull_request'
+    name: "Full CI Label Set"
+    steps:
+      - name: "Has full-ci label"
+        if: contains(github.event.pull_request.labels.*.name, 'full-ci')
+        run: true
+      - name: "Has no full-ci label"
+        if: (!contains(github.event.pull_request.labels.*.name, 'full-ci'))
+        run: false

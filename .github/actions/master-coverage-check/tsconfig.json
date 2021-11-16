@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    // Language and Environment:
+    "lib": ["es6", "dom"],    
+    "target": "es6",
+
+    // Modules:
+    "module": "commonjs",
+    "rootDir": "./src",    
+
+    // Emit:
+    "outDir": "./lib",
+
+    // Type Checking:
+    "noImplicitAny": false,
+    "strict": true,
+
+    // Interop Constraints:
+    "esModuleInterop": true
+  },
+  
+  // Ignore files:
+  "exclude": ["./lib", "./dist", "./node_modules"]
+}

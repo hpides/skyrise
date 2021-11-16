@@ -1,0 +1,21 @@
+name: 'Master Coverage Check'
+description: 'Compares test code coverage of a local branch with the master branch.'
+inputs:
+  coverage-file-name:
+    description: 'Local file that contains the current code coverage. The format is expected to match ^[0-9]+%$.'
+    required: true
+    default: 'coverage.txt'
+  s3-object-name:
+    description: 'Amazon S3 object (bucket/key) that contains the last code coverage. The format is expected to match ^[0-9]+%$.'
+    required: true
+  mode:
+    description: 'Either commit or compare'
+    required: true
+    default: 'compare'
+  region:
+    description: 'Region of the S3 bucket to read from.'
+    required: true
+    default: 'us-east-1'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'

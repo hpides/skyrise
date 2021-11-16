@@ -1,0 +1,26 @@
+{
+  "name": "master-coverage-check",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/main.js",
+  "scripts": {
+    "build": "tsc",
+    "pack": "ncc build -m -C",
+    "all": "npm run build && npm run pack"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@actions/core": "^1.6.0",
+    "@actions/exec": "^1.0.1",
+    "@actions/github": "^5.0.0",
+    "@actions/io": "^1.0.1",
+    "@aws-sdk/client-s3": "^3.38.0"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.31.1",
+    "@types/node": "^12.12.50",
+    "typescript": "^4.4"
+  }
+}
