@@ -1,15 +1,21 @@
 name: github-ci
 on:
   pull_request:
+    types:
+    - opened
+    - reopened
+    - synchronize
+    - ready_for_review
   push:
     branches:
       - master
 concurrency: 
-  group: ${{ github.head_ref }}
+  group: group-${{ github.head_ref }}
   cancel-in-progress: true
 jobs:
   format-check:
     runs-on: [self-hosted, amazonlinux2]
+    if: github.event_name == 'push' || !github.event.pull_request.draft
     name: "Format Check"
     steps:
       - uses: actions/checkout@v2
@@ -150,8 +156,12 @@ jobs:
           ninja all -j$(nproc)
 
   full-ci-filter:
+    # This job prevents PRs from being merged that have not run and passed the full CI pipeline. The job only succeeds
+    # when the "full-ci" label is set. This is necessary because most other jobs are skipped without the label, and thus
+    # do not fail and block the merge. This job may be skipped for draft PRs, since they cannot be merged anyhow.
+
     runs-on: [self-hosted]
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && !github.event.pull_request.draft
     name: "Full CI Label Set"
     steps:
       - name: "Has full-ci label"
