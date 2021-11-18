@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master
+concurrency: 
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
 jobs:
   format-check:
     runs-on: [self-hosted, amazonlinux2]
@@ -72,6 +75,14 @@ jobs:
               > coverage_percentage.txt
           cat coverage_percentage.txt
       
+      # In PRs, we store a summary of the code coverage.
+      - name: Archive code coverage results
+        if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'full-ci')
+        uses: actions/upload-artifact@v2
+        with:
+          name: code-coverage-report
+          path: cmake-build-debug/coverage/
+
       # In a PR, we want to fail if we have commited a higher code coverage before.
       - name: Compare Code Coverage
         uses: ./.github/actions/master-coverage-check
@@ -91,14 +102,6 @@ jobs:
           s3-object-name: skyrise-ci-bucket/coverage_percentage.txt
           region: us-east-1
           mode: commit
-
-      # In PRs, we store a summary of the code coverage.
-      - name: Archive code coverage results
-        if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'full-ci')
-        uses: actions/upload-artifact@v2
-        with:
-          name: code-coverage-report
-          path: cmake-build-debug/coverage/index.html
   
   clang-release-build:
     runs-on: [self-hosted, amazonlinux2]

@@ -41,7 +41,7 @@ async function compareCoverageCheck(client: aws.S3Client, localCoverage: string,
     const remoteCoverageFloat = parseFloat(remoteCoverage);
 
     const coverage_difference_sign = (localCoverageFloat >= remoteCoverageFloat ? '+' : '-');
-    const coverage_difference_text = (localCoverageFloat - remoteCoverageFloat).toFixed(2);
+    const coverage_difference_text = Math.abs(localCoverageFloat - remoteCoverageFloat).toFixed(2);
     const message = `This branch has a test code coverage of ${localCoverage} (${coverage_difference_sign}${coverage_difference_text}% against the Master's ${remoteCoverage}).`;
 
     if(localCoverageFloat < remoteCoverageFloat) {
