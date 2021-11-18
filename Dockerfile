@@ -1,7 +1,7 @@
 # Tool versions
-ARG AWS_SDK_VERSION=1.9.133
+ARG AWS_SDK_VERSION=1.9.146
 ARG BOOST_VERSION=1.77.0
-ARG CCACHE_VERSION=4.4.2
+ARG CCACHE_VERSION=4.5
 ARG CMAKE_MAJOR_MINOR=3.21
 ARG CMAKE_PATCH=4
 ARG CPPCHECK_VERSION=2.6
@@ -10,7 +10,7 @@ ARG GCC_VERSION=7.5.0
 ARG GCC_SUFFIX=75
 ARG HEAPTRACK_VERSION=1.2.0
 ARG LLVM_CLANG_VERSION=13.0.0
-ARG ORC_VERSION=1.7.0
+ARG ORC_VERSION=1.7.1
 ARG VALGRIND_VERSION=3.18.1
 
 # Tool locations
@@ -193,7 +193,7 @@ RUN git clone --branch ${AWS_SDK_VERSION} --depth 1 --recurse-submodules --shall
     cmake .. \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=${AWS_SDK_DIR} \
-            -DBUILD_ONLY="ec2;iam;lambda;monitoring;pricing;s3;sqs;xray" \
+            -DBUILD_ONLY="dynamodb;ec2;glue;iam;lambda;monitoring;pricing;s3;sqs;xray" \
             -DBUILD_SHARED_LIBS=OFF \
             -DCPP_STANDARD=17 \
             -DCUSTOM_MEMORY_MANAGEMENT=OFF \
@@ -345,7 +345,7 @@ RUN git clone --branch ${AWS_SDK_VERSION} --depth 1 --recurse-submodules --shall
     cmake .. \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_CXX_FLAGS="-Wno-error=nonnull" \
-            -DBUILD_ONLY="ec2;iam;lambda;monitoring;pricing;s3;sqs;xray" \
+            -DBUILD_ONLY="dynamodb;ec2;glue;iam;lambda;monitoring;pricing;s3;sqs;xray" \
             -DBUILD_SHARED_LIBS=OFF \
             -DCPP_STANDARD=17 \
             -DCUSTOM_MEMORY_MANAGEMENT=OFF \

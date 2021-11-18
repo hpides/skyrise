@@ -30,7 +30,7 @@ add_subdirectory(third_party EXCLUDE_FROM_ALL)
 # Locate third-party packages
 set(aws-lambda-runtime_DIR cmake)
 find_package(aws-lambda-runtime CONFIG REQUIRED)
-find_package(AWSSDK REQUIRED COMPONENTS ec2 iam lambda monitoring pricing s3 sqs xray)
+find_package(AWSSDK REQUIRED COMPONENTS dynamodb ec2 glue iam lambda monitoring pricing s3 sqs xray)
 find_package(Boost)
 
 # Set formatter as well as static and dynamic analyzers just for Skyrise sources
