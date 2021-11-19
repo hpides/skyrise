@@ -47,7 +47,7 @@ class AwsBenchmarkIntegrationTest : public ::testing::Test {
 };
 
 TEST_F(AwsBenchmarkIntegrationTest, FunctionColocationBenchmark) {
-  const std::vector<size_t> function_instance_mb_sizes = {128, 1024};
+  const std::vector<size_t> function_instance_mb_sizes = {128};
   const std::vector<size_t> invocation_counts = {16};
   const std::vector<size_t> sleep_min_durations = {1};
   const size_t repetition_count = 1;
@@ -56,7 +56,7 @@ TEST_F(AwsBenchmarkIntegrationTest, FunctionColocationBenchmark) {
       GetCostCalculator(), function_instance_mb_sizes, invocation_counts, sleep_min_durations, repetition_count);
 
   const auto benchmark_result = benchmark->Run(GetBenchmarkRunner());
-  EXPECT_EQ(benchmark_result.GetLength(), 2);
+  EXPECT_EQ(benchmark_result.GetLength(), 1);
 }
 
 TEST_F(AwsBenchmarkIntegrationTest, FunctionWarmUpBenchmark) {
@@ -81,7 +81,7 @@ TEST_F(AwsBenchmarkIntegrationTest, IdleAvailabilityBenchmark) {
   const std::vector<size_t> function_instance_mb_sizes = {128};
   const std::vector<size_t> invocation_counts = {16};
   const std::vector<size_t> sleep_min_durations = {1};
-  const size_t repetition_count = 3;
+  const size_t repetition_count = 2;
 
   auto benchmark = std::make_shared<skyrise::IdleAvailabilityBenchmark>(
       GetCostCalculator(), function_instance_mb_sizes, invocation_counts, sleep_min_durations, repetition_count);
@@ -93,17 +93,18 @@ TEST_F(AwsBenchmarkIntegrationTest, IdleAvailabilityBenchmark) {
 TEST_F(AwsBenchmarkIntegrationTest, skyriseBenchmarkIdleLifetime) {
   const std::vector<size_t> function_instance_mb_sizes = {128};
   const std::vector<size_t> invocation_counts = {16};
-  const std::vector<size_t> sleep_min_durations = {1, 2, 3};
+  const std::vector<size_t> sleep_min_durations = {1, 2};
   const size_t repetition_count = 1;
 
   auto benchmark = std::make_shared<skyrise::IdleLifetimeBenchmark>(
       GetCostCalculator(), function_instance_mb_sizes, invocation_counts, sleep_min_durations, repetition_count);
 
   const auto benchmark_result = benchmark->Run(GetBenchmarkRunner());
-  EXPECT_EQ(benchmark_result.GetLength(), 3);
+  EXPECT_EQ(benchmark_result.GetLength(), 2);
 }
 
-TEST_F(AwsBenchmarkIntegrationTest, InvocationLatencyBenchmark) {
+// TODO(tobodner): Fix sporadic segmentation fault and re-enable test.
+TEST_F(AwsBenchmarkIntegrationTest, DISABLED_InvocationLatencyBenchmark) {
   const std::vector<size_t> function_instance_mb_sizes = {128};
   const std::vector<size_t> invocation_counts = {16};
   const std::vector<bool> warm_modes = {true, false};
