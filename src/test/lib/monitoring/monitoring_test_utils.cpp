@@ -11,6 +11,7 @@
 #include <aws/lambda/model/FunctionCode.h>
 #include <aws/lambda/model/InvokeRequest.h>
 
+#include "limits.hpp"
 #include "utils/assert.hpp"
 
 namespace skyrise {
@@ -36,15 +37,20 @@ void UploadFunction(const std::shared_ptr<Client>& client, const std::string& pa
 
   Assert(get_role_outcome.IsSuccess(), get_role_outcome.GetError().GetMessage());
 
-  Aws::Lambda::Model::CreateFunctionRequest create_function_request;
-  create_function_request.WithFunctionName(function_name)
-      .WithHandler("FunctionHandler")
-      .WithRole(role.GetArn())
-      .WithCode(Aws::Lambda::Model::FunctionCode().WithZipFile(byte_buffer))
-      .WithRuntime(Aws::Lambda::Model::Runtime::provided_al2)
-      .WithTracingConfig(enable_tracing
-                             ? Aws::Lambda::Model::TracingConfig().WithMode(Aws::Lambda::Model::TracingMode::Active)
-                             : Aws::Lambda::Model::TracingConfig());
+  auto create_function_request =
+      Aws::Lambda::Model::CreateFunctionRequest()
+          .WithFunctionName(function_name)
+          .WithRuntime(Aws::Lambda::Model::Runtime::provided_al2)
+          .WithRole(role.GetArn())
+          .WithHandler("FunctionHandler")
+          .WithCode(Aws::Lambda::Model::FunctionCode().WithZipFile(byte_buffer))
+          // TODO(tobodner): Remove state opt-out, once we support state handling.
+          .WithDescription("aws:states:opt-out")
+          .WithTimeout(kLambdaFunctionTimeoutSeconds)
+          .WithMemorySize(128)
+          .WithTracingConfig(enable_tracing
+                                 ? Aws::Lambda::Model::TracingConfig().WithMode(Aws::Lambda::Model::TracingMode::Active)
+                                 : Aws::Lambda::Model::TracingConfig());
 
   const auto create_function_outcome = client->GetLambdaClient()->CreateFunction(create_function_request);
 

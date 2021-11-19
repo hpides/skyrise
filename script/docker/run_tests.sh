@@ -19,7 +19,7 @@ AWS_SECRET_ACCESS_KEY=$(aws --profile default configure get aws_secret_access_ke
 COMMAND="cd /var/skyrise/cmake-build-debug/ && bin/skyriseTest $GTEST_FILTER_FLAGS"
 
 PREFIX="hpiepic"
-IMAGE_DATE="20210423"
+IMAGE_DATE="20211117"
 IMAGE="skyrise:amazonlinux2-${IMAGE_DATE}"
 
 USER="$(id -u)"

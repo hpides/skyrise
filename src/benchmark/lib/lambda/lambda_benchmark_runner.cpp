@@ -72,10 +72,12 @@ void LambdaBenchmarkRunner::Setup() {
             .WithRuntime(Aws::Lambda::Model::Runtime::provided_al2)
             .WithRole(function_role_arn_)
             .WithHandler("HandlerFunction")
+            .WithCode(
+                SetFunctionCode(function_config.function_path, function_config.function_name, function_config.is_local))
+            // TODO(tobodner): Remove state opt-out, once we support state handling.
+            .WithDescription("aws:states:opt-out")
             .WithTimeout(kLambdaFunctionTimeoutSeconds)
-            .WithMemorySize(function_config.memory_size)
-            .WithCode(SetFunctionCode(function_config.function_path, function_config.function_name,
-                                      function_config.is_local));
+            .WithMemorySize(function_config.memory_size);
 
     if (typed_config_->enable_tracing_) {
       create_function_request.SetTracingConfig(
