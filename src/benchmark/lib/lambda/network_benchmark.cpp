@@ -83,8 +83,7 @@ std::vector<std::shared_ptr<Aws::IOStream>> NetworkBenchmark::GeneratePayloads(
     const auto payload_value = Aws::Utils::Json::JsonValue()
                                    .WithArray("s3_keys", object_keys)
                                    .WithInteger("batch_size", parameters.batch_size)
-                                   .WithString("s3_bucket", kBucketPrefix + std::to_string(parameters.invocation_count %
-                                                                                           parameters.bucket_count))
+                                   .WithString("s3_bucket", kBucketPrefix + std::to_string(i % parameters.bucket_count))
                                    .WithInteger("object_byte_size", parameters.object_byte_size);
 
     payloads.emplace_back(std::make_shared<Aws::StringStream>(payload_value.View().WriteCompact()));

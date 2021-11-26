@@ -72,8 +72,7 @@ Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateResultOu
         std::chrono::duration<double>(std::chrono::duration<double, std::milli>(benchmark_repetition.GetDurationMs()))
             .count();
     throughputs.emplace_back(ByteToMb(benchmark_parameters.object_byte_size) * benchmark_parameters.thread_count *
-                             benchmark_parameters.bucket_count * benchmark_repetition.GetInvokeResults().size() /
-                             duration_seconds);
+                             benchmark_repetition.GetInvokeResults().size() / duration_seconds);
   }
 
   const BenchmarkResultAggregate aggregates(throughputs);
