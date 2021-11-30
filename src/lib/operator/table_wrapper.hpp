@@ -18,7 +18,10 @@ class TableWrapper : public AbstractOperator {
   const std::string& Name() const override { return kOperatorName; }
 
  protected:
-  std::shared_ptr<const Table> OnExecute() override { return table_; }
+  std::shared_ptr<const Table> OnExecute(
+      const std::shared_ptr<OperatorExecutionContext>& /*operator_execution_context*/) override {
+    return table_;
+  }
 
   const std::shared_ptr<const Table> table_;
   const std::string kOperatorName{"TableWrapper"};

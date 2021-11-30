@@ -21,7 +21,8 @@ PartitionOperator::PartitionOperator(std::shared_ptr<AbstractOperator> input, co
 
 const std::string& PartitionOperator::Name() const { return kName; }
 
-std::shared_ptr<const Table> PartitionOperator::OnExecute() {
+std::shared_ptr<const Table> PartitionOperator::OnExecute(
+    const std::shared_ptr<OperatorExecutionContext>& /*operator_execution_context*/) {
   Assert(LeftInput(), "Input operator must not be nullptr.");
   Assert(LeftInputTable(), "Input table must not be nullptr.");
 

@@ -17,18 +17,14 @@ class ExportOperatorProxy : public AbstractOperatorProxy {
 
   const std::string& Name() const override;
 
-  static std::shared_ptr<AbstractOperatorProxy> FromJson(const Aws::Utils::Json::JsonView& json,
-                                                         StorageFactory storage_factory = nullptr);
+  static std::shared_ptr<AbstractOperatorProxy> FromJson(const Aws::Utils::Json::JsonView& json);
   Aws::Utils::Json::JsonValue ToJson() const override;
-
-  void SetStorageFactory(StorageFactory storage_factory);
 
  protected:
   std::shared_ptr<AbstractOperator> CreateOperatorInstance() const override;
 
  private:
   const std::string bucket_name_;
-  StorageFactory storage_factory_;
   const std::string target_object_key_;
   const ExportOperator::OutputFormat output_format_;
 };

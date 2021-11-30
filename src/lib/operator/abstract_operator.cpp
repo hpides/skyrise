@@ -10,11 +10,11 @@ AbstractOperator::AbstractOperator(OperatorType type, const std::shared_ptr<cons
 
 OperatorType AbstractOperator::Type() const { return type_; }
 
-void AbstractOperator::Execute() {
+void AbstractOperator::Execute(const std::shared_ptr<OperatorExecutionContext>& operator_execution_context) {
   DebugAssert(!left_input_ || left_input_->GetOutput(), "Left input has not yet been executed.");
   DebugAssert(!right_input_ || right_input_->GetOutput(), "Right input has not yet been executed.");
 
-  output_ = OnExecute();
+  output_ = OnExecute(operator_execution_context);
   OnCleanup();
 }
 

@@ -10,16 +10,16 @@ namespace skyrise {
 
 class PqpDeserializer {
  public:
-  PqpDeserializer(const std::string& pqp_plan, StorageFactory storage_factory = nullptr);
+  PqpDeserializer(const std::string& pqp_plan);
   std::shared_ptr<const AbstractOperatorProxy> Deserialize();
 
  private:
-  std::shared_ptr<AbstractOperatorProxy> DeserializeSingleOperator(const Aws::Utils::Json::JsonView& operator_payload);
+  static std::shared_ptr<AbstractOperatorProxy> DeserializeSingleOperator(
+      const Aws::Utils::Json::JsonView& operator_parameters);
   void BindInputOperators();
 
   std::unordered_map<std::string, std::shared_ptr<AbstractOperatorProxy>> operators_;
   Aws::Utils::Json::JsonValue pqp_plan_;
-  StorageFactory storage_factory_;
 };
 
 }  // namespace skyrise

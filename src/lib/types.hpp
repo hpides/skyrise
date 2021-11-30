@@ -27,7 +27,10 @@ using ColumnCount = uint32_t;
 using ColumnId = uint32_t;
 using ChunkId = uint32_t;
 
+using TaskId = uint32_t;
+
 inline constexpr ColumnId kInvalidColumnId = std::numeric_limits<ColumnId>::max();
+inline constexpr TaskId kInvalidTaskId = std::numeric_limits<TaskId>::max();
 
 enum class PredicateCondition {
   kEquals,
@@ -46,6 +49,11 @@ enum class PredicateCondition {
   kNotLike,
   kIsNull,
   kIsNotNull
+};
+
+enum class SchedulePriority {
+  kDefault = 1,  // Schedule task at the end of the queue.
+  kHigh = 0      // Schedule task at the beginning of the queue.
 };
 
 std::ostream& operator<<(std::ostream& stream, const PredicateCondition predicate_condition);

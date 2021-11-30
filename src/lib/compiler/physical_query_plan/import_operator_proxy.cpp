@@ -24,8 +24,7 @@ ImportOperatorProxy::ImportOperatorProxy(std::string bucket_name, std::vector<st
       format_(format),
       reader_factory_(std::move(reader_factory)) {}
 
-std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::FromJson(const Aws::Utils::Json::JsonView& json,
-                                                                     StorageFactory storage_factory) {
+std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::FromJson(const Aws::Utils::Json::JsonView& json) {
   Aws::String bucket_name = json.GetString("bucket_name");
   ImportOperatorProxy::ObjectFormat format = magic_enum::enum_cast<ObjectFormat>(json.GetString("format")).value();
   std::vector<std::string> object_keys = JsonArrayToVector<std::string>(json.GetArray("object_keys"));
@@ -84,12 +83,7 @@ std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::FromJson(const Aws::
     }
   }();
 
-  auto result = std::make_shared<ImportOperatorProxy>(bucket_name, object_keys, column_ids, format, reader_factory);
-  if (storage_factory != nullptr) {
-    result->SetStorageFactory(std::move(storage_factory));
-  }
-
-  return result;
+  return std::make_shared<ImportOperatorProxy>(bucket_name, object_keys, column_ids, format, reader_factory);
 }
 
 Aws::Utils::Json::JsonValue ImportOperatorProxy::ToJson() const {
@@ -154,12 +148,7 @@ Aws::Utils::Json::JsonValue ImportOperatorProxy::ToJson() const {
 }
 
 std::shared_ptr<AbstractOperator> ImportOperatorProxy::CreateOperatorInstance() const {
-  Assert(storage_factory_ != nullptr,
-         "ImportOperatorProxy expects to receive a storage factory via SetStorageFactory() or FromJson() before "
-         "the operator instantiation.");
-  std::shared_ptr<Storage> storage = storage_factory_(bucket_name_);
-
-  return std::make_shared<ImportOperator>(storage, objects_keys_, column_ids_, reader_factory_);
+  return std::make_shared<ImportOperator>(bucket_name_, objects_keys_, column_ids_, reader_factory_);
 }
 
 std::shared_ptr<TableColumnDefinitions> ImportOperatorProxy::ParseColumnDefinitions(
@@ -193,11 +182,6 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> ImportOperatorProxy::WriteColumnD
   }
 
   return json_output;
-}
-
-void ImportOperatorProxy::SetStorageFactory(StorageFactory storage_factory) {
-  Assert(storage_factory != nullptr, "StorageFactory function must be provided.");
-  storage_factory_ = std::move(storage_factory);
 }
 
 }  // namespace skyrise

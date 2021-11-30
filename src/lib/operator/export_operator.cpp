@@ -5,11 +5,10 @@
 
 namespace skyrise {
 
-ExportOperator::ExportOperator(const std::shared_ptr<const AbstractOperator>& input_operator,
-                               std::shared_ptr<Storage> storage, std::string target_object_key,
-                               OutputFormat output_format)
+ExportOperator::ExportOperator(const std::shared_ptr<const AbstractOperator>& input_operator, std::string bucket_name,
+                               std::string target_object_key, OutputFormat output_format)
     : AbstractOperator(OperatorType::kExport, input_operator),
-      storage_(std::move(storage)),
+      bucket_name_(std::move(bucket_name)),
       target_object_key_(std::move(target_object_key)),
       output_format_(output_format) {}
 
@@ -40,8 +39,10 @@ std::unique_ptr<AbstractFormatWriter> ExportOperator::GetWriter() {
   return nullptr;
 }
 
-std::shared_ptr<const Table> ExportOperator::OnExecute() {
-  const std::unique_ptr<ObjectWriter> output = storage_->OpenForWriting(target_object_key_);
+std::shared_ptr<const Table> ExportOperator::OnExecute(
+    const std::shared_ptr<OperatorExecutionContext>& operator_execution_context) {
+  const std::unique_ptr<ObjectWriter> output =
+      operator_execution_context->GetStorage(bucket_name_)->OpenForWriting(target_object_key_);
   const std::unique_ptr<AbstractFormatWriter> formatter = GetWriter();
   const std::shared_ptr<const skyrise::Table> input = LeftInputTable();
   StorageError error = StorageError::Success();

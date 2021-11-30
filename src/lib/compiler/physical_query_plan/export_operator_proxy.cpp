@@ -20,17 +20,13 @@ ExportOperatorProxy::ExportOperatorProxy(std::string bucket_name, std::string ta
       target_object_key_(std::move(target_object_key)),
       output_format_(output_format) {}
 
-std::shared_ptr<AbstractOperatorProxy> ExportOperatorProxy::FromJson(const Aws::Utils::Json::JsonView& json,
-                                                                     StorageFactory storage_factory) {
+std::shared_ptr<AbstractOperatorProxy> ExportOperatorProxy::FromJson(const Aws::Utils::Json::JsonView& json) {
   auto bucket_name = json.GetString("bucket_name");
   auto target_object_key = json.GetString("target_object_key");
   auto output_format = *magic_enum::enum_cast<ExportOperator::OutputFormat>(json.GetString("output_format"));
 
-  auto result = std::make_shared<ExportOperatorProxy>(bucket_name, target_object_key, output_format);
-  if (storage_factory != nullptr) {
-    result->SetStorageFactory(std::move(storage_factory));
-  }
-  return result;
+  // We bind operators after their construction, so left_ and right_ are nullptr for now.
+  return std::make_shared<ExportOperatorProxy>(bucket_name, target_object_key, output_format);
 }
 
 Aws::Utils::Json::JsonValue ExportOperatorProxy::ToJson() const {
@@ -42,12 +38,7 @@ Aws::Utils::Json::JsonValue ExportOperatorProxy::ToJson() const {
 
 std::shared_ptr<AbstractOperator> ExportOperatorProxy::CreateOperatorInstance() const {
   return std::make_shared<ExportOperator>(GetLeftInput() ? GetLeftInput()->GetOperatorInstance() : nullptr,
-                                          storage_factory_(bucket_name_), target_object_key_, output_format_);
-}
-
-void ExportOperatorProxy::SetStorageFactory(StorageFactory storage_factory) {
-  Assert(storage_factory != nullptr, "StorageFactory function must be provided.");
-  storage_factory_ = std::move(storage_factory);
+                                          bucket_name_, target_object_key_, output_format_);
 }
 
 }  // namespace skyrise

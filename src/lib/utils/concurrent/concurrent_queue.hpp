@@ -8,15 +8,12 @@
 
 namespace skyrise {
 
-// Queue is a thread-safe FIFO data structure. It provides Push() and Pop() operations. A size limit for the queue can
-// be specified in the constructor. This is a rather naive implementation that uses locks for every operation.
+// ConcurrentQueue is a thread-safe FIFO data structure. It provides Push() and Pop() operations. A size limit for the
+// queue can be specified in the constructor. This is a rather naive implementation that uses locks for every operation.
 // TODO(jansiebert): Profile for potential bottlenecks and find better implementation.
 template <typename T>
-class Queue {
+class ConcurrentQueue {
  public:
-  Queue(size_t capacity = 1) : capacity_(capacity) {}
-  ~Queue() {}
-
   // Returns the number of elements inside the queue.
   size_t Size() const {
     std::lock_guard<std::mutex> guard(queue_mutex_);
@@ -71,6 +68,22 @@ class Queue {
     return true;
   }
 
+  bool TryPop(T* result) {
+    std::unique_lock<std::mutex> guard(queue_mutex_);
+
+    // Having no value available means that the queue has been closed.
+    if (queue_.empty() || closed_) {
+      return false;
+    }
+
+    *result = std::move(queue_.front());
+    queue_.pop();
+
+    guard.unlock();
+    queue_can_write_.notify_one();
+    return true;
+  }
+
   // Closes the queue. Values that are already in the queue can still be received. No new values will
   // be inserted in the queue.
   void Close() {
@@ -79,6 +92,7 @@ class Queue {
     closed_ = true;
     guard.unlock();
     queue_can_write_.notify_all();
+    queue_can_read_.notify_all();
   }
 
  private:
@@ -96,11 +110,6 @@ class Queue {
   std::unique_lock<std::mutex> AssureCanWrite() {
     std::unique_lock<std::mutex> guard(queue_mutex_);
 
-    if (queue_.size() < capacity_ || closed_) {
-      return guard;
-    }
-
-    queue_can_write_.wait(guard, [&] { return queue_.size() < capacity_ || closed_; });
     return guard;
   }
 
@@ -109,7 +118,6 @@ class Queue {
   mutable std::mutex queue_mutex_;
   std::condition_variable queue_can_read_;
   std::condition_variable queue_can_write_;
-  size_t capacity_;
   bool closed_ = false;
 };
 

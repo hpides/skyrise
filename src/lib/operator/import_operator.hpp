@@ -14,17 +14,21 @@ namespace skyrise {
  */
 class ImportOperator : public AbstractOperator {
  public:
-  ImportOperator(const std::shared_ptr<Storage>& storage, const std::vector<std::string>& objects_keys,
+  ImportOperator(std::string bucket_name, const std::vector<std::string>& source_object_keys,
                  const std::vector<ColumnId>& column_ids, const std::shared_ptr<AbstractChunkReaderFactory>& factory);
 
   const std::string& Name() const override;
 
  protected:
-  std::shared_ptr<const Table> OnExecute() override;
+  std::shared_ptr<const Table> OnExecute(
+      const std::shared_ptr<OperatorExecutionContext>& operator_execution_context = nullptr) override;
   std::shared_ptr<const TableColumnDefinitions> ExtractSchema();
 
  private:
-  ChunkReader reader_;
+  const std::string bucket_name_;
+  const std::vector<std::string> source_object_keys_;
   std::vector<ColumnId> column_ids_;
+  const std::shared_ptr<AbstractChunkReaderFactory> factory_;
+  ChunkReader reader_;
 };
 }  // namespace skyrise

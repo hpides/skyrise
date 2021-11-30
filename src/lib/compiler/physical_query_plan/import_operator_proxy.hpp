@@ -17,11 +17,8 @@ class ImportOperatorProxy : public AbstractOperatorProxy {
 
   const std::string& Name() const override;
 
-  static std::shared_ptr<AbstractOperatorProxy> FromJson(const Aws::Utils::Json::JsonView& json,
-                                                         StorageFactory storage_factory = nullptr);
+  static std::shared_ptr<AbstractOperatorProxy> FromJson(const Aws::Utils::Json::JsonView& json);
   Aws::Utils::Json::JsonValue ToJson() const override;
-
-  void SetStorageFactory(StorageFactory storage_factory);
 
  protected:
   std::shared_ptr<AbstractOperator> CreateOperatorInstance() const override;
@@ -35,7 +32,6 @@ class ImportOperatorProxy : public AbstractOperatorProxy {
   const std::vector<ColumnId> column_ids_;
   const ObjectFormat format_;
   const std::shared_ptr<AbstractChunkReaderFactory> reader_factory_;
-  StorageFactory storage_factory_;
 };
 
 }  // namespace skyrise

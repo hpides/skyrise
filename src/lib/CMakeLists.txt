@@ -144,6 +144,8 @@ set(
 
     operator/abstract_operator.cpp
     operator/abstract_operator.hpp
+    operator/execution_context.cpp
+    operator/execution_context.hpp
     operator/export_operator.cpp
     operator/export_operator.hpp
     operator/import_operator.cpp
@@ -153,12 +155,23 @@ set(
     operator/table_wrapper.hpp
 
     scheduler/scheduler_types.hpp
+    scheduler/worker/abstract_task.cpp
+    scheduler/worker/abstract_task.hpp
+    scheduler/worker/task_executor.cpp
+    scheduler/worker/task_executor.hpp
+    scheduler/worker/generic_task.cpp
+    scheduler/worker/generic_task.hpp
+    scheduler/worker/operator_task.cpp
+    scheduler/worker/operator_task.hpp
+    scheduler/worker/fragment_scheduler.cpp
+    scheduler/worker/fragment_scheduler.hpp
+
     types.cpp
     types.hpp
 
     utils/array.hpp
     utils/assert.hpp
-    utils/concurrent/queue.hpp
+    utils/concurrent/concurrent_queue.hpp
     utils/filesystem.cpp
     utils/filesystem.hpp
     utils/git_metadata.cpp

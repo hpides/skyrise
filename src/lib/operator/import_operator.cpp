@@ -6,12 +6,14 @@
 
 namespace skyrise {
 
-ImportOperator::ImportOperator(const std::shared_ptr<Storage>& storage, const std::vector<std::string>& objects_keys,
+ImportOperator::ImportOperator(std::string bucket_name, const std::vector<std::string>& source_object_keys,
                                const std::vector<ColumnId>& column_ids,
                                const std::shared_ptr<AbstractChunkReaderFactory>& factory)
-    : AbstractOperator(OperatorType::kImport), column_ids_(column_ids) {
-  reader_.AddObjects(factory, storage, objects_keys);
-}
+    : AbstractOperator(OperatorType::kImport),
+      bucket_name_(std::move(bucket_name)),
+      source_object_keys_(source_object_keys),
+      column_ids_(column_ids),
+      factory_(factory) {}
 
 std::shared_ptr<const TableColumnDefinitions> ImportOperator::ExtractSchema() {
   std::shared_ptr<const TableColumnDefinitions> reader_schema = reader_.GetSchema();
@@ -35,7 +37,10 @@ std::shared_ptr<const TableColumnDefinitions> ImportOperator::ExtractSchema() {
   return std::make_shared<TableColumnDefinitions>(schema);
 }
 
-std::shared_ptr<const Table> ImportOperator::OnExecute() {
+std::shared_ptr<const Table> ImportOperator::OnExecute(
+    const std::shared_ptr<OperatorExecutionContext>& operator_execution_context) {
+  reader_.AddObjects(factory_, operator_execution_context->GetStorage(bucket_name_), source_object_keys_);
+
   // TODO(anyone): Prune columns on Orc Level
   const auto schema = ExtractSchema();
 

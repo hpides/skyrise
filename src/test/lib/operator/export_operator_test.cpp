@@ -41,14 +41,23 @@ TEST_F(ExportOperatorTest, ExportToCsv) {
   auto storage = std::make_shared<MockStorage>();
   auto table = CreateTableContainingValue(num_chunks, num_rows_per_chunk, 1);
   auto mock_input_operator = std::make_shared<TableWrapper>(table);
+  const std::string bucket_name = "MockBucket";
 
-  auto export_operator = std::make_shared<ExportOperator>(mock_input_operator, storage, output_object_name,
+  auto export_operator = std::make_shared<ExportOperator>(mock_input_operator, bucket_name, output_object_name,
                                                           ExportOperator::OutputFormat::kCsv);
+
+  auto operator_execution_context = std::make_shared<OperatorExecutionContext>(
+      nullptr,
+      [&storage, &bucket_name](const std::string& storage_name) {
+        EXPECT_EQ(storage_name, bucket_name);
+        return storage;
+      },
+      nullptr);
 
   EXPECT_NE(export_operator->Name(), "");
 
-  mock_input_operator->Execute();
-  export_operator->Execute();
+  mock_input_operator->Execute(operator_execution_context);
+  export_operator->Execute(operator_execution_context);
 
   ObjectStatus status = storage->GetStatus(output_object_name);
   EXPECT_FALSE(status.GetError().IsError());
@@ -79,9 +88,15 @@ TEST_F(ExportOperatorTest, OperatorWorksWithDifferentOutputFormats) {
   for (ExportOperator::OutputFormat format : formats) {
     auto mock_input_operator = std::make_shared<TableWrapper>(table);
     auto storage = std::make_shared<MockStorage>();
-    auto export_operator = std::make_shared<ExportOperator>(mock_input_operator, storage, output_object_name, format);
-    mock_input_operator->Execute();
-    export_operator->Execute();
+
+    auto export_operator =
+        std::make_shared<ExportOperator>(mock_input_operator, "MockBucket", output_object_name, format);
+
+    auto operator_execution_context = std::make_shared<OperatorExecutionContext>(
+        nullptr, [&storage](const std::string& /*storage_name*/) { return storage; }, nullptr);
+
+    mock_input_operator->Execute(operator_execution_context);
+    export_operator->Execute(operator_execution_context);
 
     ObjectStatus status = storage->GetStatus(output_object_name);
     EXPECT_FALSE(status.GetError().IsError());

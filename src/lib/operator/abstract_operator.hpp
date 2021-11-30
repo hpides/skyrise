@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 
+#include "operator/execution_context.hpp"
 #include "storage/table/table.hpp"
 #include "types.hpp"
 
@@ -30,7 +31,7 @@ class AbstractOperator : public std::enable_shared_from_this<AbstractOperator>, 
    * Execute runs the operator's logic and cleanup routine.
    * Execute and GetOutput are split into two methods to allow for easier asynchronous execution.
    */
-  void Execute();
+  void Execute(const std::shared_ptr<OperatorExecutionContext>& operator_execution_context = nullptr);
 
   /**
    * GetOutput returns the result of the operator that has been executed.
@@ -68,7 +69,8 @@ class AbstractOperator : public std::enable_shared_from_this<AbstractOperator>, 
   /**
    * OnExecute implements the operator's logic.
    */
-  virtual std::shared_ptr<const Table> OnExecute() = 0;
+  virtual std::shared_ptr<const Table> OnExecute(
+      const std::shared_ptr<OperatorExecutionContext>& operator_execution_context = nullptr) = 0;
 
   /**
    * OnCleanup allows operator-specific cleanups for temporary data.

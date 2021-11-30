@@ -31,6 +31,8 @@ set(
     lib/operator/import_operator_test.cpp
     lib/operator/partition_operator_test.cpp
 
+    lib/scheduler/worker/fragment_scheduler_test.cpp
+
     lib/serialization/schema_serialization_test.cpp
 
     lib/statistics/manifest_shared.cpp
