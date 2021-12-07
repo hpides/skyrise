@@ -68,6 +68,8 @@ class Pricing {
 
  private:
   std::map<Aws::String, long double> FetchPricing(const Aws::String& service_code) const;
+  Aws::Pricing::Model::GetProductsRequest CreateGetProductsRequest(const Aws::String& service_code,
+                                                                   const Aws::String& next_token) const;
 
   const std::shared_ptr<const Aws::Pricing::PricingClient> pricing_client_;
   const std::string client_region_;

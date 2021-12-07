@@ -38,6 +38,64 @@ const std::shared_ptr<PricingS3>& Pricing::GetS3Pricing() const { return pricing
 const std::shared_ptr<PricingXray>& Pricing::GetXrayPricing() const { return pricing_xray_; }
 
 std::map<Aws::String, long double> Pricing::FetchPricing(const Aws::String& service_code) const {
+  std::map<Aws::String, long double> prices;
+
+  Aws::String next_token;
+
+  do {
+    const auto outcome = pricing_client_->GetProducts(CreateGetProductsRequest(service_code, next_token));
+    Assert(outcome.IsSuccess(), "Price List API call was unsuccessful: " + outcome.GetError().GetMessage());
+    next_token = outcome.GetResult().GetNextToken();
+
+    const auto price_list = outcome.GetResult().GetPriceList();
+
+    for (const auto& price : price_list) {
+      // Parse JSON from outcome string.
+      const Aws::Utils::Json::JsonValue price_value(price);
+      const auto price_view = price_value.View();
+
+      // Retrieve and return price.
+      auto usage_type = price_view.GetObject("product").GetObject("attributes").GetString("usagetype");
+
+      // TODO(anyone): Complete this list by adding all possible region prefixes.
+      // Remove prefix if present.
+      if (service_code == "AWSXRay" &&
+          (usage_type.find("USE1-") == 0 || usage_type.find("EUW1-") == 0 || usage_type.find("APN1-") == 0)) {
+        usage_type = usage_type.substr(5);
+      }
+
+      const auto price_dimensions_view = price_view.GetObject("terms")
+                                             .GetObject("OnDemand")
+                                             .GetAllObjects()
+                                             .cbegin()
+                                             ->second.GetObject("priceDimensions")
+                                             .GetAllObjects();
+
+      if (price_dimensions_view.size() > 1) {
+        Aws::Vector<std::pair<size_t, double>> unit_prices;
+
+        for (auto const& price_dimension : price_dimensions_view) {
+          const size_t begin_range = std::stoull(price_dimension.second.GetString("beginRange"));
+          const long double unit_price = std::stold(price_dimension.second.GetObject("pricePerUnit").GetString("USD"));
+          unit_prices.emplace_back(begin_range, unit_price);
+        }
+
+        std::sort(unit_prices.begin(), unit_prices.end(),
+                  [](const auto& a, const auto& b) { return a.first < b.first; });
+        prices.emplace(usage_type, unit_prices[0].second);
+      } else {
+        const Aws::String single_price =
+            price_dimensions_view.cbegin()->second.GetObject("pricePerUnit").GetString("USD");
+        prices.emplace(usage_type, std::stod(single_price));
+      }
+    }
+  } while (!next_token.empty());
+
+  return prices;
+}
+
+Aws::Pricing::Model::GetProductsRequest Pricing::CreateGetProductsRequest(const Aws::String& service_code,
+                                                                          const Aws::String& next_token) const {
   // Determine location from region
   Assert(kRegionToLocation.find(client_region_) != kRegionToLocation.cend(),
          "AWS region " + client_region_ + " not supported.");
@@ -49,57 +107,16 @@ std::map<Aws::String, long double> Pricing::FetchPricing(const Aws::String& serv
                                                           .WithType(Aws::Pricing::Model::FilterType::TERM_MATCH)
                                                           .WithField("location")
                                                           .WithValue(location)};
-  // Create and send the request
+
   Aws::Pricing::Model::GetProductsRequest request;
   request.SetServiceCode(service_code);
   request.SetFilters(filters);
 
-  const auto outcome = pricing_client_->GetProducts(request);
-  Assert(outcome.IsSuccess(), "Price List API call was unsuccessful: " + outcome.GetError().GetMessage());
-
-  std::map<Aws::String, long double> prices_map;
-  const auto price_list = outcome.GetResult().GetPriceList();
-
-  for (const auto& price : price_list) {
-    // Parse JSON from outcome string
-    const auto price_value = Aws::Utils::Json::JsonValue(price);
-    const auto price_view = price_value.View();
-
-    // Retrieve and return price
-    auto usage_type = price_view.GetObject("product").GetObject("attributes").GetString("usagetype");
-
-    // TODO(anyone): Complete this list by adding all possible region prefixes
-    // Remove prefix if present
-    if (service_code == "AWSXRay" &&
-        (usage_type.find("USE1-") == 0 || usage_type.find("EUW1-") == 0 || usage_type.find("APN1-") == 0)) {
-      usage_type = usage_type.substr(5);
-    }
-
-    const auto price_dimensions_view = price_view.GetObject("terms")
-                                           .GetObject("OnDemand")
-                                           .GetAllObjects()
-                                           .cbegin()
-                                           ->second.GetObject("priceDimensions")
-                                           .GetAllObjects();
-
-    if (price_dimensions_view.size() > 1) {
-      Aws::Vector<std::pair<size_t, double>> unit_prices;
-
-      for (auto const& price_dimension : price_dimensions_view) {
-        const size_t begin_range = std::stoi(price_dimension.second.GetString("beginRange"));
-        const long double unit_price = std::stold(price_dimension.second.GetObject("pricePerUnit").GetString("USD"));
-        unit_prices.emplace_back(std::make_pair(begin_range, unit_price));
-      }
-
-      std::sort(unit_prices.begin(), unit_prices.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
-      prices_map.emplace(std::make_pair(usage_type, unit_prices[0].second));
-    } else {
-      const auto single_price = price_dimensions_view.cbegin()->second.GetObject("pricePerUnit").GetString("USD");
-      prices_map.emplace(std::make_pair(usage_type, std::stod(single_price)));
-    }
+  if (!next_token.empty()) {
+    request.SetNextToken(next_token);
   }
 
-  return prices_map;
+  return request;
 }
 
 }  // namespace skyrise
