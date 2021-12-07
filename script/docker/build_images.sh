@@ -29,10 +29,10 @@ done
 
 echo "Building images with repository prefix ${PREFIX}.."
 export DOCKER_BUILDKIT=1
-docker build --build-arg BUILDKIT_INLINE_CACHE=1 --pull --target amazonlinux2 \
-             --tag ${PREFIX}/skyrise:amazonlinux2-${DATE} ${SOURCE_DIR}
+docker build --build-arg BUILDKIT_INLINE_CACHE=1 --pull --target al2 \
+             --tag ${PREFIX}/skyrise:al2-${DATE} --tag ${PREFIX}/skyrise:al2 ${SOURCE_DIR}
 docker build --build-arg BUILDKIT_INLINE_CACHE=1 --pull --target ubuntu \
-             --tag ${PREFIX}/skyrise:ubuntu-${DATE} ${SOURCE_DIR}
+             --tag ${PREFIX}/skyrise:ubuntu-${DATE} --tag ${PREFIX}/skyrise:ubuntu ${SOURCE_DIR}
 
 if [ "$PRUNE" = true ]; then
     echo "Removing dangling images.."

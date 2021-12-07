@@ -1,9 +1,9 @@
 # Tool versions
-ARG AWS_SDK_VERSION=1.9.146
+ARG AWS_SDK_VERSION=1.9.160
 ARG BOOST_VERSION=1.77.0
-ARG CCACHE_VERSION=4.5
-ARG CMAKE_MAJOR_MINOR=3.21
-ARG CMAKE_PATCH=4
+ARG CCACHE_VERSION=4.5.1
+ARG CMAKE_MAJOR_MINOR=3.22
+ARG CMAKE_PATCH=0
 ARG CPPCHECK_VERSION=2.6
 ARG CPPLINT_COMMIT=9806df8
 ARG GCC_VERSION=7.5.0
@@ -193,7 +193,7 @@ RUN git clone --branch ${AWS_SDK_VERSION} --depth 1 --recurse-submodules --shall
     cmake .. \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=${AWS_SDK_DIR} \
-            -DBUILD_ONLY="dynamodb;ec2;glue;iam;lambda;monitoring;pricing;s3;sqs;xray" \
+            -DBUILD_ONLY="dynamodb;ec2;glue;iam;lambda;logs;monitoring;pricing;s3;sqs;xray" \
             -DBUILD_SHARED_LIBS=OFF \
             -DCPP_STANDARD=17 \
             -DCUSTOM_MEMORY_MANAGEMENT=OFF \
@@ -268,7 +268,7 @@ COPY --from=base-valgrind ${VALGRIND_DIR} ${VALGRIND_DIR}
 
 
 # Amazon Linux 2 Docker image for building Skyrise
-FROM amazon/aws-sam-cli-build-image-provided.al2 AS amazonlinux2
+FROM amazon/aws-sam-cli-build-image-provided.al2 AS al2
 ARG AWS_SDK_DIR
 ARG BOOST_DIR
 ARG GCC_DIR
@@ -345,7 +345,7 @@ RUN git clone --branch ${AWS_SDK_VERSION} --depth 1 --recurse-submodules --shall
     cmake .. \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_CXX_FLAGS="-Wno-error=nonnull" \
-            -DBUILD_ONLY="dynamodb;ec2;glue;iam;lambda;monitoring;pricing;s3;sqs;xray" \
+            -DBUILD_ONLY="dynamodb;ec2;glue;iam;lambda;logs;monitoring;pricing;s3;sqs;xray" \
             -DBUILD_SHARED_LIBS=OFF \
             -DCPP_STANDARD=17 \
             -DCUSTOM_MEMORY_MANAGEMENT=OFF \
