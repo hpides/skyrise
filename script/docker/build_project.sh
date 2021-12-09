@@ -34,7 +34,7 @@ exitWithError() {
 
 BUILD_DIR="cmake-build-debug"
 CMAKE_OPTIONS=''
-IMAGE_DATE="20211117"
+IMAGE_DATE="20211208"
 CMAKE_FORCE="false"
 NINJA_TOLERANCE="1"
 MAKE_TARGET="all"
@@ -85,7 +85,7 @@ GROUP="$(id -g)"
 COMMAND="docker run --rm -it \
                     --user ${USER}:${GROUP} \
                     --volume ${SOURCE_DIR}:${PROJECT_MOUNT_POINT} \
-                    ${PREFIX}/skyrise:amazonlinux2-${IMAGE_DATE} bash -c \"${BUILD_COMMAND}\""
+                    ${PREFIX}/skyrise:al2-${IMAGE_DATE} bash -c \"${BUILD_COMMAND}\""
 
 if [ "$VERBOSE" = true ]; then
     echo "Executing build command: ${COMMAND}"
