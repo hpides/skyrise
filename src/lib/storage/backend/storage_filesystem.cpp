@@ -150,7 +150,7 @@ StorageError FilesystemReader::Close() {
   return StorageError::Success();
 }
 StorageError FilesystemReader::Read(size_t first_byte, size_t last_byte,
-                                    std::function<void(const char* data, size_t length)> callback) {
+                                    const std::function<void(const char* data, size_t length)>& callback) {
   if (error_) {
     return error_;
   }

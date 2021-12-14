@@ -1,3 +1,4 @@
+#include <functional>
 #include <thread>
 
 #include <gtest/gtest.h>
@@ -9,6 +10,14 @@
 #include "utils/assert.hpp"
 
 namespace skyrise {
+
+namespace {
+
+std::function<void(const char* data, size_t n)> FillBufferLambda(std::vector<char>* buffer) {
+  return [buffer](const char* data, size_t n) { buffer->insert(buffer->end(), data, data + n); };
+}
+
+}  // namespace
 
 template <typename Provider>
 class AwsBaseStorageTest : public ::testing::Test {
@@ -67,8 +76,8 @@ TYPED_TEST_SUITE(AwsBaseStorageTest, StorageProviderTypes, );
 // Trailing comma on purpose (https://github.com/google/googletest/issues/1419)
 
 TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteSmallObject) {
-  static const std::string kFilename{"small.txt"};
-  static const std::string kFileContent{"abcd"};
+  static const std::string kFilename = "small.txt";
+  static const std::string kFileContent = "abcd";
   constexpr size_t kFileSize = 4;
 
   // Create
@@ -89,11 +98,7 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteSmallObject) {
   auto reader = this->storage_->OpenForReading(kFilename);
   std::vector<char> buffer;
   buffer.reserve(kFileSize);
-  EXPECT_FALSE(reader->Read(0, ObjectReader::kLastByteInFile, [&buffer](const char* data, size_t n) {
-    for (size_t i = 0; i < n; i++) {
-      buffer.push_back(data[i]);
-    }
-  }));
+  EXPECT_FALSE(reader->Read(0, ObjectReader::kLastByteInFile, FillBufferLambda(&buffer)));
   EXPECT_FALSE(reader->Close());
 
   EXPECT_EQ(buffer.size(), kFileSize);
@@ -106,17 +111,47 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteSmallObject) {
   buffer.clear();
   reader = this->storage_->OpenForReading(kFilename);
   auto compare_against = kFileContent.substr(1, 2);
-  EXPECT_FALSE(reader->Read(1, 2, [&buffer](const char* data, size_t n) {
-    for (size_t i = 0; i < n; i++) {
-      buffer.push_back(data[i]);
-    }
-  }));
+  EXPECT_FALSE(reader->Read(1, 2, FillBufferLambda(&buffer)));
   EXPECT_FALSE(reader->Close());
 
   EXPECT_EQ(buffer.size(), 2);
   for (size_t i = 0; i < buffer.size(); i++) {
     EXPECT_EQ(buffer[i], compare_against[i]);
   }
+
+  // Delete
+  EXPECT_FALSE(this->storage_->Delete(kFilename));
+  this->WaitForObjectToVanish(kFilename);
+}
+
+TYPED_TEST(AwsBaseStorageTest, CreateReadTailDeleteSmallObject) {
+  // This test needs to be seperate from the former test to cover code paths that extract status information from
+  // partial requests.
+
+  static const std::string kFilename = "small.txt";
+  static const std::string kFileContent = "abcd";
+  constexpr size_t kFileSize = 4;
+
+  // Create
+  auto writer = this->storage_->OpenForWriting(kFilename);
+  EXPECT_FALSE(writer->Write(kFileContent.c_str(), kFileSize));
+  EXPECT_FALSE(writer->Close());
+
+  this->WaitForObjectToBecomeVisible(kFilename);
+
+  // ReadTail
+  auto reader = this->storage_->OpenForReading(kFilename);
+  std::vector<char> buffer;
+  buffer.reserve(kFileSize);
+  EXPECT_FALSE(reader->ReadTail(1, FillBufferLambda(&buffer)));
+
+  EXPECT_EQ(buffer.size(), 1);
+  EXPECT_EQ(buffer[0], 'd');
+
+  EXPECT_FALSE(reader->GetStatus().GetError().IsError());
+  EXPECT_EQ(reader->GetStatus().GetSize(), kFileSize);
+
+  EXPECT_FALSE(reader->Close());
 
   // Delete
   EXPECT_FALSE(this->storage_->Delete(kFilename));

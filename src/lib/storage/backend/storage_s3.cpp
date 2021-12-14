@@ -1,8 +1,10 @@
 #include "storage_s3.hpp"
 
+#include "utils/assert.hpp"
+
 namespace skyrise {
 
-namespace detail {
+namespace {
 
 time_t ConvertAwsDateTime(const Aws::Utils::DateTime aws_datetime) {
   const auto seconds =
@@ -12,8 +14,7 @@ time_t ConvertAwsDateTime(const Aws::Utils::DateTime aws_datetime) {
 
 class ProxyStreamBuffer : public std::streambuf {
  public:
-  explicit ProxyStreamBuffer(std::function<void(const char* data, size_t n)> callback)
-      : callback_(std::move(callback)) {}
+  explicit ProxyStreamBuffer(const std::function<void(const char* data, size_t n)>& callback) : callback_(callback) {}
 
  protected:
   std::streamsize xsputn(const char_type* s, std::streamsize n) override {
@@ -27,8 +28,8 @@ class ProxyStreamBuffer : public std::streambuf {
 
 class ProxyStream : public std::iostream {
  public:
-  explicit ProxyStream(std::function<void(const char* data, size_t n)> callback)
-      : std::iostream(nullptr), buffer_(std::make_unique<ProxyStreamBuffer>(std::move(callback))) {
+  explicit ProxyStream(const std::function<void(const char* data, size_t n)>& callback)
+      : std::iostream(nullptr), buffer_(std::make_unique<ProxyStreamBuffer>(callback)) {
     rdbuf(buffer_.get());
   }
 
@@ -36,7 +37,7 @@ class ProxyStream : public std::iostream {
   std::unique_ptr<ProxyStreamBuffer> buffer_;
 };
 
-}  // namespace detail
+}  // namespace
 
 StorageErrorType TranslateS3Error(const Aws::S3::S3Errors error) {
   switch (error) {
@@ -283,8 +284,7 @@ std::pair<std::vector<ObjectStatus>, StorageError> S3Storage::List(const std::st
     }
 
     for (const auto& obj : result.GetContents()) {
-      result_vector.emplace_back(obj.GetKey(), detail::ConvertAwsDateTime(obj.GetLastModified()), obj.GetETag(),
-                                 obj.GetSize());
+      result_vector.emplace_back(obj.GetKey(), ConvertAwsDateTime(obj.GetLastModified()), obj.GetETag(), obj.GetSize());
     }
   }
 
@@ -391,23 +391,75 @@ S3ObjectReader::S3ObjectReader(std::shared_ptr<const Aws::S3::S3Client> client, 
                                std::string object_id)
     : client_(std::move(client)), bucket_(std::move(bucket)), object_id_(std::move(object_id)) {}
 
-StorageError S3ObjectReader::Read(size_t first_byte, size_t last_byte,
-                                  std::function<void(const char* data, size_t length)> callback) {
+Aws::S3::Model::GetObjectRequest S3ObjectReader::CreateGetObjectRequest(
+    const std::function<void(const char* data, size_t length)>& callback, const std::string& range) {
   Aws::S3::Model::GetObjectRequest request;
   request.SetBucket(bucket_);
   request.SetKey(object_id_);
-  SetRange(request, first_byte, last_byte);
+  request.SetResponseStreamFactory([&callback]() { return new ProxyStream(callback); });
+  if (!range.empty()) {
+    request.SetRange(range);
+  }
 
-  // The AWS SDK will free the resource
-  request.SetResponseStreamFactory(
-      [callback = std::move(callback)]() mutable { return new detail::ProxyStream(std::move(callback)); });
+  return request;
+}
 
+StorageError S3ObjectReader::Read(size_t first_byte, size_t last_byte,
+                                  const std::function<void(const char* data, size_t length)>& callback) {
+  bool read_entire_object = (first_byte == 0 && last_byte == kLastByteInFile);
+  std::string range_string;
+  if (!read_entire_object) {
+    range_string = GetRangeString(first_byte, last_byte);
+  }
+
+  return ProcessGetObjectRequest(CreateGetObjectRequest(callback, range_string));
+}
+
+StorageError S3ObjectReader::ReadTail(size_t num_last_bytes,
+                                      const std::function<void(const char* data, size_t length)>& callback) {
+  const std::string range_string = GetRangeStringForTail(num_last_bytes);
+  return ProcessGetObjectRequest(CreateGetObjectRequest(callback, range_string));
+}
+
+StorageError S3ObjectReader::ProcessGetObjectRequest(const Aws::S3::Model::GetObjectRequest& request) {
   auto outcome = client_->GetObject(request);
   if (!outcome.IsSuccess()) {
     return GetErrorFromOutcome(outcome);
   }
 
+  // If we do not have status information about the object, we can obtain it now.
+  if (status_.GetError().IsError()) {
+    Aws::S3::Model::GetObjectResult result = outcome.GetResultWithOwnership();
+    const time_t last_modified = ConvertAwsDateTime(result.GetLastModified());
+    const std::string& hash = result.GetETag();
+
+    // For range requests, the actual length of the object is sent in the "Content-Range"-Header.
+    const size_t size = result.GetContentRange().empty() ? result.GetContentLength()
+                                                         : ParseContentLengthFromRange(result.GetContentRange());
+
+    status_ = ObjectStatus(object_id_, last_modified, hash, size);
+  }
+
   return StorageError::Success();
+}
+
+size_t S3ObjectReader::ParseContentLengthFromRange(const Aws::String& content_range) {
+  // A header line might look like "Content-Range: bytes 0-1023/146515"
+  // We are interested in the number after '/'.
+
+  size_t index_of_slash = content_range.find_last_of('/');
+  if (index_of_slash == Aws::String::npos) {
+    Fail("Found a malformed value for header entry 'Content-Range'.");
+  }
+
+  Aws::String content_length_string = content_range.substr(index_of_slash + 1);
+  try {
+    return std::stoull(content_length_string);
+  } catch (const std::exception& e) {
+    // We have std::invalid_argument or std::out_of_range here.
+    // A string of length 0 will also run into this branch.
+    Fail(e.what());
+  }
 }
 
 const ObjectStatus& S3ObjectReader::GetStatus() {
@@ -423,7 +475,7 @@ const ObjectStatus& S3ObjectReader::GetStatus() {
     } else {
       auto result = outcome.GetResult();
 
-      const time_t last_modified = detail::ConvertAwsDateTime(result.GetLastModified());
+      const time_t last_modified = ConvertAwsDateTime(result.GetLastModified());
       const std::string& hash = result.GetETag();
       const size_t size = result.GetContentLength();
 
@@ -433,18 +485,19 @@ const ObjectStatus& S3ObjectReader::GetStatus() {
   return status_;
 }
 
-void S3ObjectReader::SetRange(Aws::S3::Model::GetObjectRequest& request, size_t first_byte, size_t last_byte) {
-  bool read_entire_object = (first_byte == 0 && last_byte == kLastByteInFile);
-  if (read_entire_object) {
-    return;
-  }
-
+std::string S3ObjectReader::GetRangeString(size_t first_byte, size_t last_byte) {
   std::stringstream stream;
   stream << "bytes=" << first_byte << "-";
   if (last_byte != kLastByteInFile) {
     stream << last_byte;
   }
-  request.SetRange(stream.str());
+  return stream.str();
+}
+
+std::string S3ObjectReader::GetRangeStringForTail(size_t num_last_bytes) {
+  std::stringstream stream;
+  stream << "bytes=-" << num_last_bytes;
+  return stream.str();
 }
 
 StorageError S3ObjectReader::Close() { return StorageError::Success(); }

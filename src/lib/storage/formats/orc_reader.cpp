@@ -22,15 +22,18 @@ class OrcInputProxy : public orc::InputStream {
 
  private:
   static constexpr size_t kNaturalReadSize = 20_MB;
-  size_t object_size_;
   ObjectReaderStream stream_;
+  size_t object_size_;
   std::string name_;
 };
 
 OrcInputProxy::OrcInputProxy(std::unique_ptr<ObjectReader> source)
-    : object_size_(source->GetStatus().GetError() ? 0 : source->GetStatus().GetSize()),
-      stream_(std::move(source)),
-      name_("OrcInputProxy") {}
+    : stream_(std::move(source), true), name_("OrcInputProxy") {
+  // Get Size of object from stream.
+  stream_.seekg(0, std::ios::end);
+  object_size_ = stream_.tellg();
+  stream_.seekg(0, std::ios::beg);
+}
 
 uint64_t OrcInputProxy::getLength() const { return object_size_; }
 

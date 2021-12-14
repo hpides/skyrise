@@ -99,7 +99,27 @@ int ObjectReaderStreamBuffer::underflow() {
   return traits_type::to_int_type(*gptr());
 }
 
-ObjectReaderStream::ObjectReaderStream(std::unique_ptr<ObjectReader> reader)
-    : std::iostream(&stream_buffer_), stream_buffer_(std::move(reader)) {}
+void ObjectReaderStreamBuffer::FillBufferWithTail() {
+  buffer_.clear();
+
+  StorageError readtail_result = reader_->ReadTail(
+      kBufferSize, [this](const char* data, size_t length) { buffer_.insert(buffer_.end(), data, data + length); });
+
+  if (readtail_result.IsError()) {
+    // Since this is an optimization, we do not propagate the error. Instead, a subsequent read will.
+    AWS_LOGSTREAM_ERROR(kStreamLoggingTag, "Read failed with message: " << readtail_result.GetMessage());
+    return;
+  }
+
+  const size_t actually_read_bytes = buffer_.size();
+  setg(buffer_.data(), buffer_.data(), buffer_.data() + actually_read_bytes);
+}
+
+ObjectReaderStream::ObjectReaderStream(std::unique_ptr<ObjectReader> reader, bool initial_fill_buffer_with_tail)
+    : std::iostream(&stream_buffer_), stream_buffer_(std::move(reader)) {
+  if (initial_fill_buffer_with_tail) {
+    stream_buffer_.FillBufferWithTail();
+  }
+}
 
 }  // namespace skyrise

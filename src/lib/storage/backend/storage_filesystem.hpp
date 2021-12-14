@@ -28,7 +28,7 @@ class FilesystemReader : public ObjectReader {
   FilesystemReader(const FilesystemReader&) = delete;
   ~FilesystemReader() override;
   StorageError Read(size_t first_byte, size_t last_byte,
-                    std::function<void(const char* data, size_t length)> callback) override;
+                    const std::function<void(const char* data, size_t length)>& callback) override;
   const ObjectStatus& GetStatus() override;
   StorageError Close() override;
 

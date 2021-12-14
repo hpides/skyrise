@@ -6,7 +6,7 @@ MockReader::MockReader(std::shared_ptr<std::string> data, std::string identifier
     : data_(std::move(data)), identifier_(std::move(identifier)) {}
 
 StorageError MockReader::Read(size_t first_byte, size_t last_byte,
-                              std::function<void(const char* data, size_t length)> callback) {
+                              const std::function<void(const char* data, size_t length)>& callback) {
   num_reads_++;
 
   if (!data_) {

@@ -20,6 +20,12 @@ class ObjectReaderStreamBuffer : public std::streambuf {
  public:
   explicit ObjectReaderStreamBuffer(std::unique_ptr<ObjectReader> reader);
 
+  /**
+   * Fills the internal buffer with data from the end of the object. This function is used to optimize requests for file
+   * formats that start by reading data from the end of an object.
+   */
+  void FillBufferWithTail();
+
  protected:
   /**
    * Refill the internal buffer.
@@ -58,7 +64,7 @@ class ObjectReaderStreamBuffer : public std::streambuf {
  */
 class ObjectReaderStream : public std::iostream {
  public:
-  explicit ObjectReaderStream(std::unique_ptr<ObjectReader> reader);
+  explicit ObjectReaderStream(std::unique_ptr<ObjectReader> reader, bool initial_fill_buffer_with_tail = false);
 
  private:
   ObjectReaderStreamBuffer stream_buffer_;

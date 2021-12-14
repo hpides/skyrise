@@ -27,9 +27,10 @@ class MockReader : public ObjectReader {
  public:
   MockReader() = default;
   MockReader(std::shared_ptr<std::string> data, std::string identifier);
-  StorageError Read(size_t first_byte, size_t last_byte, std::function<void(const char* data, size_t length)> callback);
-  const ObjectStatus& GetStatus();
-  StorageError Close();
+  StorageError Read(size_t first_byte, size_t last_byte,
+                    const std::function<void(const char* data, size_t length)>& callback) override;
+  const ObjectStatus& GetStatus() override;
+  StorageError Close() override;
 
   // Returns a reference to the counter. While you can use this reference to later check the current value of the
   // counter, keep in mind that it has the same lifetime as the MockReader itself.

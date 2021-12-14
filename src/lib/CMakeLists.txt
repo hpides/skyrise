@@ -22,6 +22,7 @@ set(
 
 set(
     STORAGE_SOURCES
+    storage/backend/abstract_storage.cpp
     storage/backend/abstract_storage.hpp
     storage/backend/errors.cpp
     storage/backend/errors.hpp
