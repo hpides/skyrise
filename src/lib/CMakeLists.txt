@@ -1,5 +1,6 @@
 set(PRE_CONFIGURE_FILE "utils/git_metadata.cpp.in")
 set(POST_CONFIGURE_FILE "utils/git_metadata.cpp")
+set(GIT_FAIL_IF_NONZERO_EXIT FALSE)
 include(${PROJECT_SOURCE_DIR}/third_party/cmake-git-version-tracking/git_watcher.cmake)
 
 set(
