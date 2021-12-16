@@ -8,7 +8,7 @@
 #   -b/--build-dir          BUILD_DIR        [default="cmake-build-debug"]  The subdirectory of the project root where output files are stored
 #   -c/--cmake              CMAKE_OPTIONS                                   A string of options that is passed to CMake
 #                                                                           (e.g. '-DONE_OPTION=ON -DOTHER_OPTION=OFF')
-#   -d/--date               IMAGE_DATE       [default="20210423"] (latest)  The creation date of the Docker image
+#   -d/--date               IMAGE_DATE       [default="20211208"] (latest)  The creation date of the Docker image
 #   -f/--cmake-force                                                        Forced re-run of CMake to ignore CMakeCache.txt files
 #   -k/--ninja-tolerance    NINJA_TOLERANCE  [default="1"]                  The number of failed jobs after which ninja aborts the build.
 #   -m/--make-target        MAKE_TARGET      [default="all"]                The target for make

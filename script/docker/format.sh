@@ -4,7 +4,7 @@
 COMMAND="python3 script/run_clang_format.py --clang_format_binary clang-format --source_dir src --fix"
 
 PREFIX="hpiepic"
-IMAGE_DATE="20210423"
+IMAGE_DATE="20211208"
 IMAGE="skyrise:amazonlinux2-${IMAGE_DATE}"
 
 USER="$(id -u)"
