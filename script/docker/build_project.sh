@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script builds our project inside a Docker container (using the image {PREFIX}/skyrise:amazonlinux2-{IMAGE_DATE}).
+# This script builds our project inside a Docker container (using the image {PREFIX}/skyrise:al2-{IMAGE_DATE}).
 # The project directory is mounted into the Docker container, and the output of the build process is stored in the
 # subdirectory (BUILD_DIR). The script assumes the user to be in the Unix group docker.
 #
