@@ -109,9 +109,13 @@ set(
     expression/binary_predicate_expression.hpp
     expression/cast_expression.cpp
     expression/cast_expression.hpp
+    expression/expression_deserializer.cpp
+    expression/expression_deserializer.hpp
     expression/expression_functional.cpp
     expression/expression_functional.hpp
     expression/expression_precedence.hpp
+    expression/expression_serializer.cpp
+    expression/expression_serializer.hpp
     expression/expression_utils.cpp
     expression/expression_utils.hpp
     expression/extract_expression.cpp

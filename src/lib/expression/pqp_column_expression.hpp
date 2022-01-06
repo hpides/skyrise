@@ -26,15 +26,15 @@ class PqpColumnExpression : public AbstractExpression {
   DataType GetDataType() const override;
 
   const ColumnId column_id_;
+  const DataType data_type_;
+  const bool is_nullable_;
+  const std::string column_name_;
 
  protected:
   bool ShallowEquals(const AbstractExpression& expression) const override;
   size_t ShallowHash() const override;
 
  private:
-  const DataType data_type_;
-  const bool is_nullable_;
-  const std::string column_name_;
 };
 
 }  // namespace skyrise

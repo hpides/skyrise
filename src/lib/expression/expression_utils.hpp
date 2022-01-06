@@ -51,7 +51,7 @@ void VisitExpression(Expression& expression, Visitor visitor) {
     expression_queue.pop();
 
     if (visitor(expression_reference.get()) == ExpressionVisitation::kVisitArguments) {
-      for (auto& argument : expression_reference.get()->arguments) {
+      for (auto& argument : expression_reference.get()->arguments_) {
         expression_queue.push(argument);
       }
     }

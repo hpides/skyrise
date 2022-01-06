@@ -24,12 +24,11 @@ class CastExpression : public AbstractExpression {
   std::string Description(const DescriptionMode mode) const override;
   DataType GetDataType() const override;
 
+  const DataType data_type_;
+
  protected:
   bool ShallowEquals(const AbstractExpression& expression) const override;
   size_t ShallowHash() const override;
-
- private:
-  const DataType data_type_;
 };
 
 }  // namespace skyrise

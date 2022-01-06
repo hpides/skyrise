@@ -114,7 +114,7 @@ inline detail::Ternary<PredicateCondition::kBetweenExclusive, BetweenExpression>
 
 template <typename Argument>
 std::shared_ptr<CastExpression> Cast_(const Argument& argument, const DataType data_type) {
-  return std::make_shared<CastExpression>(to_expression(argument), data_type);
+  return std::make_shared<CastExpression>(ToExpression(argument), data_type);
 }
 
 template <typename... Args>

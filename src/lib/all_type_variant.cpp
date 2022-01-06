@@ -27,6 +27,9 @@ std::ostream& operator<<(std::ostream& stream, const AllTypeVariant& value) {
     case DataType::kDouble:
       stream << std::get<double>(value);
       break;
+    case DataType::kNull:
+      stream << std::get<NullValue>(value);
+      break;
     default:
       Fail("Unsupported AllTypeVariant type.");
       break;
