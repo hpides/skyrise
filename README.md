@@ -1,6 +1,9 @@
 # Skyrise
+Skyrise is a serverless query processor developed by the Enterprise Platform and Integration Concepts Group at HPI. The target workload of Skyrise is interactive analytics in-situ on cold data in cloud storage.
 
-### Quickstart
+## Key Features
+
+## Quickstart
 The Skyrise project is built and tested in a containerized **Docker** environment or on **Ubuntu**. For either setup, run:
 ```
 git clone --recursive git@github.com:hpi-epic/skyrise.git
@@ -18,7 +21,7 @@ cmake .. -GNinja
 ninja all
 ```
 
-### Team
+## Team
 
 Lead: [Thomas Bodner](https://hpi.de/plattner/people/phd-students/thomas-bodner.html)
 
