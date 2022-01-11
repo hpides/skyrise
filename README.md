@@ -1,5 +1,5 @@
 # Skyrise
-Skyrise is a serverless query processor developed by the Enterprise Platform and Integration Concepts Group at HPI. The target workload of Skyrise is interactive in-situ analytics on cold in cloud storage.
+Skyrise is a serverless query processor developed by the Enterprise Platform and Integration Concepts Group at HPI. The target workload of Skyrise is interactive in-situ analytics on cold data in cloud storage.
 
 ## Key Features
 
