@@ -44,7 +44,8 @@ async function compareCoverageCheck(client: aws.S3Client, localCoverage: string,
     const coverage_difference_text = Math.abs(localCoverageFloat - remoteCoverageFloat).toFixed(2);
     const message = `This branch has a test code coverage of ${localCoverage} (${coverage_difference_sign}${coverage_difference_text}% against the Master's ${remoteCoverage}).`;
 
-    if(localCoverageFloat < remoteCoverageFloat) {
+    // We tolerate a variation of 0.1% in code coverage because of nondeterminism in the control flow of our concurrent code and external cloud services.
+    if(localCoverageFloat < remoteCoverageFloat - 0.1) {
         core.setFailed(message);
     } else {
         core.info(message);

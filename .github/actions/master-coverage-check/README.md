@@ -4,4 +4,8 @@ This action compares test code coverage of a local branch with the master branch
 
 ## Building
 
-The file `dist/index.js` contains the logic of this custom action bundled with all dependencies. A GitHub Actions worker will run this file. Whenever the source code in `src/main.ts` is updated, a new artifact needs to be built and commited. Before commiting, run `npm install` to install dependencies and `npm run all` to build.
+The file `dist/index.js` contains the logic of this custom action bundled with all dependencies. A GitHub Actions worker will run this file. Whenever the source code in `src/main.ts` is updated, **a new artifact needs to be built and committed**. Before committing: 
+
+1. `cd` into the folder of the Github action.
+2. Run `npm install` to install dependencies. 
+3. Execute `npm run all` to build a new Javascript artifact.
