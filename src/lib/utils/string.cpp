@@ -48,7 +48,7 @@ size_t StringHeapSize(const std::string& string) {
 
   if (string.capacity() > sso_string_capacity) {
     // For heap-allocated strings, \0 is appended to denote the end of the string. capacity() is used over length()
-    // since some libraries (e.g. llvm's libc++) also over-allocate the heap strings
+    // since some libraries (e.g., LLVM's libc++) also over-allocate the heap strings
     // (cf. https://shaharmike.com/cpp/std-string/).
     return string.capacity() + 1;
   }

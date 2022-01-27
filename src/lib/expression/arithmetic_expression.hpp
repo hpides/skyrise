@@ -14,7 +14,7 @@ enum class ArithmeticOperator { kAddition, kSubtraction, kMultiplication, kDivis
 std::ostream& operator<<(std::ostream& stream, const ArithmeticOperator arithmetic_operator);
 
 /**
- * ArithmeticExpression represents, e.g. 2 + 3 or 5 * 3 * 4.
+ * ArithmeticExpression represents, e.g., 2 + 3 or 5 * 3 * 4.
  */
 class ArithmeticExpression : public AbstractExpression {
  public:

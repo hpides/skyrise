@@ -15,10 +15,7 @@ AbstractPredicateExpression::AbstractPredicateExpression(const PredicateConditio
                                                          std::vector<std::shared_ptr<AbstractExpression>> arguments)
     : AbstractExpression(ExpressionType::kPredicate, std::move(arguments)), predicate_condition_(predicate_condition) {}
 
-DataType AbstractPredicateExpression::GetDataType() const {
-  // TODO(maltenbergert): Revisit DataType once the ExpressionEvaluator is introduced.
-  return DataType::kInt;
-}
+DataType AbstractPredicateExpression::GetDataType() const { return DataType::kInt; }
 
 bool AbstractPredicateExpression::ShallowEquals(const AbstractExpression& expression) const {
   DebugAssert(dynamic_cast<const AbstractPredicateExpression*>(&expression),

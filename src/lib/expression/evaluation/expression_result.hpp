@@ -43,6 +43,7 @@ class BaseExpressionResult {
 template <typename T>
 class ExpressionResult : public BaseExpressionResult {
  public:
+  using Type = T;
   static std::shared_ptr<ExpressionResult<T>> MakeNull() {
     ExpressionResult<T> null_value({{T{}}}, {true});
 

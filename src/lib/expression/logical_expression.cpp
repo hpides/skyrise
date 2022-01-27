@@ -44,10 +44,7 @@ std::string LogicalExpression::Description(const DescriptionMode mode) const {
   return stream.str();
 }
 
-DataType LogicalExpression::GetDataType() const {
-  // TODO(TheoRadig): Revisit DataType once the ExpressionEvaluator is introduced.
-  return DataType::kInt;
-}
+DataType LogicalExpression::GetDataType() const { return DataType::kInt; }
 
 bool LogicalExpression::ShallowEquals(const AbstractExpression& expression) const {
   DebugAssert(dynamic_cast<const LogicalExpression*>(&expression),

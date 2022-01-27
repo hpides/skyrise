@@ -34,7 +34,7 @@ bool ValueExpression::ShallowEquals(const AbstractExpression& expression) const 
   const auto& value_expression =
       static_cast<const ValueExpression&>(expression);  // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 
-  // Even though NULL != NULL, two NULL expressions are the same expressions (e.g. when resolving ColumnIds)
+  // Even though NULL != NULL, two NULL expressions are the same expressions (e.g., when resolving ColumnIds).
   if (GetDataType() == DataType::kNull && value_expression.GetDataType() == DataType::kNull) {
     return true;
   }

@@ -21,11 +21,12 @@ namespace skyrise {
 template <typename T>
 class ExpressionResultNullableSeries {
  public:
+  using Type = T;
   ExpressionResultNullableSeries(std::shared_ptr<std::vector<T>> values, std::shared_ptr<std::vector<bool>> nulls)
       : values_(std::move(values)), nulls_(std::move(nulls)) {
     DebugAssert(values_ != nullptr, "Values is nullptr.");
     DebugAssert(nulls_ != nullptr, "Nulls is nullptr.");
-    DebugAssert(values_.size() == nulls_.size(), "Need as many values as nulls.");
+    DebugAssert(values_->size() == nulls_->size(), "Need as many values as nulls.");
   }
 
   bool IsSeries() const { return true; }
@@ -56,6 +57,7 @@ class ExpressionResultNullableSeries {
 template <typename T>
 class ExpressionResultNonNullSeries {
  public:
+  using Type = T;
   explicit ExpressionResultNonNullSeries(std::shared_ptr<std::vector<T>> values) : values_(std::move(values)) {
     DebugAssert(values_ != nullptr, "Values is nullptr.");
   }
@@ -84,6 +86,7 @@ class ExpressionResultNonNullSeries {
 template <typename T>
 class ExpressionResultLiteral {
  public:
+  using Type = T;
   ExpressionResultLiteral(const T& value, const bool null) : value_(value), null_(null) {}
 
   bool IsSeries() const { return false; }

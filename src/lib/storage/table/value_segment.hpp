@@ -57,9 +57,8 @@ class ValueSegment : public BaseValueSegment {
   // val may only contain NULL values, if IsNullable() is true.
   void Append(const AllTypeVariant& val) final;
 
-  // Returns all values. This is the preferred method to check a value at a certain index. Usually you need to
-  // access more than a single value anyway.
-  // e.g. auto& values = segment.values(); and then: values.at(i); in your loop.
+  // Returns all values. This is the preferred method to check a value at a certain index. Usually you need to access
+  // more than a single value anyway, e.g., auto& values = segment.values(); and then: values.at(i); in your loop.
   const std::vector<T>& Values() const;
   std::vector<T>& Values();
 

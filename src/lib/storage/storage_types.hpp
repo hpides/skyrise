@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <iostream>
 #include <limits>
 #include <memory>
 #include <vector>
@@ -12,6 +13,30 @@ using ChunkOffset = uint32_t;
 
 inline constexpr ChunkId kInvalidChunkId{std::numeric_limits<ChunkId>::max()};
 inline constexpr ChunkOffset kInvalidChunkOffset{std::numeric_limits<ChunkOffset>::max()};
+
+struct RowId {
+  bool IsNull() const { return chunk_offset == kInvalidChunkOffset; }
+
+  bool operator<(const RowId& other) const {
+    return std::tie(chunk_id, chunk_offset) < std::tie(other.chunk_id, other.chunk_offset);
+  }
+
+  bool operator==(const RowId& other) const {
+    return std::tie(chunk_id, chunk_offset) == std::tie(other.chunk_id, other.chunk_offset);
+  }
+
+  friend std::ostream& operator<<(std::ostream& stream, const RowId& row_id);
+
+  ChunkId chunk_id = kInvalidChunkId;
+  ChunkOffset chunk_offset = kInvalidChunkOffset;
+};
+
+inline std::ostream& operator<<(std::ostream& stream, const RowId& row_id) {
+  stream << "RowId(" << row_id.chunk_id << ", " << row_id.chunk_offset << ")";
+  return stream;
+}
+
+using RowIdPositionList = std::vector<RowId>;
 
 /**
  * Chunk Default Size:

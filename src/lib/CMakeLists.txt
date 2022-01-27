@@ -134,6 +134,8 @@ set(
     expression/unary_minus_expression.hpp
     expression/value_expression.cpp
     expression/value_expression.hpp
+    expression/evaluation/expression_evaluator.cpp
+    expression/evaluation/expression_evaluator.hpp
     expression/evaluation/expression_functors.hpp
     expression/evaluation/expression_result.hpp
     expression/evaluation/expression_result_views.hpp
