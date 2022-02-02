@@ -109,13 +109,14 @@ set(
     expression/binary_predicate_expression.hpp
     expression/cast_expression.cpp
     expression/cast_expression.hpp
-    expression/expression_deserializer.cpp
-    expression/expression_deserializer.hpp
+    expression/evaluation/expression_evaluator.cpp
+    expression/evaluation/expression_evaluator.hpp
+    expression/evaluation/expression_functors.hpp
+    expression/evaluation/expression_result.hpp
+    expression/evaluation/expression_result_views.hpp
     expression/expression_functional.cpp
     expression/expression_functional.hpp
     expression/expression_precedence.hpp
-    expression/expression_serializer.cpp
-    expression/expression_serializer.hpp
     expression/expression_utils.cpp
     expression/expression_utils.hpp
     expression/extract_expression.cpp
@@ -130,15 +131,14 @@ set(
     expression/logical_expression.hpp
     expression/pqp_column_expression.cpp
     expression/pqp_column_expression.hpp
+    expression/serialization/expression_deserializer.cpp
+    expression/serialization/expression_deserializer.hpp
+    expression/serialization/expression_serializer.cpp
+    expression/serialization/expression_serializer.hpp
     expression/unary_minus_expression.cpp
     expression/unary_minus_expression.hpp
     expression/value_expression.cpp
     expression/value_expression.hpp
-    expression/evaluation/expression_evaluator.cpp
-    expression/evaluation/expression_evaluator.hpp
-    expression/evaluation/expression_functors.hpp
-    expression/evaluation/expression_result.hpp
-    expression/evaluation/expression_result_views.hpp
 
     metadata/abstract_catalog.hpp
     metadata/mock_catalog.cpp
