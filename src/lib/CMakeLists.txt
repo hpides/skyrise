@@ -88,6 +88,8 @@ set(
     compiler/physical_query_plan/export_operator_proxy.hpp
     compiler/physical_query_plan/import_operator_proxy.cpp
     compiler/physical_query_plan/import_operator_proxy.hpp
+    compiler/physical_query_plan/import_options.cpp
+    compiler/physical_query_plan/import_options.hpp
     compiler/physical_query_plan/partition_operator_proxy.cpp
     compiler/physical_query_plan/partition_operator_proxy.hpp
     compiler/physical_query_plan/pqp_deserializer.cpp

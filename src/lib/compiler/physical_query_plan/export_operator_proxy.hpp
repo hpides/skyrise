@@ -12,8 +12,8 @@ class ExportOperatorProxy : public AbstractOperatorProxy {
  public:
   ExportOperatorProxy(std::string bucket_name, std::string target_object_key,
                       ExportOperator::OutputFormat output_format,
-                      const std::shared_ptr<const AbstractOperatorProxy>& left = nullptr,
-                      const std::shared_ptr<const AbstractOperatorProxy>& right = nullptr);
+                      const std::shared_ptr<AbstractOperatorProxy>& left = nullptr,
+                      const std::shared_ptr<AbstractOperatorProxy>& right = nullptr);
 
   const std::string& Name() const override;
 
@@ -21,7 +21,7 @@ class ExportOperatorProxy : public AbstractOperatorProxy {
   Aws::Utils::Json::JsonValue ToJson() const override;
 
  protected:
-  std::shared_ptr<AbstractOperator> CreateOperatorInstance() const override;
+  std::shared_ptr<AbstractOperator> CreateOperatorInstance() override;
 
  private:
   const std::string bucket_name_;

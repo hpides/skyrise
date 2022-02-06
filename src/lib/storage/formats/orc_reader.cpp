@@ -143,7 +143,7 @@ OrcFormatReader::OrcFormatReader(std::unique_ptr<ObjectReader> source, Configura
     : configuration_(std::move(configuration)) {
   auto input_stream = std::make_unique<OrcInputProxy>(std::move(source));
   Assert(!(configuration_.select_partition_range.has_value() && configuration_.select_row_range.has_value()),
-         "You may only select by partion or rows.");
+         "You may only select by partition or rows.");
   orc::ReaderOptions options;
 
   try {

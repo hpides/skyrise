@@ -9,8 +9,8 @@
 
 namespace skyrise {
 
-AbstractOperatorProxy::AbstractOperatorProxy(const OperatorType type, std::shared_ptr<const AbstractOperatorProxy> left,
-                                             std::shared_ptr<const AbstractOperatorProxy> right)
+AbstractOperatorProxy::AbstractOperatorProxy(const OperatorType type, std::shared_ptr<AbstractOperatorProxy> left,
+                                             std::shared_ptr<AbstractOperatorProxy> right)
     : type_(type), left_input_(std::move(left)), right_input_(std::move(right)) {}
 
 OperatorType AbstractOperatorProxy::Type() const { return type_; }
@@ -37,17 +37,18 @@ std::string AbstractOperatorProxy::GetIdentity() const {
   return string_stream.str();
 }
 
-std::shared_ptr<const AbstractOperatorProxy> AbstractOperatorProxy::GetLeftInput() const { return left_input_; }
-std::shared_ptr<const AbstractOperatorProxy> AbstractOperatorProxy::GetRightInput() const { return right_input_; }
+std::shared_ptr<AbstractOperatorProxy> AbstractOperatorProxy::GetLeftInput() const { return left_input_; }
 
-void AbstractOperatorProxy::SetLeftInput(std::shared_ptr<const AbstractOperatorProxy> left_input) {
+std::shared_ptr<AbstractOperatorProxy> AbstractOperatorProxy::GetRightInput() const { return right_input_; }
+
+void AbstractOperatorProxy::SetLeftInput(std::shared_ptr<AbstractOperatorProxy> left_input) {
   left_input_ = std::move(left_input);
 }
-void AbstractOperatorProxy::SetRightInput(std::shared_ptr<const AbstractOperatorProxy> right_input) {
+void AbstractOperatorProxy::SetRightInput(std::shared_ptr<AbstractOperatorProxy> right_input) {
   right_input_ = std::move(right_input);
 }
 
-std::shared_ptr<AbstractOperator> AbstractOperatorProxy::GetOperatorInstance() const {
+std::shared_ptr<AbstractOperator> AbstractOperatorProxy::GetOrCreateOperatorInstance() {
   if (!operator_instance_) {
     operator_instance_ = CreateOperatorInstance();
   }

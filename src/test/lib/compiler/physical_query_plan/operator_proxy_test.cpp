@@ -17,7 +17,7 @@ namespace skyrise {
 
 template <typename Proxy, typename Operator>
 void TestProxy(std::shared_ptr<Proxy> proxy) {
-  std::shared_ptr<AbstractOperator> operator_instance = proxy->GetOperatorInstance();
+  std::shared_ptr<AbstractOperator> operator_instance = proxy->GetOrCreateOperatorInstance();
   ASSERT_NE(operator_instance, nullptr);
 
   std::shared_ptr<const Operator> deserialized_proxy = std::dynamic_pointer_cast<const Operator>(operator_instance);
@@ -38,50 +38,16 @@ void TestProxy(std::shared_ptr<Proxy> proxy) {
 TEST(ProxyOperatorTest, AbstractProxy) {
   // We cannot create an instance of AbstractOperatorProxy, thus we use the ExportOperatorProxy to check the correct
   // serialization.
-  auto left_child = std::make_shared<const ExportOperatorProxy>("", "", ExportOperator::OutputFormat::kOrc);
-  auto right_child = std::make_shared<const ExportOperatorProxy>("", "", ExportOperator::OutputFormat::kOrc);
+  auto left_child = std::make_shared<ExportOperatorProxy>("", "", ExportOperator::OutputFormat::kOrc);
+  auto right_child = std::make_shared<ExportOperatorProxy>("", "", ExportOperator::OutputFormat::kOrc);
   auto proxy =
-      std::make_shared<const ExportOperatorProxy>("", "", ExportOperator::OutputFormat::kOrc, left_child, right_child);
+      std::make_shared<ExportOperatorProxy>("", "", ExportOperator::OutputFormat::kOrc, left_child, right_child);
 
   const Aws::Utils::Json::JsonValue proxy_json = proxy->ToJson();
 
   ASSERT_FALSE(proxy_json.View().GetString(kKeyOperatorType).empty());
   ASSERT_EQ(proxy_json.View().GetString(kKeyLeftInput), left_child->GetIdentity());
   ASSERT_EQ(proxy_json.View().GetString(kKeyRightInput), right_child->GetIdentity());
-}
-
-TEST(ProxyOperatorTest, ImportOperatorProxy) {
-  std::string bucket_name = "test_bucket";
-  std::vector<std::string> object_keys = {"a", "b", "c"};
-  std::vector<ColumnId> column_ids = {ColumnId{2}, ColumnId{3}};
-
-  auto definitions = std::make_shared<TableColumnDefinitions>();
-  definitions->emplace_back("a", DataType::kInt, false);
-
-  CsvFormatReaderOptions csv_options;
-  csv_options.expected_schema = definitions;
-
-  OrcFormatReaderOptions orc_options;
-  orc_options.expected_schema = definitions;
-  orc_options.select_partition_range = std::make_pair(1, 1);
-
-  auto import_csv_proxy = std::make_shared<ImportOperatorProxy>(
-      bucket_name, object_keys, column_ids, ImportOperatorProxy::ObjectFormat::kCsv,
-      std::make_shared<FormatReaderFactory<CsvFormatReader>>());
-  auto import_csv_proxy_custom_options = std::make_shared<ImportOperatorProxy>(
-      bucket_name, object_keys, column_ids, ImportOperatorProxy::ObjectFormat::kCsv,
-      std::make_shared<FormatReaderFactory<CsvFormatReader>>(csv_options));
-  auto import_orc_proxy = std::make_shared<ImportOperatorProxy>(
-      bucket_name, object_keys, column_ids, ImportOperatorProxy::ObjectFormat::kOrc,
-      std::make_shared<FormatReaderFactory<OrcFormatReader>>());
-  auto import_orc_proxy_custom_options = std::make_shared<ImportOperatorProxy>(
-      bucket_name, object_keys, column_ids, ImportOperatorProxy::ObjectFormat::kOrc,
-      std::make_shared<FormatReaderFactory<OrcFormatReader>>(orc_options));
-
-  TestProxy<ImportOperatorProxy, ImportOperator>(import_csv_proxy);
-  TestProxy<ImportOperatorProxy, ImportOperator>(import_csv_proxy_custom_options);
-  TestProxy<ImportOperatorProxy, ImportOperator>(import_orc_proxy);
-  TestProxy<ImportOperatorProxy, ImportOperator>(import_orc_proxy_custom_options);
 }
 
 TEST(ProxyOperatorTest, ExportOperatorProxy) {

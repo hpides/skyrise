@@ -56,7 +56,7 @@ void PqpDeserializer::BindInputOperators() {
   }
 }
 
-std::shared_ptr<const AbstractOperatorProxy> PqpDeserializer::Deserialize() {
+std::shared_ptr<AbstractOperatorProxy> PqpDeserializer::Deserialize() {
   const auto view = pqp_plan_.View();
 
   const auto operator_map = view.GetObject(kKeyOperators).GetAllObjects();

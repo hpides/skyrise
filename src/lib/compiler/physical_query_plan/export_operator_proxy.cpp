@@ -13,8 +13,8 @@ const std::string& ExportOperatorProxy::Name() const {
 
 ExportOperatorProxy::ExportOperatorProxy(std::string bucket_name, std::string target_object_key,
                                          ExportOperator::OutputFormat output_format,
-                                         const std::shared_ptr<const AbstractOperatorProxy>& left,
-                                         const std::shared_ptr<const AbstractOperatorProxy>& right)
+                                         const std::shared_ptr<AbstractOperatorProxy>& left,
+                                         const std::shared_ptr<AbstractOperatorProxy>& right)
     : AbstractOperatorProxy(OperatorType::kExport, left, right),
       bucket_name_(std::move(bucket_name)),
       target_object_key_(std::move(target_object_key)),
@@ -36,8 +36,8 @@ Aws::Utils::Json::JsonValue ExportOperatorProxy::ToJson() const {
       .WithString("output_format", std::string(magic_enum::enum_name(output_format_)));
 }
 
-std::shared_ptr<AbstractOperator> ExportOperatorProxy::CreateOperatorInstance() const {
-  return std::make_shared<ExportOperator>(GetLeftInput() ? GetLeftInput()->GetOperatorInstance() : nullptr,
+std::shared_ptr<AbstractOperator> ExportOperatorProxy::CreateOperatorInstance() {
+  return std::make_shared<ExportOperator>(GetLeftInput() ? GetLeftInput()->GetOrCreateOperatorInstance() : nullptr,
                                           bucket_name_, target_object_key_, output_format_);
 }
 

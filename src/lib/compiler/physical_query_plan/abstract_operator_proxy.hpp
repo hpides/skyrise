@@ -19,38 +19,37 @@ using StorageFactory = std::function<std::shared_ptr<Storage>(const std::string&
  */
 class AbstractOperatorProxy : public std::enable_shared_from_this<AbstractOperatorProxy>, private Noncopyable {
  public:
-  AbstractOperatorProxy(const OperatorType type, std::shared_ptr<const AbstractOperatorProxy> left = nullptr,
-                        std::shared_ptr<const AbstractOperatorProxy> right = nullptr);
+  AbstractOperatorProxy(const OperatorType type, std::shared_ptr<AbstractOperatorProxy> left = nullptr,
+                        std::shared_ptr<AbstractOperatorProxy> right = nullptr);
   virtual ~AbstractOperatorProxy() = default;
 
   OperatorType Type() const;
   virtual const std::string& Name() const = 0;
   virtual std::string Description(DescriptionMode description_mode = DescriptionMode::kSingleLine) const;
 
-  std::shared_ptr<const AbstractOperatorProxy> GetLeftInput() const;
-  std::shared_ptr<const AbstractOperatorProxy> GetRightInput() const;
+  std::shared_ptr<AbstractOperatorProxy> GetLeftInput() const;
+  std::shared_ptr<AbstractOperatorProxy> GetRightInput() const;
 
-  void SetLeftInput(std::shared_ptr<const AbstractOperatorProxy> left_input);
-  void SetRightInput(std::shared_ptr<const AbstractOperatorProxy> right_input);
+  void SetLeftInput(std::shared_ptr<AbstractOperatorProxy> left_input);
+  void SetRightInput(std::shared_ptr<AbstractOperatorProxy> right_input);
 
   virtual Aws::Utils::Json::JsonValue ToJson() const;
 
-  std::shared_ptr<AbstractOperator> GetOperatorInstance() const;
+  std::shared_ptr<AbstractOperator> GetOrCreateOperatorInstance();
 
   std::string GetIdentity() const;
 
  protected:
-  virtual std::shared_ptr<AbstractOperator> CreateOperatorInstance() const = 0;
+  virtual std::shared_ptr<AbstractOperator> CreateOperatorInstance() = 0;
 
   const OperatorType type_;
 
   // Shared pointers to input operator proxies. If there is no input operator it has nullptr as a value.
-  std::shared_ptr<const AbstractOperatorProxy> left_input_;
-  std::shared_ptr<const AbstractOperatorProxy> right_input_;
+  std::shared_ptr<AbstractOperatorProxy> left_input_;
+  std::shared_ptr<AbstractOperatorProxy> right_input_;
 
- private:
-  // An instance of the corresponding operator is cached to avoid multiple instatiations of the same operator.
-  mutable std::shared_ptr<AbstractOperator> operator_instance_;
+  // An instance of the corresponding operator is cached to avoid multiple instantiations of the same operator.
+  std::shared_ptr<AbstractOperator> operator_instance_;
 };
 
 }  // namespace skyrise

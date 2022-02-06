@@ -20,6 +20,19 @@ struct CsvFormatReaderOptions {
   bool has_header = false;
   bool has_types = false;
   std::shared_ptr<TableColumnDefinitions> expected_schema = nullptr;
+
+  bool operator==(const CsvFormatReaderOptions& rhs) const {
+    const bool same_schema = [&]() {
+      if (expected_schema && rhs.expected_schema) {
+        return *expected_schema == *rhs.expected_schema;
+      } else {
+        return !expected_schema && !rhs.expected_schema;
+      }
+    }();
+    return read_buffer_size == rhs.read_buffer_size && delimiter == rhs.delimiter &&
+           guess_delimiter == rhs.guess_delimiter && guess_has_header == rhs.guess_has_header &&
+           has_header == rhs.has_header && has_types == rhs.has_types && same_schema;
+  }
 };
 
 /*

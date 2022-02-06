@@ -41,8 +41,8 @@ Aws::Utils::Json::JsonValue PartitionOperatorProxy::ToJson() const {
       .WithArray("partition_column_ids", partition_column_id_array);
 }
 
-std::shared_ptr<AbstractOperator> PartitionOperatorProxy::CreateOperatorInstance() const {
-  const auto input_operator = GetLeftInput() ? GetLeftInput()->GetOperatorInstance() : nullptr;
+std::shared_ptr<AbstractOperator> PartitionOperatorProxy::CreateOperatorInstance() {
+  const auto input_operator = GetLeftInput() ? GetLeftInput()->GetOrCreateOperatorInstance() : nullptr;
   return std::make_shared<PartitionOperator>(input_operator, partition_count_, partition_column_ids_);
 }
 

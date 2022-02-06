@@ -17,6 +17,8 @@ set(
 
     lib/compiler/physical_query_plan/pqp_serialization_test.cpp
     lib/compiler/physical_query_plan/operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/import_options_test.cpp
+    lib/compiler/physical_query_plan/import_operator_proxy_test.cpp
 
     lib/expression/expression_evaluator_to_result_test.cpp
 

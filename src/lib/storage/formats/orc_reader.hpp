@@ -21,6 +21,38 @@ struct OrcFormatReaderOptions {
    */
   std::optional<std::pair<size_t, size_t>> select_row_range = std::nullopt;
   std::optional<std::pair<size_t, size_t>> select_partition_range = std::nullopt;
+
+  bool operator==(const OrcFormatReaderOptions& rhs) const {
+    if (parse_dates_as_string != rhs.parse_dates_as_string) {
+      return false;
+    }
+
+    const auto same_schema = [&]() {
+      if (expected_schema && rhs.expected_schema) {
+        return *expected_schema == *rhs.expected_schema;
+      } else {
+        return !expected_schema && !rhs.expected_schema;
+      }
+    };
+
+    const auto same_row_range = [&]() {
+      if (select_row_range.has_value() && rhs.select_row_range.has_value()) {
+        return select_row_range.value() == rhs.select_row_range.value();
+      } else {
+        return !select_row_range.has_value() && !rhs.select_row_range.has_value();
+      }
+    };
+
+    const auto same_partition_range = [&]() {
+      if (select_partition_range.has_value() && rhs.select_partition_range.has_value()) {
+        return select_partition_range.value() == rhs.select_partition_range.value();
+      } else {
+        return !select_partition_range.has_value() && !rhs.select_partition_range.has_value();
+      }
+    };
+
+    return same_schema() && same_row_range() && same_partition_range();
+  }
 };
 
 /**

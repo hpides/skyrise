@@ -11,7 +11,7 @@ namespace skyrise {
 class PqpDeserializer {
  public:
   PqpDeserializer(const std::string& pqp_plan);
-  std::shared_ptr<const AbstractOperatorProxy> Deserialize();
+  std::shared_ptr<AbstractOperatorProxy> Deserialize();
 
  private:
   static std::shared_ptr<AbstractOperatorProxy> DeserializeSingleOperator(

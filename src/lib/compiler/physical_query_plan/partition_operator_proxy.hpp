@@ -18,7 +18,7 @@ class PartitionOperatorProxy : public AbstractOperatorProxy {
   virtual Aws::Utils::Json::JsonValue ToJson() const override;
 
  protected:
-  std::shared_ptr<AbstractOperator> CreateOperatorInstance() const override;
+  std::shared_ptr<AbstractOperator> CreateOperatorInstance() override;
 
  private:
   const size_t partition_count_;
