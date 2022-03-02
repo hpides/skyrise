@@ -5,7 +5,7 @@
 #include <aws/core/Aws.h>
 
 #include "abstract_benchmark_config.hpp"
-#include "cloud_function/function_config.hpp"
+#include "function/function_config.hpp"
 #include "function_invocation_config.hpp"
 #include "scheduler/warm_up_strategy.hpp"
 
@@ -29,7 +29,6 @@ class LambdaBenchmarkConfig : public AbstractBenchmarkConfig {
 
   void SetPayloads(const std::vector<std::shared_ptr<Aws::IOStream>>& payloads);
   void SetOnePayloadForAllFunctions(const std::shared_ptr<Aws::IOStream>& payload);
-  static Aws::String GetProjectDirPath();
 
   const WarmUp warm_up_;
   const UseOneFunctionPerRepetition use_one_function_per_repetition_;

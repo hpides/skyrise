@@ -14,6 +14,7 @@
 
 #include "abstract_benchmark_runner.hpp"
 #include "client/client.hpp"
+#include "configuration.hpp"
 #include "lambda_benchmark_config.hpp"
 #include "lambda_benchmark_result.hpp"
 
@@ -39,7 +40,6 @@ class LambdaBenchmarkRunner : public AbstractBenchmarkRunner {
   void CreateInvokeRequests();
   void CollectSqsMessages(const size_t invocation_count);
 
-  static Aws::Utils::CryptoBuffer OpenFunctionZip(const Aws::String& function_path);
   Aws::Lambda::Model::FunctionCode SetFunctionCode(const Aws::String& function_path, const Aws::String& function_name,
                                                    const bool is_local);
 
@@ -57,9 +57,6 @@ class LambdaBenchmarkRunner : public AbstractBenchmarkRunner {
   std::shared_ptr<LambdaBenchmarkResult> benchmark_result_;
   std::unordered_map<std::string, Aws::Utils::CryptoBuffer> package_files_;
   std::mutex package_files_mutex_;
-
-  const Aws::String kFunctionRoleName{"AWSLambda"};
-  Aws::String function_role_arn_;
 };
 
 class ContextFunctionInvocation : public Aws::Client::AsyncCallerContext {

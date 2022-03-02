@@ -14,6 +14,7 @@
 #include <aws/core/utils/logging/LogMacros.h>
 
 #include "benchmark_result_aggregate.hpp"
+#include "function/function_utils.hpp"
 #include "utils/assert.hpp"
 
 namespace skyrise {
@@ -190,7 +191,7 @@ void InvocationLatencyBenchmark::Setup() {
 
   for (const auto& s3_package_name : s3_package_names) {
     std::shared_ptr<Aws::IOStream> package_file = Aws::MakeShared<Aws::FStream>(
-        s3_package_name.c_str(), LambdaBenchmarkConfig::GetProjectDirPath() + "pkg/" + s3_package_name + ".zip",
+        s3_package_name.c_str(), GetProjectDirectoryPath() + "pkg/" + s3_package_name + ".zip",
         std::ios_base::in | std::ios_base::binary);
 
     auto file_size = package_file->tellg();

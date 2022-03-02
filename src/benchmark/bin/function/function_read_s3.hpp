@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cloud_function/function.hpp"
+#include "function/function.hpp"
 
 namespace skyrise {
 

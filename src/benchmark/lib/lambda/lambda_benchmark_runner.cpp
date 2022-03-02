@@ -12,13 +12,10 @@
 
 #include <aws/core/utils/json/JsonSerializer.h>
 #include <aws/core/utils/logging/LogMacros.h>
-#include <aws/iam/model/GetRoleRequest.h>
-#include <aws/lambda/model/CreateFunctionRequest.h>
 #include <aws/lambda/model/DeleteFunctionRequest.h>
 #include <aws/lambda/model/DestinationConfig.h>
 #include <aws/lambda/model/OnFailure.h>
 #include <aws/lambda/model/OnSuccess.h>
-#include <aws/lambda/model/PublishVersionRequest.h>
 #include <aws/lambda/model/PutFunctionConcurrencyRequest.h>
 #include <aws/lambda/model/PutFunctionEventInvokeConfigRequest.h>
 #include <aws/sqs/model/CreateQueueRequest.h>
@@ -29,7 +26,8 @@
 #include <aws/sqs/model/QueueAttributeName.h>
 #include <aws/sqs/model/ReceiveMessageRequest.h>
 
-#include "limits.hpp"
+#include "configuration.hpp"
+#include "function/function_utils.hpp"
 #include "utils/assert.hpp"
 
 namespace skyrise {
@@ -44,13 +42,7 @@ LambdaBenchmarkRunner::LambdaBenchmarkRunner(std::shared_ptr<const Aws::IAM::IAM
     : iam_client_(std::move(iam_client)),
       lambda_client_(std::move(lambda_client)),
       sqs_client_(std::move(sqs_client)),
-      cost_calculator_(std::move(cost_calculator)) {
-  const auto get_role_outcome = iam_client_->GetRole(Aws::IAM::Model::GetRoleRequest().WithRoleName(kFunctionRoleName));
-
-  Assert(get_role_outcome.IsSuccess(), get_role_outcome.GetError().GetMessage());
-
-  function_role_arn_ = get_role_outcome.GetResult().GetRole().GetArn();
-}
+      cost_calculator_(std::move(cost_calculator)) {}
 
 std::shared_ptr<LambdaBenchmarkResult> LambdaBenchmarkRunner::RunLambdaConfig(
     const std::shared_ptr<LambdaBenchmarkConfig>& config) {
@@ -63,40 +55,27 @@ void LambdaBenchmarkRunner::Setup() {
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Creating functions...");
 
   // TODO(d-justen): Employ custom Lambda client if parallel function upload gets us in trouble
-  std::vector<Aws::Lambda::Model::CreateFunctionOutcomeCallable> outcome_callables;
+  std::vector<FunctionDeployable> function_deployables;
 
   for (const auto& function_config : typed_config_->function_configs_) {
-    auto create_function_request =
-        Aws::Lambda::Model::CreateFunctionRequest()
-            .WithFunctionName(function_config.function_name)
-            .WithRuntime(Aws::Lambda::Model::Runtime::provided_al2)
-            .WithRole(function_role_arn_)
-            .WithHandler("HandlerFunction")
-            .WithCode(
-                SetFunctionCode(function_config.function_path, function_config.function_name, function_config.is_local))
-            // TODO(tobodner): Remove state opt-out, once we support state handling.
-            .WithDescription("aws:states:opt-out")
-            .WithTimeout(kLambdaFunctionTimeoutSeconds)
-            .WithMemorySize(function_config.memory_size);
-
-    if (typed_config_->enable_tracing_) {
-      create_function_request.SetTracingConfig(
-          Aws::Lambda::Model::TracingConfig().WithMode(Aws::Lambda::Model::TracingMode::Active));
+    Aws::Lambda::Model::FunctionCode function_code;
+    if (function_config.is_local) {
+      const std::lock_guard<std::mutex> lock(package_files_mutex_);
+      if (package_files_.find(function_config.function_path) == package_files_.cend()) {
+        package_files_[function_config.function_path] = OpenFunctionZipFile(function_config.function_path);
+      }
+      function_code.WithZipFile(package_files_[function_config.function_path]);
+    } else {
+      function_code = GetRemoteFunctionCode(function_config.function_path, function_config.function_name);
     }
 
-    outcome_callables.emplace_back(lambda_client_->CreateFunctionCallable(create_function_request));
+    function_deployables.emplace_back(function_config.function_name, function_code.Jsonize(),
+                                      function_config.memory_size);
   }
 
-  for (auto& outcome_callable : outcome_callables) {
-    const auto& outcome = outcome_callable.get();
-    Assert(outcome.IsSuccess(), outcome.GetError().GetMessage());
+  UploadFunctions(iam_client_, lambda_client_, function_deployables, typed_config_->enable_tracing_);
 
-    const auto publish_version_outcome = lambda_client_->PublishVersion(
-        Aws::Lambda::Model::PublishVersionRequest().WithFunctionName(outcome.GetResult().GetFunctionName()));
-    Assert(publish_version_outcome.IsSuccess(), publish_version_outcome.GetError().GetMessage());
-  }
-
-  AWS_LOGSTREAM_INFO(kTag.c_str(), "Functions created.");
+  AWS_LOGSTREAM_INFO(kTag.c_str(), "Functions created and active.");
 
   if (typed_config_->use_event_queue_ == UseEventQueue::kYes) {
     SetupEventQueue();
@@ -330,42 +309,6 @@ void LambdaBenchmarkRunner::CollectSqsMessages(const size_t invocation_count) {
       Assert(delete_message_outcome.IsSuccess(), delete_message_outcome.GetError().GetMessage());
     }
   }
-}
-
-Aws::Utils::CryptoBuffer LambdaBenchmarkRunner::OpenFunctionZip(const Aws::String& function_path) {
-  std::ifstream infile(function_path, std::ios::in | std::ios::binary);
-  Assert(infile, function_path + " could not be opened.");
-
-  const std::string file_buffer = StreamToString(&infile);
-
-  return Aws::Utils::ByteBuffer(reinterpret_cast<const unsigned char*>(file_buffer.c_str()), file_buffer.length());
-}
-
-Aws::Lambda::Model::FunctionCode LambdaBenchmarkRunner::SetFunctionCode(const Aws::String& function_path,
-                                                                        const Aws::String& function_name,
-                                                                        const bool is_local) {
-  Aws::Lambda::Model::FunctionCode code;
-
-  if (is_local) {
-    const std::lock_guard<std::mutex> lock(package_files_mutex_);
-
-    if (package_files_.find(function_path) == package_files_.cend()) {
-      package_files_[function_path] = OpenFunctionZip(function_path);
-    }
-
-    code.WithZipFile(package_files_[function_path]);
-  } else {
-    // Extract function name after S3_
-    std::regex function_name_regex("S3_([^-]*)");
-    std::smatch matches;
-
-    const auto function_name_found = std::regex_search(function_name, matches, function_name_regex);
-    Assert(function_name_found, "S3 key could not be extracted from function name " + function_name + ".");
-
-    code.WithS3Bucket(function_path).WithS3Key(matches[1]);
-  }
-
-  return code;
 }
 
 }  // namespace skyrise

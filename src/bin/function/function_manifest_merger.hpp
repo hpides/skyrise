@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cloud_function/function.hpp"
+#include "function/function.hpp"
 #include "statistics/manifest_merger.hpp"
 #include "storage/backend/storage_s3.hpp"
 

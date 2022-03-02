@@ -7,6 +7,7 @@
 
 #include <unistd.h>
 
+#include "function/function_utils.hpp"
 #include "utils/assert.hpp"
 #include "utils/string.hpp"
 #include "utils/time.hpp"
@@ -53,7 +54,7 @@ LambdaBenchmarkConfig::LambdaBenchmarkConfig(const Aws::String& function_zip_nam
 
   const auto is_local = function_zip_name.find("S3_") != 0;
   const Aws::String function_location =
-      is_local ? GetProjectDirPath() + "pkg/" + function_zip_name + ".zip" : function_bucket;
+      is_local ? GetProjectDirectoryPath() + "pkg/" + function_zip_name + ".zip" : function_bucket;
   Aws::StringStream function_name_base;
   function_name_base << benchmark_id_ << "-" << benchmark_timestamp_ << "-" << function_zip_name;
 
@@ -83,23 +84,6 @@ LambdaBenchmarkConfig::LambdaBenchmarkConfig(const Aws::String& function_zip_nam
 
     repetition_configs_.emplace_back(invocation_configs);
   }
-}
-
-Aws::String LambdaBenchmarkConfig::GetProjectDirPath() {
-  std::array<char, PATH_MAX> executable_path_buffer{};
-  const auto path_name_length =
-      readlink("/proc/self/exe", executable_path_buffer.data(), sizeof(executable_path_buffer) - 1);
-
-  if (path_name_length == -1) {
-    Fail("Unable to read project directory path.");
-  }
-
-  executable_path_buffer[path_name_length] = '\0';
-
-  const Aws::String path_name(executable_path_buffer.data());
-
-  // Return the absolute project directory path by removing the path to the executable
-  return path_name.substr(0, path_name.rfind("bin"));
 }
 
 void LambdaBenchmarkConfig::SetPayloads(const std::vector<std::shared_ptr<Aws::IOStream>>& payloads) {

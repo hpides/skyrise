@@ -190,6 +190,8 @@ set(
     utils/json.hpp
     utils/literal.hpp
     utils/map.hpp
+    utils/profiling/function_host_information.cpp
+    utils/profiling/function_host_information.hpp
     utils/random.hpp
     utils/string.cpp
     utils/string.hpp
@@ -229,11 +231,12 @@ set(
     COORDINATOR_SOURCES
     client/client.cpp
     client/client.hpp
-    cloud_function/function_config.hpp
     configuration.hpp
     coordinator.cpp
     coordinator.hpp
-    limits.hpp
+    function/function_config.hpp
+    function/function_utils.cpp
+    function/function_utils.hpp
     monitoring/function_segments.cpp
     monitoring/function_segments.hpp
     scheduler/warm_up_strategy.cpp
@@ -260,16 +263,14 @@ target_link_libraries(skyriseCoordinator PUBLIC ${COORDINATOR_LIBRARIES})
 
 set(
     WORKER_SOURCES
-    cloud_function/function.cpp
-    cloud_function/function.hpp
+    function/function.cpp
+    function/function.hpp
     monitoring/metrics_collector.cpp
     monitoring/metrics_collector.hpp
     monitoring/monitoring_handler.cpp
     monitoring/monitoring_handler.hpp
     monitoring/tracer.cpp
     monitoring/tracer.hpp
-    utils/profiling/function_host_information.cpp
-    utils/profiling/function_host_information.hpp
 )
 
 set(

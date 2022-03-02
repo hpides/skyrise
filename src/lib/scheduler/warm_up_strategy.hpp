@@ -4,7 +4,7 @@
 #include <string>
 
 #include "client/client.hpp"
-#include "cloud_function/function_config.hpp"
+#include "function/function_config.hpp"
 #include "utils/costs/cost_calculator.hpp"
 
 namespace skyrise {

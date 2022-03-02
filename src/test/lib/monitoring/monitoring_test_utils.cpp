@@ -11,51 +11,10 @@
 #include <aws/lambda/model/FunctionCode.h>
 #include <aws/lambda/model/InvokeRequest.h>
 
-#include "limits.hpp"
+#include "configuration.hpp"
 #include "utils/assert.hpp"
 
 namespace skyrise {
-
-// TODO(anyone): Consolidate common utility functions in lib/utils
-void UploadFunction(const std::shared_ptr<Client>& client, const std::string& package_name,
-                    const std::string& function_name, const std::string& role_name, bool enable_tracing) {
-  // TODO(anyone): Use GetProjectDirPath() currently residing in LambdaBenchmarkConfig for more robustness
-  const Aws::String function_path = "./pkg/" + package_name + ".zip";
-  std::ifstream infile(function_path, std::ios::in | std::ios::binary);
-
-  if (!infile) {
-    Fail(function_path + " could not be opened.");
-  }
-
-  const std::string file_buffer = StreamToString(&infile);
-  Aws::Utils::ByteBuffer byte_buffer(reinterpret_cast<const unsigned char*>(file_buffer.c_str()), file_buffer.length());
-
-  Aws::IAM::Model::GetRoleRequest get_role_request;
-  get_role_request.WithRoleName(role_name);
-  const auto get_role_outcome = client->GetIAMClient()->GetRole(get_role_request);
-  const auto role = get_role_outcome.GetResult().GetRole();
-
-  Assert(get_role_outcome.IsSuccess(), get_role_outcome.GetError().GetMessage());
-
-  auto create_function_request =
-      Aws::Lambda::Model::CreateFunctionRequest()
-          .WithFunctionName(function_name)
-          .WithRuntime(Aws::Lambda::Model::Runtime::provided_al2)
-          .WithRole(role.GetArn())
-          .WithHandler("FunctionHandler")
-          .WithCode(Aws::Lambda::Model::FunctionCode().WithZipFile(byte_buffer))
-          // TODO(tobodner): Remove state opt-out, once we support state handling.
-          .WithDescription("aws:states:opt-out")
-          .WithTimeout(kLambdaFunctionTimeoutSeconds)
-          .WithMemorySize(128)
-          .WithTracingConfig(enable_tracing
-                                 ? Aws::Lambda::Model::TracingConfig().WithMode(Aws::Lambda::Model::TracingMode::Active)
-                                 : Aws::Lambda::Model::TracingConfig());
-
-  const auto create_function_outcome = client->GetLambdaClient()->CreateFunction(create_function_request);
-
-  Assert(create_function_outcome.IsSuccess(), create_function_outcome.GetError().GetMessage());
-}
 
 std::pair<std::chrono::time_point<std::chrono::system_clock>, std::chrono::time_point<std::chrono::system_clock>>
 InvokeFunction(const std::shared_ptr<Client>& client, const std::string& function_name) {
