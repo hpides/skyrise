@@ -21,6 +21,7 @@ set(
     lib/compiler/physical_query_plan/import_operator_proxy_test.cpp
 
     lib/expression/expression_evaluator_to_result_test.cpp
+    lib/expression/expression_serialization_test.cpp
 
     lib/metadata/mock_catalog_test.cpp
     lib/metadata/tpch_mock_catalog_test.cpp

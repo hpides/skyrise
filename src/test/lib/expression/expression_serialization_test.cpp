@@ -1,9 +1,10 @@
+#include <gtest/gtest.h>
+
 #include "expression/aggregate_expression.hpp"
-#include "expression/expression_deserializer.hpp"
 #include "expression/expression_functional.hpp"
-#include "expression/expression_serializer.hpp"
 #include "expression/pqp_column_expression.hpp"
-#include "gtest/gtest.h"
+#include "expression/serialization/expression_deserializer.hpp"
+#include "expression/serialization/expression_serializer.hpp"
 
 namespace skyrise {
 
@@ -36,13 +37,14 @@ void TestSerializeAndDeserialize(const std::vector<std::shared_ptr<AbstractExpre
     TestSerializeAndDeserialize(expression);
   }
 }
+
 }  // namespace
 
 /**
  * The following tests' expressions were taken from expression_evaluator_to_result_test.cpp
  */
 
-TEST(ExpressionSerialization, AggregateExpressions) {
+TEST(ExpressionSerializationTest, AggregateExpressions) {
   const auto column_a = std::make_shared<PqpColumnExpression>(1, DataType::kInt, false, "a");
   const std::vector<std::shared_ptr<AbstractExpression>> expressions = {
       std::make_shared<AggregateExpression>(AggregateFunction::kAvg, ToExpression(5)),
@@ -53,24 +55,24 @@ TEST(ExpressionSerialization, AggregateExpressions) {
   TestSerializeAndDeserialize(expressions);
 }
 
-TEST(ExpressionSerialization, ArithmeticExpressions) {
+TEST(ExpressionSerializationTest, ArithmeticExpressions) {
   const std::vector<std::shared_ptr<AbstractExpression>> expressions = {Mul_(5, Add_(2, 2.5)), Div_(Sub_(10, 2), 2)};
   TestSerializeAndDeserialize(expressions);
 }
 
-TEST(ExpressionSerialization, BetweenExpressions) {
+TEST(ExpressionSerializationTest, BetweenExpressions) {
   const std::vector<std::shared_ptr<AbstractExpression>> expressions = {
       BetweenInclusive_(5.0f, 3.1, 5), BetweenLowerInclusive_(4, 3.0, 5.0), BetweenLowerInclusive_(3, 3, Null_())};
   TestSerializeAndDeserialize(expressions);
 }
 
-TEST(ExpressionSerialization, CastExpressions) {
+TEST(ExpressionSerializationTest, CastExpressions) {
   std::vector<std::shared_ptr<AbstractExpression>> expressions = {Cast_(ToExpression(6.5f), DataType::kInt),
                                                                   Cast_(ToExpression(6), DataType::kFloat)};
   TestSerializeAndDeserialize(expressions);
 }
 
-TEST(ExpressionSerialization, ExpressionPointer) {
+TEST(ExpressionSerializationTest, ExpressionPointer) {
   std::shared_ptr<AbstractExpression> valid_pointer = ToExpression(10);
   std::shared_ptr<AbstractExpression> null_pointer = nullptr;
 
@@ -79,44 +81,44 @@ TEST(ExpressionSerialization, ExpressionPointer) {
   EXPECT_ANY_THROW(ExpressionSerializer::Serialize(null_pointer));
 }
 
-TEST(ExpressionSerialization, ExtractExpressions) {
+TEST(ExpressionSerializationTest, ExtractExpressions) {
   std::vector<std::shared_ptr<AbstractExpression>> expressions = {
       Extract_(DatetimeComponent::kMonth, "1992-09-30"), Extract_(DatetimeComponent::kYear, Null_()),
       Extract_(DatetimeComponent::kHour, "1992-09-30"), Extract_(DatetimeComponent::kSecond, "1992-09-30")};
   TestSerializeAndDeserialize(expressions);
 }
 
-TEST(ExpressionSerialization, InAndListExpressions) {
+TEST(ExpressionSerializationTest, InAndListExpressions) {
   std::vector<std::shared_ptr<AbstractExpression>> expressions = {
       List_(Null_(), 2, 3, 4), In_(Null_(), List_(Null_())), In_("You", List_("Hello", 1.0, "You", 3.0)),
       In_(5, List_(1.0, Add_(2.0, 3.0))), NotIn_(Null_(), List_(Null_()))};
   TestSerializeAndDeserialize(expressions);
 }
 
-TEST(ExpressionSerialization, IsNullExpressionExpressions) {
+TEST(ExpressionSerializationTest, IsNullExpressionExpressions) {
   std::vector<std::shared_ptr<AbstractExpression>> expressions = {IsNull_(0), IsNull_(Null_()), IsNotNull_(1)};
   TestSerializeAndDeserialize(expressions);
 }
 
-TEST(ExpressionSerialization, LiteralExpressions) {
+TEST(ExpressionSerializationTest, LiteralExpressions) {
   std::vector<std::shared_ptr<AbstractExpression>> expressions = {ToExpression(10),    ToExpression(10.0f),
                                                                   ToExpression(10.0f), ToExpression("10"),
                                                                   ToExpression(10L),   ToExpression(kNullValue)};
   TestSerializeAndDeserialize(expressions);
 }
 
-TEST(ExpressionSerialization, LogicalExpressions) {
+TEST(ExpressionSerializationTest, LogicalExpressions) {
   std::vector<std::shared_ptr<AbstractExpression>> expressions = {And_(1, 1), And_(NullValue(), NullValue()),
                                                                   Or_(1, 1)};
   TestSerializeAndDeserialize(expressions);
 }
 
-TEST(ExpressionSerialization, PredicateExpressions) {
+TEST(ExpressionSerializationTest, PredicateExpressions) {
   std::vector<std::shared_ptr<AbstractExpression>> expressions = {GreaterThan_(5, 2), Equals_(10, 10)};
   TestSerializeAndDeserialize(expressions);
 }
 
-TEST(ExpressionSerialization, PqpColumnExpressions) {
+TEST(ExpressionSerializationTest, PqpColumnExpressions) {
   const auto column_a = std::make_shared<PqpColumnExpression>(1, DataType::kInt, false, "a");
   const auto column_b = std::make_shared<PqpColumnExpression>(2, DataType::kDouble, false, "b");
   const auto column_c = std::make_shared<PqpColumnExpression>(2, DataType::kString, false, "c");
@@ -127,7 +129,7 @@ TEST(ExpressionSerialization, PqpColumnExpressions) {
   TestSerializeAndDeserialize(expressions);
 }
 
-TEST(ExpressionSerialization, UnaryMinusExpressions) {
+TEST(ExpressionSerializationTest, UnaryMinusExpressions) {
   const auto column_a = std::make_shared<PqpColumnExpression>(1, DataType::kInt, false, "a");
   std::vector<std::shared_ptr<AbstractExpression>> expressions = {UnaryMinus_(2.5), UnaryMinus_(int32_t{-3}),
                                                                   UnaryMinus_(column_a)};

@@ -149,7 +149,6 @@ Aws::Utils::Json::JsonValue ExpressionSerializer::Serialize(const AbstractExpres
 
 Aws::Utils::Json::JsonValue ExpressionSerializer::Serialize(const std::shared_ptr<AbstractExpression>& expression) {
   Assert(expression, "Cannot serialize null pointer.");
-
   return Serialize(*expression);
 }
 
