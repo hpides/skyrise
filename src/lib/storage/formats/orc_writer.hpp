@@ -35,7 +35,7 @@ class OrcOutputProxy : public orc::OutputStream {
 }  // namespace detail
 
 struct OrcFormatWriterOptions {
-  orc::CompressionKind compression_kind = orc::CompressionKind_NONE;
+  orc::CompressionKind compression_kind = orc::CompressionKind_ZSTD;
   orc::CompressionStrategy compression_strategy = orc::CompressionStrategy_SPEED;
   size_t stripe_size = 64_MB;       // ORC default.
   bool save_chunk_offsets = false;  // Used for partitioned intermediate format.
