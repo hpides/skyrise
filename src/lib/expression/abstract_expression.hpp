@@ -21,6 +21,7 @@ enum class ExpressionType {
   kExtract,
   kList,
   kLogical,
+  kLqpColumn,
   kPqpColumn,
   kPredicate,
   kUnaryMinus,
