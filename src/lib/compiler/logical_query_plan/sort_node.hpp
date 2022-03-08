@@ -1,0 +1,38 @@
+/**
+ * Taken and modified from our sister project Hyrise (https://github.com/hyrise/hyrise)
+ */
+#pragma once
+
+#include <string>
+#include <vector>
+
+#include "abstract_lqp_node.hpp"
+#include "types.hpp"
+
+namespace skyrise {
+
+/**
+ * This node type represents sorting operations as defined in ORDER BY clauses.
+ */
+class SortNode : public EnableMakeForPlanNode<SortNode, AbstractLqpNode>, public AbstractLqpNode {
+ public:
+  explicit SortNode(const std::vector<std::shared_ptr<AbstractExpression>>& expressions,
+                    const std::vector<SortMode>& init_sort_modes);
+
+  const std::string& Name() const override;
+  using AbstractLqpNode::Description;
+  std::string Description(const DescriptionMode mode,
+                          const AbstractExpression::DescriptionMode expression_mode) const override;
+
+  // Forwards unique constraints from the left input node
+  std::shared_ptr<LqpUniqueConstraints> UniqueConstraints() const override;
+
+  const std::vector<SortMode> sort_modes;
+
+ protected:
+  size_t OnShallowHash() const override;
+  std::shared_ptr<AbstractLqpNode> OnShallowCopy(LqpNodeMapping& node_mapping) const override;
+  bool OnShallowEquals(const AbstractLqpNode& rhs, const LqpNodeMapping& node_mapping) const override;
+};
+
+}  // namespace skyrise
