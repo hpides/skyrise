@@ -82,10 +82,6 @@ set(
     compiler/logical_query_plan/aggregate_node.hpp
     compiler/logical_query_plan/alias_node.cpp
     compiler/logical_query_plan/alias_node.hpp
-    compiler/logical_query_plan/create_view_node.cpp
-    compiler/logical_query_plan/create_view_node.hpp
-    compiler/logical_query_plan/drop_view_node.cpp
-    compiler/logical_query_plan/drop_view_node.hpp
     compiler/logical_query_plan/dummy_table_node.cpp
     compiler/logical_query_plan/dummy_table_node.hpp
     compiler/logical_query_plan/functional_dependency.cpp

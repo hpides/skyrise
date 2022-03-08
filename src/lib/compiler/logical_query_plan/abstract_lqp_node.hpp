@@ -19,11 +19,7 @@ namespace skyrise {
 enum class LqpNodeType {
   kAggregate,
   kAlias,
-  kCreateView,
-  kDropView,
   kDummyTable,
-  kExport,
-  kImport,
   kJoin,
   kLimit,
   kMock,
@@ -31,7 +27,6 @@ enum class LqpNodeType {
   kProjection,
   kRoot,
   kSort,
-  kStaticTable,  // used for create table - TODO(anyone): Remove?
   kStoredTable,
   kUnion,
 };
