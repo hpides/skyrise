@@ -133,21 +133,37 @@ set(
     constant_mappings.hpp
 
     compiler/abstract_plan_node.hpp
-
+    compiler/enable_make_for_plan_node.hpp
     compiler/physical_query_plan/abstract_operator_proxy.cpp
     compiler/physical_query_plan/abstract_operator_proxy.hpp
+    compiler/physical_query_plan/aggregate_operator_proxy.cpp
+    compiler/physical_query_plan/aggregate_operator_proxy.hpp
+    compiler/physical_query_plan/alias_operator_proxy.cpp
+    compiler/physical_query_plan/alias_operator_proxy.hpp
+    compiler/physical_query_plan/data_exchange_operator_proxy.cpp
+    compiler/physical_query_plan/data_exchange_operator_proxy.hpp
     compiler/physical_query_plan/export_operator_proxy.cpp
     compiler/physical_query_plan/export_operator_proxy.hpp
+    compiler/physical_query_plan/filter_operator_proxy.cpp
+    compiler/physical_query_plan/filter_operator_proxy.hpp
     compiler/physical_query_plan/import_operator_proxy.cpp
     compiler/physical_query_plan/import_operator_proxy.hpp
     compiler/physical_query_plan/import_options.cpp
     compiler/physical_query_plan/import_options.hpp
+    compiler/physical_query_plan/join_operator_proxy.cpp
+    compiler/physical_query_plan/join_operator_proxy.hpp
+    compiler/physical_query_plan/limit_operator_proxy.cpp
+    compiler/physical_query_plan/limit_operator_proxy.hpp
     compiler/physical_query_plan/partition_operator_proxy.cpp
     compiler/physical_query_plan/partition_operator_proxy.hpp
-    compiler/physical_query_plan/pqp_deserializer.cpp
-    compiler/physical_query_plan/pqp_deserializer.hpp
-    compiler/physical_query_plan/pqp_serializer.cpp
-    compiler/physical_query_plan/pqp_serializer.hpp
+    compiler/physical_query_plan/pqp_serialization.cpp
+    compiler/physical_query_plan/pqp_serialization.hpp
+    compiler/physical_query_plan/projection_operator_proxy.cpp
+    compiler/physical_query_plan/projection_operator_proxy.hpp
+    compiler/physical_query_plan/sort_operator_proxy.cpp
+    compiler/physical_query_plan/sort_operator_proxy.hpp
+    compiler/physical_query_plan/union_operator_proxy.cpp
+    compiler/physical_query_plan/union_operator_proxy.hpp
 
     expression/abstract_expression.cpp
     expression/abstract_expression.hpp
@@ -240,6 +256,7 @@ set(
     utils/json.hpp
     utils/literal.hpp
     utils/map.hpp
+    utils/print_directed_acyclic_graph.hpp
     utils/profiling/function_host_information.cpp
     utils/profiling/function_host_information.hpp
     utils/random.hpp

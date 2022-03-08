@@ -93,8 +93,8 @@ TEST_F(StorageValueSegmentTest, MemoryUsageEstimation) {
   value_segment_int_.Append(1);
   value_segment_int_.Append(2);
 
-  auto short_str = std::string{"Hello"};
-  auto longer_str = std::string{"HelloWorldHaveANiceDayWithSunshineAndGoodCofefe"};
+  auto short_str = std::string("Hello");
+  auto longer_str = std::string("HelloWorldHaveANiceDayWithSunshineAndGoodCofefe");
 
   value_segment_str_.Append(short_str);
   value_segment_str_.Append(longer_str);

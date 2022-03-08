@@ -22,7 +22,7 @@ class ManifestReaderTest : public ManifestTest {
   }
 
   inline static const std::string kMetadataFile{"manifest.orc"};
-  inline static const std::string kTablePrefix{"someprefix"};
+  inline static const std::string kTablePrefix = "someprefix";
   std::shared_ptr<ManifestWriter> manifest_writer_;
 };
 

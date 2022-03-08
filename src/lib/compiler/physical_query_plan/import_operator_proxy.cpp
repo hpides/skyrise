@@ -9,10 +9,10 @@
 
 namespace {
 
-const std::string kJsonKeyImportOptions = "import_options";
 const std::string kJsonKeyBucketName = "bucket_name";
-const std::string kJsonKeyObjectKeys = "object_keys";
 const std::string kJsonKeyColumnIds = "column_ids";
+const std::string kJsonKeyImportOptions = "import_options";
+const std::string kJsonKeyObjectKeys = "object_keys";
 
 const std::string kOrcExtension = ".orc";
 const std::string kCsvExtension = ".csv";
@@ -26,11 +26,35 @@ ImportOperatorProxy::ImportOperatorProxy(std::string bucket_name, std::vector<st
     : AbstractOperatorProxy(OperatorType::kImport),
       bucket_name_(std::move(bucket_name)),
       object_keys_(std::move(object_keys)),
-      column_ids_(std::move(column_ids)) {}
+      column_ids_(std::move(column_ids)),
+      output_objects_count_(std::numeric_limits<size_t>::max()) {
+  Assert(!column_ids_.empty(), "Import must involve at least one ColumnId.");
+}
 
 const std::string& ImportOperatorProxy::Name() const {
-  static const auto kName = std::string{"Import"};
+  static const std::string kName = "Import";
   return kName;
+}
+
+std::string ImportOperatorProxy::Description(const DescriptionMode mode) const {
+  std::stringstream stream;
+  const char separator = (mode == DescriptionMode::kSingleLine ? ' ' : '\n');
+  stream << AbstractOperatorProxy::Description(mode) << separator;
+
+  // Import details
+  stream << bucket_name_ << "/";
+  if (mode == DescriptionMode::kMultiLine) {
+    stream << separator;
+  }
+  if (object_keys_.size() == 1) {
+    stream << object_keys_.front();
+  } else {
+    stream << "{" << object_keys_.size() << " objects}";
+  }
+  // todo(anyone) output format ORC/CSV?
+
+  stream << separator << "ColumnIds{" << column_ids_ << "}";
+  return stream.str();
 }
 
 const std::string& ImportOperatorProxy::BucketName() const { return bucket_name_; }
@@ -47,6 +71,20 @@ void ImportOperatorProxy::SetImportOptions(std::shared_ptr<const ImportOptions> 
 }
 
 std::shared_ptr<const ImportOptions> ImportOperatorProxy::GetImportOptions() const { return import_options_; }
+
+bool ImportOperatorProxy::IsPipelineBreaker() const { return false; }
+
+size_t ImportOperatorProxy::OutputObjectsCount() const {
+  Assert(!object_keys_.empty(), "ImportOperatorProxy has no object keys set.");
+  return std::min(object_keys_.size(), output_objects_count_);
+}
+
+void ImportOperatorProxy::SetOutputObjectsCount(size_t output_objects_count) {
+  Assert(output_objects_count >= 1, "ImportOperatorProxy must specify at least one output object.");
+  output_objects_count_ = output_objects_count;
+}
+
+size_t ImportOperatorProxy::OutputColumnsCount() const { return column_ids_.size(); }
 
 Aws::Utils::Json::JsonValue ImportOperatorProxy::ToJson() const {
   auto json_output = AbstractOperatorProxy::ToJson()
@@ -66,7 +104,8 @@ std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::FromJson(const Aws::
   const std::vector<std::string> object_keys = JsonArrayToVector<std::string>(json.GetArray(kJsonKeyObjectKeys));
   const std::vector<ColumnId> column_ids = JsonArrayToVector<ColumnId>(json.GetArray(kJsonKeyColumnIds));
 
-  auto import_proxy = std::make_shared<ImportOperatorProxy>(bucket_name, object_keys, column_ids);
+  auto import_proxy = ImportOperatorProxy::Make(bucket_name, object_keys, column_ids);
+  import_proxy->SetAttributesFromJson(json);
 
   if (json.ValueExists(kJsonKeyImportOptions)) {
     const auto deserialized_import_options = ImportOptions::FromJson(json.GetObject(kJsonKeyImportOptions));
@@ -76,7 +115,19 @@ std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::FromJson(const Aws::
   return import_proxy;
 }
 
-std::shared_ptr<AbstractOperator> ImportOperatorProxy::CreateOperatorInstance() {
+std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::OnDeepCopy(
+    const std::shared_ptr<AbstractOperatorProxy>& /*copied_left_input*/,
+    const std::shared_ptr<AbstractOperatorProxy>& /*copied_right_input*/) const {
+  auto copy = ImportOperatorProxy::Make(bucket_name_, object_keys_, column_ids_);
+  copy->SetOutputObjectsCount(output_objects_count_);
+  if (import_options_ != nullptr) {
+    copy->SetImportOptions(import_options_);
+  }
+
+  return copy;
+}
+
+std::shared_ptr<AbstractOperator> ImportOperatorProxy::CreateOperatorInstanceRecursively() {
   Assert(!bucket_name_.empty(), "ImportOperatorProxy has no bucket name.");
   Assert(!object_keys_.empty(), "ImportOperatorProxy must specify at least one object key.");
   Assert(!column_ids_.empty(), "ImportOperatorProxy must specify at least one column id.");

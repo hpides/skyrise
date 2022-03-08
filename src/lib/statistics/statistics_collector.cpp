@@ -116,7 +116,7 @@ std::pair<AllTypeVariant, AllTypeVariant> StatisticsOrcFormatReader::GetMinMaxFo
     // STRUCT:
     // UNION:
     default:
-      return std::pair<AllTypeVariant, AllTypeVariant>{};
+      return std::pair<AllTypeVariant, AllTypeVariant>();
   }
 }
 

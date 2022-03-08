@@ -93,7 +93,7 @@ std::shared_ptr<AbstractExpression> RewriteInListExpression(const InExpression& 
    */
 
   const auto list_expression = std::dynamic_pointer_cast<ListExpression>(in_expression.Set());
-  Assert(list_expression, "Expected ListExpression");
+  Assert(list_expression, "Expected ListExpression.");
 
   const bool left_is_string = in_expression.Value()->GetDataType() == DataType::kString;
 
@@ -1099,7 +1099,7 @@ std::shared_ptr<ExpressionResult<std::string>> ExpressionEvaluator::EvaluateConc
   for (const auto& argument : arguments) {
     // `CONCAT` with a `NULL` literal argument yields `NULL`.
     if (argument->GetDataType() == DataType::kNull) {
-      ExpressionResult<std::string> null_value_result({std::string{}}, {true});
+      ExpressionResult<std::string> null_value_result({std::string()}, {true});
       return std::make_shared<ExpressionResult<std::string>>(null_value_result);
     }
 

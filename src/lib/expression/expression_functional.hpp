@@ -6,6 +6,8 @@
 #include <memory>
 
 #include "abstract_expression.hpp"
+#include "aggregate_expression.hpp"
+#include "all_type_variant.hpp"
 #include "arithmetic_expression.hpp"
 #include "between_expression.hpp"
 #include "binary_predicate_expression.hpp"
@@ -16,6 +18,7 @@
 #include "list_expression.hpp"
 #include "logical_expression.hpp"
 #include "pqp_column_expression.hpp"
+#include "types.hpp"
 #include "unary_minus_expression.hpp"
 #include "value_expression.hpp"
 
@@ -92,6 +95,12 @@ struct Ternary final {
 
 inline detail::Unary<PredicateCondition::kIsNull, IsNullExpression> IsNull_;
 inline detail::Unary<PredicateCondition::kIsNotNull, IsNullExpression> IsNotNull_;
+inline detail::Unary<AggregateFunction::kSum, AggregateExpression> Sum_;
+inline detail::Unary<AggregateFunction::kMax, AggregateExpression> Max_;
+inline detail::Unary<AggregateFunction::kMin, AggregateExpression> Min_;
+inline detail::Unary<AggregateFunction::kAvg, AggregateExpression> Avg_;
+inline detail::Unary<AggregateFunction::kCount, AggregateExpression> Count_;
+inline detail::Unary<AggregateFunction::kCountDistinct, AggregateExpression> CountDistinct_;
 
 inline detail::Binary<ArithmeticOperator::kDivision, ArithmeticExpression> Div_;
 inline detail::Binary<ArithmeticOperator::kMultiplication, ArithmeticExpression> Mul_;

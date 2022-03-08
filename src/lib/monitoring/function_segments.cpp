@@ -21,7 +21,7 @@ std::map<Aws::String, std::unordered_set<Aws::String>> FunctionSegmentsAnalyzer:
   }
 
   for (const auto& function_name : function_names) {
-    trace_ids.emplace(function_name, std::unordered_set<Aws::String>{});
+    trace_ids.emplace(function_name, std::unordered_set<Aws::String>());
   }
 
   Aws::XRay::Model::GetTraceSummariesRequest get_trace_summaries_request;

@@ -24,7 +24,7 @@ class TableWrapper : public AbstractOperator {
   }
 
   const std::shared_ptr<const Table> table_;
-  const std::string kOperatorName{"TableWrapper"};
+  const std::string kOperatorName = "TableWrapper";
 };
 
 }  // namespace skyrise

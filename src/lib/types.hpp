@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <limits>
 #include <ostream>
+#include <vector>
 
 namespace skyrise {
 
@@ -31,6 +32,12 @@ using TaskId = uint32_t;
 
 inline constexpr ColumnId kInvalidColumnId = std::numeric_limits<ColumnId>::max();
 inline constexpr TaskId kInvalidTaskId = std::numeric_limits<TaskId>::max();
+
+/**
+ * Outputs @param column_ids to @param stream as a comma-separated list.
+ * Function is used by multiple Description implementations.
+ */
+std::ostream& operator<<(std::ostream& stream, const std::vector<ColumnId>& column_ids);
 
 enum class PredicateCondition {
   kEquals,
@@ -102,6 +109,9 @@ PredicateCondition ConditionsToBetween(const PredicateCondition lower, const Pre
  */
 enum class AggregateFunction { kAny, kAvg, kCount, kCountDistinct, kMax, kMin, kStandardDeviationSample, kSum };
 std::ostream& operator<<(std::ostream& stream, const AggregateFunction aggregate_function);
+
+enum class DataExchangeMode { kFullMerge, kPartialMerge };
+std::ostream& operator<<(std::ostream& stream, DataExchangeMode data_exchange_mode);
 
 /**
  * Let R and S be two tables and we want to perform `R <JoinMode> S ON <condition>`

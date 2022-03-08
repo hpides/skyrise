@@ -15,8 +15,8 @@
 namespace skyrise {
 
 // Character sets for randomly generated strings
-inline const std::string kCharacterSetUpper{"ABCDEFGHIJKLMNOPQRSTUVWXYZ"};
-inline const std::string kCharacterSetLower{"abcdefghijklmnopqrstuvwxyz"};
+inline const std::string kCharacterSetUpper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+inline const std::string kCharacterSetLower = "abcdefghijklmnopqrstuvwxyz";
 inline const std::string kCharacterSetDecimal{"0123456789"};
 inline const std::string kCharacterSetHex{"0123456789abcdef"};
 

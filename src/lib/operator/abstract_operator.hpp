@@ -12,7 +12,21 @@
 
 namespace skyrise {
 
-enum class OperatorType { kAggregate, kAlias, kExport, kFilter, kImport, kPartition, kProjection, kSort };
+enum class OperatorType {
+  kAggregate,
+  kAlias,
+  kDataExchange,  // Control Operator, not used during execution.
+  kExport,
+  kFilter,
+  kImport,
+  kHashJoin,
+  kNestedLoopJoin,
+  kLimit,
+  kPartition,
+  kProjection,
+  kSort,
+  kUnion,
+};
 
 /**
  * AbstractOperator is the abstract super class for all query execution operators. Operators have up to two input tables

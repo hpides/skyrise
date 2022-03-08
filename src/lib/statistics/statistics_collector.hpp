@@ -23,7 +23,7 @@ struct ObjectStatistics {
 
 class StatisticsOrcFormatReader : public OrcFormatReader {
  public:
-  inline static const std::string kFormatOrc{"orc"};
+  inline static const std::string kFormatOrc = "orc";
 
   StatisticsOrcFormatReader(std::shared_ptr<Storage> storage, const ObjectStatus& object)
       : OrcFormatReader(storage->OpenForReading(object.GetIdentifier())), object_status_(object) {}

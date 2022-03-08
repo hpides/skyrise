@@ -27,15 +27,56 @@ class ImportOperatorProxyTest : public ::testing::Test {
 
  protected:
   static inline const std::string kBucketName = "dummy_bucket";
-  static inline const std::vector<std::string> kObjectKeys = {"key1.orc", "key2.orc", "key3.orc"};
-  static inline const std::vector<ColumnId> kColumnIds = {ColumnId{0}, ColumnId{1}, ColumnId{3}};
+  static inline const std::vector<std::string> kObjectKeys{"key1.orc", "key2.orc", "key3.orc"};
+  static inline const std::vector<ColumnId> kColumnIds{ColumnId{0}, ColumnId{1}, ColumnId{3}};
   std::shared_ptr<TableColumnDefinitions> column_definitions_a_;
   std::shared_ptr<const ImportOptions> import_options_orc_;
   std::shared_ptr<const ImportOptions> import_options_csv_;
 };
 
+TEST_F(ImportOperatorProxyTest, BaseProperties) {
+  auto import_proxy = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
+  EXPECT_EQ(import_proxy->Type(), OperatorType::kImport);
+  EXPECT_EQ(import_proxy->BucketName(), kBucketName);
+  EXPECT_EQ(import_proxy->ObjectKeys(), kObjectKeys);
+  EXPECT_EQ(import_proxy->ColumnIds(), kColumnIds);
+  EXPECT_FALSE(import_proxy->IsPipelineBreaker());
+}
+
+TEST_F(ImportOperatorProxyTest, Description) {
+  std::vector<std::string> object_keys = {"dummy_object"};
+  std::vector<ColumnId> column_ids = {0};
+  auto import_proxy = ImportOperatorProxy::Make(kBucketName, object_keys, column_ids);
+
+  EXPECT_EQ(import_proxy->Description(DescriptionMode::kSingleLine), "[Import] dummy_bucket/dummy_object ColumnIds{0}");
+  EXPECT_EQ(import_proxy->Description(DescriptionMode::kMultiLine),
+            "[Import]\ndummy_bucket/\ndummy_object\nColumnIds{0}");
+}
+
+TEST_F(ImportOperatorProxyTest, DescriptionMultipleObjects) {
+  auto import_proxy = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
+
+  EXPECT_EQ(import_proxy->Description(DescriptionMode::kSingleLine),
+            "[Import] dummy_bucket/{3 objects} ColumnIds{0, 1, 3}");
+  EXPECT_EQ(import_proxy->Description(DescriptionMode::kMultiLine),
+            "[Import]\ndummy_bucket/\n{3 objects}\nColumnIds{0, 1, 3}");
+}
+
+TEST_F(ImportOperatorProxyTest, OutputObjectsCount) {
+  ASSERT_EQ(kObjectKeys.size(), 3);
+  auto import_proxy = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
+  EXPECT_EQ(import_proxy->OutputObjectsCount(), 3);
+  import_proxy->SetOutputObjectsCount(4);
+  EXPECT_EQ(import_proxy->OutputObjectsCount(), 3);
+  import_proxy->SetOutputObjectsCount(2);
+  EXPECT_EQ(import_proxy->OutputObjectsCount(), 2);
+  import_proxy->SetOutputObjectsCount(1);
+  EXPECT_EQ(import_proxy->OutputObjectsCount(), 1);
+  EXPECT_THROW(import_proxy->SetOutputObjectsCount(0), std::logic_error);
+}
+
 TEST_F(ImportOperatorProxyTest, SetImportOptions) {
-  auto proxy = std::make_shared<ImportOperatorProxy>(kBucketName, kObjectKeys, kColumnIds);
+  auto proxy = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
   ASSERT_EQ(proxy->GetImportOptions(), nullptr);
   proxy->SetImportOptions(import_options_orc_);
   EXPECT_EQ(proxy->GetImportOptions(), import_options_orc_);
@@ -46,11 +87,10 @@ TEST_F(ImportOperatorProxyTest, SetImportOptions) {
 }
 
 TEST_F(ImportOperatorProxyTest, SerializeAndDeserialize) {
-  const auto proxy = std::make_shared<ImportOperatorProxy>(kBucketName, kObjectKeys, kColumnIds);
+  auto proxy = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
   ASSERT_EQ(proxy->GetImportOptions(), nullptr);
-
   // (1) Serialize
-  const auto proxy_json = proxy->ToJson();
+  auto proxy_json = proxy->ToJson();
 
   // (2) Deserialize & verify attributes
   auto deserialized_proxy = ImportOperatorProxy::FromJson(proxy_json);
@@ -61,14 +101,12 @@ TEST_F(ImportOperatorProxyTest, SerializeAndDeserialize) {
   EXPECT_EQ(deserialized_import_proxy->GetImportOptions(), nullptr);
 
   // (3) Serialize again
-  const auto deserialized_proxy_json = deserialized_proxy->ToJson();
-  EXPECT_EQ(proxy_json, deserialized_proxy_json);
+  EXPECT_EQ(proxy_json, deserialized_proxy->ToJson());
 }
 
 TEST_F(ImportOperatorProxyTest, SerializeAndDeserializeImportOptionsOrc) {
-  auto import_proxy_orc = std::make_shared<ImportOperatorProxy>(kBucketName, kObjectKeys, kColumnIds);
+  auto import_proxy_orc = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
   import_proxy_orc->SetImportOptions(import_options_orc_);
-
   // (1) Serialize
   auto proxy_orc_json = import_proxy_orc->ToJson();
 
@@ -82,9 +120,8 @@ TEST_F(ImportOperatorProxyTest, SerializeAndDeserializeImportOptionsOrc) {
 }
 
 TEST_F(ImportOperatorProxyTest, SerializeAndDeserializeImportOptionsCsv) {
-  auto import_proxy_csv = std::make_shared<ImportOperatorProxy>(kBucketName, kObjectKeys, kColumnIds);
+  auto import_proxy_csv = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
   import_proxy_csv->SetImportOptions(import_options_csv_);
-
   // (1) Serialize
   auto proxy_csv_json = import_proxy_csv->ToJson();
 
@@ -97,34 +134,49 @@ TEST_F(ImportOperatorProxyTest, SerializeAndDeserializeImportOptionsCsv) {
   EXPECT_EQ(deserialized_proxy_csv_json, proxy_csv_json);
 }
 
+TEST_F(ImportOperatorProxyTest, DeepCopy) {
+  auto import_proxy = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
+  import_proxy->SetOutputObjectsCount(2);
+  import_proxy->SetImportOptions(import_options_csv_);
+
+  auto import_proxy_copy = std::dynamic_pointer_cast<ImportOperatorProxy>(import_proxy->DeepCopy());
+  EXPECT_EQ(import_proxy_copy->BucketName(), kBucketName);
+  EXPECT_EQ(import_proxy_copy->ObjectKeys(), kObjectKeys);
+  EXPECT_EQ(import_proxy_copy->ColumnIds(), kColumnIds);
+  EXPECT_EQ(import_proxy_copy->OutputObjectsCount(), 2);
+  EXPECT_EQ(import_proxy_copy->GetImportOptions(), import_options_csv_);
+}
+
 TEST_F(ImportOperatorProxyTest, CreateOperatorInstance) {
   // When custom reader options for CSV/ORC are not provided, default options must be derived. In the latter case,
   // the provided object keys must specify an .orc or .csv file extension.
   {
     const std::vector<std::string> object_keys = {"key1", "key2"};
-    auto import_proxy = std::make_shared<ImportOperatorProxy>(kBucketName, object_keys, kColumnIds);
+    auto import_proxy = ImportOperatorProxy::Make(kBucketName, object_keys, kColumnIds);
     EXPECT_THROW(import_proxy->GetOrCreateOperatorInstance(), std::logic_error);
   }
   {
     const std::vector<std::string> object_keys = {"key1.csv", "key2.csv"};
-    auto import_proxy = std::make_shared<ImportOperatorProxy>(kBucketName, object_keys, kColumnIds);
+    auto import_proxy = ImportOperatorProxy::Make(kBucketName, object_keys, kColumnIds);
     EXPECT_TRUE(import_proxy->GetOrCreateOperatorInstance());
+    EXPECT_EQ(import_proxy->GetOrCreateOperatorInstance()->Type(), OperatorType::kImport);
   }
   {
     const std::vector<std::string> object_keys = {"key1.orc", "key2.orc"};
-    auto import_proxy = std::make_shared<ImportOperatorProxy>(kBucketName, object_keys, kColumnIds);
+    auto import_proxy = ImportOperatorProxy::Make(kBucketName, object_keys, kColumnIds);
     EXPECT_TRUE(import_proxy->GetOrCreateOperatorInstance());
+    EXPECT_EQ(import_proxy->GetOrCreateOperatorInstance()->Type(), OperatorType::kImport);
   }
 }
 
 TEST_F(ImportOperatorProxyTest, CreateOperatorInstanceCustomCsvOptions) {
-  auto import_proxy = std::make_shared<ImportOperatorProxy>(kBucketName, kObjectKeys, kColumnIds);
+  auto import_proxy = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
   import_proxy->SetImportOptions(import_options_csv_);
   EXPECT_TRUE(import_proxy->GetOrCreateOperatorInstance());
 }
 
 TEST_F(ImportOperatorProxyTest, CreateOperatorInstanceCustomOrcOptions) {
-  auto import_proxy = std::make_shared<ImportOperatorProxy>(kBucketName, kObjectKeys, kColumnIds);
+  auto import_proxy = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
   import_proxy->SetImportOptions(import_options_orc_);
   EXPECT_TRUE(import_proxy->GetOrCreateOperatorInstance());
 }

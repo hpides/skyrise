@@ -30,6 +30,11 @@ const boost::bimap<AggregateFunction, std::string> kAggregateFunctionToString =
         {AggregateFunction::kSum, "SUM"},
     });
 
+const boost::bimap<DataExchangeMode, std::string> kDataExchangeModeToString = MakeBimap<DataExchangeMode, std::string>({
+    {DataExchangeMode::kFullMerge, "Full Merge"},
+    {DataExchangeMode::kPartialMerge, "Partial Merge"},
+});
+
 const boost::bimap<DataType, std::string> kDataTypeToString = MakeBimap<DataType, std::string>({
     {DataType::kDouble, "double"},
     {DataType::kFloat, "float"},

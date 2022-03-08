@@ -8,6 +8,20 @@
 
 namespace skyrise {
 
+std::ostream& operator<<(std::ostream& stream, const std::vector<ColumnId>& column_ids) {
+  for (size_t i = 0; i < column_ids.size(); ++i) {
+    if (column_ids[i] == kInvalidColumnId) {
+      stream << "kInvalidColumnId";
+    } else {
+      stream << column_ids[i];
+    }
+    if (i + 1 < column_ids.size()) {
+      stream << ", ";
+    }
+  }
+  return stream;
+}
+
 bool IsBinaryPredicateCondition(const PredicateCondition predicate_condition) {
   return predicate_condition == PredicateCondition::kEquals || predicate_condition == PredicateCondition::kNotEquals ||
          predicate_condition == PredicateCondition::kLessThan ||
@@ -147,6 +161,10 @@ std::ostream& operator<<(std::ostream& stream, const AggregateFunction aggregate
 
 std::ostream& operator<<(std::ostream& stream, const JoinMode join_mode) {
   return stream << kJoinModeToString.left.at(join_mode);
+}
+
+std::ostream& operator<<(std::ostream& stream, DataExchangeMode data_exchange_mode) {
+  return stream << kDataExchangeModeToString.left.at(data_exchange_mode);
 }
 
 std::ostream& operator<<(std::ostream& stream, SetOperationMode set_operation_mode) {

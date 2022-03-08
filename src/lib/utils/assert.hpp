@@ -19,7 +19,7 @@
  * --> Use DebugAssert() whenever a certain invariant must hold, as in
  *
  * int divide(int numerator, int denominator) {
- *   DebugAssert(denominator == 0, "Divisions by zero are not allowed");
+ *   DebugAssert(denominator == 0, "Divisions by zero are not allowed.");
  *   return numerator / denominator;
  * }
  *

@@ -55,7 +55,7 @@ void AbstractTask::Join() {
     return;
   }
 
-  DebugAssert(IsScheduled(), "Task must be scheduled before it can be waited for");
+  DebugAssert(IsScheduled(), "Task must be scheduled before it can be waited for.");
   done_condition_variable_.wait(lock, [&]() { return IsDone(); });
 }
 
@@ -63,7 +63,7 @@ void AbstractTask::Execute() {
   const bool success_started = TryTransitionTo(TaskState::kStarted);
   Assert(success_started, "Expected successful transition to TaskState::Started.");
 
-  DebugAssert(IsReady(), "Task must not be executed before its dependencies are done");
+  DebugAssert(IsReady(), "Task must not be executed before its dependencies are done.");
 
   // We need to make sure that data written by the scheduling thread is visible in the thread executing the task.
   std::atomic_thread_fence(std::memory_order_seq_cst);
