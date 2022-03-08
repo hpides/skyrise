@@ -386,6 +386,9 @@ std::shared_ptr<ExpressionResult<Result>> ExpressionEvaluator::EvaluateExpressio
 
     case ExpressionType::kList:
       Fail("Cannot evaluate a ListExpression. Lists should only appear as the right operand of an InExpression.");
+
+    default:
+      Fail("Evaluation is (currently) unsupported.");
   }
 
   // Store the result in the cache.
