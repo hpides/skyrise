@@ -107,8 +107,7 @@ std::vector<std::shared_ptr<AbstractLqpNode>> lqp_find_leaves(const std::shared_
 
 ExpressionUnorderedSet find_column_expressions(const AbstractLqpNode& lqp_node,
                                                const std::unordered_set<ColumnId>& column_ids) {
-  DebugAssert(lqp_node.Type() == LqpNodeType::kStoredTable || lqp_node.Type() == LqpNodeType::kStaticTable ||
-                  lqp_node.Type() == LqpNodeType::kMock,
+  DebugAssert(lqp_node.Type() == LqpNodeType::kStoredTable || lqp_node.Type() == LqpNodeType::kMock,
               "Did not expect other node types than StoredTableNode, StaticTableNode and MockNode.");
   DebugAssert(!lqp_node.LeftInput(), "Only valid for data source nodes");
 

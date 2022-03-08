@@ -49,10 +49,6 @@ std::string LqpColumnExpression::Description(const DescriptionMode mode) const {
       return output.str();
     }
 
-    case LqpNodeType::kStaticTable: {
-      Fail("Missing implementation for LqpNodeType::kStaticTable in LqpColumnExpression");
-    }
-
     default: {
       Fail("Node type can not be referenced in LqpColumnExpression");
     }
@@ -79,10 +75,6 @@ DataType LqpColumnExpression::GetDataType() const {
       const auto mock_node = std::static_pointer_cast<const MockNode>(original_node_locked);
       Assert(original_column_id_ < mock_node->column_definitions().size(), "ColumnId out of range");
       return mock_node->column_definitions()[original_column_id_].first;
-    }
-
-    case LqpNodeType::kStaticTable: {
-      Fail("Missing implementation for LqpNodeType::kStaticTable in LqpColumnExpression");
     }
 
     default: {
