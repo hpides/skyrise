@@ -70,8 +70,10 @@ void AbstractTask::Execute() {
 
   OnExecute();
 
+  std::unique_lock<std::mutex> lock(done_condition_variable_mutex_);
   const bool success_done = TryTransitionTo(TaskState::kDone);
   Assert(success_done, "Expected successful transition to TaskState::Done.");
+  lock.unlock();
 
   if (done_callback_) {
     done_callback_();

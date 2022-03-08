@@ -14,7 +14,20 @@ namespace skyrise {
 
 class FragmentScheduler : public Noncopyable {
  public:
-  FragmentScheduler(size_t num_threads = 0);
+  /**
+   * Constructs a new fragment scheduler object with a thread pool size set to the number of
+   * available cores.
+   */
+  FragmentScheduler();
+
+  /**
+   * Constructs a new fragment scheduler object with a fixed thread pool size.
+   */
+  FragmentScheduler(size_t num_threads);
+
+  /**
+   * Blocks until all tasks of this scheduler are finished.
+   */
   void WaitForAllTasks();
 
   /**

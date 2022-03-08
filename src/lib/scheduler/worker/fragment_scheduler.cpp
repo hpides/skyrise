@@ -4,9 +4,13 @@
 
 namespace skyrise {
 
-FragmentScheduler::FragmentScheduler(size_t num_threads)
-    : executor_(num_threads > 0 ? num_threads
-                                : FunctionHostInformationCollector().CollectInformationResources().cpu_count) {}
+// TODO(anyone): Move from the current vCPU core count model to a more accurate model based on a cloud function's memory
+// capacity (cf.
+// sentiatechblog.com/aws-re-invent-2020-day-3-optimizing-lambda-cost-with-multi-threading?utm_source=reddit&utm_medium=social&utm_campaign=day3_lambda).
+FragmentScheduler::FragmentScheduler()
+    : FragmentScheduler(FunctionHostInformationCollector().CollectInformationResources().cpu_count) {}
+
+FragmentScheduler::FragmentScheduler(size_t num_threads) : executor_(num_threads) {}
 
 void FragmentScheduler::WaitForAllTasks() {
   std::unique_lock<std::mutex> lock(lock_);
