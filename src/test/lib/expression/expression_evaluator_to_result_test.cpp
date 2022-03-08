@@ -254,17 +254,17 @@ TEST_F(ExpressionEvaluatorToResultTest, PredicatesLiterals) {
   EXPECT_TRUE(TestExpression<int32_t>(*BetweenInclusive_(5.1f, Null_(), 5), {0}));
   EXPECT_TRUE(TestExpression<int32_t>(*BetweenInclusive_(Null_(), 3.1, 5), {std::nullopt}));
   EXPECT_TRUE(TestExpression<int32_t>(*BetweenInclusive_(Null_(), Null_(), Null_()), {std::nullopt}));
-  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerInclusive_(4, 3.0, 5.0), {1}));
-  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerInclusive_(3, 3.0, 5.0), {0}));
-  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerInclusive_(3, 3.1, 5.0), {0}));
-  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerInclusive_(5.0f, 3.1, 5), {1}));
-  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerInclusive_(5.1f, 3.1, 5), {0}));
-  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerInclusive_(3.1f, 3, Null_()), {std::nullopt}));
-  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerInclusive_(5, Null_(), 5.1f), {std::nullopt}));
-  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerInclusive_(3, 3, Null_()), {0}));
-  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerInclusive_(5.1f, Null_(), 5), {0}));
-  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerInclusive_(Null_(), 3.1, 5), {std::nullopt}));
-  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerInclusive_(Null_(), Null_(), Null_()), {std::nullopt}));
+  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerExclusive_(4, 3.0, 5.0), {1}));
+  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerExclusive_(3, 3.0, 5.0), {0}));
+  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerExclusive_(3, 3.1, 5.0), {0}));
+  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerExclusive_(5.0f, 3.1, 5), {1}));
+  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerExclusive_(5.1f, 3.1, 5), {0}));
+  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerExclusive_(3.1f, 3, Null_()), {std::nullopt}));
+  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerExclusive_(5, Null_(), 5.1f), {std::nullopt}));
+  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerExclusive_(3, 3, Null_()), {0}));
+  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerExclusive_(5.1f, Null_(), 5), {0}));
+  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerExclusive_(Null_(), 3.1, 5), {std::nullopt}));
+  EXPECT_TRUE(TestExpression<int32_t>(*BetweenLowerExclusive_(Null_(), Null_(), Null_()), {std::nullopt}));
   EXPECT_TRUE(TestExpression<int32_t>(*BetweenUpperExclusive_(4, 3.0, 5.0), {1}));
   EXPECT_TRUE(TestExpression<int32_t>(*BetweenUpperExclusive_(3, 3.0, 5.0), {1}));
   EXPECT_TRUE(TestExpression<int32_t>(*BetweenUpperExclusive_(3, 3.1, 5.0), {0}));
@@ -303,9 +303,9 @@ TEST_F(ExpressionEvaluatorToResultTest, PredicatesSeries) {
   EXPECT_TRUE(TestExpression<int32_t>(table_a_, *BetweenInclusive_(4, a_, b_), {0, 0, 1, 1}));
   EXPECT_TRUE(TestExpression<int32_t>(table_a_, *BetweenInclusive_(b_, a_, d_), {1, 1, 1, 1}));
 
-  EXPECT_TRUE(TestExpression<int32_t>(table_a_, *BetweenLowerInclusive_(a_, a_, b_), {0, 0, 0, 0}));
-  EXPECT_TRUE(TestExpression<int32_t>(table_a_, *BetweenLowerInclusive_(a_, Sub_(a_, 1), b_), {1, 1, 1, 1}));
-  EXPECT_TRUE(TestExpression<int32_t>(table_a_, *BetweenLowerInclusive_(2, a_, b_), {1, 0, 0, 0}));
+  EXPECT_TRUE(TestExpression<int32_t>(table_a_, *BetweenLowerExclusive_(a_, a_, b_), {0, 0, 0, 0}));
+  EXPECT_TRUE(TestExpression<int32_t>(table_a_, *BetweenLowerExclusive_(a_, Sub_(a_, 1), b_), {1, 1, 1, 1}));
+  EXPECT_TRUE(TestExpression<int32_t>(table_a_, *BetweenLowerExclusive_(2, a_, b_), {1, 0, 0, 0}));
 
   EXPECT_TRUE(TestExpression<int32_t>(table_a_, *BetweenUpperExclusive_(a_, a_, b_), {1, 1, 1, 1}));
   EXPECT_TRUE(TestExpression<int32_t>(table_a_, *BetweenUpperExclusive_(a_, a_, Sub_(b_, 1)), {0, 0, 0, 0}));

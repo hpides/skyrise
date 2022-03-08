@@ -62,7 +62,7 @@ TEST(ExpressionSerializationTest, ArithmeticExpressions) {
 
 TEST(ExpressionSerializationTest, BetweenExpressions) {
   const std::vector<std::shared_ptr<AbstractExpression>> expressions = {
-      BetweenInclusive_(5.0f, 3.1, 5), BetweenLowerInclusive_(4, 3.0, 5.0), BetweenLowerInclusive_(3, 3, Null_())};
+      BetweenInclusive_(5.0f, 3.1, 5), BetweenLowerExclusive_(4, 3.0, 5.0), BetweenLowerExclusive_(3, 3, Null_())};
   TestSerializeAndDeserialize(expressions);
 }
 
