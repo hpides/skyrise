@@ -57,7 +57,6 @@ bool ExpressionIsNullableOnLqpImpl(const std::shared_ptr<AbstractExpression>& ex
       return VariantIsNull(value_expression.value_);
     }
     case ExpressionType::kCast:    /* fallthrough */
-    case ExpressionType::kExists:  /* fallthrough */
     case ExpressionType::kExtract: /* fallthrough */
     case ExpressionType::kList:    /* fallthrough */
     case ExpressionType::kLogical: /* fallthrough */
