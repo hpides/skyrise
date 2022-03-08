@@ -1,0 +1,359 @@
+/**
+ * Taken and modified from our sister project Hyrise (https://github.com/hyrise/hyrise)
+ * TODO(julianmenzler): Enable after we found a solution for load_table("..")
+ */
+#include "compiler/logical_query_plan/stored_table_node.hpp"
+
+#include <memory>
+#include <string>
+
+#include <gtest/gtest.h>
+
+//#include "constraint_test_utils.hpp"
+//#include "expression/expression_functional.hpp"
+//#include "compiler/logical_query_plan/lqp_utils.hpp"
+//#include "storage/table/table_key_constraint.hpp"
+
+// using namespace skyrise::expression_functional;  // NOLINT(google-build-using-namespace)
+
+namespace skyrise {
+
+class StoredTableNodeTest : public ::testing::Test {
+ protected:
+  void SetUp() override {
+    //    Hyrise::reset();
+    //
+    //    Hyrise::get().storage_manager.add_table("t_a", load_table("resources/test_data/tbl/int_int_float.tbl", 1));
+    //    Hyrise::get().storage_manager.add_table("t_b", load_table("resources/test_data/tbl/int_int_float.tbl", 1));
+    //
+    //    const auto& table_t_a = Hyrise::get().storage_manager.get_table("t_a");
+    //    ChunkEncoder::encode_all_chunks(table_t_a);
+    //    table_t_a->create_index<GroupKeyIndex>({ColumnId{0}}, "i_a1");
+    //    table_t_a->create_index<GroupKeyIndex>({ColumnId{1}}, "i_b");
+    //    table_t_a->create_index<CompositeGroupKeyIndex>({ColumnId{0}, ColumnId{1}}, "i_a2");
+    //    table_t_a->create_index<CompositeGroupKeyIndex>({ColumnId{1}, ColumnId{0}}, "i_a3");
+    //
+    //    stored_table_node_ = StoredTableNode::Make("t_a");
+    //    a_ = stored_table_node_->get_column("a");
+    //    b_ = stored_table_node_->get_column("b");
+    //    c_ = stored_table_node_->get_column("c");
+    //
+    //    stored_table_node_->set_pruned_chunk_ids({ChunkID{2}});
+  }
+  //
+  //  std::shared_ptr<StoredTableNode> stored_table_node_;
+  //  std::shared_ptr<LqpColumnExpression> a_, b_, c_;
+};
+//
+// TEST_F(StoredTableNodeTest, Description) {
+//  const auto stored_table_node_a = StoredTableNode::Make("t_a");
+//  EXPECT_EQ(stored_table_node_a->Description(), "[StoredTable] Name: 't_a' pruned: 0/4 chunk(s), 0/3 column(s)");
+//
+//  const auto stored_table_node_b = StoredTableNode::Make("t_a");
+//  stored_table_node_b->set_pruned_chunk_ids({ChunkID{2}});
+//  stored_table_node_b->set_pruned_column_ids({ColumnId{1}});
+//  EXPECT_EQ(stored_table_node_b->Description(), "[StoredTable] Name: 't_a' pruned: 1/4 chunk(s), 1/3 column(s)");
+//}
+//
+// TEST_F(StoredTableNodeTest, GetColumn) {
+//  EXPECT_EQ(*stored_table_node_->get_column("a"), *a_);
+//  EXPECT_EQ(*stored_table_node_->get_column("b"), *b_);
+//
+//  // Column pruning does not interfere with get_column()
+//  stored_table_node_->set_pruned_column_ids({ColumnId{0}});
+//  EXPECT_EQ(*stored_table_node_->get_column("a"), *a_);
+//  EXPECT_EQ(*stored_table_node_->get_column("b"), *b_);
+//}
+//
+// TEST_F(StoredTableNodeTest, ColumnExpressions) {
+//  EXPECT_EQ(stored_table_node_->OutputExpressions().size(), 3u);
+//  EXPECT_EQ(*stored_table_node_->OutputExpressions().at(0u), *a_);
+//  EXPECT_EQ(*stored_table_node_->OutputExpressions().at(1u), *b_);
+//  EXPECT_EQ(*stored_table_node_->OutputExpressions().at(2u), *c_);
+//
+//  // Column pruning does not interfere with get_column()
+//  stored_table_node_->set_pruned_column_ids({ColumnId{0}});
+//  EXPECT_EQ(stored_table_node_->OutputExpressions().size(), 2u);
+//  EXPECT_EQ(*stored_table_node_->OutputExpressions().at(0u), *b_);
+//  EXPECT_EQ(*stored_table_node_->OutputExpressions().at(1u), *c_);
+//}
+//
+// TEST_F(StoredTableNodeTest, HashingAndEqualityCheck) {
+//  EXPECT_EQ(*stored_table_node_, *stored_table_node_);
+//
+//  const auto different_node_a = StoredTableNode::Make("t_b");
+//  different_node_a->set_pruned_chunk_ids({ChunkID{2}});
+//
+//  const auto different_node_b = StoredTableNode::Make("t_a");
+//
+//  const auto different_node_c = StoredTableNode::Make("t_b");
+//  different_node_c->set_pruned_column_ids({ColumnId{1}});
+//  const auto different_node_c2 = StoredTableNode::Make("t_b");
+//  different_node_c2->set_pruned_column_ids({ColumnId{1}});
+//
+//  EXPECT_NE(*stored_table_node_, *different_node_a);
+//  EXPECT_NE(*stored_table_node_, *different_node_b);
+//  EXPECT_NE(*stored_table_node_, *different_node_c);
+//  EXPECT_EQ(*different_node_c, *different_node_c2);
+//
+//  EXPECT_NE(stored_table_node_->hash(), different_node_a->hash());
+//  EXPECT_NE(stored_table_node_->hash(), different_node_b->hash());
+//  EXPECT_NE(stored_table_node_->hash(), different_node_c->hash());
+//  EXPECT_EQ(different_node_c->hash(), different_node_c2->hash());
+//}
+//
+// TEST_F(StoredTableNodeTest, Copy) {
+//  EXPECT_EQ(*stored_table_node_->DeepCopy(), *stored_table_node_);
+//
+//  stored_table_node_->set_pruned_chunk_ids({ChunkID{2}});
+//  stored_table_node_->set_pruned_column_ids({ColumnId{1}});
+//  EXPECT_EQ(*stored_table_node_->DeepCopy(), *stored_table_node_);
+//}
+//
+// TEST_F(StoredTableNodeTest, NodeExpressions) { ASSERT_EQ(stored_table_node_->node_expressions_.size(), 0u); }
+//
+// TEST_F(StoredTableNodeTest, GetStatisticsPruneFirstColumn) {
+//  EXPECT_EQ(stored_table_node_->indexes_statistics().size(), 4u);
+//
+//  auto expected_statistics = stored_table_node_->indexes_statistics().at(1u);
+//
+//  stored_table_node_->set_pruned_column_ids({ColumnId{0}});
+//
+//  // column with ColumnId{0} was pruned, therefore the column has to be left shifted
+//  expected_statistics.column_ids[0] -= 1;
+//
+//  EXPECT_EQ(stored_table_node_->indexes_statistics().size(), 1u);
+//  EXPECT_EQ(stored_table_node_->indexes_statistics().at(0u), expected_statistics);
+//}
+//
+// TEST_F(StoredTableNodeTest, GetStatisticsPruneSecondColumn) {
+//  EXPECT_EQ(stored_table_node_->indexes_statistics().size(), 4u);
+//
+//  auto expected_statistics = stored_table_node_->indexes_statistics().at(0u);
+//
+//  stored_table_node_->set_pruned_column_ids({ColumnId{1}});
+//
+//  // column with ColumnId{1} was pruned, so ColumnId{0} should be untouched
+//
+//  EXPECT_EQ(stored_table_node_->indexes_statistics().size(), 1u);
+//  EXPECT_EQ(stored_table_node_->indexes_statistics().at(0u), expected_statistics);
+//}
+//
+// TEST_F(StoredTableNodeTest, GetStatisticsPruneBothColumns) {
+//  EXPECT_EQ(stored_table_node_->indexes_statistics().size(), 4u);
+//
+//  stored_table_node_->set_pruned_column_ids({ColumnId{0}, ColumnId{1}});
+//
+//  // All indexed columns were pruned, therefore the index statistics should be empty
+//  EXPECT_EQ(stored_table_node_->indexes_statistics().size(), 0u);
+//}
+//
+// TEST_F(StoredTableNodeTest, FunctionalDependenciesNone) {
+//  // No constraints => No functional dependencies
+//  EXPECT_TRUE(stored_table_node_->FunctionalDependencies().empty());
+//
+//  // Constraint across all columns => No more columns available to create a functional dependency from
+//  const auto table = Hyrise::get().storage_manager.get_table("t_a");
+//  table->add_soft_key_constraint(
+//      {{a_->original_column_id_, b_->original_column_id_, c_->original_column_id_}, KeyConstraintType::UNIQUE});
+//
+//  EXPECT_TRUE(stored_table_node_->FunctionalDependencies().empty());
+//}
+//
+// TEST_F(StoredTableNodeTest, FunctionalDependenciesSingle) {
+//  const auto table = Hyrise::get().storage_manager.get_table("t_a");
+//  table->add_soft_key_constraint({{a_->original_column_id_}, KeyConstraintType::UNIQUE});
+//
+//  const auto& fds = stored_table_node_->FunctionalDependencies();
+//  const auto fd_expected = FunctionalDependency{{a_}, {b_, c_}};
+//
+//  EXPECT_EQ(fds.size(), 1);
+//  EXPECT_EQ(fds.at(0), fd_expected);
+//}
+//
+// TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedLeftColumnSet) {
+//  const auto table = Hyrise::get().storage_manager.get_table("t_a");
+//  table->add_soft_key_constraint({{a_->original_column_id_}, KeyConstraintType::UNIQUE});
+//
+//  // Prune unique column "a", which would be part of the left column set in the resulting FD: {a} => {b, c}
+//  stored_table_node_->set_pruned_column_ids({ColumnId{0}});
+//
+//  EXPECT_TRUE(stored_table_node_->FunctionalDependencies().empty());
+//}
+//
+// TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedLeftColumnSet2) {
+//  const auto table = Hyrise::get().storage_manager.get_table("t_a");
+//  table->add_soft_key_constraint({{b_->original_column_id_}, KeyConstraintType::UNIQUE});
+//
+//  // Prune unique column "a", which would be part of the left column set in the resulting FD: {a} => {b, c}
+//  stored_table_node_->set_pruned_column_ids({ColumnId{0}});
+//
+//  const auto fd_expected = FunctionalDependency{{b_}, {c_}};
+//  EXPECT_EQ(stored_table_node_->FunctionalDependencies().size(), 1);
+//  EXPECT_EQ(stored_table_node_->FunctionalDependencies().at(0), fd_expected);
+//}
+//
+// TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedRightColumnSet) {
+//  const auto table = Hyrise::get().storage_manager.get_table("t_a");
+//  table->add_soft_key_constraint({{a_->original_column_id_}, KeyConstraintType::UNIQUE});
+//
+//  // Prune column "b", which would be part of the right column set in the resulting FD: {a} => {b, c}
+//  stored_table_node_->set_pruned_column_ids({ColumnId{1}});
+//
+//  const auto fd_expected = FunctionalDependency{{a_}, {c_}};
+//  EXPECT_EQ(stored_table_node_->FunctionalDependencies().size(), 1);
+//  EXPECT_EQ(stored_table_node_->FunctionalDependencies().at(0), fd_expected);
+//}
+//
+// TEST_F(StoredTableNodeTest, FunctionalDependenciesMultiple) {
+//  const auto table = Hyrise::get().storage_manager.get_table("t_a");  // int_int_float.tbl
+//  table->add_soft_key_constraint({{a_->original_column_id_}, KeyConstraintType::UNIQUE});
+//  table->add_soft_key_constraint({{a_->original_column_id_, b_->original_column_id_}, KeyConstraintType::UNIQUE});
+//
+//  const auto& fds = stored_table_node_->FunctionalDependencies();
+//
+//  const auto fd1_expected = FunctionalDependency{{a_}, {b_, c_}};
+//  const auto fd2_expected = FunctionalDependency{{a_, b_}, {c_}};
+//
+//  EXPECT_EQ(fds.size(), 2);
+//  EXPECT_EQ(fds.at(0), fd1_expected);
+//  EXPECT_EQ(fds.at(1), fd2_expected);
+//}
+//
+// TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
+//  // Create four identical tables of 3 columns (a, b, c), where the second column of which is nullable (b)
+//  TableColumnDefinitions column_definitions{
+//      {"a", DataType::kInt, false}, {"b", DataType::kInt, true}, {"c", DataType::kInt, false}};
+//
+//  // Test {a} => {b, c}
+//  {
+//    const auto table = std::make_shared<Table>(column_definitions, TableType::Data);
+//    table->add_soft_key_constraint({{ColumnId{0}}, KeyConstraintType::UNIQUE});
+//
+//    Hyrise::get().storage_manager.add_table("table_a", table);
+//    const auto stored_table_node = StoredTableNode::Make("table_a");
+//    const auto& a = stored_table_node->get_column("a");
+//    const auto& b = stored_table_node->get_column("b");
+//    const auto& c = stored_table_node->get_column("c");
+//    const auto& fds = stored_table_node->FunctionalDependencies();
+//
+//    const auto fd_expected = FunctionalDependency{{a}, {b, c}};
+//    EXPECT_EQ(fds.size(), 1);
+//    EXPECT_EQ(fds.at(0), fd_expected);
+//  }
+//
+//  // Test {a, b} => {c}
+//  {
+//    const auto table = std::make_shared<Table>(column_definitions, TableType::Data);
+//    table->add_soft_key_constraint({{ColumnId{0}, ColumnId{1}}, KeyConstraintType::UNIQUE});
+//
+//    Hyrise::get().storage_manager.add_table("table_b", table);
+//    const auto& stored_table_node = StoredTableNode::Make("table_b");
+//
+//    EXPECT_EQ(stored_table_node->FunctionalDependencies().size(), 0);
+//  }
+//
+//  // Test {a, c} => {b}
+//  {
+//    const auto table = std::make_shared<Table>(column_definitions, TableType::Data);
+//    table->add_soft_key_constraint({{ColumnId{0}, ColumnId{2}}, KeyConstraintType::UNIQUE});
+//
+//    Hyrise::get().storage_manager.add_table("table_c", table);
+//    const auto& stored_table_node = StoredTableNode::Make("table_c");
+//    const auto& a = stored_table_node->get_column("a");
+//    const auto& b = stored_table_node->get_column("b");
+//    const auto& c = stored_table_node->get_column("c");
+//    const auto& fds = stored_table_node->FunctionalDependencies();
+//
+//    const auto fd_expected = FunctionalDependency{{a, c}, {b}};
+//    EXPECT_EQ(fds.size(), 1);
+//    EXPECT_EQ(fds.at(0), fd_expected);
+//  }
+//
+//  // Test {b} => {a, c}
+//  {
+//    const auto table = std::make_shared<Table>(column_definitions, TableType::Data);
+//    table->add_soft_key_constraint({{ColumnId{1}}, KeyConstraintType::UNIQUE});
+//
+//    Hyrise::get().storage_manager.add_table("table_d", table);
+//    const auto& stored_table_node = StoredTableNode::Make("table_d");
+//
+//    EXPECT_EQ(stored_table_node->FunctionalDependencies().size(), 0);
+//  }
+//}
+//
+// TEST_F(StoredTableNodeTest, UniqueConstraints) {
+//  const auto table = Hyrise::get().storage_manager.get_table("t_a");
+//
+//  const auto key_constraint_a_b = TableKeyConstraint{{ColumnId{0}, ColumnId{1}}, KeyConstraintType::PRIMARY_KEY};
+//  const auto key_constraint_c = TableKeyConstraint{{ColumnId{2}}, KeyConstraintType::UNIQUE};
+//  table->add_soft_key_constraint(key_constraint_a_b);
+//  table->add_soft_key_constraint(key_constraint_c);
+//
+//  const auto& unique_constraints = stored_table_node_->UniqueConstraints();
+//
+//  // Basic check
+//  EXPECT_EQ(unique_constraints->size(), 2);
+//  // In-depth check
+//  EXPECT_TRUE(find_unique_constraint_by_key_constraint(key_constraint_a_b, unique_constraints));
+//  EXPECT_TRUE(find_unique_constraint_by_key_constraint(key_constraint_c, unique_constraints));
+//
+//  // Check whether StoredTableNode is referenced by the constraint's expressions
+//  for (const auto& unique_constraint : *unique_constraints) {
+//    for (const auto& expression : unique_constraint.expressions) {
+//      const auto& column_expression = std::dynamic_pointer_cast<LqpColumnExpression>(expression);
+//      EXPECT_TRUE(column_expression && !column_expression->original_node_.expired());
+//      EXPECT_TRUE(column_expression->original_node_.lock() == stored_table_node_);
+//    }
+//  }
+//}
+//
+// TEST_F(StoredTableNodeTest, UniqueConstraintsPrunedColumns) {
+//  const auto table = Hyrise::get().storage_manager.get_table("t_a");
+//
+//  // Prepare unique constraints
+//  const auto key_constraint_a = TableKeyConstraint{{ColumnId{0}}, KeyConstraintType::UNIQUE};
+//  const auto key_constraint_a_b = TableKeyConstraint{{ColumnId{0}, ColumnId{1}}, KeyConstraintType::UNIQUE};
+//  const auto key_constraint_c = TableKeyConstraint{{ColumnId{2}}, KeyConstraintType::UNIQUE};
+//  table->add_soft_key_constraint(key_constraint_a);
+//  table->add_soft_key_constraint(key_constraint_a_b);
+//  table->add_soft_key_constraint(key_constraint_c);
+//  const auto& table_key_constraints = table->soft_key_constraints();
+//  EXPECT_EQ(table_key_constraints.size(), 3);
+//  EXPECT_EQ(stored_table_node_->UniqueConstraints()->size(), 3);
+//
+//  // Prune column a, which should remove two unique constraints
+//  stored_table_node_->set_pruned_column_ids({ColumnId{0}});
+//
+//  // Basic check
+//  const auto& unique_constraints = stored_table_node_->UniqueConstraints();
+//  EXPECT_EQ(unique_constraints->size(), 1);
+//  // In-depth check
+//  EXPECT_TRUE(find_unique_constraint_by_key_constraint(key_constraint_c, unique_constraints));
+//}
+//
+// TEST_F(StoredTableNodeTest, UniqueConstraintsEmpty) {
+//  EXPECT_TRUE(Hyrise::get().storage_manager.get_table(stored_table_node_->table_name)->soft_key_constraints().empty());
+//  EXPECT_TRUE(stored_table_node_->UniqueConstraints()->empty());
+//}
+//
+// TEST_F(StoredTableNodeTest, HasMatchingUniqueConstraint) {
+//  const auto table = Hyrise::get().storage_manager.get_table("t_a");
+//  const auto key_constraint_a = TableKeyConstraint{{a_->original_column_id_}, KeyConstraintType::UNIQUE};
+//  table->add_soft_key_constraint(key_constraint_a);
+//  EXPECT_EQ(stored_table_node_->UniqueConstraints()->size(), 1);
+//
+//  // Negative test
+//  EXPECT_FALSE(stored_table_node_->HasMatchingUniqueConstraint({b_}));
+//  EXPECT_FALSE(stored_table_node_->HasMatchingUniqueConstraint({c_}));
+//  EXPECT_FALSE(stored_table_node_->HasMatchingUniqueConstraint({b_, c_}));
+//
+//  // Test exact match
+//  EXPECT_TRUE(stored_table_node_->HasMatchingUniqueConstraint({a_}));
+//
+//  // Test superset of column ids
+//  EXPECT_TRUE(stored_table_node_->HasMatchingUniqueConstraint({a_, b_}));
+//  EXPECT_TRUE(stored_table_node_->HasMatchingUniqueConstraint({a_, c_}));
+//}
+
+}  // namespace skyrise

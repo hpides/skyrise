@@ -15,6 +15,23 @@ set(
     benchmark/lib/lambda/lambda_benchmark_runner_test.cpp
     benchmark/lib/lambda/lambda_benchmark_test.cpp
 
+    lib/compiler/logical_query_plan/aggregate_node_test.cpp
+    lib/compiler/logical_query_plan/alias_node_test.cpp
+    lib/compiler/logical_query_plan/constraint_test_utils.hpp
+    lib/compiler/logical_query_plan/dummy_table_node_test.cpp
+    lib/compiler/logical_query_plan/functional_dependency_test.cpp
+    lib/compiler/logical_query_plan/join_node_test.cpp
+    lib/compiler/logical_query_plan/limit_node_test.cpp
+    lib/compiler/logical_query_plan/lqp_expression_utils_test.cpp
+    lib/compiler/logical_query_plan/lqp_unique_constraint_test.cpp
+    lib/compiler/logical_query_plan/lqp_utils_test.cpp
+    lib/compiler/logical_query_plan/mock_node_test.cpp
+    lib/compiler/logical_query_plan/predicate_node_test.cpp
+    lib/compiler/logical_query_plan/projection_node_test.cpp
+    lib/compiler/logical_query_plan/sort_node_test.cpp
+    lib/compiler/logical_query_plan/stored_table_node_test.cpp
+    lib/compiler/logical_query_plan/union_node_test.cpp
+        
     lib/compiler/physical_query_plan/pqp_serialization_test.cpp
     lib/compiler/physical_query_plan/operator_proxy_test.cpp
     lib/compiler/physical_query_plan/import_options_test.cpp

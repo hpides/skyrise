@@ -1,0 +1,70 @@
+/**
+ * Taken and modified from our sister project Hyrise (https://github.com/hyrise/hyrise)
+ * TODO(julianmenzler): Enable after we found a solution for load_table("..")
+ */
+#include "compiler/logical_query_plan/predicate_node.hpp"
+
+#include <memory>
+
+#include <gtest/gtest.h>
+
+//#include "expression/expression_functional.hpp"
+//#include "compiler/logical_query_plan/lqp_utils.hpp"
+//#include "compiler/logical_query_plan/stored_table_node.hpp"
+
+// using namespace skyrise::expression_functional;  // NOLINT(google-build-using-namespace)
+
+namespace skyrise {
+
+class PredicateNodeTest : public ::testing::Test {
+ protected:
+  void SetUp() override {
+    //    Hyrise::get().storage_manager.add_table("table_a",
+    //                                            load_table("resources/test_data/tbl/int_float_double_string.tbl", 2));
+    //
+    //    table_node_ = StoredTableNode::Make("table_a");
+    //    i_ = LqpColumn_(table_node_, ColumnId{0});
+    //    f_ = LqpColumn_(table_node_, ColumnId{1});
+    //
+    //    predicate_node_ = PredicateNode::Make(Equals_(i_, 5), table_node_);
+  }
+  //
+  //  std::shared_ptr<StoredTableNode> table_node_;
+  //  std::shared_ptr<LqpColumnExpression> i_, f_;
+  //  std::shared_ptr<PredicateNode> predicate_node_;
+};
+//
+// TEST_F(PredicateNodeTest, Descriptions) { EXPECT_EQ(predicate_node_->Description(), "[Predicate] i = 5"); }
+//
+// TEST_F(PredicateNodeTest, HashingAndEqualityCheck) {
+//  EXPECT_EQ(*predicate_node_, *predicate_node_);
+//  const auto equal_table_node = StoredTableNode::Make("table_a");
+//  const auto equal_i = equal_table_node->get_column("i");
+//
+//  const auto other_predicate_node_a = PredicateNode::Make(Equals_(i_, 5), table_node_);
+//  const auto other_predicate_node_b = PredicateNode::Make(Equals_(f_, 5), table_node_);
+//  const auto other_predicate_node_c = PredicateNode::Make(NotEquals_(i_, 5), table_node_);
+//  const auto other_predicate_node_d = PredicateNode::Make(Equals_(i_, 6), table_node_);
+//  const auto other_predicate_node_e = PredicateNode::Make(Equals_(equal_i, 5), equal_table_node);
+//
+//  EXPECT_EQ(*other_predicate_node_a, *predicate_node_);
+//  EXPECT_NE(*other_predicate_node_b, *predicate_node_);
+//  EXPECT_NE(*other_predicate_node_c, *predicate_node_);
+//  EXPECT_NE(*other_predicate_node_d, *predicate_node_);
+//  EXPECT_EQ(*other_predicate_node_e, *predicate_node_);
+//
+//  EXPECT_EQ(other_predicate_node_a->hash(), predicate_node_->hash());
+//  EXPECT_NE(other_predicate_node_b->hash(), predicate_node_->hash());
+//  EXPECT_NE(other_predicate_node_c->hash(), predicate_node_->hash());
+//  EXPECT_NE(other_predicate_node_d->hash(), predicate_node_->hash());
+//  EXPECT_EQ(other_predicate_node_e->hash(), predicate_node_->hash());
+//}
+//
+// TEST_F(PredicateNodeTest, Copy) { EXPECT_EQ(*predicate_node_->DeepCopy(), *predicate_node_); }
+//
+// TEST_F(PredicateNodeTest, NodeExpressions) {
+//  ASSERT_EQ(predicate_node_->node_expressions_.size(), 1u);
+//  EXPECT_EQ(*predicate_node_->node_expressions_.at(0), *Equals_(i_, 5));
+//}
+
+}  // namespace skyrise
