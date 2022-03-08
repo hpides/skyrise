@@ -39,9 +39,35 @@ TableColumnDefinition TableSchema::GetTableColumnDefinition(const ColumnId colum
 
 ColumnCount TableSchema::TableColumnCount() const { return static_cast<ColumnCount>(column_definitions_.size()); }
 
-std::shared_ptr<const TableSchema> TableSchema::FromTableColumnDefinitions(
-    const TableColumnDefinitions& column_definitions) {
-  return std::make_shared<const TableSchema>(column_definitions);
+std::shared_ptr<TableSchema> TableSchema::FromTableColumnDefinitions(const TableColumnDefinitions& column_definitions) {
+  return std::make_shared<TableSchema>(column_definitions);
 }
+
+void TableSchema::AddKeyConstraint(const TableKeyConstraint& table_key_constraint) {
+  // Check validity of specified columns
+  for (const auto& column_id : table_key_constraint.columns()) {
+    Assert(column_id < TableColumnCount(), "ColumnId out of range");
+
+    // PRIMARY KEY requires non-nullable columns
+    if (table_key_constraint.key_type() == KeyConstraintType::PRIMARY_KEY) {
+      Assert(!ColumnIsNullable(column_id), "Column must be non-nullable to comply with PRIMARY KEY.");
+    }
+  }
+
+  for (const auto& existing_constraint : table_key_constraints_) {
+    // Ensure that no other PRIMARY KEY is defined
+    Assert(existing_constraint.key_type() == KeyConstraintType::UNIQUE ||
+               table_key_constraint.key_type() == KeyConstraintType::UNIQUE,
+           "Another primary key already exists for this table.");
+
+    // Ensure there is only one key constraint per column set.
+    Assert(table_key_constraint.columns() != existing_constraint.columns(),
+           "Another key constraint for the same column set has already been defined.");
+  }
+
+  table_key_constraints_.push_back(table_key_constraint);
+}
+
+const TableKeyConstraints& TableSchema::KeyConstraints() const { return table_key_constraints_; }
 
 }  // namespace skyrise
