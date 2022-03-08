@@ -75,6 +75,60 @@ set(
 )
 
 set(
+    QUERY_COMPILER_SOURCES
+    compiler/logical_query_plan/abstract_lqp_node.cpp
+    compiler/logical_query_plan/abstract_lqp_node.hpp
+    compiler/logical_query_plan/aggregate_node.cpp
+    compiler/logical_query_plan/aggregate_node.hpp
+    compiler/logical_query_plan/alias_node.cpp
+    compiler/logical_query_plan/alias_node.hpp
+    compiler/logical_query_plan/create_view_node.cpp
+    compiler/logical_query_plan/create_view_node.hpp
+    compiler/logical_query_plan/drop_view_node.cpp
+    compiler/logical_query_plan/drop_view_node.hpp
+    compiler/logical_query_plan/dummy_table_node.cpp
+    compiler/logical_query_plan/dummy_table_node.hpp
+    compiler/logical_query_plan/functional_dependency.cpp
+    compiler/logical_query_plan/functional_dependency.hpp
+    compiler/logical_query_plan/join_node.cpp
+    compiler/logical_query_plan/join_node.hpp
+    compiler/logical_query_plan/limit_node.cpp
+    compiler/logical_query_plan/limit_node.hpp
+    compiler/logical_query_plan/logical_plan_root_node.cpp
+    compiler/logical_query_plan/logical_plan_root_node.hpp
+    compiler/logical_query_plan/lqp_expression_utils.cpp
+    compiler/logical_query_plan/lqp_expression_utils.hpp
+    compiler/logical_query_plan/lqp_translator.cpp
+    compiler/logical_query_plan/lqp_translator.hpp
+    compiler/logical_query_plan/lqp_unique_constraint.cpp
+    compiler/logical_query_plan/lqp_unique_constraint.hpp
+    compiler/logical_query_plan/lqp_utils.cpp
+    compiler/logical_query_plan/lqp_utils.hpp
+    compiler/logical_query_plan/lqp_wrapper.cpp
+    compiler/logical_query_plan/lqp_wrapper.hpp
+    compiler/logical_query_plan/mock_node.cpp
+    compiler/logical_query_plan/mock_node.hpp
+    compiler/logical_query_plan/predicate_node.cpp
+    compiler/logical_query_plan/predicate_node.hpp
+    compiler/logical_query_plan/projection_node.cpp
+    compiler/logical_query_plan/projection_node.hpp
+    compiler/logical_query_plan/sort_node.cpp
+    compiler/logical_query_plan/sort_node.hpp
+    compiler/logical_query_plan/stored_table_node.cpp
+    compiler/logical_query_plan/stored_table_node.hpp
+    compiler/logical_query_plan/union_node.cpp
+    compiler/logical_query_plan/union_node.hpp
+
+    compiler/plan_utils.hpp
+
+    expression/lqp_column_expression.cpp
+    expression/lqp_column_expression.hpp
+
+    metadata/tpch_mock_catalog.cpp
+    metadata/tpch_mock_catalog.hpp
+)
+
+set(
     SHARED_SOURCES
     aggregate_traits.hpp
     all_type_variant.hpp
@@ -149,8 +203,6 @@ set(
     metadata/table_partition.hpp
     metadata/table_schema.cpp
     metadata/table_schema.hpp
-    metadata/tpch_mock_catalog.cpp
-    metadata/tpch_mock_catalog.hpp
 
     operator/abstract_operator.cpp
     operator/abstract_operator.hpp
@@ -245,6 +297,7 @@ set(
     utils/costs/cost_calculator.hpp
     utils/costs/pricing.cpp
     utils/costs/pricing.hpp
+    ${QUERY_COMPILER_SOURCES}
 )
 
 set(
