@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "abstract_lqp_node.hpp"
-#include "compiler/query_context.hpp"
 #include "expression/abstract_expression.hpp"
 #include "metadata/abstract_catalog.hpp"
 #include "types.hpp"

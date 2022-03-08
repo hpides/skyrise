@@ -94,8 +94,6 @@ set(
     compiler/logical_query_plan/logical_plan_root_node.hpp
     compiler/logical_query_plan/lqp_expression_utils.cpp
     compiler/logical_query_plan/lqp_expression_utils.hpp
-    compiler/logical_query_plan/lqp_translator.cpp
-    compiler/logical_query_plan/lqp_translator.hpp
     compiler/logical_query_plan/lqp_unique_constraint.cpp
     compiler/logical_query_plan/lqp_unique_constraint.hpp
     compiler/logical_query_plan/lqp_utils.cpp
