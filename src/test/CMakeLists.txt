@@ -31,7 +31,7 @@ set(
     lib/compiler/logical_query_plan/sort_node_test.cpp
     lib/compiler/logical_query_plan/stored_table_node_test.cpp
     lib/compiler/logical_query_plan/union_node_test.cpp
-        
+
     lib/compiler/physical_query_plan/pqp_serialization_test.cpp
     lib/compiler/physical_query_plan/operator_proxy_test.cpp
     lib/compiler/physical_query_plan/import_options_test.cpp

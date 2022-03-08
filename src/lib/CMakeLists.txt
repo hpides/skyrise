@@ -132,6 +132,8 @@ set(
     constant_mappings.cpp
     constant_mappings.hpp
 
+    compiler/abstract_plan_node.hpp
+
     compiler/physical_query_plan/abstract_operator_proxy.cpp
     compiler/physical_query_plan/abstract_operator_proxy.hpp
     compiler/physical_query_plan/export_operator_proxy.cpp
