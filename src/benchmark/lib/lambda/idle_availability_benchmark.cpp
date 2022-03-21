@@ -9,6 +9,7 @@
 #include <magic_enum.hpp>
 
 #include "benchmark_result_aggregate.hpp"
+#include "lambda_benchmark_output.hpp"
 #include "utils/assert.hpp"
 #include "utils/map.hpp"
 #include "utils/string.hpp"
@@ -71,11 +72,6 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> IdleAvailabilityBenchmark::OnRun(
 Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
     const std::shared_ptr<LambdaBenchmarkResult>& benchmark_result,
     const IdleAvailabilityBenchmarkParameters& benchmark_parameters) const {
-  Aws::StringStream benchmark_name;
-  benchmark_name << "IdleAvailabilityBenchmark/" << benchmark_parameters.function_instance_mb_size << "/"
-                 << benchmark_parameters.invocation_count << "/" << benchmark_parameters.sleep_min_duration << "/"
-                 << benchmark_parameters.repetition_count;
-
   const auto& benchmark_repetitions = benchmark_result->GetBenchmarkRepetitions();
 
   std::map<std::string, std::vector<bool>> vm_ids_to_availability_flags;
@@ -140,49 +136,60 @@ Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
     unavailable_phases_lengths.emplace_back(0);
   }
 
-  const BenchmarkResultAggregate availability_percentages_aggregates(availability_percentages);
-  const BenchmarkResultAggregate unavailable_phases_counts_aggregates(unavailable_phases_counts);
-  const BenchmarkResultAggregate unavailable_phases_lengths_aggregates(unavailable_phases_lengths);
+  const BenchmarkResultAggregate availability_percentages_aggregate(availability_percentages);
+  const BenchmarkResultAggregate unavailable_phases_counts_aggregate(unavailable_phases_counts);
+  const BenchmarkResultAggregate unavailable_phases_lengths_aggregate(unavailable_phases_lengths);
 
-  return GenerateJsonOutput(
-      benchmark_name.str(),
-      {{"availability_percentage_minimum", availability_percentages_aggregates.GetMinimum()},
-       {"availability_percentage_maximum", availability_percentages_aggregates.GetMaximum()},
-       {"availability_percentage_average", availability_percentages_aggregates.GetAverage()},
-       {"availability_percentage_median", availability_percentages_aggregates.GetMedian()},
-       {"availability_percentage_percentile_0.01", availability_percentages_aggregates.GetPercentile(0.01)},
-       {"availability_percentage_percentile_0.1", availability_percentages_aggregates.GetPercentile(0.1)},
-       {"availability_percentage_percentile_1", availability_percentages_aggregates.GetPercentile(1)},
-       {"availability_percentage_percentile_10", availability_percentages_aggregates.GetPercentile(10)},
-       {"availability_percentage_std_dev", availability_percentages_aggregates.GetStandardDeviation()},
-       {"unavailable_phases_count_minimum", unavailable_phases_counts_aggregates.GetMinimum()},
-       {"unavailable_phases_count_maximum", unavailable_phases_counts_aggregates.GetMaximum()},
-       {"unavailable_phases_count_average", unavailable_phases_counts_aggregates.GetAverage()},
-       {"unavailable_phases_count_median", unavailable_phases_counts_aggregates.GetMedian()},
-       {"unavailable_phases_count_percentile_90", unavailable_phases_counts_aggregates.GetPercentile(90)},
-       {"unavailable_phases_count_percentile_99", unavailable_phases_counts_aggregates.GetPercentile(99)},
-       {"unavailable_phases_count_percentile_99.9", unavailable_phases_counts_aggregates.GetPercentile(99.9)},
-       {"unavailable_phases_count_percentile_99.99", unavailable_phases_counts_aggregates.GetPercentile(99.99)},
-       {"unavailable_phases_count_std_dev", unavailable_phases_counts_aggregates.GetStandardDeviation()},
-       {"unavailable_phases_length_minimum", unavailable_phases_lengths_aggregates.GetMinimum()},
-       {"unavailable_phases_length_maximum", unavailable_phases_lengths_aggregates.GetMaximum()},
-       {"unavailable_phases_length_average", unavailable_phases_lengths_aggregates.GetAverage()},
-       {"unavailable_phases_length_median", unavailable_phases_lengths_aggregates.GetMedian()},
-       {"unavailable_phases_length_percentile_90", unavailable_phases_lengths_aggregates.GetPercentile(90)},
-       {"unavailable_phases_length_percentile_99", unavailable_phases_lengths_aggregates.GetPercentile(99)},
-       {"unavailable_phases_length_percentile_99.9", unavailable_phases_lengths_aggregates.GetPercentile(99.9)},
-       {"unavailable_phases_length_percentile_99.99", unavailable_phases_lengths_aggregates.GetPercentile(99.99)},
-       {"unavailable_phases_length_std_dev", unavailable_phases_lengths_aggregates.GetStandardDeviation()},
-       {"benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
-                                  benchmark_result, benchmark_parameters.function_instance_mb_size))}},
-      {/*aggregated string metrics*/}, benchmark_result, {[&](const LambdaInvokeResult& invoke_result) {
+  return LambdaBenchmarkOutput("idle_availability_benchmark", benchmark_result)
+      .WithInt64Argument("function_instance_mb_size", benchmark_parameters.function_instance_mb_size)
+      .WithInt64Argument("invocation_count", benchmark_parameters.invocation_count)
+      .WithInt64Argument("sleep_min_duration", benchmark_parameters.sleep_min_duration)
+      .WithInt64Argument("repetition_count", benchmark_parameters.repetition_count)
+      .WithDoubleMetric("availability_percentage_minimum", availability_percentages_aggregate.GetMinimum())
+      .WithDoubleMetric("availability_percentage_maximum", availability_percentages_aggregate.GetMaximum())
+      .WithDoubleMetric("availability_percentage_average", availability_percentages_aggregate.GetAverage())
+      .WithDoubleMetric("availability_percentage_median", availability_percentages_aggregate.GetMedian())
+      .WithDoubleMetric("availability_percentage_percentile_0.01",
+                        availability_percentages_aggregate.GetPercentile(0.01))
+      .WithDoubleMetric("availability_percentage_percentile_0.1", availability_percentages_aggregate.GetPercentile(0.1))
+      .WithDoubleMetric("availability_percentage_percentile_1", availability_percentages_aggregate.GetPercentile(1))
+      .WithDoubleMetric("availability_percentage_percentile_10", availability_percentages_aggregate.GetPercentile(10))
+      .WithDoubleMetric("availability_percentage_std_dev", availability_percentages_aggregate.GetStandardDeviation())
+      .WithDoubleMetric("unavailable_phases_count_minimum", unavailable_phases_counts_aggregate.GetMinimum())
+      .WithDoubleMetric("unavailable_phases_count_maximum", unavailable_phases_counts_aggregate.GetMaximum())
+      .WithDoubleMetric("unavailable_phases_count_average", unavailable_phases_counts_aggregate.GetAverage())
+      .WithDoubleMetric("unavailable_phases_count_median", unavailable_phases_counts_aggregate.GetMedian())
+      .WithDoubleMetric("unavailable_phases_count_percentile_90", unavailable_phases_counts_aggregate.GetPercentile(90))
+      .WithDoubleMetric("unavailable_phases_count_percentile_99", unavailable_phases_counts_aggregate.GetPercentile(99))
+      .WithDoubleMetric("unavailable_phases_count_percentile_99.9",
+                        unavailable_phases_counts_aggregate.GetPercentile(99.9))
+      .WithDoubleMetric("unavailable_phases_count_percentile_99.99",
+                        unavailable_phases_counts_aggregate.GetPercentile(99.99))
+      .WithDoubleMetric("unavailable_phases_count_std_dev", unavailable_phases_counts_aggregate.GetStandardDeviation())
+      .WithDoubleMetric("unavailable_phases_length_minimum", unavailable_phases_lengths_aggregate.GetMinimum())
+      .WithDoubleMetric("unavailable_phases_length_maximum", unavailable_phases_lengths_aggregate.GetMaximum())
+      .WithDoubleMetric("unavailable_phases_length_average", unavailable_phases_lengths_aggregate.GetAverage())
+      .WithDoubleMetric("unavailable_phases_length_median", unavailable_phases_lengths_aggregate.GetMedian())
+      .WithDoubleMetric("unavailable_phases_length_percentile_90",
+                        unavailable_phases_lengths_aggregate.GetPercentile(90))
+      .WithDoubleMetric("unavailable_phases_length_percentile_99",
+                        unavailable_phases_lengths_aggregate.GetPercentile(99))
+      .WithDoubleMetric("unavailable_phases_length_percentile_99.9",
+                        unavailable_phases_lengths_aggregate.GetPercentile(99.9))
+      .WithDoubleMetric("unavailable_phases_length_percentile_99.99",
+                        unavailable_phases_lengths_aggregate.GetPercentile(99.99))
+      .WithDoubleMetric("unavailable_phases_length_std_dev",
+                        unavailable_phases_lengths_aggregate.GetStandardDeviation())
+      .WithDoubleMetric("benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
+                                                  benchmark_result, benchmark_parameters.function_instance_mb_size)))
+      .WithDoubleInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
         return std::make_tuple("function_cost_usd",
                                ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size));
-      }},
-      {[&](const LambdaInvokeResult& invoke_result) {
+      })
+      .WithStringInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
         return std::make_tuple("vm_id", invoke_result.GetResponseBody().AsString());
-      }},
-      {/*extract object metric functions*/});
+      })
+      .Build();
 }
 
 }  // namespace skyrise

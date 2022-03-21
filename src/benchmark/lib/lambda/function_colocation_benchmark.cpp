@@ -9,6 +9,7 @@
 #include <magic_enum.hpp>
 
 #include "benchmark_result_aggregate.hpp"
+#include "lambda_benchmark_output.hpp"
 #include "utils/assert.hpp"
 #include "utils/map.hpp"
 #include "utils/string.hpp"
@@ -69,11 +70,6 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> FunctionColocationBenchmark::OnRu
 Aws::Utils::Json::JsonValue FunctionColocationBenchmark::GenerateResultOutput(
     const std::shared_ptr<LambdaBenchmarkResult>& benchmark_result,
     const FunctionColocationBenchmarkParameters& benchmark_parameters) const {
-  Aws::StringStream benchmark_name;
-  benchmark_name << "ColocationBenchmark/" << benchmark_parameters.function_instance_mb_size << "/"
-                 << benchmark_parameters.invocation_count << "/" << benchmark_parameters.sleep_min_duration << "/"
-                 << benchmark_parameters.repetition_count;
-
   const auto& benchmark_repetitions = benchmark_result->GetBenchmarkRepetitions();
 
   std::vector<double> colocation_counts;
@@ -96,29 +92,32 @@ Aws::Utils::Json::JsonValue FunctionColocationBenchmark::GenerateResultOutput(
     }
   }
 
-  const BenchmarkResultAggregate aggregates(colocation_counts);
+  const BenchmarkResultAggregate aggregate(colocation_counts);
 
-  return GenerateJsonOutput(
-      benchmark_name.str(),
-      {{"colocation_counts_minimum", aggregates.GetMinimum()},
-       {"colocation_counts_maximum", aggregates.GetMaximum()},
-       {"colocation_counts_average", aggregates.GetAverage()},
-       {"colocation_counts_median", aggregates.GetMedian()},
-       {"colocation_counts_90", aggregates.GetPercentile(90)},
-       {"colocation_counts_99", aggregates.GetPercentile(99)},
-       {"colocation_counts_99.9", aggregates.GetPercentile(99.9)},
-       {"colocation_counts_99.99", aggregates.GetPercentile(99.99)},
-       {"colocation_counts_std_dev", aggregates.GetStandardDeviation()},
-       {"benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
-                                  benchmark_result, benchmark_parameters.function_instance_mb_size))}},
-      {/*aggregated string metrics*/}, benchmark_result, {[&](const LambdaInvokeResult& invoke_result) {
+  return LambdaBenchmarkOutput("function_colocation_benchmark", benchmark_result)
+      .WithInt64Argument("function_instance_mb_size", benchmark_parameters.function_instance_mb_size)
+      .WithInt64Argument("invocation_count", benchmark_parameters.invocation_count)
+      .WithInt64Argument("sleep_min_duration", benchmark_parameters.sleep_min_duration)
+      .WithInt64Argument("repetition_count", benchmark_parameters.repetition_count)
+      .WithDoubleMetric("colocation_counts_minimum", aggregate.GetMinimum())
+      .WithDoubleMetric("colocation_counts_maximum", aggregate.GetMaximum())
+      .WithDoubleMetric("colocation_counts_average", aggregate.GetAverage())
+      .WithDoubleMetric("colocation_counts_median", aggregate.GetMedian())
+      .WithDoubleMetric("colocation_counts_percentile_90", aggregate.GetPercentile(90))
+      .WithDoubleMetric("colocation_counts_percentile_99", aggregate.GetPercentile(99))
+      .WithDoubleMetric("colocation_counts_percentile_99.9", aggregate.GetPercentile(99.9))
+      .WithDoubleMetric("colocation_counts_percentile_99.99", aggregate.GetPercentile(99.99))
+      .WithDoubleMetric("colocation_counts_std_dev", aggregate.GetStandardDeviation())
+      .WithDoubleMetric("benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
+                                                  benchmark_result, benchmark_parameters.function_instance_mb_size)))
+      .WithDoubleInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
         return std::make_tuple("function_cost_usd",
                                ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size));
-      }},
-      {[&](const LambdaInvokeResult& invoke_result) {
+      })
+      .WithStringInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
         return std::make_tuple("vm_id", invoke_result.GetResponseBody().AsString());
-      }},
-      {/*extract object metric functions*/});
+      })
+      .Build();
 }
 
 }  // namespace skyrise

@@ -7,6 +7,7 @@
 #include <magic_enum.hpp>
 
 #include "benchmark_result_aggregate.hpp"
+#include "lambda_benchmark_output.hpp"
 #include "utils/string.hpp"
 #include "utils/unit_conversion.hpp"
 
@@ -32,7 +33,8 @@ NetworkThroughputBenchmark::NetworkThroughputBenchmark(
               const auto config = std::make_shared<LambdaBenchmarkConfig>(function_name.str(),
                                                                           function_instance_mb_size, repetition_count);
               NetworkBenchmarkParameters parameters{
-                  function_instance_mb_size, object_byte_size, batch_size, thread_count, 1, 1, operation_type};
+                  function_instance_mb_size, object_byte_size, batch_size, thread_count, 1, 1,
+                  repetition_count,          operation_type};
               config->SetPayloads(GeneratePayloads(parameters));
 
               benchmark_configs_.emplace_back(parameters, config);
@@ -47,12 +49,6 @@ NetworkThroughputBenchmark::NetworkThroughputBenchmark(
 Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
     const std::shared_ptr<LambdaBenchmarkResult>& benchmark_result,
     const NetworkBenchmarkParameters& benchmark_parameters) {
-  Aws::StringStream benchmark_name;
-  benchmark_name << "NetworkThroughputBenchmark/" << benchmark_parameters.function_instance_mb_size
-                 << "FunctionInstanceMB/" << ByteToMb(benchmark_parameters.object_byte_size) << "ObjectMB/"
-                 << benchmark_parameters.thread_count << "Threads/"
-                 << magic_enum::enum_name(benchmark_parameters.operation_type);
-
   const auto& benchmark_repetitions = benchmark_result->GetBenchmarkRepetitions();
 
   std::vector<double> throughputs;
@@ -78,31 +74,36 @@ Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
     throughputs.emplace_back(-1.0);
   }
 
-  const BenchmarkResultAggregate aggregates(throughputs);
+  const BenchmarkResultAggregate aggregate(throughputs);
 
-  return GenerateJsonOutput(
-      benchmark_name.str(),
-      {{"throughput_mb_per_s_minimum", aggregates.GetMinimum()},
-       {"throughput_mb_per_s_maximum", aggregates.GetMaximum()},
-       {"throughput_mb_per_s_average", aggregates.GetAverage()},
-       {"throughput_mb_per_s_median", aggregates.GetMedian()},
-       {"throughput_mb_per_s_percentile_0.01", aggregates.GetPercentile(0.01)},
-       {"throughput_mb_per_s_percentile_0.1", aggregates.GetPercentile(0.1)},
-       {"throughput_mb_per_s_percentile_1", aggregates.GetPercentile(1)},
-       {"throughput_mb_per_s_percentile_10", aggregates.GetPercentile(10)},
-       {"throughput_mb_per_s_std_dev", aggregates.GetStandardDeviation()},
-       {"benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
-                                  benchmark_result, benchmark_parameters.function_instance_mb_size))}},
-      {/*aggregated string metrics*/}, benchmark_result,
-      {[&](const LambdaInvokeResult& invoke_result) {
-         return std::make_tuple("billed_lambda_duration_ms", invoke_result.GetLogResult()->GetBilledDurationMs());
-       },
-       [&](const LambdaInvokeResult& invoke_result) {
-         return std::make_tuple(
-             "function_cost_usd",
-             static_cast<double>(ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size)));
-       }},
-      {/*extract string metric functions*/}, {[&](const LambdaInvokeResult& invoke_result) {
+  return LambdaBenchmarkOutput("network_throughput_benchmark", benchmark_result)
+      .WithInt64Argument("function_instance_mb_size", benchmark_parameters.function_instance_mb_size)
+      .WithInt64Argument("object_byte_size", benchmark_parameters.object_byte_size)
+      .WithInt64Argument("batch_size", benchmark_parameters.batch_size)
+      .WithInt64Argument("thread_count", benchmark_parameters.thread_count)
+      .WithInt64Argument("invocation_count", benchmark_parameters.invocation_count)
+      .WithInt64Argument("bucket_count", benchmark_parameters.bucket_count)
+      .WithInt64Argument("repetition_count", benchmark_parameters.repetition_count)
+      .WithStringArgument("operation_type", std::string(magic_enum::enum_name(benchmark_parameters.operation_type)))
+      .WithDoubleMetric("throughput_mb_per_s_minimum", aggregate.GetMinimum())
+      .WithDoubleMetric("throughput_mb_per_s_maximum", aggregate.GetMaximum())
+      .WithDoubleMetric("throughput_mb_per_s_average", aggregate.GetAverage())
+      .WithDoubleMetric("throughput_mb_per_s_median", aggregate.GetMedian())
+      .WithDoubleMetric("throughput_mb_per_s_percentile_0.01", aggregate.GetPercentile(0.01))
+      .WithDoubleMetric("throughput_mb_per_s_percentile_0.1", aggregate.GetPercentile(0.1))
+      .WithDoubleMetric("throughput_mb_per_s_percentile_1", aggregate.GetPercentile(1))
+      .WithDoubleMetric("throughput_mb_per_s_percentile_10", aggregate.GetPercentile(10))
+      .WithDoubleMetric("throughput_mb_per_s_std_dev", aggregate.GetStandardDeviation())
+      .WithDoubleMetric("benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
+                                                  benchmark_result, benchmark_parameters.function_instance_mb_size)))
+      .WithDoubleInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
+        return std::make_tuple("function_cost_usd",
+                               ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size));
+      })
+      .WithDoubleInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
+        return std::make_tuple("billed_lambda_duration_ms", invoke_result.GetLogResult()->GetBilledDurationMs());
+      })
+      .WithObjectInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
         const auto ms_durations = invoke_result.GetResponseBody().GetArray("ms_durations");
 
         Aws::Utils::Array<Aws::Utils::Json::JsonValue> duration_seconds(ms_durations.GetLength());
@@ -114,7 +115,8 @@ Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
         }
 
         return std::make_tuple("duration_seconds", Aws::Utils::Json::JsonValue().AsArray(duration_seconds));
-      }});
+      })
+      .Build();
 }
 
 }  // namespace skyrise

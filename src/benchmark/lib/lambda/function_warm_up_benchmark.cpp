@@ -8,6 +8,7 @@
 #include "benchmark_helper.hpp"
 #include "benchmark_result_aggregate.hpp"
 #include "client/client.hpp"
+#include "lambda_benchmark_output.hpp"
 
 namespace skyrise {
 
@@ -43,8 +44,8 @@ FunctionWarmUpBenchmark::FunctionWarmUpBenchmark(std::shared_ptr<const CostCalcu
               std::make_shared<Aws::StringStream>(payload_value.View().WriteCompact()));
 
           benchmark_configs_.emplace_back(
-              FunctionWarmUpBenchmarkParameters{function_instance_mb_size, invocation_count, repetition_count,
-                                                sleep_ms_duration, provisioning_factor, enable_provisioned_concurrency,
+              FunctionWarmUpBenchmarkParameters{function_instance_mb_size, invocation_count, sleep_ms_duration,
+                                                provisioning_factor, enable_provisioned_concurrency, repetition_count,
                                                 config->warm_up_strategy_->GetName()},
               config);
         }
@@ -59,8 +60,9 @@ FunctionWarmUpBenchmark::FunctionWarmUpBenchmark(std::shared_ptr<const CostCalcu
         config->SetOnePayloadForAllFunctions(std::make_shared<Aws::StringStream>(payload_value.View().WriteCompact()));
 
         benchmark_configs_.emplace_back(
-            FunctionWarmUpBenchmarkParameters{function_instance_mb_size, invocation_count, repetition_count, 0, 1.0,
-                                              enable_provisioned_concurrency, config->warm_up_strategy_->GetName()},
+            FunctionWarmUpBenchmarkParameters{function_instance_mb_size, invocation_count, 0, 1.0,
+                                              enable_provisioned_concurrency, repetition_count,
+                                              config->warm_up_strategy_->GetName()},
             config);
       }
     }
@@ -87,12 +89,6 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> FunctionWarmUpBenchmark::OnRun(
 Aws::Utils::Json::JsonValue FunctionWarmUpBenchmark::GenerateResultOutput(
     const std::shared_ptr<LambdaBenchmarkResult>& benchmark_result,
     const FunctionWarmUpBenchmarkParameters& benchmark_parameters) const {
-  Aws::StringStream benchmark_name;
-  benchmark_name << "FunctionWarmUpBenchmark/" << benchmark_parameters.function_instance_mb_size << "/"
-                 << benchmark_parameters.invocation_count << "/" << benchmark_parameters.sleep_ms_duration << "/"
-                 << benchmark_parameters.provisioning_factor << "/"
-                 << benchmark_parameters.enable_provisioned_concurrency << "/" << benchmark_parameters.warm_up_strategy;
-
   const auto is_warm_function = [&](const LambdaInvokeResult& invoke_result) {
     return !invoke_result.GetLogResult()->HasInitDuration() ||
            benchmark_parameters.warm_up_strategy == "ProvisionedConcurrencyWarmUpStrategy";
@@ -120,28 +116,34 @@ Aws::Utils::Json::JsonValue FunctionWarmUpBenchmark::GenerateResultOutput(
     warm_function_percentages.emplace_back(warm_function_count / static_cast<double>(successful_function_count));
   }
 
-  const BenchmarkResultAggregate warm_function_percentages_aggregates(warm_function_percentages);
+  const BenchmarkResultAggregate aggregate(warm_function_percentages);
 
-  return GenerateJsonOutput(
-      benchmark_name.str(),
-      {{"warm_function_percentage_minimum", warm_function_percentages_aggregates.GetMinimum()},
-       {"warm_function_percentage_maximum", warm_function_percentages_aggregates.GetMaximum()},
-       {"warm_function_percentage_average", warm_function_percentages_aggregates.GetAverage()},
-       {"warm_function_percentage_median", warm_function_percentages_aggregates.GetMedian()},
-       {"warm_function_percentage_percentile_0.01", warm_function_percentages_aggregates.GetPercentile(0.01)},
-       {"warm_function_percentage_percentile_0.1", warm_function_percentages_aggregates.GetPercentile(0.1)},
-       {"warm_function_percentage_percentile_1", warm_function_percentages_aggregates.GetPercentile(1)},
-       {"warm_function_percentage_percentile_10", warm_function_percentages_aggregates.GetPercentile(10)},
-       {"warm_function_percentage_std_dev", warm_function_percentages_aggregates.GetStandardDeviation()},
-       {"warm_up_cost_usd", benchmark_result->GetWarmUpCost()},
-       {"benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
-                                  benchmark_result, benchmark_parameters.function_instance_mb_size,
-                                  benchmark_parameters.warm_up_strategy == "ProvisionedConcurrencyWarmUpStrategy"))}},
-      {/*aggregated string metrics*/}, benchmark_result, {/*extract double metric functions*/},
-      {[&](const LambdaInvokeResult& invoke_result) {
-        return std::make_tuple("is_warm_function", is_warm_function(invoke_result) ? "true" : "false");
-      }},
-      {/*extract object metric functions*/});
+  return LambdaBenchmarkOutput("function_warm_up_benchmark", benchmark_result)
+      .WithInt64Argument("function_instance_mb_size", benchmark_parameters.function_instance_mb_size)
+      .WithInt64Argument("invocation_count", benchmark_parameters.invocation_count)
+      .WithInt64Argument("sleep_ms_duration", benchmark_parameters.sleep_ms_duration)
+      .WithDoubleArgument("provisioning_factor", benchmark_parameters.provisioning_factor)
+      .WithBoolArgument("enable_provisioned_concurrency", benchmark_parameters.enable_provisioned_concurrency)
+      .WithInt64Argument("repetition_count", benchmark_parameters.repetition_count)
+      .WithStringArgument("warm_up_strategy", benchmark_parameters.warm_up_strategy)
+      .WithDoubleMetric("warm_function_percentage_minimum", aggregate.GetMinimum())
+      .WithDoubleMetric("warm_function_percentage_maximum", aggregate.GetMaximum())
+      .WithDoubleMetric("warm_function_percentage_average", aggregate.GetAverage())
+      .WithDoubleMetric("warm_function_percentage_median", aggregate.GetMedian())
+      .WithDoubleMetric("warm_function_percentage_percentile_0.01", aggregate.GetPercentile(0.01))
+      .WithDoubleMetric("warm_function_percentage_percentile_0.1", aggregate.GetPercentile(0.1))
+      .WithDoubleMetric("warm_function_percentage_percentile_1", aggregate.GetPercentile(1))
+      .WithDoubleMetric("warm_function_percentage_percentile_10", aggregate.GetPercentile(10))
+      .WithDoubleMetric("warm_function_percentage_std_dev", aggregate.GetStandardDeviation())
+      .WithDoubleMetric("warm_up_cost_usd", benchmark_result->GetWarmUpCost())
+      .WithDoubleMetric("benchmark_cost_usd",
+                        static_cast<double>(CalculateOverallFunctionCost(
+                            benchmark_result, benchmark_parameters.function_instance_mb_size,
+                            benchmark_parameters.warm_up_strategy == "ProvisionedConcurrencyWarmUpStrategy")))
+      .WithBoolInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
+        return std::make_tuple("is_warm_function", is_warm_function(invoke_result) ? true : false);
+      })
+      .Build();
 }
 
 }  // namespace skyrise

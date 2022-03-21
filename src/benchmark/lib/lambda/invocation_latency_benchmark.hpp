@@ -11,12 +11,12 @@
 namespace skyrise {
 
 struct InvocationLatencyBenchmarkParameters {
-  Aws::String function_package_name;
   size_t function_instance_mb_size;
   size_t invocation_count;
   bool warm_mode;
   size_t sleep_ms_duration;
   size_t repetition_count;
+  Aws::String function_package_name;
 };
 
 class InvocationLatencyBenchmark : public LambdaBenchmark {
