@@ -8,6 +8,7 @@
 namespace {
 
 const std::string kJsonKeyPredicate = "predicate";
+const std::string kName = "Filter";
 
 }  // namespace
 
@@ -16,14 +17,11 @@ namespace skyrise {
 FilterOperatorProxy::FilterOperatorProxy(std::shared_ptr<AbstractExpression> predicate)
     : AbstractOperatorProxy(OperatorType::kFilter), predicate_(std::move(predicate)) {}
 
-const std::string& FilterOperatorProxy::Name() const {
-  static const std::string kName = "Filter";
-  return kName;
-}
+const std::string& FilterOperatorProxy::Name() const { return kName; }
 
 std::string FilterOperatorProxy::Description(const DescriptionMode mode) const {
   std::stringstream stream;
-  const char separator = (mode == DescriptionMode::kSingleLine ? ' ' : '\n');
+  const char separator = mode == DescriptionMode::kSingleLine ? ' ' : '\n';
   stream << AbstractOperatorProxy::Description(mode) << separator;
   stream << predicate_->AsColumnName();
 

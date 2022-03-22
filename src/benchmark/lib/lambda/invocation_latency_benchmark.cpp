@@ -15,6 +15,7 @@
 
 #include "benchmark_result_aggregate.hpp"
 #include "function/function_utils.hpp"
+#include "lambda_benchmark_output.hpp"
 #include "utils/assert.hpp"
 
 namespace skyrise {
@@ -175,8 +176,8 @@ void InvocationLatencyBenchmark::Setup() {
             benchmark_config->SetOnePayloadForAllFunctions(payload_stream);
 
             benchmark_configs_.emplace_back(
-                InvocationLatencyBenchmarkParameters{package_name, function_instance_mb_size, invocation_count,
-                                                     warm_mode, sleep_ms_duration, repetition_count_},
+                InvocationLatencyBenchmarkParameters{function_instance_mb_size, invocation_count, warm_mode,
+                                                     sleep_ms_duration, repetition_count_, package_name},
                 benchmark_config);
           }
         }
@@ -232,36 +233,20 @@ long double InvocationLatencyBenchmark::CalculateBenchmarkCost(
   return lambda_cost + xray_cost;
 }
 
-// TODO(anyone): Add sleep_ms_duration and other benchmark parameters to JSON
-
 Aws::Utils::Json::JsonValue InvocationLatencyBenchmark::GenerateResultOutput(
     const std::shared_ptr<LambdaBenchmarkResult>& benchmark_result,
     const InvocationLatencyBenchmarkParameters& benchmark_parameters,
     const std::shared_ptr<std::unordered_map<Aws::String, LambdaSegmentDurations>>& result_segments) const {
-  Aws::StringStream benchmark_name;
-  benchmark_name << "InvocationLatencyBenchmark/" << benchmark_parameters.function_package_name << "/"
-                 << benchmark_parameters.function_instance_mb_size << "/" << benchmark_parameters.invocation_count
-                 << "/" << (benchmark_parameters.warm_mode ? "Warm" : "Cold") << "/"
-                 << benchmark_parameters.sleep_ms_duration << "/" << benchmark_parameters.repetition_count;
+  auto benchmark_output =
+      LambdaBenchmarkOutput("invocation_latency_benchmark", benchmark_result)
+          .WithInt64Argument("function_instance_mb_size", benchmark_parameters.function_instance_mb_size)
+          .WithInt64Argument("invocation_count", benchmark_parameters.invocation_count)
+          .WithBoolArgument("warm_mode", benchmark_parameters.warm_mode)
+          .WithInt64Argument("sleep_ms_duration", benchmark_parameters.sleep_ms_duration)
+          .WithInt64Argument("repetition_count", benchmark_parameters.repetition_count)
+          .WithStringArgument("function_package_name", benchmark_parameters.function_package_name);
 
   const auto& segments = FunctionSegmentsAnalyzer::CreateLambdaSegmentDurations();
-  std::vector<std::function<std::tuple<Aws::String, double>(const LambdaInvokeResult&)>> extract_metric_functions;
-  extract_metric_functions.reserve(segments.size() + 1);
-
-  for (const auto& segment : segments) {
-    extract_metric_functions.emplace_back([&segment, &result_segments](const LambdaInvokeResult& invoke_result) {
-      return std::make_tuple(
-          segment.first,
-          std::chrono::duration<double>((*result_segments)[invoke_result.GetInvokeId()][segment.first]).count());
-    });
-  }
-
-  extract_metric_functions.emplace_back([&](const LambdaInvokeResult& invoke_result) {
-    return std::make_tuple("function_cost_usd",
-                           ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size));
-  });
-
-  std::vector<std::tuple<Aws::String, double>> aggregated_metrics;
 
   for (const auto& segment : segments) {
     std::vector<double> metrics;
@@ -276,28 +261,37 @@ Aws::Utils::Json::JsonValue InvocationLatencyBenchmark::GenerateResultOutput(
       continue;
     }
 
-    const BenchmarkResultAggregate aggregates(metrics);
+    const BenchmarkResultAggregate aggregate(metrics);
 
-    aggregated_metrics.emplace_back(segment.first + "_minimum", aggregates.GetMinimum());
-    aggregated_metrics.emplace_back(segment.first + "_maximum", aggregates.GetMaximum());
-    aggregated_metrics.emplace_back(segment.first + "_median", aggregates.GetMedian());
-    aggregated_metrics.emplace_back(segment.first + "_average", aggregates.GetAverage());
-    aggregated_metrics.emplace_back(segment.first + "_percentile_25", aggregates.GetPercentile(25));
-    aggregated_metrics.emplace_back(segment.first + "_percentile_75", aggregates.GetPercentile(75));
-    aggregated_metrics.emplace_back(segment.first + "_percentile_90", aggregates.GetPercentile(90));
-    aggregated_metrics.emplace_back(segment.first + "_percentile_99", aggregates.GetPercentile(99));
-    aggregated_metrics.emplace_back(segment.first + "_percentile_99_9", aggregates.GetPercentile(99.9));
-    aggregated_metrics.emplace_back(segment.first + "_percentile_99_99", aggregates.GetPercentile(99.99));
-    aggregated_metrics.emplace_back(segment.first + "_standard_deviation", aggregates.GetStandardDeviation());
+    benchmark_output.WithDoubleMetric(segment.first + "_minimum", aggregate.GetMinimum())
+        .WithDoubleMetric(segment.first + "_maximum", aggregate.GetMaximum())
+        .WithDoubleMetric(segment.first + "_average", aggregate.GetAverage())
+        .WithDoubleMetric(segment.first + "_median", aggregate.GetMedian())
+        .WithDoubleMetric(segment.first + "_percentile_25", aggregate.GetPercentile(25))
+        .WithDoubleMetric(segment.first + "_percentile_75", aggregate.GetPercentile(75))
+        .WithDoubleMetric(segment.first + "_percentile_90", aggregate.GetPercentile(90))
+        .WithDoubleMetric(segment.first + "_percentile_99", aggregate.GetPercentile(99))
+        .WithDoubleMetric(segment.first + "_percentile_99.9", aggregate.GetPercentile(99.9))
+        .WithDoubleMetric(segment.first + "_percentile_99.99", aggregate.GetPercentile(99.99))
+        .WithDoubleMetric(segment.first + "_std_dev", aggregate.GetStandardDeviation());
   }
 
-  aggregated_metrics.emplace_back("benchmark_cost_usd", static_cast<double>(benchmark_cost_));
-  aggregated_metrics.emplace_back("warm_up_cost_usd", static_cast<double>(benchmark_result->GetWarmUpCost()));
+  benchmark_output.WithDoubleMetric("benchmark_cost_usd", static_cast<double>(benchmark_cost_))
+      .WithDoubleMetric("warm_up_cost_usd", static_cast<double>(benchmark_result->GetWarmUpCost()))
+      .WithDoubleInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
+        return std::make_tuple("function_cost_usd",
+                               ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size));
+      });
 
-  auto json_output = GenerateJsonOutput(benchmark_name.str(), aggregated_metrics, {}, benchmark_result,
-                                        extract_metric_functions, {}, {});
+  for (const auto& segment : segments) {
+    benchmark_output.WithDoubleInvocationMetric([&segment, &result_segments](const LambdaInvokeResult& invoke_result) {
+      return std::make_tuple(
+          segment.first,
+          std::chrono::duration<double>((*result_segments)[invoke_result.GetInvokeId()][segment.first]).count());
+    });
+  }
 
-  return json_output;
+  return benchmark_output.Build();
 }
 
 }  // namespace skyrise

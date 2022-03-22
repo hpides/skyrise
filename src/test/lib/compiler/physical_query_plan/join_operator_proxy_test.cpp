@@ -32,45 +32,45 @@ class JoinOperatorProxyTest : public ::testing::Test {
   std::shared_ptr<AbstractExpression> primary_predicate_;
   std::vector<std::shared_ptr<AbstractExpression>> empty_secondary_predicates_;
   static inline const std::string kBucketName = "dummy_bucket";
-  static inline const std::vector<std::string> kObjectKeys{"key1.orc", "key2.orc", "key3.orc"};
+  static inline const std::vector<std::string> kObjectKeys = {"key1.orc", "key2.orc", "key3.orc"};
 };
 
 TEST_F(JoinOperatorProxyTest, BaseProperties) {
-  auto join_proxy = JoinOperatorProxy::Make(JoinMode::kInner, primary_predicate_, empty_secondary_predicates_);
+  const auto join_proxy = JoinOperatorProxy::Make(JoinMode::kInner, primary_predicate_, empty_secondary_predicates_);
   EXPECT_EQ(join_proxy->Type(), OperatorType::kNestedLoopJoin);
   EXPECT_TRUE(join_proxy->RequiresRightInput());
   EXPECT_TRUE(join_proxy->IsPipelineBreaker());
 }
 
 TEST_F(JoinOperatorProxyTest, Description) {
-  auto join_proxy = JoinOperatorProxy::Make(JoinMode::kInner, primary_predicate_, empty_secondary_predicates_);
+  const auto join_proxy = JoinOperatorProxy::Make(JoinMode::kInner, primary_predicate_, empty_secondary_predicates_);
   join_proxy->SetImplementation(OperatorType::kHashJoin);
 
-  EXPECT_EQ(join_proxy->Description(DescriptionMode::kSingleLine), "[JoinHash] Inner where a = x");
-  EXPECT_EQ(join_proxy->Description(DescriptionMode::kMultiLine), "[JoinHash]\nInner\nwhere a = x");
+  EXPECT_EQ(join_proxy->Description(DescriptionMode::kSingleLine), "[HashJoin] Inner where a = x");
+  EXPECT_EQ(join_proxy->Description(DescriptionMode::kMultiLine), "[HashJoin]\nInner\nwhere a = x");
 }
 
 TEST_F(JoinOperatorProxyTest, DescriptionMultiPredicate) {
-  auto secondary_predicates = ExpressionVector_(NotEquals_(b_, y_), GreaterThanEquals_(b_, y_));
-  auto join_proxy = JoinOperatorProxy::Make(JoinMode::kFullOuter, primary_predicate_, secondary_predicates);
+  const auto secondary_predicates = ExpressionVector_(NotEquals_(b_, y_), GreaterThanEquals_(b_, y_));
+  const auto join_proxy = JoinOperatorProxy::Make(JoinMode::kFullOuter, primary_predicate_, secondary_predicates);
 
   EXPECT_EQ(join_proxy->Description(DescriptionMode::kSingleLine),
-            "[JoinNestedLoop] Full Outer where a = x and b != y and b >= y");
+            "[NestedLoopJoin] Full Outer where a = x and b != y and b >= y");
   EXPECT_EQ(join_proxy->Description(DescriptionMode::kMultiLine),
-            "[JoinNestedLoop]\nFull Outer\nwhere a = x\nand b != y\nand b >= y");
+            "[NestedLoopJoin]\nFull Outer\nwhere a = x\nand b != y\nand b >= y");
 }
 
 TEST_F(JoinOperatorProxyTest, DescriptionCross) {
-  auto join_proxy = JoinOperatorProxy::Make(JoinMode::kCross, nullptr, empty_secondary_predicates_);
-  EXPECT_EQ(join_proxy->Description(DescriptionMode::kSingleLine), "[JoinNestedLoop] Cross");
-  EXPECT_EQ(join_proxy->Description(DescriptionMode::kMultiLine), "[JoinNestedLoop]\nCross");
+  const auto join_proxy = JoinOperatorProxy::Make(JoinMode::kCross, nullptr, empty_secondary_predicates_);
+  EXPECT_EQ(join_proxy->Description(DescriptionMode::kSingleLine), "[NestedLoopJoin] Cross");
+  EXPECT_EQ(join_proxy->Description(DescriptionMode::kMultiLine), "[NestedLoopJoin]\nCross");
 }
 
 TEST_F(JoinOperatorProxyTest, OutputObjectsCount) {
-  const auto column_ids = std::vector<ColumnId>{ColumnId{0}};
-  auto import_proxy_a = ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}});
+  const std::vector<ColumnId> column_ids = {ColumnId{0}};
+  const auto import_proxy_a = ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}});
   import_proxy_a->SetOutputObjectsCount(1);
-  auto import_proxy_b = ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}});
+  const auto import_proxy_b = ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}});
   import_proxy_b->SetOutputObjectsCount(2);
   // clang-format off
 
@@ -109,15 +109,15 @@ TEST_F(JoinOperatorProxyTest, SerializeAndDeserialize) {
 }
 
 TEST_F(JoinOperatorProxyTest, DeepCopy) {
-  auto secondary_predicates = ExpressionVector_(NotEquals_(b_, y_), GreaterThanEquals_(b_, y_));
+  const auto secondary_predicates = ExpressionVector_(NotEquals_(b_, y_), GreaterThanEquals_(b_, y_));
   // clang-format off
-  auto join_proxy =
+  const auto join_proxy =
   JoinOperatorProxy::Make(JoinMode::kLeftOuter, primary_predicate_, secondary_predicates,
     ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}}),
     ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
   // clang-format on
-  auto join_proxy_copy = std::dynamic_pointer_cast<JoinOperatorProxy>(join_proxy->DeepCopy());
+  const auto join_proxy_copy = std::dynamic_pointer_cast<JoinOperatorProxy>(join_proxy->DeepCopy());
   EXPECT_EQ(join_proxy_copy->GetJoinMode(), JoinMode::kLeftOuter);
   EXPECT_NE(join_proxy_copy->PrimaryPredicate(), primary_predicate_);
   EXPECT_EQ(*join_proxy_copy->PrimaryPredicate(), *primary_predicate_);
@@ -133,7 +133,7 @@ TEST_F(JoinOperatorProxyTest, DeepCopy) {
 TEST_F(JoinOperatorProxyTest, CreateOperatorInstance) {
   // TODO(anyone): Adjust test when adding the operator implementation.
   // clang-format off
-  auto join_proxy =
+  const auto join_proxy =
   JoinOperatorProxy::Make(JoinMode::kInner, primary_predicate_, empty_secondary_predicates_,
     ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}}),
     ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));

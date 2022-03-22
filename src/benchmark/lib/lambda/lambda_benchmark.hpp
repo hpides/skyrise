@@ -32,19 +32,6 @@ class LambdaBenchmark : public AbstractBenchmark {
   long double ExtractFunctionCost(const LambdaInvokeResult& invoke_result, const size_t function_instance_mb_size,
                                   const bool is_provisioned_concurrency = false) const;
 
-  // TODO(maltenbergert): Split up GenerateJsonOutput
-  FRIEND_TEST(AwsBenchmarkTest, GenerateJsonOutput);
-  static Aws::Utils::Json::JsonValue GenerateJsonOutput(
-      const Aws::String& benchmark_name, const std::vector<std::tuple<Aws::String, double>>& aggregated_numeric_metrics,
-      const std::vector<std::tuple<Aws::String, Aws::String>>& aggregated_alphabetic_metrics,
-      const std::shared_ptr<LambdaBenchmarkResult>& benchmark_result,
-      const std::vector<std::function<std::tuple<Aws::String, double>(const LambdaInvokeResult&)>>&
-          extract_numeric_metric_functions,
-      const std::vector<std::function<std::tuple<Aws::String, Aws::String>(const LambdaInvokeResult&)>>&
-          extract_alphabetic_metric_functions,
-      const std::vector<std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const LambdaInvokeResult&)>>&
-          extract_object_metric_functions);
-
   const std::shared_ptr<const CostCalculator> cost_calculator_;
 };
 

@@ -6,7 +6,10 @@
 #include "types.hpp"
 
 namespace {
-const std::string kJsonKeySetOperationMode{"set_operation_mode"};
+
+const std::string kJsonKeySetOperationMode = "set_operation_mode";
+const std::string kName = "Union";
+
 }  // namespace
 
 namespace skyrise {
@@ -14,14 +17,11 @@ namespace skyrise {
 UnionOperatorProxy::UnionOperatorProxy(const SetOperationMode mode)
     : AbstractOperatorProxy(OperatorType::kUnion), mode_(mode) {}
 
-const std::string& UnionOperatorProxy::Name() const {
-  static const std::string kName = "Union";
-  return kName;
-}
+const std::string& UnionOperatorProxy::Name() const { return kName; }
 
 std::string UnionOperatorProxy::Description(const DescriptionMode mode) const {
   std::stringstream stream;
-  const char separator = (mode == DescriptionMode::kSingleLine ? ' ' : '\n');
+  const char separator = mode == DescriptionMode::kSingleLine ? ' ' : '\n';
   stream << AbstractOperatorProxy::Description(mode) << separator;
   stream << mode_;
 

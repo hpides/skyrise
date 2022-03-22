@@ -4,30 +4,34 @@
 #include <string>
 
 #include "abstract_operator_proxy.hpp"
-#include "expression/abstract_expression.hpp"
+#include "types.hpp"
 
 namespace skyrise {
 
-class LimitOperatorProxy : public EnableMakeForPlanNode<LimitOperatorProxy, AbstractOperatorProxy>,
-                           public AbstractOperatorProxy {
+class ExchangeOperatorProxy : public EnableMakeForPlanNode<ExchangeOperatorProxy, AbstractOperatorProxy>,
+                              public AbstractOperatorProxy {
  public:
-  LimitOperatorProxy(std::shared_ptr<AbstractExpression> row_count);
+  ExchangeOperatorProxy();
 
   const std::string& Name() const override;
   std::string Description(const DescriptionMode mode) const override;
 
-  const std::shared_ptr<AbstractExpression>& RowCount() const;
+  /**
+   * Accessors
+   */
+  ExchangeMode GetExchangeMode() const;
+  void SetToFullMerge();
+  void SetToPartialMerge(size_t output_objects_count);
+  void SetToFullyMeshedExchange();
 
   /**
    * Optimization-relevant attributes
    */
   bool IsPipelineBreaker() const override;
+  size_t OutputObjectsCount() const override;
 
-  /**
-   * Serialization / Deserialization
-   */
+  // Fails, because it is unsupported.
   Aws::Utils::Json::JsonValue ToJson() const override;
-  static std::shared_ptr<AbstractOperatorProxy> FromJson(const Aws::Utils::Json::JsonView& json);
 
  protected:
   std::shared_ptr<AbstractOperatorProxy> OnDeepCopy(
@@ -36,7 +40,8 @@ class LimitOperatorProxy : public EnableMakeForPlanNode<LimitOperatorProxy, Abst
   std::shared_ptr<AbstractOperator> CreateOperatorInstanceRecursively() override;
 
  private:
-  const std::shared_ptr<AbstractExpression> row_count_;
+  ExchangeMode mode_;
+  size_t output_objects_count_;
 };
 
 }  // namespace skyrise

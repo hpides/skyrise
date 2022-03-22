@@ -19,12 +19,12 @@ class UnionOperatorProxyTest : public ::testing::Test {
 
  protected:
   std::shared_ptr<ImportOperatorProxy> import_proxy_a, import_proxy_b;
-  static inline const std::vector<std::string> kObjectKeys{"key1.orc", "key2.orc", "key3.orc"};
-  static inline const std::vector<ColumnId> kColumnIds{ColumnId{0}, ColumnId{3}, ColumnId{4}};
+  static inline const std::vector<std::string> kObjectKeys = {"key1.orc", "key2.orc", "key3.orc"};
+  static inline const std::vector<ColumnId> kColumnIds = {ColumnId{0}, ColumnId{3}, ColumnId{4}};
 };
 
 TEST_F(UnionOperatorProxyTest, BaseProperties) {
-  auto union_all_proxy = UnionOperatorProxy::Make(SetOperationMode::kAll, import_proxy_a, import_proxy_b);
+  const auto union_all_proxy = UnionOperatorProxy::Make(SetOperationMode::kAll, import_proxy_a, import_proxy_b);
   EXPECT_EQ(union_all_proxy->Type(), OperatorType::kUnion);
   EXPECT_TRUE(union_all_proxy->IsPipelineBreaker());
   EXPECT_EQ(union_all_proxy->OutputColumnsCount(), import_proxy_a->OutputColumnsCount());
@@ -32,46 +32,47 @@ TEST_F(UnionOperatorProxyTest, BaseProperties) {
 }
 
 TEST_F(UnionOperatorProxyTest, Description) {
-  auto union_proxy = UnionOperatorProxy::Make(SetOperationMode::kUnique);
+  const auto union_proxy = UnionOperatorProxy::Make(SetOperationMode::kUnique);
   EXPECT_EQ(union_proxy->Description(DescriptionMode::kSingleLine), "[Union] Unique");
   EXPECT_EQ(union_proxy->Description(DescriptionMode::kMultiLine), "[Union]\nUnique");
 
-  auto union_all_proxy = UnionOperatorProxy::Make(SetOperationMode::kAll);
+  const auto union_all_proxy = UnionOperatorProxy::Make(SetOperationMode::kAll);
   EXPECT_EQ(union_all_proxy->Description(DescriptionMode::kSingleLine), "[Union] All");
   EXPECT_EQ(union_all_proxy->Description(DescriptionMode::kMultiLine), "[Union]\nAll");
 }
 
 TEST_F(UnionOperatorProxyTest, SerializeAndDeserialize) {
-  auto union_proxy = UnionOperatorProxy::Make(SetOperationMode::kUnique);
-  auto union_all_proxy = UnionOperatorProxy::Make(SetOperationMode::kAll);
+  const auto union_proxy = UnionOperatorProxy::Make(SetOperationMode::kUnique);
+  const auto union_all_proxy = UnionOperatorProxy::Make(SetOperationMode::kAll);
 
   // (1) Serialize
-  auto union_json = union_proxy->ToJson();
-  auto union_all_json = union_all_proxy->ToJson();
+  const auto union_json = union_proxy->ToJson();
+  const auto union_all_json = union_all_proxy->ToJson();
 
   // (2) Deserialize & verify attributes
-  auto deserialized_union = std::dynamic_pointer_cast<UnionOperatorProxy>(UnionOperatorProxy::FromJson(union_json));
-  auto deserialized_union_all =
+  const auto deserialized_union =
+      std::dynamic_pointer_cast<UnionOperatorProxy>(UnionOperatorProxy::FromJson(union_json));
+  const auto deserialized_union_all =
       std::dynamic_pointer_cast<UnionOperatorProxy>(UnionOperatorProxy::FromJson(union_all_json));
   EXPECT_EQ(deserialized_union->GetSetOperationMode(), SetOperationMode::kUnique);
   EXPECT_EQ(deserialized_union_all->GetSetOperationMode(), SetOperationMode::kAll);
 
   // (3) Serialize again
-  auto deserialized_union_json = deserialized_union->ToJson();
-  auto deserialized_union_all_json = deserialized_union_all->ToJson();
+  const auto deserialized_union_json = deserialized_union->ToJson();
+  const auto deserialized_union_all_json = deserialized_union_all->ToJson();
   EXPECT_EQ(union_json, deserialized_union_json);
   EXPECT_EQ(union_all_json, deserialized_union_all_json);
 }
 
 TEST_F(UnionOperatorProxyTest, DeepCopy) {
   // clang-format off
-  auto union_proxy =
+  const auto union_proxy =
   UnionOperatorProxy::Make(SetOperationMode::kAll,
     import_proxy_a,
     import_proxy_b);
 
   // clang-format on
-  auto union_proxy_copy = std::dynamic_pointer_cast<UnionOperatorProxy>(union_proxy->DeepCopy());
+  const auto union_proxy_copy = std::dynamic_pointer_cast<UnionOperatorProxy>(union_proxy->DeepCopy());
   EXPECT_EQ(union_proxy_copy->GetSetOperationMode(), SetOperationMode::kAll);
   EXPECT_EQ(union_proxy_copy->InputNodeCount(), 2);
   // Without input
@@ -83,7 +84,7 @@ TEST_F(UnionOperatorProxyTest, DeepCopy) {
 TEST_F(UnionOperatorProxyTest, CreateOperatorInstance) {
   // TODO(anyone): Adjust test when adding the operator implementation.
   // clang-format off
-  auto union_proxy =
+  const auto union_proxy =
   UnionOperatorProxy::Make(SetOperationMode::kUnique,
     import_proxy_a,
     import_proxy_b);

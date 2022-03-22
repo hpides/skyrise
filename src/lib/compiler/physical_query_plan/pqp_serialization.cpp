@@ -2,7 +2,7 @@
 
 #include "aggregate_operator_proxy.hpp"
 #include "alias_operator_proxy.hpp"
-#include "data_exchange_operator_proxy.hpp"
+#include "exchange_operator_proxy.hpp"
 #include "export_operator_proxy.hpp"
 #include "filter_operator_proxy.hpp"
 #include "import_operator_proxy.hpp"
@@ -14,23 +14,23 @@
 #include "sort_operator_proxy.hpp"
 #include "union_operator_proxy.hpp"
 
-namespace {
+namespace skyrise {
 
-using namespace skyrise;  // NOLINT(google-build-using-namespace)
+namespace {
 
 inline const std::string kJsonKeyRootOperatorIdentity = "root_operator_identity";
 inline const std::string kJsonKeyOperators = "operators";
 
 void SerializeOperatorProxiesRecursively(const std::shared_ptr<AbstractOperatorProxy>& operator_proxy,
                                          Aws::Utils::Json::JsonValue& operators_json) {
-  std::string op_identity = operator_proxy->Identity();
+  std::string operator_identity = operator_proxy->Identity();
 
-  if (operators_json.View().KeyExists(op_identity)) {
+  if (operators_json.View().KeyExists(operator_identity)) {
     return;
   }
 
   // Serialize attributes
-  operators_json.WithObject(op_identity, operator_proxy->ToJson());
+  operators_json.WithObject(operator_identity, operator_proxy->ToJson());
 
   // Recurse to serialize inputs
   if (operator_proxy->LeftInput()) {
@@ -78,8 +78,6 @@ std::shared_ptr<AbstractOperatorProxy> DeserializeOperatorProxy(const Aws::Utils
 
 }  // namespace
 
-namespace skyrise {
-
 std::string SerializePqp(const std::shared_ptr<AbstractOperatorProxy>& root_operator_proxy) {
   Aws::Utils::Json::JsonValue pqp_json;
 
@@ -87,7 +85,7 @@ std::string SerializePqp(const std::shared_ptr<AbstractOperatorProxy>& root_oper
   pqp_json.WithString(kJsonKeyRootOperatorIdentity, root_operator_proxy->Identity());
 
   // (2) Serialize PQP's operator proxies
-  Aws::Utils::Json::JsonValue operator_proxies_json{};
+  Aws::Utils::Json::JsonValue operator_proxies_json;
   SerializeOperatorProxiesRecursively(root_operator_proxy, operator_proxies_json);
   pqp_json.WithObject(kJsonKeyOperators, operator_proxies_json);
 
@@ -103,20 +101,20 @@ std::shared_ptr<AbstractOperatorProxy> DeserializePqp(const std::string& pqp_str
 
   // (1) Deserialize into a flat list of operator proxies
   const auto operators_json_map = json_view.GetObject(kJsonKeyOperators).GetAllObjects();
-  std::unordered_map<std::string, std::shared_ptr<AbstractOperatorProxy>> operator_proxies_by_identity;
-  operator_proxies_by_identity.reserve(operators_json_map.size());
+  std::unordered_map<std::string, std::shared_ptr<AbstractOperatorProxy>> identity_to_operator_proxies;
+  identity_to_operator_proxies.reserve(operators_json_map.size());
 
   for (const auto& [identity, operator_parameters] : operators_json_map) {
-    operator_proxies_by_identity.emplace(identity, DeserializeOperatorProxy(operator_parameters));
+    identity_to_operator_proxies.emplace(identity, DeserializeOperatorProxy(operator_parameters));
   }
 
   // (2) Bind operator proxies' inputs
-  for (auto& [identity, operator_proxy] : operator_proxies_by_identity) {
-    operator_proxy->BindInputs(operator_proxies_by_identity);
+  for (auto& [identity, operator_proxy] : identity_to_operator_proxies) {
+    operator_proxy->BindInputs(identity_to_operator_proxies);
   }
 
   auto root_operator_identity = json_view.GetString(kJsonKeyRootOperatorIdentity);
-  return operator_proxies_by_identity[root_operator_identity];
+  return identity_to_operator_proxies[root_operator_identity];
 }
 
 }  // namespace skyrise

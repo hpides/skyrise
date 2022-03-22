@@ -1,16 +1,16 @@
 # Tool versions
-ARG AWS_SDK_VERSION=1.9.160
-ARG BOOST_VERSION=1.77.0
-ARG CCACHE_VERSION=4.5.1
-ARG CMAKE_MAJOR_MINOR=3.21
-ARG CMAKE_PATCH=4
-ARG CPPCHECK_VERSION=2.6
-ARG CPPLINT_COMMIT=9806df8
+ARG AWS_SDK_VERSION=1.9.212
+ARG BOOST_VERSION=1.78.0
+ARG CCACHE_VERSION=4.6
+ARG CMAKE_MAJOR_MINOR=3.22
+ARG CMAKE_PATCH=3
+ARG CPPCHECK_VERSION=2.7
+ARG CPPLINT_COMMIT=af78b49
 ARG GCC_VERSION=7.5.0
 ARG GCC_SUFFIX=75
-ARG HEAPTRACK_VERSION=1.2.0
-ARG LLVM_CLANG_VERSION=13.0.0
-ARG ORC_VERSION=1.7.1
+ARG HEAPTRACK_VERSION=1.3.0
+ARG LLVM_CLANG_VERSION=13.0.1
+ARG ORC_VERSION=1.7.3
 ARG VALGRIND_VERSION=3.18.1
 
 # Tool locations
@@ -298,8 +298,15 @@ RUN yum update -y && \
     rm -rf /var/cache/yum && \
     # Python packages
     pip3 install --no-input --quiet \
+    boto3 \
+    ipympl \
+    ipywidgets \
+    jupyterlab \
+    matplotlib \
+    pandas \
     pytictoc \
     termcolor \
+    tqdm \
     yapf && \
     # Default commands
     /usr/sbin/alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 1300 && \

@@ -12,6 +12,7 @@ namespace {
 const std::string kJsonKeyAggregates = "aggregates";
 const std::string kJsonKeyGroupByColumnIds = "group_by_column_ids";
 const std::string kJsonKeyIsPipelineBreaker = "is_pipeline_breaker";
+const std::string kName = "Aggregate";
 
 }  // namespace
 
@@ -24,16 +25,14 @@ AggregateOperatorProxy::AggregateOperatorProxy(std::vector<ColumnId> groupby_col
       aggregates_(std::move(aggregates)),
       is_pipeline_breaker_(true) {}
 
-const std::string& AggregateOperatorProxy::Name() const {
-  static const std::string kName = "Aggregate";
-  return kName;
-}
+const std::string& AggregateOperatorProxy::Name() const { return kName; }
 
 std::string AggregateOperatorProxy::Description(const DescriptionMode mode) const {
   std::stringstream stream;
-  const char separator = (mode == DescriptionMode::kSingleLine ? ' ' : '\n');
+  const char separator = mode == DescriptionMode::kSingleLine ? ' ' : '\n';
   stream << AbstractOperatorProxy::Description(mode) << separator;
   stream << "GroupByColumnIds{" << groupby_column_ids_ << "}" << separator;
+
   for (size_t i = 0; i < aggregates_.size(); ++i) {
     const auto& aggregate = aggregates_[i];
     stream << aggregate->AsColumnName();
@@ -62,7 +61,8 @@ size_t AggregateOperatorProxy::OutputColumnsCount() const { return groupby_colum
 
 Aws::Utils::Json::JsonValue AggregateOperatorProxy::ToJson() const {
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> aggregates_json(aggregates_.size());
-  for (size_t i = 0; i < aggregates_.size(); i++) {
+
+  for (size_t i = 0; i < aggregates_.size(); ++i) {
     aggregates_json[i] = ExpressionSerializer::Serialize(*aggregates_[i]);
   }
 
@@ -73,15 +73,17 @@ Aws::Utils::Json::JsonValue AggregateOperatorProxy::ToJson() const {
 }
 
 std::shared_ptr<AbstractOperatorProxy> AggregateOperatorProxy::FromJson(const Aws::Utils::Json::JsonView& json) {
+  const auto json_aggregates = json.GetArray(kJsonKeyAggregates);
   std::vector<std::shared_ptr<AbstractExpression>> aggregates;
-  auto aggregates_json_array = json.GetArray(kJsonKeyAggregates);
-  aggregates.reserve(aggregates_json_array.GetLength());
-  for (size_t i = 0; i < aggregates_json_array.GetLength(); ++i) {
-    auto deserialized_expression = ExpressionDeserializer::Deserialize(aggregates_json_array.GetItem(i));
+  aggregates.reserve(json_aggregates.GetLength());
+
+  for (size_t i = 0; i < json_aggregates.GetLength(); ++i) {
+    auto deserialized_expression = ExpressionDeserializer::Deserialize(json_aggregates.GetItem(i));
     Assert(deserialized_expression->type_ == ExpressionType::kAggregate, "Expected type AggregateExpression.");
     aggregates.emplace_back(deserialized_expression);
   }
-  std::vector<ColumnId> group_by_column_ids = JsonArrayToVector<ColumnId>(json.GetArray(kJsonKeyGroupByColumnIds));
+
+  auto group_by_column_ids = JsonArrayToVector<ColumnId>(json.GetArray(kJsonKeyGroupByColumnIds));
 
   auto aggregate_proxy = AggregateOperatorProxy::Make(group_by_column_ids, aggregates);
   aggregate_proxy->SetAttributesFromJson(json);

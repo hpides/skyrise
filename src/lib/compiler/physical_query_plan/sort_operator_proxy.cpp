@@ -10,6 +10,7 @@ namespace {
 const std::string kJsonKeySortDefinitions = "sort_definitions";
 const std::string kJsonKeySortColumnId = "sort_column_id";
 const std::string kJsonKeySortMode = "sort_mode";
+const std::string kName = "Sort";
 
 }  // namespace
 
@@ -20,38 +21,35 @@ SortOperatorProxy::SortOperatorProxy(std::vector<SortColumnDefinition> sort_defi
   Assert(!sort_definitions_.empty(), "Expected at least one sort definition.");
 }
 
-const std::string& SortOperatorProxy::Name() const {
-  static const std::string kName = "Sort";
-  return kName;
-}
+const std::string& SortOperatorProxy::Name() const { return kName; }
 
 const std::vector<SortColumnDefinition> SortOperatorProxy::SortDefinitions() const { return sort_definitions_; }
 
 bool SortOperatorProxy::IsPipelineBreaker() const { return true; }
 
 Aws::Utils::Json::JsonValue SortOperatorProxy::ToJson() const {
-  Aws::Utils::Array<Aws::Utils::Json::JsonValue> sort_definitions_json_array(sort_definitions_.size());
+  Aws::Utils::Array<Aws::Utils::Json::JsonValue> json_sort_definitions(sort_definitions_.size());
 
   for (size_t i = 0; i < sort_definitions_.size(); ++i) {
     const auto& sort_column_definition = sort_definitions_[i];
-    sort_definitions_json_array[i] =
+    json_sort_definitions[i] =
         Aws::Utils::Json::JsonValue()
             .WithInteger(kJsonKeySortColumnId, sort_column_definition.column)
             .WithString(kJsonKeySortMode, std::string(magic_enum::enum_name(sort_column_definition.sort_mode)));
   }
 
-  return AbstractOperatorProxy::ToJson().WithArray(kJsonKeySortDefinitions, sort_definitions_json_array);
+  return AbstractOperatorProxy::ToJson().WithArray(kJsonKeySortDefinitions, json_sort_definitions);
 }
 
 std::shared_ptr<AbstractOperatorProxy> SortOperatorProxy::FromJson(const Aws::Utils::Json::JsonView& json) {
-  const Aws::Utils::Array<Aws::Utils::Json::JsonView> sort_definitions_json_array =
-      json.GetArray(kJsonKeySortDefinitions);
+  const Aws::Utils::Array<Aws::Utils::Json::JsonView> json_sort_definitions = json.GetArray(kJsonKeySortDefinitions);
   std::vector<SortColumnDefinition> sort_definitions;
-  sort_definitions.reserve(sort_definitions_json_array.GetLength());
-  for (size_t i = 0; i < sort_definitions_json_array.GetLength(); i++) {
+  sort_definitions.reserve(json_sort_definitions.GetLength());
+
+  for (size_t i = 0; i < json_sort_definitions.GetLength(); ++i) {
     sort_definitions.emplace_back(
-        sort_definitions_json_array[i].GetInteger(kJsonKeySortColumnId),
-        magic_enum::enum_cast<SortMode>(sort_definitions_json_array[i].GetString(kJsonKeySortMode)).value());
+        json_sort_definitions[i].GetInteger(kJsonKeySortColumnId),
+        magic_enum::enum_cast<SortMode>(json_sort_definitions[i].GetString(kJsonKeySortMode)).value());
   }
 
   auto sort_proxy = SortOperatorProxy::Make(sort_definitions);

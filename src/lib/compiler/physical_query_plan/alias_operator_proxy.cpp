@@ -9,8 +9,11 @@
 #include "utils/json.hpp"
 
 namespace {
-const std::string kJsonKeyColumnIds{"column_ids"};
+
 const std::string kJsonKeyAliases = "aliases";
+const std::string kJsonKeyColumnIds = "column_ids";
+const std::string kName = "Alias";
+
 }  // namespace
 
 namespace skyrise {
@@ -20,17 +23,13 @@ AliasOperatorProxy::AliasOperatorProxy(std::vector<ColumnId> column_ids, std::ve
   Assert(column_ids_.size() == aliases_.size(), "Expected as many aliases as columns.");
 }
 
-const std::string& AliasOperatorProxy::Name() const {
-  static const std::string kName = "Alias";
-  return kName;
-}
+const std::string& AliasOperatorProxy::Name() const { return kName; }
 
 std::string AliasOperatorProxy::Description(const DescriptionMode mode) const {
   std::stringstream stream;
-  const char separator = (mode == DescriptionMode::kSingleLine ? ' ' : '\n');
+  const char separator = mode == DescriptionMode::kSingleLine ? ' ' : '\n';
   stream << AbstractOperatorProxy::Description(mode) << separator;
-  std::string delimiter = ",";
-  delimiter += separator;
+  const auto delimiter = std::string{","} + separator;
   stream << boost::algorithm::join(aliases_, delimiter);
 
   return stream.str();
@@ -43,8 +42,7 @@ const std::vector<std::string>& AliasOperatorProxy::Aliases() const { return ali
 bool AliasOperatorProxy::IsPipelineBreaker() const { return false; }
 
 size_t AliasOperatorProxy::OutputColumnsCount() const {
-  DebugAssert(!LeftInput() || LeftInput()->OutputColumnsCount() == column_ids_.size(),
-              "Unexpected number of ColumnIds.");
+  DebugAssert(!LeftInput() || LeftInput()->OutputColumnsCount() == column_ids_.size(), "Unexpected number of aliases.");
   return column_ids_.size();
 }
 
@@ -55,8 +53,8 @@ Aws::Utils::Json::JsonValue AliasOperatorProxy::ToJson() const {
 }
 
 std::shared_ptr<AbstractOperatorProxy> AliasOperatorProxy::FromJson(const Aws::Utils::Json::JsonView& json) {
-  std::vector<ColumnId> column_ids = JsonArrayToVector<ColumnId>(json.GetArray(kJsonKeyColumnIds));
-  std::vector<std::string> aliases = JsonArrayToVector<std::string>(json.GetArray(kJsonKeyAliases));
+  auto column_ids = JsonArrayToVector<ColumnId>(json.GetArray(kJsonKeyColumnIds));
+  auto aliases = JsonArrayToVector<std::string>(json.GetArray(kJsonKeyAliases));
 
   auto alias_proxy = AliasOperatorProxy::Make(column_ids, aliases);
   alias_proxy->SetAttributesFromJson(json);

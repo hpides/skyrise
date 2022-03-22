@@ -69,7 +69,7 @@ class AbstractTask : public std::enable_shared_from_this<AbstractTask> {
   bool IsReady() const;
 
   /**
-   * @returns true when the task is scheduled or was scheduled successfully.
+   * @return true when the task is scheduled or was scheduled successfully.
    */
   bool IsScheduled() const;
 
@@ -135,7 +135,7 @@ class AbstractTask : public std::enable_shared_from_this<AbstractTask> {
 
   /**
    * Transitions the task's state to @param new_state.
-   * @returns true on success and
+   * @return true on success and
    *          false if another caller/thread/worker was faster in progressing this task's state.
    */
   [[nodiscard]] bool TryTransitionTo(TaskState new_state);

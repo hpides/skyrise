@@ -1,6 +1,7 @@
 /**
  * Taken and modified from our sister project Hyrise (https://github.com/hyrise/hyrise)
  */
+
 #pragma once
 
 #include <functional>
@@ -21,18 +22,17 @@ namespace detail {
 /**
  * @param indentation   its size determines the indentation of a node, a true means a vertical line "|",
  *                      a false means, a space " " should be used to increase the indentation
- * @param id_by_node    used to determine whether a node was already printed and which id it had
+ * @param node_to_id    used to determine whether a node was already printed and which id it has
  * @param id_counter    used to generate ids for nodes
  */
 template <typename Node>
-void PrintDirectedAcyclicGraphImpl(const std::shared_ptr<Node>& node, const NodeGetChildrenFunction<Node>& get_children,
-                                   const PrintNodeFunction<Node>& print_node, std::ostream& stream,
-                                   std::vector<bool>& indentation,
-                                   std::unordered_map<std::shared_ptr<const Node>, size_t>& id_by_node,
-                                   size_t& id_counter) {
-  /**
-   * Indent whilst drawing the edges
-   */
+void PrintDirectedAcyclicGraphRecursively(const std::shared_ptr<Node>& node,
+                                          const NodeGetChildrenFunction<Node>& get_children,
+                                          const PrintNodeFunction<Node>& print_node, std::ostream& stream,
+                                          std::vector<bool>& indentation,
+                                          std::unordered_map<std::shared_ptr<const Node>, size_t>& node_to_id,
+                                          size_t& id_counter) {
+  // Indent whilst drawing the edges.
   const auto max_indentation = indentation.empty() ? 0 : indentation.size() - 1;
   for (size_t level = 0; level < max_indentation; ++level) {
     if (indentation[level]) {
@@ -42,27 +42,24 @@ void PrintDirectedAcyclicGraphImpl(const std::shared_ptr<Node>& node, const Node
     }
   }
 
-  // Only the root node is not "pointed at" with "\_<node_info>"
+  // Only the root node is not "pointed at" with "\_<node_info>".
   if (!indentation.empty()) {
     stream << " \\_";
   }
 
-  /**
-   * Check whether the node has been printed before
-   */
-  const auto iter = id_by_node.find(node);
-  if (iter != id_by_node.end()) {
-    stream << "Recurring Node --> [" << iter->second << "]" << std::endl;
+  // Check whether the node has been printed before.
+  const auto iter = node_to_id.find(node);
+  if (iter != node_to_id.end()) {
+    stream << "Recurring Node --> [" << iter->second << "]"
+           << "\n";
     return;
   }
 
   const auto this_node_id = id_counter;
-  id_counter++;
-  id_by_node.emplace(node, this_node_id);
+  ++id_counter;
+  node_to_id.emplace(node, this_node_id);
 
-  /**
-   * Print node info
-   */
+  // Print node info.
   stream << "[" << this_node_id << "] ";
   print_node(node, stream);
   stream << std::endl;
@@ -70,19 +67,18 @@ void PrintDirectedAcyclicGraphImpl(const std::shared_ptr<Node>& node, const Node
   const auto children = get_children(node);
   indentation.emplace_back(true);
 
-  /**
-   * Recursively progress to children
-   */
-  for (size_t child_idx = 0; child_idx < children.size(); ++child_idx) {
-    if (child_idx + 1 == children.size()) {
+  // Recursively progress to children.
+  for (size_t i = 0; i < children.size(); ++i) {
+    if (i + 1 == children.size()) {
       indentation.back() = false;
     }
-    PrintDirectedAcyclicGraphImpl<Node>(children[child_idx], get_children, print_node, stream, indentation, id_by_node,
-                                        id_counter);
+    PrintDirectedAcyclicGraphRecursively<Node>(children[i], get_children, print_node, stream, indentation, node_to_id,
+                                               id_counter);
   }
 
   indentation.pop_back();
 }
+
 }  // namespace detail
 
 /**
@@ -113,10 +109,11 @@ template <typename Node>
 void PrintDirectedAcyclicGraph(const std::shared_ptr<Node>& node, const NodeGetChildrenFunction<Node>& get_children,
                                const PrintNodeFunction<Node>& print_node, std::ostream& stream = std::cout) {
   std::vector<bool> levels;
-  std::unordered_map<std::shared_ptr<Node>, size_t> id_by_node;
-  auto id_counter = size_t{0};
+  std::unordered_map<std::shared_ptr<Node>, size_t> node_to_id;
+  size_t id_counter = 0;
 
-  detail::PrintDirectedAcyclicGraphImpl<Node>(node, get_children, print_node, stream, levels, id_by_node, id_counter);
+  detail::PrintDirectedAcyclicGraphRecursively<Node>(node, get_children, print_node, stream, levels, node_to_id,
+                                                     id_counter);
 }
 
 }  //  namespace skyrise

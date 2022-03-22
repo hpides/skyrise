@@ -9,6 +9,7 @@
 #include "utils/print_directed_acyclic_graph.hpp"
 
 namespace {
+
 inline const std::string kJsonKeyComment = "comment";
 inline const std::string kJsonKeyLeftInputOperatorIdentity = "left_input_operator_identity";
 inline const std::string kJsonKeyOperatorIdentity = "operator_identity";
@@ -26,11 +27,9 @@ std::string AbstractOperatorProxy::Description(const DescriptionMode mode) const
   std::stringstream stream;
   stream << "[" << Name() << "]";
 
-  // Append comment, if set
   if (!comment_.empty()) {
-    const char separator = (mode == DescriptionMode::kSingleLine ? ' ' : '\n');
-    stream << separator;
-    stream << "(" << comment_ << ")";
+    const char separator = mode == DescriptionMode::kSingleLine ? ' ' : '\n';
+    stream << separator << "(" << comment_ << ")";
   }
 
   return stream.str();
@@ -49,7 +48,7 @@ std::string AbstractOperatorProxy::Identity() const {
 }
 
 void AbstractOperatorProxy::PrefixIdentity(const std::string& prefix) {
-  Assert(!prefix.empty(), "Unexpected empty prefix!");
+  Assert(!prefix.empty(), "Prefix must not be empty.");
   std::stringstream stream;
   stream << prefix << Identity();
   identity_ = stream.str();
@@ -65,6 +64,7 @@ size_t AbstractOperatorProxy::InputObjectsCount() const {
   if (LeftInput()) {
     input_objects_count += LeftInput()->OutputObjectsCount();
   }
+
   if (RightInput()) {
     input_objects_count += RightInput()->OutputObjectsCount();
   }
@@ -98,13 +98,13 @@ std::shared_ptr<AbstractOperatorProxy> AbstractOperatorProxy::DeepCopy(
   const auto copied_right_input =
       RightInput() ? RightInput()->DeepCopy(copied_proxies) : std::shared_ptr<AbstractOperatorProxy>();
 
-  auto copied_op = OnDeepCopy(copied_left_input, copied_right_input);
-  copied_op->SetIdentity(Identity());
-  copied_op->SetComment(comment_);
+  auto copied_proxy = OnDeepCopy(copied_left_input, copied_right_input);
+  copied_proxy->SetIdentity(Identity());
+  copied_proxy->SetComment(comment_);
 
-  copied_proxies.emplace(this, copied_op);
+  copied_proxies.emplace(this, copied_proxy);
 
-  return copied_op;
+  return copied_proxy;
 }
 
 std::shared_ptr<AbstractOperator> AbstractOperatorProxy::GetOrCreateOperatorInstance() {
@@ -120,10 +120,11 @@ Aws::Utils::Json::JsonValue AbstractOperatorProxy::ToJson() const {
   result.WithString(kJsonKeyOperatorType, std::string(magic_enum::enum_name(type_)))
       .WithString(kJsonKeyOperatorIdentity, Identity());
 
-  // Serialize inputs with operator identity strings
+  // Serialize inputs with operator identity strings.
   if (LeftInput()) {
     result.WithString(kJsonKeyLeftInputOperatorIdentity, LeftInput()->Identity());
   }
+
   if (RightInput()) {
     result.WithString(kJsonKeyRightInputOperatorIdentity, RightInput()->Identity());
   }
@@ -136,7 +137,7 @@ Aws::Utils::Json::JsonValue AbstractOperatorProxy::ToJson() const {
 }
 
 void AbstractOperatorProxy::BindInputs(
-    const std::unordered_map<std::string, std::shared_ptr<AbstractOperatorProxy>>& operator_proxies_by_identity) {
+    const std::unordered_map<std::string, std::shared_ptr<AbstractOperatorProxy>>& identity_to_operator_proxies) {
   Assert(!LeftInput() && !RightInput(), "Inputs are expected to be unset.");
 
   // Bind left input, if specified.
@@ -144,20 +145,20 @@ void AbstractOperatorProxy::BindInputs(
     Assert(right_input_identity_.empty(), "Unexpected right input operator identity.");
     return;
   }
-  // TODO(julianmenzler): C++20: Replace with .contains
-  Assert(operator_proxies_by_identity.find(left_input_identity_) != operator_proxies_by_identity.end(),
+  const auto& left_input = identity_to_operator_proxies.find(left_input_identity_);
+  Assert(left_input != identity_to_operator_proxies.end(),
          "Left input operator proxy cannot be bound because no instance was provided.");
-  SetLeftInput(operator_proxies_by_identity.at(left_input_identity_));
+  SetLeftInput(left_input->second);
   left_input_identity_.clear();
 
   // Bind right input, if specified.
   if (right_input_identity_.empty()) {
     return;
   }
-  // TODO(julianmenzler): C++20: Replace with .contains
-  Assert(operator_proxies_by_identity.find(right_input_identity_) != operator_proxies_by_identity.end(),
+  const auto& right_input = identity_to_operator_proxies.find(right_input_identity_);
+  Assert(right_input != identity_to_operator_proxies.end(),
          "Right input operator proxy cannot be bound because no instance was provided.");
-  SetRightInput(operator_proxies_by_identity.at(right_input_identity_));
+  SetRightInput(right_input->second);
   right_input_identity_.clear();
 }
 
@@ -179,7 +180,7 @@ void AbstractOperatorProxy::SetAttributesFromJson(const Aws::Utils::Json::JsonVi
 }
 
 std::ostream& operator<<(std::ostream& stream, const AbstractOperatorProxy& root_operator_proxy) {
-  // Functor returning the inputs of a given node
+  // Functor returns the inputs of a given node.
   const auto get_inputs = [](const auto& operator_proxy) {
     std::vector<std::shared_ptr<const AbstractOperatorProxy>> inputs;
     if (operator_proxy->LeftInput()) {
@@ -191,11 +192,9 @@ std::ostream& operator<<(std::ostream& stream, const AbstractOperatorProxy& root
     return inputs;
   };
 
-  // Functor writing a given node's description to a given output stream
+  // Functor writes a given node's description to a given output stream.
   const auto print_node = [](const auto& operator_proxy, auto& output_stream) {
     output_stream << operator_proxy->Description(DescriptionMode::kSingleLine);
-    //    output_stream << " @ " << operator_proxy;
-    //    output_stream << " @ " << operator_proxy->Identity();
   };
 
   PrintDirectedAcyclicGraph<const AbstractOperatorProxy>(root_operator_proxy.SharedFromBase(), get_inputs, print_node,

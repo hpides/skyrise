@@ -23,7 +23,7 @@ BinaryPredicateExpression::BinaryPredicateExpression(const PredicateCondition pr
     const auto iterator =
         std::find(valid_predicate_conditions.cbegin(), valid_predicate_conditions.cend(), predicate_condition_);
     Assert(iterator != valid_predicate_conditions.cend(),
-           "Specified PredicateCondition is not valid for a BinaryPredicateExpression");
+           "Specified PredicateCondition is not valid for a BinaryPredicateExpression.");
   }
 }
 

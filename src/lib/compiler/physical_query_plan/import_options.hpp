@@ -20,7 +20,7 @@ class ImportOptions {
   ImportOptions(OrcFormatReaderOptions orc_format_reader_options);
 
   /**
-   * @returns a FormatReaderFactory for either CSV or ORC data.
+   * @return a FormatReaderFactory for either CSV or ORC data.
    *          The factory uses custom reader options, if provided. Otherwise, the factory is initialized with default
    *          reader options for CSV and ORC data.
    */

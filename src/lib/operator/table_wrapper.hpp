@@ -5,6 +5,12 @@
 
 #include "abstract_operator.hpp"
 
+namespace {
+
+const std::string kName = "TableWrapper";
+
+}  // namespace
+
 namespace skyrise {
 
 /**
@@ -15,7 +21,7 @@ class TableWrapper : public AbstractOperator {
   explicit TableWrapper(std::shared_ptr<const Table> table)
       : AbstractOperator(OperatorType::kImport), table_(std::move(table)) {}
 
-  const std::string& Name() const override { return kOperatorName; }
+  const std::string& Name() const override { return kName; }
 
  protected:
   std::shared_ptr<const Table> OnExecute(
@@ -24,7 +30,6 @@ class TableWrapper : public AbstractOperator {
   }
 
   const std::shared_ptr<const Table> table_;
-  const std::string kOperatorName = "TableWrapper";
 };
 
 }  // namespace skyrise

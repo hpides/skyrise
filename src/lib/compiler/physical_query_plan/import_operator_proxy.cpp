@@ -9,13 +9,13 @@
 
 namespace {
 
+const std::string kCsvExtension = ".csv";
 const std::string kJsonKeyBucketName = "bucket_name";
 const std::string kJsonKeyColumnIds = "column_ids";
 const std::string kJsonKeyImportOptions = "import_options";
 const std::string kJsonKeyObjectKeys = "object_keys";
-
+const std::string kName = "Import";
 const std::string kOrcExtension = ".orc";
-const std::string kCsvExtension = ".csv";
 
 }  // namespace
 
@@ -31,14 +31,11 @@ ImportOperatorProxy::ImportOperatorProxy(std::string bucket_name, std::vector<st
   Assert(!column_ids_.empty(), "Import must involve at least one ColumnId.");
 }
 
-const std::string& ImportOperatorProxy::Name() const {
-  static const std::string kName = "Import";
-  return kName;
-}
+const std::string& ImportOperatorProxy::Name() const { return kName; }
 
 std::string ImportOperatorProxy::Description(const DescriptionMode mode) const {
   std::stringstream stream;
-  const char separator = (mode == DescriptionMode::kSingleLine ? ' ' : '\n');
+  const char separator = mode == DescriptionMode::kSingleLine ? ' ' : '\n';
   stream << AbstractOperatorProxy::Description(mode) << separator;
 
   // Import details
@@ -51,7 +48,7 @@ std::string ImportOperatorProxy::Description(const DescriptionMode mode) const {
   } else {
     stream << "{" << object_keys_.size() << " objects}";
   }
-  // todo(anyone) output format ORC/CSV?
+  // todo(anyone) input format ORC/CSV?
 
   stream << separator << "ColumnIds{" << column_ids_ << "}";
   return stream.str();
@@ -101,8 +98,8 @@ Aws::Utils::Json::JsonValue ImportOperatorProxy::ToJson() const {
 
 std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::FromJson(const Aws::Utils::Json::JsonView& json) {
   const Aws::String bucket_name = json.GetString(kJsonKeyBucketName);
-  const std::vector<std::string> object_keys = JsonArrayToVector<std::string>(json.GetArray(kJsonKeyObjectKeys));
-  const std::vector<ColumnId> column_ids = JsonArrayToVector<ColumnId>(json.GetArray(kJsonKeyColumnIds));
+  const auto object_keys = JsonArrayToVector<std::string>(json.GetArray(kJsonKeyObjectKeys));
+  const auto column_ids = JsonArrayToVector<ColumnId>(json.GetArray(kJsonKeyColumnIds));
 
   auto import_proxy = ImportOperatorProxy::Make(bucket_name, object_keys, column_ids);
   import_proxy->SetAttributesFromJson(json);
@@ -140,7 +137,6 @@ std::shared_ptr<AbstractOperator> ImportOperatorProxy::CreateOperatorInstanceRec
     reader_factory = import_options_->CreateReaderFactory();
   } else {
     const std::string first_object_key = object_keys_.front();
-    // TODO(anyone): C++20 std::string::ends_with
     auto specifies_format = [&first_object_key](const std::string& file_extension) -> bool {
       if (first_object_key.size() <= file_extension.size()) {
         return false;

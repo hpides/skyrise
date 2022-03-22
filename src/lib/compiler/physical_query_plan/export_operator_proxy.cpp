@@ -6,10 +6,13 @@
 #include "utils/json.hpp"
 
 namespace {
+
 const std::string kJsonKeyBucketName = "bucket_name";
-const std::string kJsonKeyTargetObjectKey = "target_object_key";
 const std::string kJsonKeyExportFormat = "export_format";
+const std::string kJsonKeyTargetObjectKey = "target_object_key";
+const std::string kName = "Export";
 const std::string kPlaceholderString = "PLACEHOLDER";
+
 }  // namespace
 
 namespace skyrise {
@@ -21,14 +24,11 @@ ExportOperatorProxy::ExportOperatorProxy(std::string bucket_name, std::string ta
       target_object_key_(std::move(target_object_key)),
       export_format_(export_format) {}
 
-const std::string& ExportOperatorProxy::Name() const {
-  static const std::string kName = "Export";
-  return kName;
-}
+const std::string& ExportOperatorProxy::Name() const { return kName; }
 
 std::string ExportOperatorProxy::Description(const DescriptionMode mode) const {
   std::stringstream stream;
-  const char separator = (mode == DescriptionMode::kSingleLine ? ' ' : '\n');
+  const char separator = mode == DescriptionMode::kSingleLine ? ' ' : '\n';
   stream << AbstractOperatorProxy::Description(mode) << separator;
   stream << bucket_name_ << "/";
   if (mode == DescriptionMode::kMultiLine) {
@@ -60,7 +60,7 @@ std::shared_ptr<AbstractOperatorProxy> ExportOperatorProxy::FromJson(const Aws::
 
 Aws::Utils::Json::JsonValue ExportOperatorProxy::ToJson() const {
   Assert(bucket_name_ != kPlaceholderString && target_object_key_ != kPlaceholderString,
-         "Did not expect to serialize a dummy Export");
+         "Did not expect to serialize a dummy Export.");
 
   return AbstractOperatorProxy::ToJson()
       .WithString(kJsonKeyBucketName, bucket_name_)

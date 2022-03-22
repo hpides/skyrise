@@ -3,8 +3,11 @@
 #include "operator/partition_operator.hpp"
 
 namespace {
-const std::string kJsonKeyPartitionCount{"partition_count"};
-const std::string kJsonKeyPartitionColumnIds{"partition_column_ids"};
+
+const std::string kJsonKeyPartitionCount = "partition_count";
+const std::string kJsonKeyPartitionColumnIds = "partition_column_ids";
+const std::string kName = "Partition";
+
 }  // namespace
 
 namespace skyrise {
@@ -15,16 +18,13 @@ PartitionOperatorProxy::PartitionOperatorProxy(const size_t partition_count,
       partition_count_(partition_count),
       partition_column_ids_(partition_column_ids) {}
 
-const std::string& PartitionOperatorProxy::Name() const {
-  static const std::string kName = "Partition";
-  return kName;
-}
+const std::string& PartitionOperatorProxy::Name() const { return kName; }
 
 std::string PartitionOperatorProxy::Description(const DescriptionMode mode) const {
   std::stringstream stream;
-  const char separator = (mode == DescriptionMode::kSingleLine ? ' ' : '\n');
+  const char separator = mode == DescriptionMode::kSingleLine ? ' ' : '\n';
   stream << AbstractOperatorProxy::Description(mode) << separator;
-  stream << partition_count_ << " bucket(s)" << separator;
+  stream << partition_count_ << " partition(s)" << separator;
   stream << "ColumnIds{";
   auto column_ids_iter = partition_column_ids_.cbegin();
   while (column_ids_iter != partition_column_ids_.cend()) {
@@ -48,6 +48,7 @@ Aws::Utils::Json::JsonValue PartitionOperatorProxy::ToJson() const {
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> partition_column_id_array(partition_column_ids_.size());
 
   size_t i = 0;
+
   for (const auto& partition_column_id : partition_column_ids_) {
     partition_column_id_array[i++] = Aws::Utils::Json::JsonValue().AsInteger(partition_column_id);
   }
@@ -63,7 +64,8 @@ std::shared_ptr<AbstractOperatorProxy> PartitionOperatorProxy::FromJson(const Aw
 
   // Store ColumnIds in a set to provide a deterministic order.
   std::set<ColumnId> partition_column_id_set;
-  for (size_t i = 0; i < partition_column_id_array.GetLength(); i++) {
+
+  for (size_t i = 0; i < partition_column_id_array.GetLength(); ++i) {
     partition_column_id_set.emplace(partition_column_id_array[i].AsInteger());
   }
 

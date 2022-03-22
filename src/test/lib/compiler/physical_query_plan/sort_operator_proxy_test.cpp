@@ -23,26 +23,26 @@ class SortOperatorProxyTest : public ::testing::Test {
 };
 
 TEST_F(SortOperatorProxyTest, BaseProperties) {
-  auto sort_proxy = SortOperatorProxy::Make(sort_definitions_);
+  const auto sort_proxy = SortOperatorProxy::Make(sort_definitions_);
   EXPECT_EQ(sort_proxy->Type(), OperatorType::kSort);
   EXPECT_EQ(sort_proxy->SortDefinitions(), sort_definitions_);
   EXPECT_TRUE(sort_proxy->IsPipelineBreaker());
 }
 
 TEST_F(SortOperatorProxyTest, Description) {
-  auto sort_proxy = SortOperatorProxy::Make(sort_definitions_);
+  const auto sort_proxy = SortOperatorProxy::Make(sort_definitions_);
   EXPECT_EQ(sort_proxy->Description(DescriptionMode::kSingleLine), "[Sort]");
   EXPECT_EQ(sort_proxy->Description(DescriptionMode::kMultiLine), "[Sort]");
 }
 
 TEST_F(SortOperatorProxyTest, SerializeAndDeserialize) {
-  auto sort_proxy = SortOperatorProxy::Make(sort_definitions_);
+  const auto sort_proxy = SortOperatorProxy::Make(sort_definitions_);
   // (1) Serialize
-  auto proxy_json = sort_proxy->ToJson();
+  const auto proxy_json = sort_proxy->ToJson();
 
   // (2) Deserialize & verify attributes
-  auto deserialized_proxy = SortOperatorProxy::FromJson(proxy_json);
-  auto deserialized_sort_proxy = std::dynamic_pointer_cast<SortOperatorProxy>(deserialized_proxy);
+  const auto deserialized_proxy = SortOperatorProxy::FromJson(proxy_json);
+  const auto deserialized_sort_proxy = std::dynamic_pointer_cast<SortOperatorProxy>(deserialized_proxy);
   EXPECT_EQ(deserialized_sort_proxy->SortDefinitions(), sort_definitions_);
 
   // (3) Serialize again
@@ -51,12 +51,12 @@ TEST_F(SortOperatorProxyTest, SerializeAndDeserialize) {
 
 TEST_F(SortOperatorProxyTest, DeepCopy) {
   // clang-format off
-  auto sort_proxy =
+  const auto sort_proxy =
   SortOperatorProxy::Make(sort_definitions_,
     ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
   // clang-format on
-  auto sort_proxy_copy = std::dynamic_pointer_cast<SortOperatorProxy>(sort_proxy->DeepCopy());
+  const auto sort_proxy_copy = std::dynamic_pointer_cast<SortOperatorProxy>(sort_proxy->DeepCopy());
   EXPECT_EQ(sort_proxy_copy->SortDefinitions(), sort_definitions_);
   EXPECT_EQ(sort_proxy_copy->InputNodeCount(), 1);
   // Without input
@@ -67,7 +67,7 @@ TEST_F(SortOperatorProxyTest, DeepCopy) {
 TEST_F(SortOperatorProxyTest, CreateOperatorInstance) {
   // TODO(anyone): Adjust test when adding the operator implementation in #619
   // clang-format off
-  auto sort_proxy =
+  const auto sort_proxy =
   SortOperatorProxy::Make(sort_definitions_,
     ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 

@@ -53,29 +53,26 @@ class EnableMakeForPlanNode {
           // Check if the second to last function argument represents a plan node as well.
           if constexpr (IsPlanNodeArgument<sizeof...(ArgumentTypes) - 2, ArgumentTypes...>::value) {
             // Use function arguments, except for the last two, to construct the plan node.
-            auto node = MakeImpl(arguments_tuple, std::make_index_sequence<sizeof...(ArgumentTypes) - 2>());
+            auto node = CreatePlanNode(arguments_tuple, std::make_index_sequence<sizeof...(ArgumentTypes) - 2>());
             node->SetLeftInput(std::get<sizeof...(ArgumentTypes) - 2>(arguments_tuple));
             node->SetRightInput(std::get<sizeof...(ArgumentTypes) - 1>(arguments_tuple));
             return node;
           } else {
             // Use function arguments, except for the last, to construct the plan node.
-            auto node = MakeImpl(arguments_tuple, std::make_index_sequence<sizeof...(ArgumentTypes) - 1>());
+            auto node = CreatePlanNode(arguments_tuple, std::make_index_sequence<sizeof...(ArgumentTypes) - 1>());
             node->SetLeftInput(std::get<sizeof...(ArgumentTypes) - 1>(arguments_tuple));
             return node;
           }
-
         } else {
           // Only one input plan node was provided as an argument.
           auto node = std::make_shared<DerivedPlanNodeType>();
           node->SetLeftInput(std::get<0>(arguments_tuple));
           return node;
         }
-
       } else {
         // Additional input plan nodes were not passed as last arguments.
-        return MakeImpl(arguments_tuple, std::make_index_sequence<sizeof...(ArgumentTypes)>());
+        return CreatePlanNode(arguments_tuple, std::make_index_sequence<sizeof...(ArgumentTypes)>());
       }
-
     } else {
       // No arguments were passed to this function.
       return std::make_shared<DerivedPlanNodeType>();
@@ -84,8 +81,8 @@ class EnableMakeForPlanNode {
 
  private:
   template <class ArgumentsTupleType, size_t... ConstructorIndices>
-  static std::shared_ptr<DerivedPlanNodeType> MakeImpl(const ArgumentsTupleType& arguments_tuple,
-                                                       std::index_sequence<ConstructorIndices...> /* indices */) {
+  static std::shared_ptr<DerivedPlanNodeType> CreatePlanNode(const ArgumentsTupleType& arguments_tuple,
+                                                             std::index_sequence<ConstructorIndices...> /* indices */) {
     return std::make_shared<DerivedPlanNodeType>(std::get<ConstructorIndices>(arguments_tuple)...);
   }
 

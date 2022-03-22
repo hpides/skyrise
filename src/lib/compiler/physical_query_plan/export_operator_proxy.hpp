@@ -36,8 +36,8 @@ class ExportOperatorProxy : public EnableMakeForPlanNode<ExportOperatorProxy, Ab
   static std::shared_ptr<AbstractOperatorProxy> FromJson(const Aws::Utils::Json::JsonView& json);
 
   /**
-   * Convenience construction function:
-   * @returns an ExportOperatorProxy without proper values for bucket name etc.
+   * Convenience construction function used by PipelineFragmentTemplate.
+   * @return an ExportOperatorProxy without proper values for bucket name etc.
    */
   static std::shared_ptr<AbstractOperatorProxy> DummyExportOperatorProxy();
 

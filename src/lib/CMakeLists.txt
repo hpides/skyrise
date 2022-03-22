@@ -142,8 +142,8 @@ set(
     compiler/physical_query_plan/aggregate_operator_proxy.hpp
     compiler/physical_query_plan/alias_operator_proxy.cpp
     compiler/physical_query_plan/alias_operator_proxy.hpp
-    compiler/physical_query_plan/data_exchange_operator_proxy.cpp
-    compiler/physical_query_plan/data_exchange_operator_proxy.hpp
+    compiler/physical_query_plan/exchange_operator_proxy.cpp
+    compiler/physical_query_plan/exchange_operator_proxy.hpp
     compiler/physical_query_plan/export_operator_proxy.cpp
     compiler/physical_query_plan/export_operator_proxy.hpp
     compiler/physical_query_plan/filter_operator_proxy.cpp

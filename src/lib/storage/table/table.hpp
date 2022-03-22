@@ -31,7 +31,7 @@ class Table : private Noncopyable {
   Table(const TableColumnDefinitions& column_definitions, std::vector<std::shared_ptr<Chunk>>&& chunks);
 
   /**
-   * @returns The column definitions for the table.
+   * @return The column definitions for the table.
    */
   const TableColumnDefinitions& ColumnDefinitions() const;
 
@@ -47,13 +47,13 @@ class Table : private Noncopyable {
   std::vector<bool> ColumnsAreNullable() const;
 
   /**
-   * @returns The ColumnId for the given name.
+   * @return The ColumnId for the given name.
    * Fails, if there is no column of that name.
    */
   ColumnId ColumnIdByName(const std::string& column_name) const;
 
   /**
-   * @returns The number of rows.
+   * @return The number of rows.
    */
   size_t RowCount() const;
 
@@ -63,19 +63,19 @@ class Table : private Noncopyable {
   bool Empty() const;
 
   /**
-   * @returns The number of chunks, or, more correctly, the ChunkId of the last chunk plus one.
+   * @return The number of chunks, or, more correctly, the ChunkId of the last chunk plus one.
    * This cannot exceed ChunkId (uint32_t).
    */
   ChunkId ChunkCount() const;
 
   /**
-   * @returns The chunk with the given ChunkId.
+   * @return The chunk with the given ChunkId.
    */
   std::shared_ptr<Chunk> GetChunk(ChunkId chunk_id);
   std::shared_ptr<const Chunk> GetChunk(ChunkId chunk_id) const;
 
   /**
-   * @returns The last chunk from chunks_.
+   * @return The last chunk from chunks_.
    */
   std::shared_ptr<Chunk> LastChunk() const;
 

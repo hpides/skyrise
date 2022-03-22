@@ -22,7 +22,7 @@ class OperatorTask : public AbstractTask {
 
   /**
    * Creates tasks recursively from the given operator @param any_operator and sets task dependencies automatically.
-   * @returns a pair, consisting of a vector of unordered tasks and a pointer to the root operator task that would
+   * @return a pair, consisting of a vector of unordered tasks and a pointer to the root operator task that would
    *          otherwise be hidden inside the vector.
    */
   static std::pair<std::vector<std::shared_ptr<AbstractTask>>, std::shared_ptr<OperatorTask>> GenerateTasksFromOperator(
@@ -39,7 +39,7 @@ class OperatorTask : public AbstractTask {
  private:
   static std::shared_ptr<OperatorTask> AddOperatorTasksRecursively(
       const std::shared_ptr<AbstractOperator>& any_operator,
-      std::unordered_map<std::shared_ptr<AbstractOperator>, std::shared_ptr<OperatorTask>>* task_by_operator,
+      std::unordered_map<std::shared_ptr<AbstractOperator>, std::shared_ptr<OperatorTask>>* operator_to_task,
       const std::shared_ptr<OperatorExecutionContext>& operator_execution_context);
 
   std::shared_ptr<AbstractOperator> any_operator_;

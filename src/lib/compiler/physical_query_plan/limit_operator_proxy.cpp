@@ -8,22 +8,20 @@
 namespace {
 
 const std::string kJsonKeyRowCountExpression = "row_count";
+const std::string kName = "Limit";
 
 }  // namespace
 
 namespace skyrise {
 
-LimitOperatorProxy::LimitOperatorProxy(const std::shared_ptr<AbstractExpression>& row_count)
-    : AbstractOperatorProxy(OperatorType::kLimit), row_count_(row_count) {}
+LimitOperatorProxy::LimitOperatorProxy(std::shared_ptr<AbstractExpression> row_count)
+    : AbstractOperatorProxy(OperatorType::kLimit), row_count_(std::move(row_count)) {}
 
-const std::string& LimitOperatorProxy::Name() const {
-  static const std::string kName = "Limit";
-  return kName;
-}
+const std::string& LimitOperatorProxy::Name() const { return kName; }
 
 std::string LimitOperatorProxy::Description(const DescriptionMode mode) const {
   std::stringstream stream;
-  const char separator = (mode == DescriptionMode::kSingleLine ? ' ' : '\n');
+  const char separator = mode == DescriptionMode::kSingleLine ? ' ' : '\n';
   stream << AbstractOperatorProxy::Description(mode) << separator;
   stream << row_count_->AsColumnName() << " row(s)";
   return stream.str();

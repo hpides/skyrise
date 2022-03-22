@@ -7,12 +7,12 @@
 namespace skyrise {
 
 /**
- * The SerializePqp function takes a PQP or any other DAG of operator proxies and generates a JSON Object. The returned
+ * The SerializePqp function takes a PQP or any other DAG of operator proxies and generates a JSON object. The returned
  * string can be transferred across the network to other computer systems. The DeserializePqp function can be used to
  * re-create the original PQP or DAG of operator proxies.
  *
- * Serialization Details:
- *  The according JSON object has the following two keys:
+ * Serialization details:
+ *  The respective JSON object has the following two keys:
  *   - "operators"                 An object where each attribute represents an operator. The attribute key is a string
  *                                 containing the identity of the described operator.
  *         Each operator is serialized as a flat object. While attributes vary depending on the type of the

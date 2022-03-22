@@ -24,6 +24,7 @@ struct NetworkBenchmarkParameters {
   size_t thread_count;
   size_t invocation_count;
   size_t bucket_count;
+  size_t repetition_count;
   S3OperationType operation_type;
 };
 

@@ -3,6 +3,12 @@
 #include "storage/formats/csv_writer.hpp"
 #include "storage/formats/orc_writer.hpp"
 
+namespace {
+
+const std::string kName = "Export";
+
+}  // namespace
+
 namespace skyrise {
 
 ExportOperator::ExportOperator(const std::shared_ptr<const AbstractOperator>& input_operator, std::string bucket_name,
@@ -12,10 +18,7 @@ ExportOperator::ExportOperator(const std::shared_ptr<const AbstractOperator>& in
       target_object_key_(std::move(target_object_key)),
       export_format_(export_format) {}
 
-const std::string& ExportOperator::Name() const {
-  static const std::string kName("Export");
-  return kName;
-}
+const std::string& ExportOperator::Name() const { return kName; }
 
 std::unique_ptr<AbstractFormatWriter> ExportOperator::GetWriter() {
   switch (export_format_) {

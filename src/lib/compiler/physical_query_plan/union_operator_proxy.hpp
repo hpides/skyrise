@@ -42,7 +42,7 @@ class UnionOperatorProxy : public EnableMakeForPlanNode<UnionOperatorProxy, Abst
   std::shared_ptr<AbstractOperator> CreateOperatorInstanceRecursively() override;
 
  private:
-  SetOperationMode mode_;
+  const SetOperationMode mode_;
 };
 
 }  // namespace skyrise

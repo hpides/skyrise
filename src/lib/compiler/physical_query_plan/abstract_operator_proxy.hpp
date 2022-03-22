@@ -36,7 +36,7 @@ class AbstractOperatorProxy : public AbstractPlanNode<AbstractOperatorProxy> {
   std::string Description(const DescriptionMode mode) const override;
 
   /**
-   * @returns an identity string unique to this operator proxy.
+   * @return an identity string unique to this operator proxy.
    * For details, see the comment about 'Operator Identity Concept' down below.
    */
   std::string Identity() const;
@@ -53,7 +53,7 @@ class AbstractOperatorProxy : public AbstractPlanNode<AbstractOperatorProxy> {
 
   /**
    * Recursively copies the input operator proxies and
-   * @returns a new instance of this operator proxy with the same configuration. Deduplication of plans will be
+   * @return a new instance of this operator proxy with the same configuration. Deduplication of plans will be
    *          preserved. See lqp_translator.cpp for more info.
    */
   std::shared_ptr<AbstractOperatorProxy> DeepCopy() const;
@@ -67,7 +67,7 @@ class AbstractOperatorProxy : public AbstractPlanNode<AbstractOperatorProxy> {
 
   /**
    * This function recursively creates an operator tree capable of processing actual data, if not already done.
-   * @returns a shared pointer to the root operator.
+   * @return a shared pointer to the root operator.
    * @pre The input operator proxies must be set or bound before calling this function.
    */
   std::shared_ptr<AbstractOperator> GetOrCreateOperatorInstance();
@@ -79,14 +79,14 @@ class AbstractOperatorProxy : public AbstractPlanNode<AbstractOperatorProxy> {
   virtual Aws::Utils::Json::JsonValue ToJson() const;
 
   /**
-   * Binds input proxies from @param operator_proxies_by_identity according to the operator identities attributes
+   * Binds input proxies from @param identity_to_operator_proxies according to the operator identities attributes
    * resulting from the deserialization.
    * @pre Proxy instance was created as a result of deserialization. Input proxies are unset, but specified with
    *      operator identities.
-   * @pre The map @param operator_proxies_by_identity includes the operator identity keys specified by this proxy.
+   * @pre The map @param identity_to_operator_proxies includes the operator identity keys specified by this proxy.
    */
   void BindInputs(
-      const std::unordered_map<std::string, std::shared_ptr<AbstractOperatorProxy>>& operator_proxies_by_identity);
+      const std::unordered_map<std::string, std::shared_ptr<AbstractOperatorProxy>>& identity_to_operator_proxies);
 
  protected:
   virtual std::shared_ptr<AbstractOperatorProxy> OnDeepCopy(

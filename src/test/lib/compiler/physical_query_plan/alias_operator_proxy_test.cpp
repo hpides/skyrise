@@ -15,12 +15,12 @@ class AliasOperatorProxyTest : public ::testing::Test {
   void SetUp() override {}
 
  protected:
-  const std::vector<std::string> aliases_{"category", "revenue"};
-  const std::vector<ColumnId> column_ids_{ColumnId{0}, ColumnId{1}};
+  const std::vector<std::string> aliases_ = {"category", "revenue"};
+  const std::vector<ColumnId> column_ids_ = {ColumnId{0}, ColumnId{1}};
 };
 
 TEST_F(AliasOperatorProxyTest, BaseProperties) {
-  auto alias_proxy = AliasOperatorProxy::Make(column_ids_, aliases_);
+  const auto alias_proxy = AliasOperatorProxy::Make(column_ids_, aliases_);
   EXPECT_EQ(alias_proxy->Type(), OperatorType::kAlias);
   EXPECT_EQ(alias_proxy->ColumnIds(), column_ids_);
   EXPECT_EQ(alias_proxy->Aliases(), aliases_);
@@ -29,20 +29,20 @@ TEST_F(AliasOperatorProxyTest, BaseProperties) {
 }
 
 TEST_F(AliasOperatorProxyTest, Description) {
-  auto alias_proxy = AliasOperatorProxy::Make(column_ids_, aliases_);
+  const auto alias_proxy = AliasOperatorProxy::Make(column_ids_, aliases_);
 
   EXPECT_EQ(alias_proxy->Description(DescriptionMode::kSingleLine), "[Alias] category, revenue");
   EXPECT_EQ(alias_proxy->Description(DescriptionMode::kMultiLine), "[Alias]\ncategory,\nrevenue");
 }
 
 TEST_F(AliasOperatorProxyTest, SerializeAndDeserialize) {
-  auto proxy = AliasOperatorProxy::Make(column_ids_, aliases_);
+  const auto proxy = AliasOperatorProxy::Make(column_ids_, aliases_);
   // (1) Serialize
-  auto proxy_json = proxy->ToJson();
+  const auto proxy_json = proxy->ToJson();
 
   // (2) Deserialize & verify attributes
-  auto deserialized_proxy = AliasOperatorProxy::FromJson(proxy_json);
-  auto deserialized_alias_proxy = std::dynamic_pointer_cast<AliasOperatorProxy>(deserialized_proxy);
+  const auto deserialized_proxy = AliasOperatorProxy::FromJson(proxy_json);
+  const auto deserialized_alias_proxy = std::dynamic_pointer_cast<AliasOperatorProxy>(deserialized_proxy);
   EXPECT_EQ(deserialized_alias_proxy->ColumnIds(), column_ids_);
   EXPECT_EQ(deserialized_alias_proxy->Aliases(), aliases_);
 
@@ -52,12 +52,12 @@ TEST_F(AliasOperatorProxyTest, SerializeAndDeserialize) {
 
 TEST_F(AliasOperatorProxyTest, DeepCopy) {
   // clang-format off
-  auto alias_proxy =
+  const auto alias_proxy =
   AliasOperatorProxy::Make(column_ids_, aliases_,
     ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
   // clang-format on
-  auto alias_proxy_copy = std::dynamic_pointer_cast<AliasOperatorProxy>(alias_proxy->DeepCopy());
+  const auto alias_proxy_copy = std::dynamic_pointer_cast<AliasOperatorProxy>(alias_proxy->DeepCopy());
   EXPECT_EQ(alias_proxy_copy->Aliases(), aliases_);
   EXPECT_EQ(alias_proxy_copy->ColumnIds(), column_ids_);
   EXPECT_EQ(alias_proxy_copy->InputNodeCount(), 1);
@@ -69,7 +69,7 @@ TEST_F(AliasOperatorProxyTest, DeepCopy) {
 TEST_F(AliasOperatorProxyTest, CreateOperatorInstance) {
   // TODO(anyone): Adjust test when adding the operator implementation.
   // clang-format off
-  auto alias_proxy =
+  const auto alias_proxy =
   AliasOperatorProxy::Make(column_ids_, aliases_,
     ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 

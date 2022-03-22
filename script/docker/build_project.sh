@@ -34,7 +34,7 @@ exitWithError() {
 
 BUILD_DIR="cmake-build-debug"
 CMAKE_OPTIONS=''
-IMAGE_DATE="20211208"
+IMAGE_DATE="20220311"
 CMAKE_FORCE="false"
 NINJA_TOLERANCE="1"
 MAKE_TARGET="all"

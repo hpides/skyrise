@@ -29,7 +29,7 @@ class ProjectionOperatorProxyTest : public ::testing::Test {
 };
 
 TEST_F(ProjectionOperatorProxyTest, BaseProperties) {
-  auto projection_proxy = ProjectionOperatorProxy::Make(expressions_);
+  const auto projection_proxy = ProjectionOperatorProxy::Make(expressions_);
   EXPECT_EQ(projection_proxy->Type(), OperatorType::kProjection);
   EXPECT_EQ(projection_proxy->Expressions(), expressions_);
   EXPECT_FALSE(projection_proxy->IsPipelineBreaker());
@@ -37,19 +37,19 @@ TEST_F(ProjectionOperatorProxyTest, BaseProperties) {
 }
 
 TEST_F(ProjectionOperatorProxyTest, Description) {
-  auto projection_proxy = ProjectionOperatorProxy::Make(expressions_);
+  const auto projection_proxy = ProjectionOperatorProxy::Make(expressions_);
   EXPECT_EQ(projection_proxy->Description(DescriptionMode::kSingleLine), "[Projection]");
   EXPECT_EQ(projection_proxy->Description(DescriptionMode::kMultiLine), "[Projection]");
 }
 
 TEST_F(ProjectionOperatorProxyTest, SerializeAndDeserialize) {
-  auto projection_proxy = ProjectionOperatorProxy::Make(expressions_);
+  const auto projection_proxy = ProjectionOperatorProxy::Make(expressions_);
   // (1) Serialize
-  auto proxy_json = projection_proxy->ToJson();
+  const auto proxy_json = projection_proxy->ToJson();
 
   // (2) Deserialize & verify attributes
-  auto deserialized_proxy = ProjectionOperatorProxy::FromJson(proxy_json);
-  auto deserialized_projection_proxy = std::dynamic_pointer_cast<ProjectionOperatorProxy>(deserialized_proxy);
+  const auto deserialized_proxy = ProjectionOperatorProxy::FromJson(proxy_json);
+  const auto deserialized_projection_proxy = std::dynamic_pointer_cast<ProjectionOperatorProxy>(deserialized_proxy);
   EXPECT_TRUE(ExpressionsEqual(deserialized_projection_proxy->Expressions(), expressions_));
 
   // (3) Serialize again
@@ -58,12 +58,12 @@ TEST_F(ProjectionOperatorProxyTest, SerializeAndDeserialize) {
 
 TEST_F(ProjectionOperatorProxyTest, DeepCopy) {
   // clang-format off
-  auto projection_proxy =
+  const auto projection_proxy =
   ProjectionOperatorProxy::Make(expressions_,
     ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
   // clang-format on
-  auto projection_proxy_copy = std::dynamic_pointer_cast<ProjectionOperatorProxy>(projection_proxy->DeepCopy());
+  const auto projection_proxy_copy = std::dynamic_pointer_cast<ProjectionOperatorProxy>(projection_proxy->DeepCopy());
   EXPECT_NE(projection_proxy_copy->Expressions(), expressions_);
   EXPECT_TRUE(ExpressionsEqual(projection_proxy_copy->Expressions(), expressions_));
   EXPECT_EQ(projection_proxy_copy->InputNodeCount(), 1);
@@ -75,7 +75,7 @@ TEST_F(ProjectionOperatorProxyTest, DeepCopy) {
 TEST_F(ProjectionOperatorProxyTest, CreateOperatorInstance) {
   // TODO(anyone): Adjust test when adding the operator implementation.
   // clang-format off
-  auto projection_proxy =
+  const auto projection_proxy =
   ProjectionOperatorProxy::Make(expressions_,
     ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 

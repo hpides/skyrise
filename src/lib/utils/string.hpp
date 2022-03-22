@@ -27,7 +27,7 @@ inline const std::string kCharacterSetHex{"0123456789abcdef"};
 std::string TrimSourceFilePath(const std::string& file_path);
 
 /**
- * @returns a vector of substrings from @param string using @param delimiter.
+ * @return a vector of substrings from @param string using @param delimiter.
  */
 std::vector<std::string> SplitStringByDelimiter(const std::string& string, const char delimiter);
 
@@ -60,7 +60,7 @@ std::string VectorToString(const std::vector<T>& vector, const std::string& deli
 }
 
 /**
- * @returns A randomly generated string.
+ * @return A randomly generated string.
  */
 std::string RandomString(const size_t length, const std::string& character_set = kCharacterSetUpper +
                                                                                  kCharacterSetLower +

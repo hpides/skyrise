@@ -11,9 +11,9 @@ set(
     benchmark/lib/benchmark_result_aggregate_test.cpp
     benchmark/lib/compression/compression_test.cpp
     benchmark/lib/data_generation/tpch_test.cpp
+    benchmark/lib/lambda/lambda_benchmark_output_test.cpp
     benchmark/lib/lambda/lambda_benchmark_result_test.cpp
     benchmark/lib/lambda/lambda_benchmark_runner_test.cpp
-    benchmark/lib/lambda/lambda_benchmark_test.cpp
 
     lib/compiler/logical_query_plan/aggregate_node_test.cpp
     lib/compiler/logical_query_plan/alias_node_test.cpp
@@ -34,7 +34,7 @@ set(
 
     lib/compiler/physical_query_plan/aggregate_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/alias_operator_proxy_test.cpp
-    lib/compiler/physical_query_plan/data_exchange_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/exchange_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/export_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/filter_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/import_options_test.cpp

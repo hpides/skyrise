@@ -13,7 +13,7 @@ class AggregateExpression : public AbstractExpression {
   AggregateExpression(const AggregateFunction aggregate_function, const std::shared_ptr<AbstractExpression>& argument);
 
   /**
-   * @returns the argument expression to which the AggregateFunction is applied.
+   * @return the argument expression to which the AggregateFunction is applied.
    */
   std::shared_ptr<AbstractExpression> Argument() const;
 

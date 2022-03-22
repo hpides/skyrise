@@ -9,6 +9,7 @@
 namespace {
 
 const std::string kJsonKeyExpressions = "expressions";
+const std::string kName = "Projection";
 
 }  // namespace
 
@@ -17,10 +18,7 @@ namespace skyrise {
 ProjectionOperatorProxy::ProjectionOperatorProxy(std::vector<std::shared_ptr<AbstractExpression>> expressions)
     : AbstractOperatorProxy(OperatorType::kProjection), expressions_(std::move(expressions)) {}
 
-const std::string& ProjectionOperatorProxy::Name() const {
-  static const std::string kName = "Projection";
-  return kName;
-}
+const std::string& ProjectionOperatorProxy::Name() const { return kName; }
 
 const std::vector<std::shared_ptr<AbstractExpression>> ProjectionOperatorProxy::Expressions() const {
   return expressions_;
@@ -32,7 +30,8 @@ size_t ProjectionOperatorProxy::OutputColumnsCount() const { return expressions_
 
 Aws::Utils::Json::JsonValue ProjectionOperatorProxy::ToJson() const {
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> expressions_json(expressions_.size());
-  for (size_t i = 0; i < expressions_.size(); i++) {
+
+  for (size_t i = 0; i < expressions_.size(); ++i) {
     expressions_json[i] = ExpressionSerializer::Serialize(*expressions_[i]);
   }
   return AbstractOperatorProxy::ToJson().WithArray(kJsonKeyExpressions, expressions_json);
@@ -40,10 +39,11 @@ Aws::Utils::Json::JsonValue ProjectionOperatorProxy::ToJson() const {
 
 std::shared_ptr<AbstractOperatorProxy> ProjectionOperatorProxy::FromJson(const Aws::Utils::Json::JsonView& json) {
   std::vector<std::shared_ptr<AbstractExpression>> expressions;
-  auto expressions_json_array = json.GetArray(kJsonKeyExpressions);
-  expressions.reserve(expressions_json_array.GetLength());
-  for (size_t i = 0; i < expressions_json_array.GetLength(); ++i) {
-    auto deserialized_expression = ExpressionDeserializer::Deserialize(expressions_json_array.GetItem(i));
+  const auto json_expressions = json.GetArray(kJsonKeyExpressions);
+  expressions.reserve(json_expressions.GetLength());
+
+  for (size_t i = 0; i < json_expressions.GetLength(); ++i) {
+    auto deserialized_expression = ExpressionDeserializer::Deserialize(json_expressions.GetItem(i));
     expressions.emplace_back(deserialized_expression);
   }
 

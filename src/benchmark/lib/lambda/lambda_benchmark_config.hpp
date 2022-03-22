@@ -13,9 +13,9 @@ namespace skyrise {
 
 enum class WarmUp { kNone, kDefault, kDefaultOncePerRepetition };
 
-enum class UseOneFunctionPerRepetition : bool { kYes = true, kNo = false };
+enum class UseOneFunctionPerRepetition { kYes, kNo };
 
-enum class UseEventQueue : bool { kYes = true, kNo = false };
+enum class UseEventQueue { kYes, kNo };
 
 class LambdaBenchmarkConfig : public AbstractBenchmarkConfig {
  public:

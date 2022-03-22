@@ -35,6 +35,8 @@ set(
     lambda/invocation_throughput_benchmark.hpp
     lambda/lambda_benchmark_config.cpp
     lambda/lambda_benchmark_config.hpp
+    lambda/lambda_benchmark_output.cpp
+    lambda/lambda_benchmark_output.hpp
     lambda/lambda_benchmark_result.cpp
     lambda/lambda_benchmark_result.hpp
     lambda/lambda_benchmark_runner.cpp

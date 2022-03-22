@@ -15,10 +15,10 @@ namespace skyrise {
 struct FunctionWarmUpBenchmarkParameters {
   size_t function_instance_mb_size;
   size_t invocation_count;
-  size_t repetition_count;
   size_t sleep_ms_duration;
   double provisioning_factor;
   bool enable_provisioned_concurrency;
+  size_t repetition_count;
   std::string warm_up_strategy;
 };
 

@@ -13,7 +13,7 @@ InExpression::InExpression(const PredicateCondition predicate_condition, std::sh
                            std::shared_ptr<AbstractExpression> set)
     : AbstractPredicateExpression(predicate_condition, {std::move(value), std::move(set)}) {
   DebugAssert(predicate_condition_ == PredicateCondition::kIn || predicate_condition_ == PredicateCondition::kNotIn,
-              "Expected either IN or NOT IN as PredicateCondition");
+              "Expected either IN or NOT IN as PredicateCondition.");
 }
 
 bool InExpression::IsNegated() const { return predicate_condition_ == PredicateCondition::kNotIn; }

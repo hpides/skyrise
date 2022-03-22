@@ -17,7 +17,6 @@
 #include "is_null_expression.hpp"
 #include "list_expression.hpp"
 #include "logical_expression.hpp"
-#include "lqp_column_expression.hpp"
 #include "pqp_column_expression.hpp"
 #include "types.hpp"
 #include "unary_minus_expression.hpp"
@@ -102,16 +101,12 @@ inline detail::Unary<AggregateFunction::kMin, AggregateExpression> Min_;
 inline detail::Unary<AggregateFunction::kAvg, AggregateExpression> Avg_;
 inline detail::Unary<AggregateFunction::kCount, AggregateExpression> Count_;
 inline detail::Unary<AggregateFunction::kCountDistinct, AggregateExpression> CountDistinct_;
-inline detail::Unary<AggregateFunction::kStandardDeviationSample, AggregateExpression> StandardDeviationSample_;
-inline detail::Unary<AggregateFunction::kAny, AggregateExpression> Any_;
 
 inline detail::Binary<ArithmeticOperator::kDivision, ArithmeticExpression> Div_;
 inline detail::Binary<ArithmeticOperator::kMultiplication, ArithmeticExpression> Mul_;
 inline detail::Binary<ArithmeticOperator::kAddition, ArithmeticExpression> Add_;
 inline detail::Binary<ArithmeticOperator::kSubtraction, ArithmeticExpression> Sub_;
 inline detail::Binary<ArithmeticOperator::kModulo, ArithmeticExpression> Mod_;
-inline detail::Binary<PredicateCondition::kLike, BinaryPredicateExpression> Like_;
-inline detail::Binary<PredicateCondition::kNotLike, BinaryPredicateExpression> NotLike_;
 inline detail::Binary<PredicateCondition::kEquals, BinaryPredicateExpression> Equals_;
 inline detail::Binary<PredicateCondition::kNotEquals, BinaryPredicateExpression> NotEquals_;
 inline detail::Binary<PredicateCondition::kLessThan, BinaryPredicateExpression> LessThan_;
@@ -122,7 +117,7 @@ inline detail::Binary<LogicalOperator::kAnd, LogicalExpression> And_;
 inline detail::Binary<LogicalOperator::kOr, LogicalExpression> Or_;
 
 inline detail::Ternary<PredicateCondition::kBetweenInclusive, BetweenExpression> BetweenInclusive_;
-inline detail::Ternary<PredicateCondition::kBetweenLowerExclusive, BetweenExpression> BetweenLowerExclusive_;
+inline detail::Ternary<PredicateCondition::kBetweenLowerExclusive, BetweenExpression> BetweenLowerInclusive_;
 inline detail::Ternary<PredicateCondition::kBetweenUpperExclusive, BetweenExpression> BetweenUpperExclusive_;
 inline detail::Ternary<PredicateCondition::kBetweenExclusive, BetweenExpression> BetweenExclusive_;
 
@@ -130,8 +125,6 @@ template <typename Argument>
 std::shared_ptr<CastExpression> Cast_(const Argument& argument, const DataType data_type) {
   return std::make_shared<CastExpression>(ToExpression(argument), data_type);
 }
-
-std::shared_ptr<AggregateExpression> CountStarPqp_();
 
 template <typename... Args>
 std::vector<std::shared_ptr<AbstractExpression>> ExpressionVector_(Args&&... args) {

@@ -15,7 +15,7 @@ namespace skyrise {
 enum class OperatorType {
   kAggregate,
   kAlias,
-  kDataExchange,  // Control Operator, not used during execution.
+  kExchange,  // Control operator, not used during execution.
   kExport,
   kFilter,
   kImport,

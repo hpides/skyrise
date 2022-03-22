@@ -4,6 +4,13 @@
 
 #include "expression/expression_utils.hpp"
 
+namespace {
+
+const std::string kNameHash = "HashJoin";
+const std::string kNameNestedLoop = "NestedLoopJoin";
+
+}  // namespace
+
 namespace skyrise {
 
 JoinOperatorProxy::JoinOperatorProxy(const JoinMode mode, std::shared_ptr<AbstractExpression> primary_predicate,
@@ -14,9 +21,6 @@ JoinOperatorProxy::JoinOperatorProxy(const JoinMode mode, std::shared_ptr<Abstra
       secondary_predicates_(std::move(secondary_predicates)) {}
 
 const std::string& JoinOperatorProxy::Name() const {
-  static const std::string kNameHash = "JoinHash";
-  static const std::string kNameNestedLoop = "JoinNestedLoop";
-
   switch (type_) {
     case OperatorType::kHashJoin:
       return kNameHash;
@@ -29,12 +33,12 @@ const std::string& JoinOperatorProxy::Name() const {
 
 std::string JoinOperatorProxy::Description(const DescriptionMode mode) const {
   std::stringstream stream;
-  const char separator = (mode == DescriptionMode::kSingleLine ? ' ' : '\n');
+  const char separator = mode == DescriptionMode::kSingleLine ? ' ' : '\n';
   stream << AbstractOperatorProxy::Description(mode) << separator;
 
   stream << mode_;
   if (mode_ == JoinMode::kCross) {
-    // Cross joins do not have any predicates
+    // Cross joins do not have any predicates.
     return stream.str();
   }
 
@@ -43,6 +47,7 @@ std::string JoinOperatorProxy::Description(const DescriptionMode mode) const {
   // Join predicates
   if (!secondary_predicates_.empty()) {
     stream << separator << "and ";
+
     for (size_t i = 0; i < secondary_predicates_.size(); ++i) {
       stream << secondary_predicates_.at(i)->AsColumnName();
       if (i < secondary_predicates_.size() - 1) {

@@ -9,7 +9,7 @@
 
 namespace skyrise {
 
-enum class PlanInputSide : bool { kLeft, kRight };
+enum class PlanInputSide { kLeft, kRight };
 
 /**
  * AbstractPlanNode is the base class for (logical and physical) query plan nodes.
@@ -21,7 +21,7 @@ class AbstractPlanNode : public std::enable_shared_from_this<AbstractPlanNode<No
  public:
   AbstractPlanNode() = default;
   virtual ~AbstractPlanNode() {
-    Assert(outputs_.empty(), "There are outputs still referencing this node.");
+    Assert(outputs_.empty(), "There are still outputs referencing this node.");
     if (left_input_) {
       left_input_->RemoveOutputPointer(*this);
     }
@@ -42,29 +42,29 @@ class AbstractPlanNode : public std::enable_shared_from_this<AbstractPlanNode<No
   void SetComment(std::string comment) { comment_ = std::move(comment); }
 
   /**
-   * Should be overridden in case a node supports two inputs.
+   * Should be overridden in case a node requires two inputs.
    */
   virtual bool RequiresRightInput() const { return false; }
 
   /**
-   * @returns the number of inputs set for this node, which is in the interval of [0, 2].
+   * @return the number of inputs set for this node, which is in the interval of [0, 2].
    */
   size_t InputNodeCount() const {
     if (left_input_ && right_input_) {
       return 2;
-    } else if (left_input_ || right_input_) {
+    } else if (left_input_) {
       return 1;
     }
     return 0;
   }
 
   /**
-   * @returns the number of nodes referencing this node as an input, ranging [0, n) .
+   * @return the number of nodes referencing this node as an input, ranging [0, n)
    */
   size_t OutputNodeCount() const { return outputs_.size(); }
 
   /**
-   * Access the outputs/inputs
+   * Access the inputs/outputs
    *  The outputs are implicitly set and removed in SetLeftInput() / SetRightInput() / SetInput().
    *  SetInput() is a shorthand for SetLeftInput() or SetRightInput(), useful if the side is a runtime value.
    */
@@ -85,9 +85,9 @@ class AbstractPlanNode : public std::enable_shared_from_this<AbstractPlanNode<No
     inputs.reserve(InputNodeCount());
     if (LeftInput()) {
       inputs.emplace_back(LeftInput());
-    }
-    if (RightInput()) {
-      inputs.emplace_back(RightInput());
+      if (RightInput()) {
+        inputs.emplace_back(RightInput());
+      }
     }
     return inputs;
   }
@@ -134,7 +134,7 @@ class AbstractPlanNode : public std::enable_shared_from_this<AbstractPlanNode<No
   }
 
   /**
-   * @returns {get_output_side(outputs()[0], ..., get_output_side(outputs()[n-1])}
+   * @return {get_output_side(outputs()[0]), ..., get_output_side(outputs()[n-1])}
    */
   std::vector<PlanInputSide> GetInputSides() const {
     std::vector<PlanInputSide> input_sides;
@@ -194,7 +194,7 @@ class AbstractPlanNode : public std::enable_shared_from_this<AbstractPlanNode<No
   void AddOutputPointer(const std::shared_ptr<NodeType>& output) { outputs_.emplace_back(output); }
 
   void RemoveOutputPointer(const AbstractPlanNode<NodeType>& output) {
-    const auto iter = std::find_if(outputs_.begin(), outputs_.end(), [&](const auto& other) {
+    const auto iter = std::find_if(outputs_.cbegin(), outputs_.cend(), [&](const auto& other) {
       /**
        * Workaround
        *  Normally we'd just check `&output == other.lock().get()` here.
