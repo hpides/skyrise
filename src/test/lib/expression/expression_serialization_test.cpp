@@ -1,10 +1,10 @@
+#include "expression/expression_serialization.hpp"
+
 #include <gtest/gtest.h>
 
 #include "expression/aggregate_expression.hpp"
 #include "expression/expression_functional.hpp"
 #include "expression/pqp_column_expression.hpp"
-#include "expression/serialization/expression_deserializer.hpp"
-#include "expression/serialization/expression_serializer.hpp"
 
 namespace skyrise {
 
@@ -14,19 +14,17 @@ using namespace skyrise::expression_functional;
 namespace {
 
 void TestSerializeAndDeserialize(const std::shared_ptr<AbstractExpression>& expression) {
-  const std::string serialized_first_time = ExpressionSerializer::Serialize(*expression).View().WriteCompact();
+  const std::string serialized_first_time = SerializeExpression(*expression).View().WriteCompact();
   EXPECT_FALSE(serialized_first_time.empty());
 
   const Aws::Utils::Json::JsonValue json_parsed(serialized_first_time);
   EXPECT_TRUE(json_parsed.WasParseSuccessful());
 
-  const std::shared_ptr<AbstractExpression> deserialized_expression =
-      ExpressionDeserializer::Deserialize(json_parsed.View());
+  const std::shared_ptr<AbstractExpression> deserialized_expression = DeserializeExpression(json_parsed.View());
   EXPECT_NE(deserialized_expression, nullptr);
   EXPECT_EQ(expression->type_, deserialized_expression->type_);
 
-  const std::string serialized_second_time =
-      ExpressionSerializer::Serialize(*deserialized_expression).View().WriteCompact();
+  const std::string serialized_second_time = SerializeExpression(*deserialized_expression).View().WriteCompact();
 
   EXPECT_EQ(serialized_first_time, serialized_second_time);
   EXPECT_EQ(expression->Description(), deserialized_expression->Description());
@@ -62,7 +60,7 @@ TEST(ExpressionSerializationTest, ArithmeticExpressions) {
 
 TEST(ExpressionSerializationTest, BetweenExpressions) {
   const std::vector<std::shared_ptr<AbstractExpression>> expressions = {
-      BetweenInclusive_(5.0f, 3.1, 5), BetweenLowerInclusive_(4, 3.0, 5.0), BetweenLowerInclusive_(3, 3, Null_())};
+      BetweenInclusive_(5.0f, 3.1, 5), BetweenLowerExclusive_(4, 3.0, 5.0), BetweenLowerExclusive_(3, 3, Null_())};
   TestSerializeAndDeserialize(expressions);
 }
 
@@ -76,9 +74,9 @@ TEST(ExpressionSerializationTest, ExpressionPointer) {
   std::shared_ptr<AbstractExpression> valid_pointer = ToExpression(10);
   std::shared_ptr<AbstractExpression> null_pointer = nullptr;
 
-  Aws::Utils::Json::JsonValue serialized_valid_pointer = ExpressionSerializer::Serialize(valid_pointer);
+  Aws::Utils::Json::JsonValue serialized_valid_pointer = SerializeExpression(valid_pointer);
   EXPECT_TRUE(serialized_valid_pointer.View().ValueExists("type"));
-  EXPECT_ANY_THROW(ExpressionSerializer::Serialize(null_pointer));
+  EXPECT_ANY_THROW(SerializeExpression(null_pointer));
 }
 
 TEST(ExpressionSerializationTest, ExtractExpressions) {

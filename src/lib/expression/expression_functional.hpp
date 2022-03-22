@@ -117,7 +117,7 @@ inline detail::Binary<LogicalOperator::kAnd, LogicalExpression> And_;
 inline detail::Binary<LogicalOperator::kOr, LogicalExpression> Or_;
 
 inline detail::Ternary<PredicateCondition::kBetweenInclusive, BetweenExpression> BetweenInclusive_;
-inline detail::Ternary<PredicateCondition::kBetweenLowerExclusive, BetweenExpression> BetweenLowerInclusive_;
+inline detail::Ternary<PredicateCondition::kBetweenLowerExclusive, BetweenExpression> BetweenLowerExclusive_;
 inline detail::Ternary<PredicateCondition::kBetweenUpperExclusive, BetweenExpression> BetweenUpperExclusive_;
 inline detail::Ternary<PredicateCondition::kBetweenExclusive, BetweenExpression> BetweenExclusive_;
 

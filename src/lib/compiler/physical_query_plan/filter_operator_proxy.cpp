@@ -2,8 +2,7 @@
 
 #include <sstream>
 
-#include "expression/serialization/expression_deserializer.hpp"
-#include "expression/serialization/expression_serializer.hpp"
+#include "expression/expression_serialization.hpp"
 
 namespace {
 
@@ -34,11 +33,11 @@ bool FilterOperatorProxy::IsPipelineBreaker() const { return false; }
 
 Aws::Utils::Json::JsonValue FilterOperatorProxy::ToJson() const {
   auto json = AbstractOperatorProxy::ToJson();
-  return json.WithObject(kJsonKeyPredicate, ExpressionSerializer::Serialize(*predicate_));
+  return json.WithObject(kJsonKeyPredicate, SerializeExpression(*predicate_));
 }
 
 std::shared_ptr<AbstractOperatorProxy> FilterOperatorProxy::FromJson(const Aws::Utils::Json::JsonView& json) {
-  auto predicate = ExpressionDeserializer::Deserialize(json.GetObject(kJsonKeyPredicate));
+  auto predicate = DeserializeExpression(json.GetObject(kJsonKeyPredicate));
   auto filter_proxy = FilterOperatorProxy::Make(predicate);
   filter_proxy->SetAttributesFromJson(json);
 

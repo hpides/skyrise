@@ -2,9 +2,8 @@
 
 #include <sstream>
 
+#include "expression/expression_serialization.hpp"
 #include "expression/expression_utils.hpp"
-#include "expression/serialization/expression_deserializer.hpp"
-#include "expression/serialization/expression_serializer.hpp"
 
 namespace {
 
@@ -32,7 +31,7 @@ Aws::Utils::Json::JsonValue ProjectionOperatorProxy::ToJson() const {
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> expressions_json(expressions_.size());
 
   for (size_t i = 0; i < expressions_.size(); ++i) {
-    expressions_json[i] = ExpressionSerializer::Serialize(*expressions_[i]);
+    expressions_json[i] = SerializeExpression(*expressions_[i]);
   }
   return AbstractOperatorProxy::ToJson().WithArray(kJsonKeyExpressions, expressions_json);
 }
@@ -43,7 +42,7 @@ std::shared_ptr<AbstractOperatorProxy> ProjectionOperatorProxy::FromJson(const A
   expressions.reserve(json_expressions.GetLength());
 
   for (size_t i = 0; i < json_expressions.GetLength(); ++i) {
-    auto deserialized_expression = ExpressionDeserializer::Deserialize(json_expressions.GetItem(i));
+    auto deserialized_expression = DeserializeExpression(json_expressions.GetItem(i));
     expressions.emplace_back(deserialized_expression);
   }
 

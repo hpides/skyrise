@@ -2,8 +2,7 @@
 
 #include <sstream>
 
-#include "expression/serialization/expression_deserializer.hpp"
-#include "expression/serialization/expression_serializer.hpp"
+#include "expression/expression_serialization.hpp"
 
 namespace {
 
@@ -33,11 +32,11 @@ bool LimitOperatorProxy::IsPipelineBreaker() const { return true; }
 
 Aws::Utils::Json::JsonValue LimitOperatorProxy::ToJson() const {
   auto json = AbstractOperatorProxy::ToJson();
-  return json.WithObject(kJsonKeyRowCountExpression, ExpressionSerializer::Serialize(*row_count_));
+  return json.WithObject(kJsonKeyRowCountExpression, SerializeExpression(*row_count_));
 }
 
 std::shared_ptr<AbstractOperatorProxy> LimitOperatorProxy::FromJson(const Aws::Utils::Json::JsonView& json) {
-  auto row_count = ExpressionDeserializer::Deserialize(json.GetObject(kJsonKeyRowCountExpression));
+  auto row_count = DeserializeExpression(json.GetObject(kJsonKeyRowCountExpression));
   auto limit_proxy = LimitOperatorProxy::Make(row_count);
   limit_proxy->SetAttributesFromJson(json);
 

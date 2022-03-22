@@ -2,9 +2,8 @@
 
 #include <sstream>
 
+#include "expression/expression_serialization.hpp"
 #include "expression/expression_utils.hpp"
-#include "expression/serialization/expression_deserializer.hpp"
-#include "expression/serialization/expression_serializer.hpp"
 #include "utils/json.hpp"
 
 namespace {
@@ -63,7 +62,7 @@ Aws::Utils::Json::JsonValue AggregateOperatorProxy::ToJson() const {
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> aggregates_json(aggregates_.size());
 
   for (size_t i = 0; i < aggregates_.size(); ++i) {
-    aggregates_json[i] = ExpressionSerializer::Serialize(*aggregates_[i]);
+    aggregates_json[i] = SerializeExpression(*aggregates_[i]);
   }
 
   return AbstractOperatorProxy::ToJson()
@@ -78,7 +77,7 @@ std::shared_ptr<AbstractOperatorProxy> AggregateOperatorProxy::FromJson(const Aw
   aggregates.reserve(json_aggregates.GetLength());
 
   for (size_t i = 0; i < json_aggregates.GetLength(); ++i) {
-    auto deserialized_expression = ExpressionDeserializer::Deserialize(json_aggregates.GetItem(i));
+    auto deserialized_expression = DeserializeExpression(json_aggregates.GetItem(i));
     Assert(deserialized_expression->type_ == ExpressionType::kAggregate, "Expected type AggregateExpression.");
     aggregates.emplace_back(deserialized_expression);
   }
