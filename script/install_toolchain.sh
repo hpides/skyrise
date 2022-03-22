@@ -38,9 +38,16 @@ if [[ "$unamestr" == 'Linux' ]]; then
                 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 112 --slave /usr/bin/g++ g++ /usr/bin/g++-11
 
                 pip3 install --no-input --quiet \
+                boto3 \
                 cpplint \
+                ipympl \
+                ipywidgets \
+                jupyterlab \
+                matplotlib \
+                pandas \
                 pytictoc \
                 termcolor \
+                tqdm \
                 yapf
 
                 # Symlink to default Amazon Linux certificate file
