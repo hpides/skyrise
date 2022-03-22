@@ -37,7 +37,7 @@ void CsvFormatWriter::ProcessChunk(std::shared_ptr<const Chunk> chunk) {
     return;
   }
 
-  Assert(chunk->GetColumnCount() == num_fields_, "All chunks must have the same number of columns");
+  Assert(chunk->GetColumnCount() == num_fields_, "All chunks must have the same number of columns.");
 
   std::stringstream buffer;
   buffer << std::setprecision(kDefaultPrecision);

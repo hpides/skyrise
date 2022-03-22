@@ -9,9 +9,13 @@
 #include "storage/table/value_segment.hpp"
 #include "utils/assert.hpp"
 
-namespace skyrise {
+namespace {
 
-static const std::string kName{"Partition"};
+const std::string kName = "Partition";
+
+}  // namespace
+
+namespace skyrise {
 
 PartitionOperator::PartitionOperator(std::shared_ptr<AbstractOperator> input, const size_t partition_count,
                                      const std::set<ColumnId>& partition_column_ids)

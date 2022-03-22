@@ -28,7 +28,7 @@ class ProxyOutputStream : public orc::OutputStream {
 
  private:
   static constexpr size_t kNaturalWriteSize = 20_MB;
-  inline static const std::string kName{"ProxyOutputStream"};
+  inline static const std::string kName = "ProxyOutputStream";
   std::function<void(const char* data, size_t length)> callback_;
   size_t num_bytes_written_ = 0;
 };

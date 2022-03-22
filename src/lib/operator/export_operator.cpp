@@ -3,31 +3,34 @@
 #include "storage/formats/csv_writer.hpp"
 #include "storage/formats/orc_writer.hpp"
 
+namespace {
+
+const std::string kName = "Export";
+
+}  // namespace
+
 namespace skyrise {
 
 ExportOperator::ExportOperator(const std::shared_ptr<const AbstractOperator>& input_operator, std::string bucket_name,
-                               std::string target_object_key, OutputFormat output_format)
+                               std::string target_object_key, ExportFormat export_format)
     : AbstractOperator(OperatorType::kExport, input_operator),
       bucket_name_(std::move(bucket_name)),
       target_object_key_(std::move(target_object_key)),
-      output_format_(output_format) {}
+      export_format_(export_format) {}
 
-const std::string& ExportOperator::Name() const {
-  static const std::string kName("Export");
-  return kName;
-}
+const std::string& ExportOperator::Name() const { return kName; }
 
 std::unique_ptr<AbstractFormatWriter> ExportOperator::GetWriter() {
-  switch (output_format_) {
-    case OutputFormat::kCsv: {
+  switch (export_format_) {
+    case ExportFormat::kCsv: {
       CsvFormatWriterOptions options;
       return std::make_unique<CsvFormatWriter>(options);
     }
-    case OutputFormat::kOrc: {
+    case ExportFormat::kOrc: {
       OrcFormatWriterOptions options;
       return std::make_unique<OrcFormatWriter>(options);
     }
-    case OutputFormat::kOrcPartitioned: {
+    case ExportFormat::kOrcPartitioned: {
       OrcFormatWriterOptions options;
       options.save_chunk_offsets = true;
       return std::make_unique<OrcFormatWriter>(options);

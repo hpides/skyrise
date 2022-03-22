@@ -17,27 +17,27 @@ class TablePartition {
   TablePartition(std::string object_key, std::string etag, size_t size, time_t last_modified_timestamp);
 
   /**
-   * @returns the S3 object key of the table partition.
+   * @return the S3 object key of the table partition.
    */
   const std::string& ObjectKey() const;
 
   /**
-   * @returns the S3 object ETag resp. checksum of the partition.
+   * @return the S3 object ETag resp. checksum of the partition.
    */
   const std::string& ObjectEtag() const;
 
   /**
-   * @returns the S3 object's size in bytes.
+   * @return the S3 object's size in bytes.
    */
   size_t ObjectSize() const;
 
   /**
-   * @returns the last-modified timestamp.
+   * @return the last-modified timestamp.
    */
   time_t LastModifiedTimestamp() const;
 
   /**
-   * @returns a new TablePartition from the data of @param object_status.
+   * @return a new TablePartition from the data of @param object_status.
    */
   static TablePartition FromObjectStatus(const ObjectStatus& object_status);
 

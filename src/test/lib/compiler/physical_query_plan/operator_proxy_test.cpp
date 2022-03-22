@@ -1,72 +1,184 @@
+#include <string>
+#include <vector>
+
 #include <gtest/gtest.h>
 
-#include "compiler/physical_query_plan/export_operator_proxy.hpp"
+#include "compiler/physical_query_plan/alias_operator_proxy.hpp"
+#include "compiler/physical_query_plan/filter_operator_proxy.hpp"
 #include "compiler/physical_query_plan/import_operator_proxy.hpp"
-#include "compiler/physical_query_plan/partition_operator_proxy.hpp"
-#include "compiler/physical_query_plan/pqp_serialization_constants.hpp"
-#include "operator/execution_context.hpp"
-#include "operator/export_operator.hpp"
-#include "operator/import_operator.hpp"
-#include "operator/partition_operator.hpp"
-#include "storage/backend/mock_storage.hpp"
-#include "storage/formats/csv_reader.hpp"
-#include "storage/formats/orc_reader.hpp"
+#include "compiler/physical_query_plan/union_operator_proxy.hpp"
+#include "expression/expression_functional.hpp"
 #include "types.hpp"
 
 namespace skyrise {
 
-template <typename Proxy, typename Operator>
-void TestProxy(std::shared_ptr<Proxy> proxy) {
-  std::shared_ptr<AbstractOperator> operator_instance = proxy->GetOrCreateOperatorInstance();
-  ASSERT_NE(operator_instance, nullptr);
+using namespace skyrise::expression_functional;  // NOLINT(google-build-using-namespace)
 
-  std::shared_ptr<const Operator> deserialized_proxy = std::dynamic_pointer_cast<const Operator>(operator_instance);
-  ASSERT_NE(operator_instance, nullptr);
+class OperatorProxyTest : public ::testing::Test {
+ public:
+  void SetUp() override {
+    a_ = PqpColumn_(ColumnId{0}, DataType::kLong, false, "a");
+    b_ = PqpColumn_(ColumnId{1}, DataType::kLong, false, "b");
+  }
 
-  std::optional<std::string> name = proxy->Name();
-  EXPECT_TRUE(name.has_value());
+ protected:
+  std::shared_ptr<AbstractExpression> a_, b_;
+  static inline const std::string bucket_ = "dummy_bucket";
+  static inline const std::vector<std::string> object_keys_ = {"a.orc", "b.orc"};
+  static inline const std::vector<ColumnId> column_ids_ = {ColumnId{1}, ColumnId{3}};
+};
 
-  Aws::Utils::Json::JsonValue proxy_json1 = proxy->ToJson();
-  Aws::Utils::Json::JsonValue proxy_json2 = Proxy::FromJson(proxy_json1)->ToJson();
-  proxy_json1.WithString(kKeyLeftInput, "");
-  proxy_json1.WithString(kKeyRightInput, "");
-  proxy_json2.WithString(kKeyLeftInput, "");
-  proxy_json2.WithString(kKeyRightInput, "");
-  ASSERT_EQ(proxy_json1, proxy_json2);
+TEST_F(OperatorProxyTest, DefaultIdentity) {
+  const auto import_proxy = ImportOperatorProxy::Make(bucket_, object_keys_, column_ids_);
+  std::stringstream expected_stream;
+  expected_stream << import_proxy->Name() << import_proxy.get();
+  EXPECT_EQ(import_proxy->Identity(), expected_stream.str());
 }
 
-TEST(ProxyOperatorTest, AbstractProxy) {
-  // We cannot create an instance of AbstractOperatorProxy, thus we use the ExportOperatorProxy to check the correct
-  // serialization.
-  auto left_child = std::make_shared<ExportOperatorProxy>("", "", ExportOperator::OutputFormat::kOrc);
-  auto right_child = std::make_shared<ExportOperatorProxy>("", "", ExportOperator::OutputFormat::kOrc);
-  auto proxy =
-      std::make_shared<ExportOperatorProxy>("", "", ExportOperator::OutputFormat::kOrc, left_child, right_child);
-
-  const Aws::Utils::Json::JsonValue proxy_json = proxy->ToJson();
-
-  ASSERT_FALSE(proxy_json.View().GetString(kKeyOperatorType).empty());
-  ASSERT_EQ(proxy_json.View().GetString(kKeyLeftInput), left_child->GetIdentity());
-  ASSERT_EQ(proxy_json.View().GetString(kKeyRightInput), right_child->GetIdentity());
+TEST_F(OperatorProxyTest, SetIdentity) {
+  const auto import_proxy = ImportOperatorProxy::Make(bucket_, object_keys_, column_ids_);
+  import_proxy->SetIdentity("xyz123");
+  EXPECT_EQ(import_proxy->Identity(), "xyz123");
 }
 
-TEST(ProxyOperatorTest, ExportOperatorProxy) {
-  std::string bucket_name = "test_bucket";
-  std::string target_file = "target_file_name";
-  auto format = ExportOperator::OutputFormat::kOrc;
+TEST_F(OperatorProxyTest, PrefixIdentity) {
+  const auto import_proxy = ImportOperatorProxy::Make(bucket_, object_keys_, column_ids_);
+  import_proxy->SetIdentity("ImportXYZ");
+  import_proxy->PrefixIdentity("my_prefix_");
 
-  auto export_proxy = std::make_shared<ExportOperatorProxy>(bucket_name, target_file, format);
-
-  TestProxy<ExportOperatorProxy, ExportOperatorProxy>(export_proxy);
+  EXPECT_EQ(import_proxy->Identity(), "my_prefix_ImportXYZ");
 }
 
-TEST(ProxyOperatorTest, PartitionOperatorProxy) {
-  const size_t partition_count = 10;
-  const std::set<ColumnId> partition_column_ids{0, 1};
+TEST_F(OperatorProxyTest, DescriptionIncludesComment) {
+  const auto proxy = UnionOperatorProxy::Make(SetOperationMode::kAll);
+  proxy->SetComment("dummy comment");
 
-  auto partition_proxy = std::make_shared<PartitionOperatorProxy>(partition_count, partition_column_ids);
+  EXPECT_EQ(proxy->Description(DescriptionMode::kSingleLine), "[Union] (dummy comment) All");
+  EXPECT_EQ(proxy->Description(DescriptionMode::kMultiLine), "[Union]\n(dummy comment)\nAll");
+}
 
-  TestProxy<PartitionOperatorProxy, PartitionOperator>(partition_proxy);
+TEST_F(OperatorProxyTest, SetLeftInput) {
+  const auto import_proxy = ImportOperatorProxy::Make(bucket_, object_keys_, column_ids_);
+  ASSERT_EQ(import_proxy->OutputNodeCount(), 0);
+  const auto filter_proxy = FilterOperatorProxy::Make(GreaterThanEquals_(a_, b_), import_proxy);
+
+  EXPECT_EQ(filter_proxy->LeftInput(), import_proxy);
+  EXPECT_EQ(filter_proxy->OutputNodeCount(), 0);
+  EXPECT_EQ(import_proxy->OutputNodeCount(), 1);
+}
+
+TEST_F(OperatorProxyTest, SetBothInputs) {
+  const auto import_proxy_a = ImportOperatorProxy::Make(bucket_, object_keys_, column_ids_);
+  const auto import_proxy_b = ImportOperatorProxy::Make(bucket_, object_keys_, column_ids_);
+  ASSERT_EQ(import_proxy_a->OutputNodeCount(), 0);
+  ASSERT_EQ(import_proxy_b->OutputNodeCount(), 0);
+
+  const auto union_proxy = UnionOperatorProxy::Make(SetOperationMode::kAll, import_proxy_a, import_proxy_b);
+  EXPECT_EQ(union_proxy->InputNodeCount(), 2);
+  EXPECT_EQ(union_proxy->LeftInput(), import_proxy_a);
+  EXPECT_EQ(union_proxy->RightInput(), import_proxy_b);
+  EXPECT_EQ(union_proxy->OutputNodeCount(), 0);
+
+  EXPECT_EQ(import_proxy_a->OutputNodeCount(), 1);
+  EXPECT_EQ(import_proxy_b->OutputNodeCount(), 1);
+}
+
+TEST_F(OperatorProxyTest, InputObjectsCount) {
+  // clang-format off
+  const auto union_proxy =
+  UnionOperatorProxy::Make(SetOperationMode::kAll,
+    ImportOperatorProxy::Make(bucket_, std::vector<std::string>{"a.orc", "b.orc"}, column_ids_),
+    ImportOperatorProxy::Make(bucket_, std::vector<std::string>{"c.orc"}, column_ids_));
+  // clang-format on
+  EXPECT_EQ(union_proxy->InputObjectsCount(), 3);
+}
+
+TEST_F(OperatorProxyTest, OutputObjectsCount) {
+  // clang-format off
+  const auto filter_proxy =
+  FilterOperatorProxy::Make(GreaterThanEquals_(a_, b_),
+    ImportOperatorProxy::Make(bucket_, std::vector<std::string>{"a.orc", "b.orc"}, column_ids_));
+  // clang-format on
+  EXPECT_EQ(filter_proxy->OutputObjectsCount(), 2);
+}
+
+TEST_F(OperatorProxyTest, OutputColumnsCount) {
+  // clang-format off
+  const auto filter_proxy =
+  FilterOperatorProxy::Make(GreaterThanEquals_(a_, b_),
+    ImportOperatorProxy::Make(bucket_, object_keys_, std::vector<ColumnId>{{ColumnId{0}, ColumnId{1}, ColumnId{5}}}));
+  // clang-format on
+  EXPECT_EQ(filter_proxy->OutputColumnsCount(), 3);
+}
+
+TEST_F(OperatorProxyTest, SerializeInputsAsPlaceholders) {
+  const auto import_proxy_a = ImportOperatorProxy::Make(bucket_, object_keys_, column_ids_);
+  const auto import_proxy_b = ImportOperatorProxy::Make(bucket_, object_keys_, column_ids_);
+  const auto union_all_proxy = UnionOperatorProxy::Make(SetOperationMode::kAll, import_proxy_a, import_proxy_b);
+
+  ASSERT_NO_THROW(import_proxy_a->Identity());
+  ASSERT_NO_THROW(import_proxy_b->Identity());
+  ASSERT_NO_THROW(union_all_proxy->Identity());
+  ASSERT_NE(import_proxy_a->Identity(), import_proxy_b->Identity());
+
+  // Serialize operator proxy
+  const Aws::Utils::Json::JsonValue json = union_all_proxy->ToJson();
+
+  EXPECT_EQ(json.View().GetString("left_input_operator_identity"), import_proxy_a->Identity());
+  EXPECT_EQ(json.View().GetString("right_input_operator_identity"), import_proxy_b->Identity());
+}
+
+TEST_F(OperatorProxyTest, DeepCopy) {
+  const auto import_proxy = ImportOperatorProxy::Make(bucket_, object_keys_, column_ids_);
+  import_proxy->SetIdentity("test123");
+  import_proxy->SetComment("my-comment");
+
+  const auto import_proxy_copy = import_proxy->DeepCopy();
+  EXPECT_EQ(import_proxy->Identity(), import_proxy_copy->Identity());
+  EXPECT_EQ(import_proxy->Comment(), import_proxy_copy->Comment());
+}
+
+TEST_F(OperatorProxyTest, DeepCopyDiamondShape) {
+  const auto import_proxy = ImportOperatorProxy::Make(bucket_, object_keys_, column_ids_);
+  const auto a = PqpColumn_(ColumnId{0}, DataType::kLong, false, "a");
+  const auto b = PqpColumn_(ColumnId{1}, DataType::kLong, false, "b");
+  // clang-format off
+  const auto pqp =
+  UnionOperatorProxy::Make(SetOperationMode::kAll,
+    FilterOperatorProxy::Make(GreaterThan_(a, b),
+      import_proxy),
+    FilterOperatorProxy::Make(LessThan_(a, b),
+      import_proxy));
+  // clang-format on
+
+  const auto copied_pqp = pqp->DeepCopy();
+  EXPECT_EQ(copied_pqp->LeftInput()->LeftInput(), copied_pqp->RightInput()->LeftInput());
+}
+
+TEST_F(OperatorProxyTest, StreamOperator) {
+  const auto import_proxy = ImportOperatorProxy::Make(bucket_, object_keys_, column_ids_);
+  const auto a = PqpColumn_(ColumnId{0}, DataType::kLong, false, "a");
+  const auto b = PqpColumn_(ColumnId{1}, DataType::kLong, false, "b");
+  // clang-format off
+  const auto pqp =
+  UnionOperatorProxy::Make(SetOperationMode::kAll,
+    FilterOperatorProxy::Make(GreaterThan_(a, b),
+      import_proxy),
+    FilterOperatorProxy::Make(LessThan_(a, b),
+      import_proxy));
+
+  // Please note that backslashes must be escaped in strings.
+  const std::string expected_output =
+  "[0] [Union] All\n"
+  " \\_[1] [Filter] a > b\n"
+  " |  \\_[2] [Import] dummy_bucket/{2 objects} ColumnIds{1, 3}\n"
+  " \\_[3] [Filter] a < b\n"
+  "    \\_Recurring Node --> [2]\n";
+  // clang-format on
+
+  std::stringstream stream;
+  stream << *pqp;
+  EXPECT_EQ(stream.str(), expected_output);
 }
 
 }  // namespace skyrise

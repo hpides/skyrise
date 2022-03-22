@@ -4,6 +4,12 @@
 #include "storage/table/chunk_reader.hpp"
 #include "storage/table/table.hpp"
 
+namespace {
+
+const std::string kName = "Import";
+
+}  // namespace
+
 namespace skyrise {
 
 ImportOperator::ImportOperator(std::string bucket_name, const std::vector<std::string>& source_object_keys,
@@ -70,9 +76,6 @@ std::shared_ptr<const Table> ImportOperator::OnExecute(
   return std::make_shared<Table>(*schema, std::move(chunks));
 }
 
-const std::string& ImportOperator::Name() const {
-  static const auto kName = std::string("Import");
-  return kName;
-}
+const std::string& ImportOperator::Name() const { return kName; }
 
 }  // namespace skyrise

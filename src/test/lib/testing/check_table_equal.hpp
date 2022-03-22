@@ -22,7 +22,7 @@ enum class FloatComparisonMode { kRelativeDifference, kAbsoluteDifference };
 /**
  * Compares two tables for equality.
  *
- * @return  A human-readable description of the table-mismatch, if any
+ * @return A human-readable description of the table-mismatch, if any
  *          std::nullopt if the Tables are the same
  */
 std::optional<std::string> CheckTableEqual(const std::shared_ptr<const Table>& actual_table,

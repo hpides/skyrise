@@ -29,8 +29,8 @@ class MockCatalog : public AbstractCatalog {
   const std::vector<TablePartition>& GetTablePartitions(const std::string& table_name) const override;
 
  private:
-  std::unordered_map<std::string, std::shared_ptr<const TableSchema>> table_schema_by_table_name_;
-  std::unordered_map<std::string, const std::vector<TablePartition>> table_partitions_by_table_name_;
+  std::unordered_map<std::string, std::shared_ptr<const TableSchema>> table_name_to_table_schema_;
+  std::unordered_map<std::string, const std::vector<TablePartition>> table_name_to_table_partitions_;
 };
 
 }  // namespace skyrise

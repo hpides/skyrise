@@ -43,8 +43,8 @@ TEST_F(ExportOperatorTest, ExportToCsv) {
   auto mock_input_operator = std::make_shared<TableWrapper>(table);
   const std::string bucket_name = "MockBucket";
 
-  auto export_operator = std::make_shared<ExportOperator>(mock_input_operator, bucket_name, output_object_name,
-                                                          ExportOperator::OutputFormat::kCsv);
+  auto export_operator =
+      std::make_shared<ExportOperator>(mock_input_operator, bucket_name, output_object_name, ExportFormat::kCsv);
 
   auto operator_execution_context = std::make_shared<OperatorExecutionContext>(
       nullptr,
@@ -74,18 +74,16 @@ TEST_F(ExportOperatorTest, ExportToCsv) {
   EXPECT_EQ(lines, 1 /* Header line */ + num_chunks * num_rows_per_chunk);
 }
 
-TEST_F(ExportOperatorTest, OperatorWorksWithDifferentOutputFormats) {
+TEST_F(ExportOperatorTest, OperatorWorksWithDifferentExportFormats) {
   const size_t num_chunks = 3;
   const ChunkOffset num_rows_per_chunk = 10;
   const std::string output_object_name = "output";
   auto table = CreateTableContainingValue(num_chunks, num_rows_per_chunk, 1);
-  const std::array<ExportOperator::OutputFormat, 3> formats = {ExportOperator::OutputFormat::kCsv,
-                                                               ExportOperator::OutputFormat::kOrc,
-                                                               ExportOperator::OutputFormat::kOrcPartitioned};
+  const std::array<ExportFormat, 3> formats = {ExportFormat::kCsv, ExportFormat::kOrc, ExportFormat::kOrcPartitioned};
 
   // Since every FormatWriter is tested separately we only need to check that we have valid code paths for each format
   // and some output is produced.
-  for (ExportOperator::OutputFormat format : formats) {
+  for (ExportFormat format : formats) {
     auto mock_input_operator = std::make_shared<TableWrapper>(table);
     auto storage = std::make_shared<MockStorage>();
 

@@ -48,7 +48,7 @@ class AbstractExpression : public std::enable_shared_from_this<AbstractExpressio
   bool operator!=(const AbstractExpression& other) const;
 
   /**
-   * @returns A deep copy of the expression.
+   * @return A deep copy of the expression.
    */
   virtual std::shared_ptr<AbstractExpression> DeepCopy() const = 0;
 
@@ -59,7 +59,7 @@ class AbstractExpression : public std::enable_shared_from_this<AbstractExpressio
   virtual bool RequiresComputation() const;
 
   /**
-   * @returns The expression's column name or, optionally, a more detailed description of the expression
+   * @return The expression's column name or, optionally, a more detailed description of the expression
    */
   enum class DescriptionMode {
     kColumnName,  // Returns only the column name
@@ -68,13 +68,13 @@ class AbstractExpression : public std::enable_shared_from_this<AbstractExpressio
   virtual std::string Description(const DescriptionMode mode = DescriptionMode::kDetailed) const = 0;
 
   /**
-   * @returns A human readable string representing the Expression that can be used as a column name
+   * @return A human readable string representing the Expression that can be used as a column name
    *          (shortcut for Description(DescriptionMode::kColumnName))
    */
   std::string AsColumnName() const;
 
   /**
-   * @returns The DataType of the result of the expression
+   * @return The DataType of the result of the expression
    */
   virtual DataType GetDataType() const = 0;
 
@@ -99,12 +99,12 @@ class AbstractExpression : public std::enable_shared_from_this<AbstractExpressio
    * precedence than the expression itself.
    * Lower precedence indicates tighter binding, compare https://en.cppreference.com/w/cpp/language/operator_precedence.
    *
-   * @returns 0 by default
+   * @return 0 by default
    */
   virtual ExpressionPrecedence Precedence() const;
 
   /**
-   * @returns The argument.Description(mode), enclosed by parentheses if the argument precedence is lower than
+   * @return The argument.Description(mode), enclosed by parentheses if the argument precedence is lower than
    *          this->Precedence()
    */
   std::string EncloseArgument(const AbstractExpression& argument, const DescriptionMode mode) const;

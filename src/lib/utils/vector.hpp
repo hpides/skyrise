@@ -24,7 +24,7 @@ std::vector<std::vector<T>> SplitVectorIntoChunks(const std::vector<T>& elements
   chunks.reserve(element_count / chunk_size + 1);
   for (size_t i = 0; i < element_count; i += chunk_size) {
     const auto j = std::min(element_count, i + chunk_size);
-    chunks.emplace_back(elements.begin() + i, elements.begin() + j);
+    chunks.emplace_back(elements.cbegin() + i, elements.cbegin() + j);
   }
   return chunks;
 }

@@ -19,20 +19,20 @@ std::string OperatorTask::Description() const {
 
 std::shared_ptr<OperatorTask> OperatorTask::AddOperatorTasksRecursively(
     const std::shared_ptr<AbstractOperator>& any_operator,
-    std::unordered_map<std::shared_ptr<AbstractOperator>, std::shared_ptr<OperatorTask>>* task_by_operator,
+    std::unordered_map<std::shared_ptr<AbstractOperator>, std::shared_ptr<OperatorTask>>* operator_to_task,
     const std::shared_ptr<OperatorExecutionContext>& operator_execution_context) {
-  auto potential_task = task_by_operator->find(any_operator);
-  if (potential_task != task_by_operator->end()) {
+  auto potential_task = operator_to_task->find(any_operator);
+  if (potential_task != operator_to_task->end()) {
     return potential_task->second;
   }
 
   std::shared_ptr<OperatorTask> task = std::make_shared<OperatorTask>(any_operator, operator_execution_context);
-  task_by_operator->emplace(any_operator, task);
+  operator_to_task->emplace(any_operator, task);
 
   auto add_operator_subtasks = [&](const std::shared_ptr<skyrise::AbstractOperator>& any_operator) {
     if (any_operator) {
       std::shared_ptr<skyrise::OperatorTask> operator_task =
-          AddOperatorTasksRecursively(any_operator, task_by_operator, operator_execution_context);
+          AddOperatorTasksRecursively(any_operator, operator_to_task, operator_execution_context);
       if (operator_task) {
         operator_task->SetAsPredecessorOf(task);
       }
@@ -48,14 +48,14 @@ std::shared_ptr<OperatorTask> OperatorTask::AddOperatorTasksRecursively(
 std::pair<std::vector<std::shared_ptr<AbstractTask>>, std::shared_ptr<OperatorTask>>
 OperatorTask::GenerateTasksFromOperator(const std::shared_ptr<AbstractOperator>& any_operator,
                                         const std::shared_ptr<OperatorExecutionContext>& operator_execution_context) {
-  std::unordered_map<std::shared_ptr<AbstractOperator>, std::shared_ptr<OperatorTask>> task_by_operator;
+  std::unordered_map<std::shared_ptr<AbstractOperator>, std::shared_ptr<OperatorTask>> operator_to_task;
   std::shared_ptr<OperatorTask> root_operator_task =
-      AddOperatorTasksRecursively(any_operator, &task_by_operator, operator_execution_context);
+      AddOperatorTasksRecursively(any_operator, &operator_to_task, operator_execution_context);
 
   std::vector<std::shared_ptr<AbstractTask>> tasks;
-  tasks.reserve(task_by_operator.size());
+  tasks.reserve(operator_to_task.size());
 
-  for (auto& task_pair : task_by_operator) {
+  for (auto& task_pair : operator_to_task) {
     tasks.push_back(std::move(task_pair.second));
   }
 

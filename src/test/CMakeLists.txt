@@ -15,10 +15,21 @@ set(
     benchmark/lib/lambda/lambda_benchmark_result_test.cpp
     benchmark/lib/lambda/lambda_benchmark_runner_test.cpp
 
-    lib/compiler/physical_query_plan/pqp_serialization_test.cpp
-    lib/compiler/physical_query_plan/operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/aggregate_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/alias_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/exchange_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/export_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/filter_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/import_options_test.cpp
     lib/compiler/physical_query_plan/import_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/join_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/limit_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/partition_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/pqp_serialization_test.cpp
+    lib/compiler/physical_query_plan/projection_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/sort_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/union_operator_proxy_test.cpp
 
     lib/expression/expression_evaluator_to_result_test.cpp
     lib/expression/expression_serialization_test.cpp

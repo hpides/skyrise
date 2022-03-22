@@ -13,7 +13,7 @@ namespace skyrise {
 
 bool ExpressionsEqual(const std::vector<std::shared_ptr<AbstractExpression>>& expressions_a,
                       const std::vector<std::shared_ptr<AbstractExpression>>& expressions_b) {
-  return std::equal(expressions_a.begin(), expressions_a.end(), expressions_b.begin(), expressions_b.end(),
+  return std::equal(expressions_a.cbegin(), expressions_a.cend(), expressions_b.cbegin(), expressions_b.cend(),
                     [&](const auto& expression_a, const auto& expression_b) { return *expression_a == *expression_b; });
 }
 

@@ -19,7 +19,7 @@ namespace skyrise {
 
 void MockCatalog::AddTableSchema(const std::string& table_name,
                                  const std::shared_ptr<const TableSchema>& table_schema) {
-  bool inserted = table_schema_by_table_name_.try_emplace(table_name, table_schema).second;
+  bool inserted = table_name_to_table_schema_.try_emplace(table_name, table_schema).second;
   Assert(inserted, "Cannot add TableSchema for table name '" + table_name + "' because it already exists.");
 
   // Generate mock TablePartitions
@@ -29,7 +29,7 @@ void MockCatalog::AddTableSchema(const std::string& table_name,
     const std::string object_key = table_name + "_object0" + std::to_string(i) + ".orc";
     table_partitions.emplace_back(object_key, kMockPartitionEtag, kMockPartitionSize, kMockPartitionTimestamp);
   }
-  table_partitions_by_table_name_.emplace(table_name, std::move(table_partitions));
+  table_name_to_table_partitions_.emplace(table_name, std::move(table_partitions));
 }
 
 void MockCatalog::AddTableSchemaFromFileHeader(const std::string& table_name, const std::string& file_name) {
@@ -71,22 +71,21 @@ void MockCatalog::AddTableSchemaFromFileHeader(const std::string& table_name, co
 }
 
 bool MockCatalog::TableExists(const std::string& table_name) const {
-  // TODO(julianmenzler): C++20: Replace with .contains
-  return table_schema_by_table_name_.find(table_name) != table_schema_by_table_name_.end();
+  return table_name_to_table_schema_.find(table_name) != table_name_to_table_schema_.end();
 }
 
 std::shared_ptr<const TableSchema> MockCatalog::GetTableSchema(const std::string& table_name) const {
-  auto table_schema_by_table_name_iter = table_schema_by_table_name_.find(table_name);
-  Assert(table_schema_by_table_name_iter != table_schema_by_table_name_.end(),
+  auto table_name_to_table_schema_iter = table_name_to_table_schema_.find(table_name);
+  Assert(table_name_to_table_schema_iter != table_name_to_table_schema_.end(),
          "Could not find TableSchema for table '" + table_name + "'.");
-  return table_schema_by_table_name_iter->second;
+  return table_name_to_table_schema_iter->second;
 }
 
 const std::string& MockCatalog::TableBucketName(const std::string& /*table_name*/) const { return kMockBucketName; }
 
 const std::vector<TablePartition>& MockCatalog::GetTablePartitions(const std::string& table_name) const {
   Assert(TableExists(table_name), "Table does not exist.");
-  return table_partitions_by_table_name_.find(table_name)->second;
+  return table_name_to_table_partitions_.find(table_name)->second;
 }
 
 }  // namespace skyrise

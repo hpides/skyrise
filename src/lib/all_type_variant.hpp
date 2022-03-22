@@ -30,7 +30,7 @@ using AllTypeVariant = std::variant<NullValue, int32_t, int64_t, float, double, 
 inline const auto kNullValue = AllTypeVariant{};
 
 /**
- * @returns The DataType of an AllTypeVariant.
+ * @return The DataType of an AllTypeVariant.
  *
  * Note that DataType and AllTypeVariant are defined with correlating indices.
  */

@@ -20,7 +20,7 @@ class InExpression : public AbstractPredicateExpression {
   /**
    * Shorthand checking for PredicateCondition::kNotIn.
    *
-   * @returns The result of predicate_condition == PredicateCondition::kNotIn.
+   * @return The result of predicate_condition == PredicateCondition::kNotIn.
    */
   bool IsNegated() const;
 

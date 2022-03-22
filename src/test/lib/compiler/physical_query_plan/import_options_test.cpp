@@ -57,16 +57,16 @@ TEST_F(ImportOptionsTest, CreateReaderFactoryCsvDefaultOptions) {
 }
 
 TEST_F(ImportOptionsTest, CreateReaderFactoryCsvCustomOptions) {
-  auto import_options = std::make_shared<ImportOptions>(csv_options_);
-  auto reader_factory = import_options->CreateReaderFactory();
-  auto csv_reader_factory = std::dynamic_pointer_cast<FormatReaderFactory<CsvFormatReader>>(reader_factory);
+  const auto import_options = std::make_shared<ImportOptions>(csv_options_);
+  const auto reader_factory = import_options->CreateReaderFactory();
+  const auto csv_reader_factory = std::dynamic_pointer_cast<FormatReaderFactory<CsvFormatReader>>(reader_factory);
   ASSERT_NE(csv_reader_factory, nullptr);
   EXPECT_EQ(static_cast<const CsvFormatReaderOptions&>(csv_reader_factory->Configuration()), csv_options_);
 }
 
 TEST_F(ImportOptionsTest, CreateReaderFactoryOrcDefaultOptions) {
-  auto import_options = std::make_shared<ImportOptions>(ImportFormat::kOrc);
-  auto reader_factory = import_options->CreateReaderFactory();
+  const auto import_options = std::make_shared<ImportOptions>(ImportFormat::kOrc);
+  const auto reader_factory = import_options->CreateReaderFactory();
   ASSERT_NE(reader_factory, nullptr);
   const auto orc_reader_factory = std::dynamic_pointer_cast<FormatReaderFactory<OrcFormatReader>>(reader_factory);
   ASSERT_TRUE(orc_reader_factory);
@@ -76,18 +76,18 @@ TEST_F(ImportOptionsTest, CreateReaderFactoryOrcDefaultOptions) {
 TEST_F(ImportOptionsTest, CreateReaderFactoryOrcCustomOptions) {
   {
     // OrcOptions specifying a partition range
-    auto import_options = std::make_shared<ImportOptions>(orc_options_partition_range_);
-    auto reader_factory = import_options->CreateReaderFactory();
-    auto orc_reader_factory = std::dynamic_pointer_cast<FormatReaderFactory<OrcFormatReader>>(reader_factory);
+    const auto import_options = std::make_shared<ImportOptions>(orc_options_partition_range_);
+    const auto reader_factory = import_options->CreateReaderFactory();
+    const auto orc_reader_factory = std::dynamic_pointer_cast<FormatReaderFactory<OrcFormatReader>>(reader_factory);
     ASSERT_NE(orc_reader_factory, nullptr);
     EXPECT_EQ(static_cast<const OrcFormatReaderOptions&>(orc_reader_factory->Configuration()),
               orc_options_partition_range_);
   }
   {
     // OrcOptions specifying a row range
-    auto import_options = std::make_shared<ImportOptions>(orc_options_row_range_);
-    auto reader_factory = import_options->CreateReaderFactory();
-    auto orc_reader_factory = std::dynamic_pointer_cast<FormatReaderFactory<OrcFormatReader>>(reader_factory);
+    const auto import_options = std::make_shared<ImportOptions>(orc_options_row_range_);
+    const auto reader_factory = import_options->CreateReaderFactory();
+    const auto orc_reader_factory = std::dynamic_pointer_cast<FormatReaderFactory<OrcFormatReader>>(reader_factory);
     ASSERT_NE(orc_reader_factory, nullptr);
     EXPECT_EQ(static_cast<const OrcFormatReaderOptions&>(orc_reader_factory->Configuration()), orc_options_row_range_);
   }
@@ -100,12 +100,12 @@ TEST_F(ImportOptionsTest, SerializeAndDeserializeTableColumnDefinitions) {
   json_value.WithArray("column_definitions_a", ImportOptions::TableColumnDefinitionsToJsonArray(column_definitions_a_));
   json_value.WithArray("column_definitions_x_y",
                        ImportOptions::TableColumnDefinitionsToJsonArray(column_definitions_x_y_));
-  auto json_view = json_value.View();
+  const auto json_view = json_value.View();
 
   // (2) Deserialize & verify
-  auto column_definitions_a =
+  const auto column_definitions_a =
       ImportOptions::TableColumnDefinitionsFromJsonArray(json_view.GetArray("column_definitions_a"));
-  auto column_definitions_x_y =
+  const auto column_definitions_x_y =
       ImportOptions::TableColumnDefinitionsFromJsonArray(json_view.GetArray("column_definitions_x_y"));
   EXPECT_NE(*column_definitions_a, *column_definitions_x_y);
   EXPECT_EQ(*column_definitions_a, *column_definitions_a_);
@@ -116,16 +116,16 @@ TEST_F(ImportOptionsTest, SerializeAndDeserializeOrcOptions) {
   {
     // OrcOptions specifying a partition range
     Aws::Utils::Json::JsonValue json;
-    auto import_options = std::make_shared<ImportOptions>(orc_options_partition_range_);
+    const auto import_options = std::make_shared<ImportOptions>(orc_options_partition_range_);
 
     //  (1) Serialize
     json.WithObject("import_options", import_options->ToJson());
-    auto json_view = json.View();
+    const auto json_view = json.View();
 
     //  (2) Deserialize & verify attributes
-    auto deserialized_import_options = ImportOptions::FromJson(json_view.GetObject("import_options"));
-    auto reader_factory = deserialized_import_options->CreateReaderFactory();
-    auto orc_reader_factory = std::dynamic_pointer_cast<FormatReaderFactory<OrcFormatReader>>(reader_factory);
+    const auto deserialized_import_options = ImportOptions::FromJson(json_view.GetObject("import_options"));
+    const auto reader_factory = deserialized_import_options->CreateReaderFactory();
+    const auto orc_reader_factory = std::dynamic_pointer_cast<FormatReaderFactory<OrcFormatReader>>(reader_factory);
     ASSERT_NE(orc_reader_factory, nullptr);
     EXPECT_EQ(static_cast<const OrcFormatReaderOptions&>(orc_reader_factory->Configuration()),
               orc_options_partition_range_);
@@ -138,16 +138,16 @@ TEST_F(ImportOptionsTest, SerializeAndDeserializeOrcOptions) {
   {
     // OrcOptions specifying a row range
     Aws::Utils::Json::JsonValue json;
-    auto import_options = std::make_shared<ImportOptions>(orc_options_row_range_);
+    const auto import_options = std::make_shared<ImportOptions>(orc_options_row_range_);
 
     //  (1) Serialize
     json.WithObject("import_options", import_options->ToJson());
-    auto json_view = json.View();
+    const auto json_view = json.View();
 
     //  (2) Deserialize & verify attributes
-    auto deserialized_import_options = ImportOptions::FromJson(json_view.GetObject("import_options"));
-    auto reader_factory = deserialized_import_options->CreateReaderFactory();
-    auto orc_reader_factory = std::dynamic_pointer_cast<FormatReaderFactory<OrcFormatReader>>(reader_factory);
+    const auto deserialized_import_options = ImportOptions::FromJson(json_view.GetObject("import_options"));
+    const auto reader_factory = deserialized_import_options->CreateReaderFactory();
+    const auto orc_reader_factory = std::dynamic_pointer_cast<FormatReaderFactory<OrcFormatReader>>(reader_factory);
     ASSERT_NE(orc_reader_factory, nullptr);
     EXPECT_EQ(static_cast<const OrcFormatReaderOptions&>(orc_reader_factory->Configuration()), orc_options_row_range_);
 

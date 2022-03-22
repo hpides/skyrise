@@ -11,7 +11,7 @@ namespace skyrise {
 class OrcFormatWriterTest : public FormatterTest {};
 
 TEST_F(OrcFormatWriterTest, FormatChunkAsOrc) {
-  static const std::string kOrcMagic{"ORC"};
+  static const std::string kOrcMagic = "ORC";
   std::stringstream output;
   std::shared_ptr<std::stringstream> output_ptr(&output, [](auto /*unused*/) {});
 
