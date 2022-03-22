@@ -1,17 +1,22 @@
 import itertools
 
-from typing import List, Union
+from typing import Callable, Dict, List, Union
 
 
 class Experiment:
 
-    def __init__(self, identifier: str, executable: str, parameters: List[str], arguments: List[Union[float, int,
-                                                                                                      str]]):
+    def __init__(self,
+                 identifier: str,
+                 executable: str,
+                 parameters: List[str],
+                 arguments: List[Union[float, int, str]],
+                 plots: Dict[str, Callable] = {}):
 
         self.identifier = identifier
         self.executable = executable
         self.parameters = parameters
         self.arguments = arguments
+        self.plots = plots
 
 
 def init():
@@ -100,7 +105,16 @@ def init():
     arguments += list(
         itertools.product(*[function_instance_mb_sizes, invocation_counts, sleep_min_durations, repetition_count]))
 
-    experiments.append(Experiment(identifier, executable, parameters, arguments))
+    # Example
+    def plot_1(data):
+        print(data)
+
+    def plot_2(data):
+        print(data)
+
+    plots = {"plot_identifier_1": plot_1, "plot_identifier_2": plot_2}
+
+    experiments.append(Experiment(identifier, executable, parameters, arguments, plots))
 
     ####################################################################################################################
     # skyriseBenchmarkInvocationLatency
