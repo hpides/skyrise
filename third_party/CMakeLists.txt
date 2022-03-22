@@ -1,9 +1,3 @@
-add_compile_options(
-    -Wno-reserved-identifier
-    -Wno-suggest-destructor-override
-    -Wno-suggest-override
-)
-
 set(CMAKE_INSTALL_PREFIX ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 # aws-lambda-cpp
@@ -15,6 +9,10 @@ add_subdirectory(aws-lambda-cpp)
 # benchmark
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Enable testing of the benchmark library.")
 add_subdirectory(benchmark)
+
+add_compile_options(
+        -Wno-sign-conversion
+)
 
 # googletest
 add_subdirectory(googletest)
