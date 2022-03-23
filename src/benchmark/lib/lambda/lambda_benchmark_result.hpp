@@ -22,6 +22,8 @@ class LambdaInvokeResult {
   void Complete(Aws::Lambda::Model::InvokeOutcome* invoke_outcome);
   void UpdateSQSMessageBody(const Aws::String& sqs_message_body);
 
+  void ValidateResponseBody(const Aws::Utils::Json::JsonView& expected_response_template);
+
   const Aws::String& GetInvokeId() const;
   Aws::Utils::Json::JsonView GetResponseBody() const;
   std::shared_ptr<const LogResult> GetLogResult() const;
@@ -55,6 +57,8 @@ class LambdaBenchmarkRepetition {
   void UpdateSQSMessageBody(const size_t invoke_index, const Aws::String& sqs_message_body);
   void SetFunctionWarmUpCost(const long double cost);
 
+  void ValidateInvokeResults(const Aws::Utils::Json::JsonView& expected_response_template);
+
   const std::vector<LambdaInvokeResult>& GetInvokeResults() const;
   long double GetWarmUpCost() const;
   double GetDurationMs() const;
@@ -76,6 +80,8 @@ class LambdaBenchmarkResult : public AbstractBenchmarkResult {
                         Aws::Lambda::Model::InvokeOutcome* invoke_outcome);
   void UpdateSQSMessageBody(const size_t repetition, const size_t invoke_index, const Aws::String& sqs_message_body);
   void SetFunctionWarmUpCost(const size_t repetition, const long double cost);
+
+  void ValidateInvokeResults(const Aws::Utils::Json::JsonView& expected_response_template);
 
   double GetDurationMs() const override;
   const std::vector<LambdaBenchmarkRepetition>& GetBenchmarkRepetitions() const;

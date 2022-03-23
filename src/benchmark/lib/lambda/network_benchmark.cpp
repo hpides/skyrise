@@ -11,6 +11,17 @@
 
 namespace skyrise {
 
+namespace {
+
+const auto expected_response_template =
+    Aws::Utils::Json::JsonValue()
+        .WithArray("ms_durations", Aws::Utils::Array<Aws::Utils::Json::JsonValue>(0))
+        .WithInteger("num_s3_requests_tier_1", 0)
+        .WithInteger("num_s3_requests_tier_2", 0)
+        .WithInt64("s3_storage_used_bytes", 0);
+
+}  // namespace
+
 NetworkBenchmark::NetworkBenchmark(std::shared_ptr<const BenchmarkHelper> helper,
                                    std::shared_ptr<const CostCalculator> cost_calculator,
                                    const std::vector<size_t>& bucket_counts)
@@ -26,7 +37,8 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> NetworkBenchmark::OnRun(
   results.reserve(benchmark_configs_.size());
 
   for (const auto& benchmark_config : benchmark_configs_) {
-    results.emplace_back(benchmark_runner->RunLambdaConfig(benchmark_config.second));
+    results.push_back(benchmark_runner->RunLambdaConfig(benchmark_config.second));
+    results.back()->ValidateInvokeResults(expected_response_template);
   }
 
   Teardown();

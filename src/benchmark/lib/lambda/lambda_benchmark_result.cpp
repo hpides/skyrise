@@ -8,6 +8,37 @@
 
 namespace skyrise {
 
+namespace {
+
+bool IsSameType(const Aws::Utils::Json::JsonView& a, const Aws::Utils::Json::JsonView& b) {
+  return (a.IsObject() && b.IsObject()) || (a.IsBool() && b.IsBool()) || (a.IsString() && b.IsString()) ||
+         (a.IsIntegerType() && b.IsIntegerType()) || (a.IsFloatingPointType() && b.IsFloatingPointType()) ||
+         (a.IsListType() && b.IsListType()) || (a.IsNull() && b.IsNull());
+}
+
+bool TraverseJsonNode(const Aws::Utils::Json::JsonView& response_node,
+                      const Aws::Utils::Json::JsonView& template_node) {
+  if (!IsSameType(response_node, template_node)) {
+    return false;
+  }
+
+  if (response_node.IsObject()) {
+    for (const auto& [key, value] : template_node.GetAllObjects()) {
+      if (!response_node.KeyExists(key)) {
+        return false;
+      }
+
+      if (!TraverseJsonNode(response_node.GetObject(key), value)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+}  // namespace
+
 LambdaInvokeResult::LambdaInvokeResult(Aws::String invoke_id)
     : invoke_id_(std::move(invoke_id)),
       success_(false),
@@ -40,6 +71,11 @@ void LambdaInvokeResult::UpdateSQSMessageBody(const Aws::String& sqs_message_bod
   Assert(sqs_message_body_view.KeyExists("responsePayload"), "SQS message must contain a response payload.");
 
   response_body_ = sqs_message_body_view.GetObject("responsePayload").Materialize();
+}
+
+void LambdaInvokeResult::ValidateResponseBody(const Aws::Utils::Json::JsonView& expected_response_template) {
+  const auto& response_body_view = response_body_.View();
+  success_ = TraverseJsonNode(response_body_view, expected_response_template);
 }
 
 const Aws::String& LambdaInvokeResult::GetInvokeId() const { return invoke_id_; }
@@ -84,6 +120,12 @@ void LambdaBenchmarkRepetition::UpdateSQSMessageBody(const size_t invoke_index, 
 }
 
 void LambdaBenchmarkRepetition::SetFunctionWarmUpCost(const long double cost) { warm_up_cost_ = cost; }
+
+void LambdaBenchmarkRepetition::ValidateInvokeResults(const Aws::Utils::Json::JsonView& expected_response_template) {
+  for (auto& invoke_result : invoke_results_) {
+    invoke_result.ValidateResponseBody(expected_response_template);
+  }
+}
 
 const std::vector<LambdaInvokeResult>& LambdaBenchmarkRepetition::GetInvokeResults() const { return invoke_results_; }
 
@@ -134,6 +176,12 @@ void LambdaBenchmarkResult::UpdateSQSMessageBody(const size_t repetition, const 
 
 void LambdaBenchmarkResult::SetFunctionWarmUpCost(const size_t repetition, const long double cost) {
   benchmark_repetitions_[repetition].SetFunctionWarmUpCost(cost);
+}
+
+void LambdaBenchmarkResult::ValidateInvokeResults(const Aws::Utils::Json::JsonView& expected_response_template) {
+  for (auto& benchmark_repetition : benchmark_repetitions_) {
+    benchmark_repetition.ValidateInvokeResults(expected_response_template);
+  }
 }
 
 double LambdaBenchmarkResult::GetDurationMs() const {
