@@ -4,6 +4,7 @@
 
 #include "expression/expression_serialization.hpp"
 #include "expression/expression_utils.hpp"
+#include "operator/projection_operator.hpp"
 
 namespace {
 
@@ -59,8 +60,9 @@ std::shared_ptr<AbstractOperatorProxy> ProjectionOperatorProxy::OnDeepCopy(
 }
 
 std::shared_ptr<AbstractOperator> ProjectionOperatorProxy::CreateOperatorInstanceRecursively() {
-  Fail("CreateOperatorInstanceRecursively() is not yet implemented.");
-  return nullptr;
+  Assert(LeftInput(), "Missing input operator proxy.");
+  Assert(!expressions_.empty(), "ProjectionOperatorProxy must specify at least one expression.");
+  return std::make_shared<ProjectionOperator>(LeftInput()->GetOrCreateOperatorInstance(), expressions_);
 }
 
 }  // namespace skyrise
