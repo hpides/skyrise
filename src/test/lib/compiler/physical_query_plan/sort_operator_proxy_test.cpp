@@ -65,14 +65,10 @@ TEST_F(SortOperatorProxyTest, DeepCopy) {
 }
 
 TEST_F(SortOperatorProxyTest, CreateOperatorInstance) {
-  // TODO(anyone): Adjust test when adding the operator implementation in #619
-  // clang-format off
-  const auto sort_proxy =
-  SortOperatorProxy::Make(sort_definitions_,
-    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
-
-  // clang-format on
-  EXPECT_THROW(sort_proxy->GetOrCreateOperatorInstance(), std::logic_error);
+  const auto sort_proxy = SortOperatorProxy::Make(
+      sort_definitions_, ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"},
+                                                   std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
+  EXPECT_TRUE(sort_proxy->GetOrCreateOperatorInstance());
 }
 
 }  // namespace skyrise

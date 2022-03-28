@@ -178,6 +178,8 @@ set(
     operator/import_operator.hpp
     operator/partition_operator.cpp
     operator/partition_operator.hpp
+    operator/sort_operator.cpp
+    operator/sort_operator.hpp
     operator/table_wrapper.hpp
 
     scheduler/scheduler_types.hpp

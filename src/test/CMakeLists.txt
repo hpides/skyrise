@@ -46,6 +46,7 @@ set(
     lib/operator/export_operator_test.cpp
     lib/operator/import_operator_test.cpp
     lib/operator/partition_operator_test.cpp
+    lib/operator/sort_operator_test.cpp
 
     lib/scheduler/worker/fragment_scheduler_test.cpp
 
