@@ -67,14 +67,13 @@ TEST_F(AliasOperatorProxyTest, DeepCopy) {
 }
 
 TEST_F(AliasOperatorProxyTest, CreateOperatorInstance) {
-  // TODO(anyone): Adjust test when adding the operator implementation.
   // clang-format off
   const auto alias_proxy =
   AliasOperatorProxy::Make(column_ids_, aliases_,
     ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
-  // clang-format on
-  EXPECT_THROW(alias_proxy->GetOrCreateOperatorInstance(), std::logic_error);
+  // clang-format on                                                         
+  EXPECT_TRUE(alias_proxy->GetOrCreateOperatorInstance());
 }
 
 }  // namespace skyrise

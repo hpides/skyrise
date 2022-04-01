@@ -170,6 +170,8 @@ set(
 
     operator/abstract_operator.cpp
     operator/abstract_operator.hpp
+    operator/alias_operator.cpp
+    operator/alias_operator.hpp
     operator/execution_context.cpp
     operator/execution_context.hpp
     operator/export_operator.cpp

@@ -13,7 +13,7 @@ static const std::string kName = "Sort";
 
 }  // namespace
 
-SortOperator::SortOperator(const std::shared_ptr<const AbstractOperator> input_operator,
+SortOperator::SortOperator(std::shared_ptr<const AbstractOperator> input_operator,
                            const std::vector<SortColumnDefinition>& sort_definitions)
     : AbstractOperator(OperatorType::kSort, std::move(input_operator)), sort_definitions_(sort_definitions) {
   DebugAssert(!sort_definitions_.empty(), "Expected at least one sort criterion.");

@@ -5,6 +5,7 @@
 
 #include <boost/algorithm/string/join.hpp>
 
+#include "operator/alias_operator.hpp"
 #include "types.hpp"
 #include "utils/json.hpp"
 
@@ -69,8 +70,12 @@ std::shared_ptr<AbstractOperatorProxy> AliasOperatorProxy::OnDeepCopy(
 }
 
 std::shared_ptr<AbstractOperator> AliasOperatorProxy::CreateOperatorInstanceRecursively() {
-  Fail("CreateOperatorInstanceRecursively() is not yet implemented.");
-  return nullptr;
+  Assert(LeftInput(), "Missing input operator proxy.");
+  Assert(!aliases_.empty(), "ImportOperatorProxy must specify at least one alias.");
+  Assert(!column_ids_.empty(), "ImportOperatorProxy must specify at least one column id.");
+  Assert(aliases_.size() == column_ids_.size(),
+         "ImportOperatorProxy must specify the same number of aliases and column ids.");
+  return std::make_shared<AliasOperator>(LeftInput()->GetOrCreateOperatorInstance(), column_ids_, aliases_);
 }
 
 }  // namespace skyrise

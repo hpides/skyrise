@@ -18,7 +18,7 @@ namespace skyrise {
  */
 class SortOperator : public AbstractOperator {
  public:
-  SortOperator(const std::shared_ptr<const AbstractOperator> input_operator,
+  SortOperator(std::shared_ptr<const AbstractOperator> input_operator,
                const std::vector<SortColumnDefinition>& sort_definitions);
 
   const std::vector<SortColumnDefinition>& SortDefinitions() const;

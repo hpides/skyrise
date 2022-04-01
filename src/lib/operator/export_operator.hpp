@@ -15,7 +15,7 @@ namespace skyrise {
  */
 class ExportOperator : public AbstractOperator {
  public:
-  ExportOperator(const std::shared_ptr<const AbstractOperator>& input_operator, std::string bucket_name,
+  ExportOperator(std::shared_ptr<const AbstractOperator> input_operator, std::string bucket_name,
                  std::string target_object_key, ExportFormat export_format);
 
   const std::string& Name() const override;
