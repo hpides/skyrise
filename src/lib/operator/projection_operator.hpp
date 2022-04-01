@@ -11,7 +11,7 @@ namespace skyrise {
 class ProjectionOperator : public AbstractOperator {
  public:
   ProjectionOperator(std::shared_ptr<const AbstractOperator> input_operator,
-                     const std::vector<std::shared_ptr<AbstractExpression>>& init_expressions);
+                     const std::vector<std::shared_ptr<AbstractExpression>>& expressions);
   const std::string& Name() const override;
 
  protected:

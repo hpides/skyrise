@@ -22,8 +22,8 @@
 namespace skyrise {
 
 /**
- * Projection mostly forwards its computations to the ExpressionEvaluator, so this the actual expression evaluation is
- * not tested here, but in the expression_evaluator_test.cpp
+ * Projection mostly forwards its computations to the ExpressionEvaluator. The actual expression evaluation is not
+ * tested here, but in expression_evaluator_test.cpp.
  */
 class OperatorsProjectionTest : public ::testing::Test {
  protected:
@@ -46,7 +46,7 @@ class OperatorsProjectionTest : public ::testing::Test {
     table_ = std::make_shared<Table>(definitions, std::move(chunks));
     table_wrapper_ = std::make_shared<TableWrapper>(table_);
     // The input operator needs to be executed before the projection operator itself.
-    // We do it manually here because the scheduler,which takes care of it normally, is not used here.
+    // We do it manually here because the scheduler, which takes care of it normally, is not used here.
     table_wrapper_->Execute(nullptr);
 
     operator_context_ = std::make_shared<OperatorExecutionContext>(

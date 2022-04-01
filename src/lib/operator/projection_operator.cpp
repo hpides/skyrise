@@ -26,8 +26,8 @@ static const std::string kName = "Projection";
 namespace skyrise {
 
 ProjectionOperator::ProjectionOperator(std::shared_ptr<const AbstractOperator> input_operator,
-                                       const std::vector<std::shared_ptr<AbstractExpression>>& init_expressions)
-    : AbstractOperator(OperatorType::kProjection, std::move(input_operator), nullptr), expressions_(init_expressions) {}
+                                       const std::vector<std::shared_ptr<AbstractExpression>>& expressions)
+    : AbstractOperator(OperatorType::kProjection, std::move(input_operator), nullptr), expressions_(expressions) {}
 
 const std::string& ProjectionOperator::Name() const { return kName; }
 
