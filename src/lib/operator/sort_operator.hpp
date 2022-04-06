@@ -7,14 +7,14 @@
 #include <string>
 #include <vector>
 
+#include "abstract_operator.hpp"
 #include "all_type_variant.hpp"
-#include "operator/abstract_operator.hpp"
 #include "types.hpp"
 
 namespace skyrise {
 
 /**
- * Sorts a table by one or multiple columns in a stable fashion.
+ * Sorts a table by one or multiple columns.
  */
 class SortOperator : public AbstractOperator {
  public:

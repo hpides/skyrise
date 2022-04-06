@@ -5,13 +5,14 @@
 #include "scheduler/worker/generic_task.hpp"
 #include "storage/storage_types.hpp"
 #include "storage/table/value_segment.hpp"
-namespace skyrise {
 
 namespace {
 
 static const std::string kName = "Sort";
 
 }  // namespace
+
+namespace skyrise {
 
 SortOperator::SortOperator(std::shared_ptr<const AbstractOperator> input_operator,
                            const std::vector<SortColumnDefinition>& sort_definitions)
@@ -27,9 +28,9 @@ std::shared_ptr<const Table> SortOperator::OnExecute(
     const std::shared_ptr<OperatorExecutionContext>& operator_execution_context) {
   const auto& input_table = LeftInputTable();
 
-  for (const auto& sort_definitions : sort_definitions_) {
-    Assert(sort_definitions.column_id != kInvalidColumnId, "Invalid column in sort definition.");
-    Assert(sort_definitions.column_id < input_table->GetColumnCount(), "ColumnId is greater than the column count.");
+  for (const auto& sort_definition : sort_definitions_) {
+    Assert(sort_definition.column_id != kInvalidColumnId, "Invalid column in sort definition.");
+    Assert(sort_definition.column_id < input_table->GetColumnCount(), "ColumnId is greater than the column count.");
   }
 
   if (input_table->RowCount() == 0) {
@@ -54,7 +55,6 @@ std::shared_ptr<const Table> SortOperator::OnExecute(
                                 operator_execution_context->GetScheduler());
 }
 
-// Given an unsorted_table and a position_list defining the output order, this materializes all columns in the table.
 std::shared_ptr<Table> SortOperator::MaterializeOutputTable(
     const std::shared_ptr<const Table>& unsorted_table, const RowIdPositionList& position_list,
     const std::shared_ptr<FragmentScheduler>& fragment_scheduler) const {
@@ -134,7 +134,7 @@ class SortOperator::SortImplementation {
   // Returns a RowIdPositionList, which can be used for either an input to the next call of sort or for materializing
   // the output table.
   RowIdPositionList Sort(const RowIdPositionList& previously_sorted_position_list) {
-    // (1) Prepare Sort: Creating RowId-value-Structure.
+    // (1) Prepare Sort: Creating RowId-Value-Structure.
     MaterializeSortColumn(previously_sorted_position_list);
 
     // (2) After we got our ValueRowId Map we sort the map by the value of the pair.

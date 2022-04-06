@@ -1,7 +1,7 @@
 #include <set>
 #include <vector>
 
-#include "operator/abstract_operator.hpp"
+#include "abstract_operator.hpp"
 #include "storage/table/table.hpp"
 
 namespace skyrise {

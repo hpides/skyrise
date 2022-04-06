@@ -2,13 +2,13 @@
 
 using namespace std::string_literals;  // NOLINT
 
-namespace skyrise {
-
 namespace {
 
 static const std::string kName = "Alias";
 
 }  // namespace
+
+namespace skyrise {
 
 AliasOperator::AliasOperator(std::shared_ptr<const AbstractOperator> input_operator,
                              const std::vector<ColumnId>& column_ids, const std::vector<std::string>& aliases)
