@@ -65,9 +65,12 @@ TEST_F(SortOperatorProxyTest, DeepCopy) {
 }
 
 TEST_F(SortOperatorProxyTest, CreateOperatorInstance) {
-  const auto sort_proxy = SortOperatorProxy::Make(
-      sort_definitions_, ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"},
-                                                   std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
+  // clang-format off
+  const auto sort_proxy =
+  SortOperatorProxy::Make(sort_definitions_, 
+    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
+
+  // clang-format on
   EXPECT_TRUE(sort_proxy->GetOrCreateOperatorInstance());
 }
 

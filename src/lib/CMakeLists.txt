@@ -176,6 +176,11 @@ set(
     operator/execution_context.hpp
     operator/export_operator.cpp
     operator/export_operator.hpp
+    operator/filter_operator.cpp
+    operator/filter_operator.hpp
+    operator/filter/abstract_filter_implementation.hpp
+    operator/filter/expression_evaluator_filter_implementation.cpp
+    operator/filter/expression_evaluator_filter_implementation.hpp
     operator/import_operator.cpp
     operator/import_operator.hpp
     operator/partition_operator.cpp

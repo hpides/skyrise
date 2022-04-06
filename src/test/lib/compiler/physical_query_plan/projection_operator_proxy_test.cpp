@@ -73,9 +73,12 @@ TEST_F(ProjectionOperatorProxyTest, DeepCopy) {
 }
 
 TEST_F(ProjectionOperatorProxyTest, CreateOperatorInstance) {
-  const auto projection_proxy = ProjectionOperatorProxy::Make(
-      expressions_, ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"},
-                                              std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
+  // clang-format off
+  const auto projection_proxy =
+  ProjectionOperatorProxy::Make(expressions_, 
+    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
+
+  // clang-format on
   EXPECT_TRUE(projection_proxy->GetOrCreateOperatorInstance());
 }
 

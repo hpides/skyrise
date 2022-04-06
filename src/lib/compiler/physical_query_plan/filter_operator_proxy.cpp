@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include "expression/expression_serialization.hpp"
+#include "operator/filter_operator.hpp"
 
 namespace {
 
@@ -51,8 +52,9 @@ std::shared_ptr<AbstractOperatorProxy> FilterOperatorProxy::OnDeepCopy(
 }
 
 std::shared_ptr<AbstractOperator> FilterOperatorProxy::CreateOperatorInstanceRecursively() {
-  Fail("CreateOperatorInstanceRecursively() is not yet implemented.");
-  return nullptr;
+  Assert(LeftInput(), "Missing input operator proxy.");
+  Assert(predicate_, "FilterOperatorProxy has no predicate.");
+  return std::make_shared<FilterOperator>(LeftInput()->GetOrCreateOperatorInstance(), predicate_);
 }
 
 }  // namespace skyrise
