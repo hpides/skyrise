@@ -16,7 +16,6 @@ class ProjectionOperator : public AbstractOperator {
 
  protected:
   std::shared_ptr<const Table> OnExecute(const std::shared_ptr<OperatorExecutionContext>& context) override;
-  ExpressionUnorderedSet DetermineForwardedColumns() const;
 
   const std::vector<std::shared_ptr<AbstractExpression>> expressions_;
 };
