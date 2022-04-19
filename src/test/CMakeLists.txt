@@ -46,6 +46,7 @@ set(
     lib/monitoring/monitoring_test_utils.cpp
     lib/monitoring/monitoring_test_utils.hpp
 
+    lib/operator/aggregate_operator_test.cpp
     lib/operator/alias_operator_test.cpp
     lib/operator/export_operator_test.cpp
     lib/operator/filter_operator_test.cpp
