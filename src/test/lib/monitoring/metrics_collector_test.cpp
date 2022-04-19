@@ -25,7 +25,7 @@ class AwsMetricsCollectorTest : public ::testing::Test {
 
     Aws::SQS::Model::CreateQueueRequest create_queue_request;
     create_queue_request.WithQueueName(queue_name_);
-    const auto create_queue_outcome = client_->GetSQSClient()->CreateQueue(create_queue_request);
+    const auto create_queue_outcome = client_->GetSqsClient()->CreateQueue(create_queue_request);
     queue_url_ = create_queue_outcome.GetResult().GetQueueUrl();
 
     Assert(create_queue_outcome.IsSuccess(), create_queue_outcome.GetError().GetMessage());
@@ -34,7 +34,7 @@ class AwsMetricsCollectorTest : public ::testing::Test {
   void TearDown() override {
     Aws::SQS::Model::DeleteQueueRequest delete_queue_request;
     delete_queue_request.WithQueueUrl(queue_url_);
-    const auto delete_queue_outcome = client_->GetSQSClient()->DeleteQueue(delete_queue_request);
+    const auto delete_queue_outcome = client_->GetSqsClient()->DeleteQueue(delete_queue_request);
 
     Assert(delete_queue_outcome.IsSuccess(), delete_queue_outcome.GetError().GetMessage());
   }
@@ -53,7 +53,7 @@ class AwsMetricsCollectorTest : public ::testing::Test {
 
 TEST_F(AwsMetricsCollectorTest, SendMetric) {
   {
-    MetricsCollector metrics_collector(client_->GetSQSClient(), queue_url_, SubqueryFragmentIdentifier{});
+    MetricsCollector metrics_collector(client_->GetSqsClient(), queue_url_, SubqueryFragmentIdentifier{});
 
     metrics_collector.CollectMetrics(RuntimeMetrics{});
     metrics_collector.EnterOperator("Operator 1");
@@ -71,7 +71,7 @@ TEST_F(AwsMetricsCollectorTest, SendMetric) {
   Aws::SQS::Model::ReceiveMessageRequest receive_message_request;
   receive_message_request.WithMaxNumberOfMessages(10).WithQueueUrl(queue_url_).WithWaitTimeSeconds(20);
 
-  const auto outcome = client_->GetSQSClient()->ReceiveMessage(receive_message_request);
+  const auto outcome = client_->GetSqsClient()->ReceiveMessage(receive_message_request);
   const auto messages = outcome.GetResult().GetMessages();
 
   EXPECT_FALSE(messages.empty());

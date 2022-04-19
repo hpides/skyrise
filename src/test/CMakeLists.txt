@@ -11,6 +11,9 @@ set(
     benchmark/lib/benchmark_result_aggregate_test.cpp
     benchmark/lib/compression/compression_test.cpp
     benchmark/lib/data_generation/tpch_test.cpp
+    benchmark/lib/ec2/ec2_benchmark_config_test.cpp
+    benchmark/lib/ec2/ec2_benchmark_result_test.cpp
+    benchmark/lib/ec2/ec2_benchmark_runner_test.cpp
     benchmark/lib/lambda/lambda_benchmark_output_test.cpp
     benchmark/lib/lambda/lambda_benchmark_result_test.cpp
     benchmark/lib/lambda/lambda_benchmark_runner_test.cpp

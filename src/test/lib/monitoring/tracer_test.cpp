@@ -27,7 +27,7 @@ class AwsTracerTest : public ::testing::Test {
   void SetUp() override {
     client_ = std::make_shared<skyrise::Client>();
 
-    UploadFunctions(client_->GetIAMClient(), client_->GetLambdaClient(),
+    UploadFunctions(client_->GetIamClient(), client_->GetLambdaClient(),
                     std::vector<FunctionConfig>{{kFunctionPath, kFunctionName, kMemorySize, kIsLocal}}, kEnableTracing);
     const auto time_points = InvokeFunction(client_, kFunctionName);
 

@@ -277,6 +277,7 @@ set(
 
 set(
     COORDINATOR_LIBRARIES
+    aws-cpp-sdk-ec2
     aws-cpp-sdk-iam
     aws-cpp-sdk-lambda
     aws-cpp-sdk-monitoring

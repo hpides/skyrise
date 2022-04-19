@@ -7,7 +7,7 @@ namespace skyrise {
 
 Aws::IAM::Model::User Coordinator::GetUser() {
   // Use STS GetCallerIdentity for fewer permission requirements.
-  const auto iam_client = client_->GetIAMClient();
+  const auto iam_client = client_->GetIamClient();
   const auto outcome = iam_client->GetUser(Aws::IAM::Model::GetUserRequest{});
 
   if (!outcome.IsSuccess()) {

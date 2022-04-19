@@ -51,6 +51,7 @@ std::shared_ptr<LambdaBenchmarkResult> LambdaBenchmarkRunner::RunLambdaConfig(
 
 void LambdaBenchmarkRunner::Setup() {
   typed_config_ = std::dynamic_pointer_cast<LambdaBenchmarkConfig>(config_);
+  Assert(typed_config_, "LambdaBenchmarkRunner can only consume LambdaBenchmarkConfigs.");
 
   AWS_LOGSTREAM_INFO(kTag.c_str(), "Creating functions...");
 

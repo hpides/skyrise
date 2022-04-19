@@ -25,8 +25,8 @@ class AwsBenchmarkIntegrationTest : public ::testing::Test {
     client_ = std::make_shared<Client>();
 
     cost_calculator_ = std::make_shared<CostCalculator>(client_->GetPricingClient(), client_->GetClientRegion());
-    benchmark_runner_ = std::make_shared<LambdaBenchmarkRunner>(client_->GetIAMClient(), client_->GetLambdaClient(),
-                                                                client_->GetSQSClient(), cost_calculator_);
+    benchmark_runner_ = std::make_shared<LambdaBenchmarkRunner>(client_->GetIamClient(), client_->GetLambdaClient(),
+                                                                client_->GetSqsClient(), cost_calculator_);
     benchmark_helper_ = std::make_shared<BenchmarkHelper>(client_->GetS3Client());
   }
 

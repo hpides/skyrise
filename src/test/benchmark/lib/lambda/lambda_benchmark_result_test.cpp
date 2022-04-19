@@ -120,7 +120,7 @@ TEST(LambdaBenchmarkResultTest, ConcurrencyStressTest) {
     EXPECT_LE(result.GetBenchmarkRepetitions()[i].GetDurationMs(), max_repetition_duration);
   }
 
-  ASSERT_TRUE(result.IsComplete());
+  ASSERT_TRUE(result.IsResultComplete());
   const auto benchmark_end = std::chrono::steady_clock::now();
   const double max_benchmark_duration =
       std::chrono::duration<double, std::milli>(benchmark_end - benchmark_start).count();

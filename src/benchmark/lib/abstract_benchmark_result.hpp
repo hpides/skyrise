@@ -7,7 +7,7 @@ class AbstractBenchmarkResult {
   virtual ~AbstractBenchmarkResult() = default;
 
   virtual double GetDurationMs() const = 0;
-  virtual bool IsComplete() const = 0;
+  virtual bool IsResultComplete() const = 0;
 };
 
 }  // namespace skyrise

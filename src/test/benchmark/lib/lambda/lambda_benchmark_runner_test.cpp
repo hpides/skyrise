@@ -54,7 +54,7 @@ class AwsLambdaBenchmarkRunnerTest : public ::testing::Test {
   const AwsApi aws_api_;
   const Client client_;
   LambdaBenchmarkRunner benchmark_runner_ =
-      LambdaBenchmarkRunner(client_.GetIAMClient(), client_.GetLambdaClient(), client_.GetSQSClient(),
+      LambdaBenchmarkRunner(client_.GetIamClient(), client_.GetLambdaClient(), client_.GetSqsClient(),
                             std::make_shared<CostCalculator>(client_.GetPricingClient(), client_.GetClientRegion()));
 };
 

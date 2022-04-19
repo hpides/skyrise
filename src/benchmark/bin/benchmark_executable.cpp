@@ -92,7 +92,7 @@ void BenchmarkExecutable::InitializeClients() {
   benchmark_helper_ = std::make_shared<const skyrise::BenchmarkHelper>(client_->GetS3Client());
 
   benchmark_runner_ = std::make_shared<skyrise::LambdaBenchmarkRunner>(
-      client_->GetIAMClient(), client_->GetLambdaClient(), client_->GetSQSClient(), cost_calculator_);
+      client_->GetIamClient(), client_->GetLambdaClient(), client_->GetSqsClient(), cost_calculator_);
 }
 
 void BenchmarkExecutable::DeinitializeClients() { Aws::ShutdownAPI(sdk_options_); }

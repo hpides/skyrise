@@ -31,6 +31,7 @@ Client::Client() {
         cloudwatch_client_ =
             std::make_shared<const Aws::CloudWatch::CloudWatchClient>(credentials_provider, client_configuration);
       },
+      [&]() { ec2_client_ = std::make_shared<const Aws::EC2::EC2Client>(credentials_provider, client_configuration); },
       [&]() { iam_client_ = std::make_shared<const Aws::IAM::IAMClient>(credentials_provider, client_configuration); },
       [&]() {
         lambda_client_ = std::make_shared<const Aws::Lambda::LambdaClient>(credentials_provider, client_configuration);
@@ -61,7 +62,9 @@ std::shared_ptr<const Aws::CloudWatch::CloudWatchClient> Client::GetCloudWatchCl
   return cloudwatch_client_;
 }
 
-std::shared_ptr<const Aws::IAM::IAMClient> Client::GetIAMClient() const { return iam_client_; }
+std::shared_ptr<const Aws::EC2::EC2Client> Client::GetEc2Client() const { return ec2_client_; }
+
+std::shared_ptr<const Aws::IAM::IAMClient> Client::GetIamClient() const { return iam_client_; }
 
 std::shared_ptr<const Aws::Lambda::LambdaClient> Client::GetLambdaClient() const { return lambda_client_; }
 
@@ -69,7 +72,7 @@ std::shared_ptr<const Aws::Pricing::PricingClient> Client::GetPricingClient() co
 
 std::shared_ptr<const Aws::S3::S3Client> Client::GetS3Client() const { return s3_client_; }
 
-std::shared_ptr<const Aws::SQS::SQSClient> Client::GetSQSClient() const { return sqs_client_; }
+std::shared_ptr<const Aws::SQS::SQSClient> Client::GetSqsClient() const { return sqs_client_; }
 
 std::shared_ptr<const Aws::XRay::XRayClient> Client::GetXRayClient() const { return xray_client_; }
 

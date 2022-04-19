@@ -33,11 +33,8 @@ class LambdaBenchmarkConfig : public AbstractBenchmarkConfig {
   const WarmUp warm_up_;
   const UseOneFunctionPerRepetition use_one_function_per_repetition_;
   const UseEventQueue use_event_queue_;
-  const std::vector<std::function<void()>> after_repetition_callbacks_;
   const bool enable_tracing_;
 
-  const Aws::String benchmark_id_;
-  const Aws::String benchmark_timestamp_;
   std::shared_ptr<WarmUpStrategy> warm_up_strategy_;
   std::vector<FunctionConfig> function_configs_;
   std::vector<std::vector<FunctionInvocationConfig>> repetition_configs_;

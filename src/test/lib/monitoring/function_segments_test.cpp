@@ -28,7 +28,7 @@ class AwsFunctionSegmentsAnalyzerTest : public ::testing::Test {
 
     client_ = std::make_shared<skyrise::Client>();
 
-    UploadFunctions(client_->GetIAMClient(), client_->GetLambdaClient(),
+    UploadFunctions(client_->GetIamClient(), client_->GetLambdaClient(),
                     std::vector<FunctionConfig>{{kFunctionPath, kFunctionName, kMemorySize, kIsLocal}}, kEnableTracing);
     const auto time_points = InvokeFunction(client_, kFunctionName);
 
