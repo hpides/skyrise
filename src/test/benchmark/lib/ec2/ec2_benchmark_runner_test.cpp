@@ -22,10 +22,9 @@ class AwsEc2BenchmarkRunnerTest : public ::testing::Test {
     for (const auto& repetition : result->GetRepetitions()) {
       EXPECT_EQ(repetition.launch_durations.size(), benchmark_config->concurrent_invocation_count_);
 
-      for (const auto& launch_duration : repetition.launch_durations) {
-        EXPECT_FALSE(launch_duration.instance_id.empty());
+      for (const auto& [instance_id, launch_duration] : repetition.launch_durations) {
         EXPECT_GT(launch_duration.duration_ms, 0.0);
-        EXPECT_LT(launch_duration.duration_ms, result->GetDurationMs());
+        EXPECT_TRUE(launch_duration.cooldown_ms.has_value());
       }
     }
   }

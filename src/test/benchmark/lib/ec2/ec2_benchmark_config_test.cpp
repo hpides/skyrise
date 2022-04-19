@@ -12,7 +12,7 @@ const std::vector<Ec2InstanceType> kInstanceTypes{
     Ec2InstanceType::kT3Medium,   Ec2InstanceType::kT3Large,    Ec2InstanceType::kT3XLarge,
     Ec2InstanceType::kT32XLarge};
 
-TEST(EC2BenchmarkConfigTest, EC2InstanceMapping) {
+TEST(Ec2BenchmarkConfigTest, Ec2InstanceMapping) {
   for (const auto instance_type : kInstanceTypes) {
     Ec2BenchmarkConfig config(instance_type, 2, 3);
     EXPECT_EQ(config.instance_names_.size(), 2);

@@ -7,6 +7,9 @@
 #include <aws/core/utils/logging/ConsoleLogSystem.h>
 #include <aws/core/utils/logging/LogLevel.h>
 
+#include "ec2/ec2_invocation_benchmark.hpp"
+#include "lambda/lambda_benchmark.hpp"
+#include "utils/assert.hpp"
 #include "utils/filesystem.hpp"
 #include "utils/git_metadata.hpp"
 #include "utils/time.hpp"
@@ -63,12 +66,24 @@ std::shared_ptr<const skyrise::BenchmarkHelper> BenchmarkExecutable::GetBenchmar
   return benchmark_helper_;
 }
 
+std::shared_ptr<skyrise::Ec2BenchmarkRunner> BenchmarkExecutable::GetEc2BenchmarkRunner() const {
+  return ec2_benchmark_runner_;
+}
+
 std::shared_ptr<skyrise::LambdaBenchmarkRunner> BenchmarkExecutable::GetLambdaBenchmarkRunner() const {
-  return benchmark_runner_;
+  return lambda_benchmark_runner_;
 }
 
 void BenchmarkExecutable::ExecuteBenchmark(const std::shared_ptr<skyrise::AbstractBenchmark>& benchmark) {
-  const auto benchmark_result = benchmark->Run(benchmark_runner_);
+  const auto benchmark_result = [&]() {
+    if (std::dynamic_pointer_cast<skyrise::Ec2InvocationBenchmark>(benchmark)) {
+      return benchmark->Run(ec2_benchmark_runner_);
+    } else if (std::dynamic_pointer_cast<skyrise::LambdaBenchmark>(benchmark)) {
+      return benchmark->Run(lambda_benchmark_runner_);
+    } else {
+      Fail("Unknown benchmark type.");
+    }
+  }();
 
   const auto output =
       Aws::Utils::Json::JsonValue()
@@ -91,7 +106,9 @@ void BenchmarkExecutable::InitializeClients() {
       std::make_shared<const skyrise::CostCalculator>(client_->GetPricingClient(), client_->GetClientRegion());
   benchmark_helper_ = std::make_shared<const skyrise::BenchmarkHelper>(client_->GetS3Client());
 
-  benchmark_runner_ = std::make_shared<skyrise::LambdaBenchmarkRunner>(
+  ec2_benchmark_runner_ = std::make_shared<skyrise::Ec2BenchmarkRunner>(client_->GetEc2Client());
+
+  lambda_benchmark_runner_ = std::make_shared<skyrise::LambdaBenchmarkRunner>(
       client_->GetIamClient(), client_->GetLambdaClient(), client_->GetSqsClient(), cost_calculator_);
 }
 

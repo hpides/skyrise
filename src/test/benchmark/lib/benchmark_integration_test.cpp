@@ -2,6 +2,8 @@
 
 #include "benchmark_helper.hpp"
 #include "client/client.hpp"
+#include "ec2/ec2_benchmark_runner.hpp"
+#include "ec2/ec2_invocation_benchmark.hpp"
 #include "lambda/function_colocation_benchmark.hpp"
 #include "lambda/function_warm_up_benchmark.hpp"
 #include "lambda/function_warm_up_continuous_benchmark.hpp"
@@ -25,15 +27,19 @@ class AwsBenchmarkIntegrationTest : public ::testing::Test {
     client_ = std::make_shared<Client>();
 
     cost_calculator_ = std::make_shared<CostCalculator>(client_->GetPricingClient(), client_->GetClientRegion());
-    benchmark_runner_ = std::make_shared<LambdaBenchmarkRunner>(client_->GetIamClient(), client_->GetLambdaClient(),
-                                                                client_->GetSqsClient(), cost_calculator_);
+    ec2_benchmark_runner_ = std::make_shared<Ec2BenchmarkRunner>(client_->GetEc2Client());
+    lambda_benchmark_runner_ = std::make_shared<LambdaBenchmarkRunner>(
+        client_->GetIamClient(), client_->GetLambdaClient(), client_->GetSqsClient(), cost_calculator_);
     benchmark_helper_ = std::make_shared<BenchmarkHelper>(client_->GetS3Client());
   }
 
   [[nodiscard]] const Client& GetClient() const { return *client_; }
 
   [[nodiscard]] std::shared_ptr<CostCalculator> GetCostCalculator() const { return cost_calculator_; }
-  [[nodiscard]] std::shared_ptr<LambdaBenchmarkRunner> GetBenchmarkRunner() const { return benchmark_runner_; }
+  [[nodiscard]] std::shared_ptr<Ec2BenchmarkRunner> GetEc2BenchmarkRunner() const { return ec2_benchmark_runner_; }
+  [[nodiscard]] std::shared_ptr<LambdaBenchmarkRunner> GetLambdaBenchmarkRunner() const {
+    return lambda_benchmark_runner_;
+  }
   [[nodiscard]] std::shared_ptr<BenchmarkHelper> GetBenchmarkHelper() const { return benchmark_helper_; }
 
  private:
@@ -42,7 +48,8 @@ class AwsBenchmarkIntegrationTest : public ::testing::Test {
   std::shared_ptr<Client> client_;
 
   std::shared_ptr<CostCalculator> cost_calculator_;
-  std::shared_ptr<LambdaBenchmarkRunner> benchmark_runner_;
+  std::shared_ptr<Ec2BenchmarkRunner> ec2_benchmark_runner_;
+  std::shared_ptr<LambdaBenchmarkRunner> lambda_benchmark_runner_;
   std::shared_ptr<BenchmarkHelper> benchmark_helper_;
 };
 
@@ -55,7 +62,7 @@ TEST_F(AwsBenchmarkIntegrationTest, FunctionColocationBenchmark) {
   auto benchmark = std::make_shared<skyrise::FunctionColocationBenchmark>(
       GetCostCalculator(), function_instance_mb_sizes, invocation_counts, sleep_min_durations, repetition_count);
 
-  const auto benchmark_result = benchmark->Run(GetBenchmarkRunner());
+  const auto benchmark_result = benchmark->Run(GetLambdaBenchmarkRunner());
   EXPECT_EQ(benchmark_result.GetLength(), 1);
 }
 
@@ -71,7 +78,7 @@ TEST_F(AwsBenchmarkIntegrationTest, FunctionWarmUpBenchmark) {
       GetCostCalculator(), function_instance_mb_sizes, invocation_counts, sleep_ms_durations, provisioning_factors,
       enable_provisioned_concurrency, repetition_count);
 
-  const auto benchmark_result = benchmark->Run(GetBenchmarkRunner());
+  const auto benchmark_result = benchmark->Run(GetLambdaBenchmarkRunner());
   EXPECT_EQ(benchmark_result.GetLength(), 1);
 }
 
@@ -86,7 +93,7 @@ TEST_F(AwsBenchmarkIntegrationTest, IdleAvailabilityBenchmark) {
   auto benchmark = std::make_shared<skyrise::IdleAvailabilityBenchmark>(
       GetCostCalculator(), function_instance_mb_sizes, invocation_counts, sleep_min_durations, repetition_count);
 
-  const auto benchmark_result = benchmark->Run(GetBenchmarkRunner());
+  const auto benchmark_result = benchmark->Run(GetLambdaBenchmarkRunner());
   EXPECT_EQ(benchmark_result.GetLength(), 1);
 }
 
@@ -99,7 +106,7 @@ TEST_F(AwsBenchmarkIntegrationTest, skyriseBenchmarkIdleLifetime) {
   auto benchmark = std::make_shared<skyrise::IdleLifetimeBenchmark>(
       GetCostCalculator(), function_instance_mb_sizes, invocation_counts, sleep_min_durations, repetition_count);
 
-  const auto benchmark_result = benchmark->Run(GetBenchmarkRunner());
+  const auto benchmark_result = benchmark->Run(GetLambdaBenchmarkRunner());
   EXPECT_EQ(benchmark_result.GetLength(), 2);
 }
 
@@ -115,7 +122,7 @@ TEST_F(AwsBenchmarkIntegrationTest, DISABLED_InvocationLatencyBenchmark) {
       GetClient().GetXRayClient(), GetBenchmarkHelper(), GetCostCalculator(), function_instance_mb_sizes,
       invocation_counts, warm_modes, sleep_ms_durations, repetition_count);
 
-  const auto benchmark_result = benchmark->Run(GetBenchmarkRunner());
+  const auto benchmark_result = benchmark->Run(GetLambdaBenchmarkRunner());
   EXPECT_EQ(benchmark_result.GetLength(), 26);
 }
 
@@ -129,7 +136,7 @@ TEST_F(AwsBenchmarkIntegrationTest, InvocationThroughputBenchmark) {
       GetCostCalculator(), function_instance_mb_sizes, invocation_counts, function_payload_byte_sizes,
       repetition_count);
 
-  const auto benchmark_result = benchmark->Run(GetBenchmarkRunner());
+  const auto benchmark_result = benchmark->Run(GetLambdaBenchmarkRunner());
   EXPECT_EQ(benchmark_result.GetLength(), 2);
 }
 
@@ -143,7 +150,7 @@ TEST_F(AwsBenchmarkIntegrationTest, NetworkLatencyBenchmark) {
                                                                       function_instance_mb_sizes, object_byte_sizes,
                                                                       batch_sizes, repetition_count);
 
-  const auto benchmark_result = benchmark->Run(GetBenchmarkRunner());
+  const auto benchmark_result = benchmark->Run(GetLambdaBenchmarkRunner());
   EXPECT_EQ(benchmark_result.GetLength(), 2);
 }
 
@@ -159,7 +166,7 @@ TEST_F(AwsBenchmarkIntegrationTest, NetworkThroughputBenchmark) {
                                                                          function_instance_mb_sizes, object_byte_sizes,
                                                                          batch_sizes, thread_counts, repetition_count);
 
-  const auto benchmark_result = benchmark->Run(GetBenchmarkRunner());
+  const auto benchmark_result = benchmark->Run(GetLambdaBenchmarkRunner());
   EXPECT_EQ(benchmark_result.GetLength(), 2);
 }
 
@@ -178,8 +185,19 @@ TEST_F(AwsBenchmarkIntegrationTest, NetworkThroughputParallelBenchmark) {
       GetBenchmarkHelper(), GetCostCalculator(), function_instance_mb_sizes, object_byte_sizes, batch_sizes,
       thread_counts, invocation_counts, bucket_counts, enable_reads, repetition_count);
 
-  const auto benchmark_result = benchmark->Run(GetBenchmarkRunner());
+  const auto benchmark_result = benchmark->Run(GetLambdaBenchmarkRunner());
   EXPECT_EQ(benchmark_result.GetLength(), 2);
+}
+
+TEST_F(AwsBenchmarkIntegrationTest, Ec2InvocationBenchmark) {
+  const std::vector<size_t> concurrent_invocation_count = {3};
+  const std::vector<Ec2InstanceType> instance_types = {Ec2InstanceType::kT3Micro};
+  const size_t repetition_count = 1;
+
+  auto benchmark =
+      std::make_shared<Ec2InvocationBenchmark>(concurrent_invocation_count, instance_types, repetition_count);
+  const auto benchmark_result = benchmark->Run(GetEc2BenchmarkRunner());
+  EXPECT_EQ(benchmark_result.GetLength(), 1);
 }
 
 }  // namespace skyrise

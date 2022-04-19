@@ -7,6 +7,7 @@
 #include "abstract_benchmark.hpp"
 #include "benchmark_helper.hpp"
 #include "client/client.hpp"
+#include "ec2/ec2_benchmark_runner.hpp"
 #include "lambda/lambda_benchmark_runner.hpp"
 #include "utils/costs/cost_calculator.hpp"
 
@@ -22,6 +23,7 @@ class BenchmarkExecutable {
   std::shared_ptr<const skyrise::CostCalculator> GetCostCalculator() const;
   std::shared_ptr<const skyrise::BenchmarkHelper> GetBenchmarkHelper() const;
 
+  std::shared_ptr<skyrise::Ec2BenchmarkRunner> GetEc2BenchmarkRunner() const;
   std::shared_ptr<skyrise::LambdaBenchmarkRunner> GetLambdaBenchmarkRunner() const;
 
   void ExecuteBenchmark(const std::shared_ptr<skyrise::AbstractBenchmark>& benchmark);
@@ -41,5 +43,6 @@ class BenchmarkExecutable {
   std::shared_ptr<const skyrise::CostCalculator> cost_calculator_;
   std::shared_ptr<const skyrise::BenchmarkHelper> benchmark_helper_;
 
-  std::shared_ptr<skyrise::LambdaBenchmarkRunner> benchmark_runner_;
+  std::shared_ptr<skyrise::Ec2BenchmarkRunner> ec2_benchmark_runner_;
+  std::shared_ptr<skyrise::LambdaBenchmarkRunner> lambda_benchmark_runner_;
 };

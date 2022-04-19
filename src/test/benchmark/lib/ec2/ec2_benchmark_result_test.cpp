@@ -14,12 +14,13 @@ TEST(Ec2BenchmarkResultTest, BasicFunctionality) {
     for (size_t j = 0; j < invocation_count; j++) {
       EXPECT_FALSE(benchmark_result.IsResultComplete());
       EXPECT_FALSE(benchmark_result.IsRepetitionComplete(i));
-      benchmark_result.RegisterInstanceLaunch(std::to_string(j), 1.0, i);
+      benchmark_result.RegisterInstanceLaunch(i, std::to_string(j), 1.0);
+      benchmark_result.UpdateCooldown(i, std::to_string(j), 2.0);
     }
 
     EXPECT_TRUE(benchmark_result.IsRepetitionComplete(i));
     EXPECT_FALSE(benchmark_result.IsRepetitionFinalized(i));
-    benchmark_result.FinalizeRepetition(1.0, i);
+    benchmark_result.FinalizeRepetition(i, 1.0);
     EXPECT_TRUE(benchmark_result.IsRepetitionFinalized(i));
   }
 
@@ -38,13 +39,14 @@ TEST(Ec2BenchmarkResultTest, Exceptions) {
 
   for (size_t i = 0; i < repetition_count; i++) {
     for (size_t j = 0; j < invocation_count; j++) {
-      EXPECT_ANY_THROW(benchmark_result.FinalizeRepetition(1.0, i));
+      EXPECT_ANY_THROW(benchmark_result.FinalizeRepetition(i, 1.0));
       EXPECT_ANY_THROW(benchmark_result.FinalizeResult(10.0));
       EXPECT_ANY_THROW(benchmark_result.GetDurationMs());
-      benchmark_result.RegisterInstanceLaunch(std::to_string(j), 1.0, i);
+      benchmark_result.RegisterInstanceLaunch(i, std::to_string(j), 1.0);
+      benchmark_result.UpdateCooldown(i, std::to_string(j), 2.0);
     }
 
-    EXPECT_NO_THROW(benchmark_result.FinalizeRepetition(1.0, i));
+    EXPECT_NO_THROW(benchmark_result.FinalizeRepetition(i, 1.0));
   }
 
   EXPECT_NO_THROW(benchmark_result.FinalizeResult(10.0));

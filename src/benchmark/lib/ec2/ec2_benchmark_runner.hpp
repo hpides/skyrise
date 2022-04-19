@@ -21,7 +21,7 @@ class Ec2BenchmarkRunner : public AbstractBenchmarkRunner {
   void Setup() override;
   void Teardown() override;
   std::shared_ptr<AbstractBenchmarkResult> OnRunConfig() override;
-  void TerminateInstances();
+  void TerminateInstances(const double repetition_duration_ms, const size_t repetition);
 
   const std::shared_ptr<const Aws::EC2::EC2Client> ec2_client_;
   std::vector<std::vector<Aws::EC2::Model::RunInstancesRequest>> run_instance_requests_;

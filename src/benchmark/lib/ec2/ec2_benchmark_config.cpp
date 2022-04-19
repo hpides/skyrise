@@ -39,6 +39,28 @@ Aws::EC2::Model::InstanceType Ec2BenchmarkConfig::ToAwsType(const Ec2InstanceTyp
       return Aws::EC2::Model::InstanceType::c5_24xlarge;
     case Ec2InstanceType::kC5Metal:
       return Aws::EC2::Model::InstanceType::c5_metal;
+    case Ec2InstanceType::kC5NLarge:
+      return Aws::EC2::Model::InstanceType::c5n_large;
+    case Ec2InstanceType::kC5NXLarge:
+      return Aws::EC2::Model::InstanceType::c5n_xlarge;
+    case Ec2InstanceType::kC5N2XLarge:
+      return Aws::EC2::Model::InstanceType::c5n_2xlarge;
+    case Ec2InstanceType::kC5N4XLarge:
+      return Aws::EC2::Model::InstanceType::c5n_4xlarge;
+    case Ec2InstanceType::kC5N9XLarge:
+      return Aws::EC2::Model::InstanceType::c5n_9xlarge;
+    case Ec2InstanceType::kC5N18XLarge:
+      return Aws::EC2::Model::InstanceType::c5n_18xlarge;
+    case Ec2InstanceType::kC5NMetal:
+      return Aws::EC2::Model::InstanceType::c5n_metal;
+    case Ec2InstanceType::kD3XLarge:
+      return Aws::EC2::Model::InstanceType::d3_xlarge;
+    case Ec2InstanceType::kD32XLarge:
+      return Aws::EC2::Model::InstanceType::d3_2xlarge;
+    case Ec2InstanceType::kD34XLarge:
+      return Aws::EC2::Model::InstanceType::d3_4xlarge;
+    case Ec2InstanceType::kD38XLarge:
+      return Aws::EC2::Model::InstanceType::d3_8xlarge;
     case Ec2InstanceType::kT3Nano:
       return Aws::EC2::Model::InstanceType::t3_nano;
     case Ec2InstanceType::kT3Micro:

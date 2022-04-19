@@ -24,6 +24,8 @@ set(
     ec2/ec2_benchmark_result.hpp
     ec2/ec2_benchmark_runner.cpp
     ec2/ec2_benchmark_runner.hpp
+    ec2/ec2_invocation_benchmark.cpp
+    ec2/ec2_invocation_benchmark.hpp
     lambda/function_colocation_benchmark.cpp
     lambda/function_colocation_benchmark.hpp
     lambda/function_invocation_config.hpp
