@@ -25,6 +25,7 @@ cxxopts::OptionAdder& BenchmarkExecutable::GetOptionAdder() { return cli_option_
 
 cxxopts::ParseResult& BenchmarkExecutable::GetParseResult(
     int argc, char* argv[]) {  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+  cli_option_adder_("metering", "Enable tracking of requests", cxxopts::value<bool>());
   cli_option_adder_("verbose", "Show the verbose status log", cxxopts::value<bool>());
   cli_option_adder_("help", "Print the usage overview", cxxopts::value<bool>());
 
@@ -41,6 +42,11 @@ cxxopts::ParseResult& BenchmarkExecutable::GetParseResult(
 
   if (cli_parse_result_.count("output") == 0) {
     throw cxxopts::option_required_exception("OUTPUT");
+  }
+
+  if (cli_parse_result_.count("metering") > 0) {
+    request_tracker_ = std::make_shared<skyrise::RequestTracker>();
+    request_tracker_->Install(&sdk_options_);
   }
 
   if (cli_parse_result_.count("verbose") > 0) {
@@ -95,6 +101,8 @@ void BenchmarkExecutable::ExecuteBenchmark(const std::shared_ptr<skyrise::Abstra
   skyrise::WriteStringToFile(output.View().WriteReadable(), cli_parse_result_["output"].as<std::string>());
 
   DeinitializeClients();
+
+  PrintRequestSummary();
 }
 
 void BenchmarkExecutable::InitializeClients() {
@@ -113,3 +121,9 @@ void BenchmarkExecutable::InitializeClients() {
 }
 
 void BenchmarkExecutable::DeinitializeClients() { Aws::ShutdownAPI(sdk_options_); }
+
+void BenchmarkExecutable::PrintRequestSummary() {
+  if (request_tracker_) {
+    request_tracker_->WriteSummaryToStream(&std::cout);
+  }
+}

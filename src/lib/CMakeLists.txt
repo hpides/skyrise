@@ -167,6 +167,11 @@ set(
     metadata/table_schema.hpp
     metadata/tpch_mock_catalog.cpp
     metadata/tpch_mock_catalog.hpp
+    
+    metering/request_tracker/monitor.cpp
+    metering/request_tracker/monitor.hpp
+    metering/request_tracker/request_tracker.cpp
+    metering/request_tracker/request_tracker.hpp
 
     operator/abstract_aggregate_operator.cpp
     operator/abstract_aggregate_operator.hpp

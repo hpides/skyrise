@@ -3,6 +3,7 @@
 #include <chrono>
 #include <thread>
 
+#include <aws/core/utils/json/JsonSerializer.h>
 #include <aws/core/utils/logging/ConsoleLogSystem.h>
 #include <aws/core/utils/logging/LogLevel.h>
 #include <aws/lambda-runtime/runtime.h>
@@ -64,17 +65,44 @@ void Function::HandleRequest() const {
                                                                   Aws::Utils::Logging::LogLevel::Info);
   };
 
+  std::shared_ptr<skyrise::RequestTracker> request_tracker;
+
+  if constexpr (SKYRISE_DEBUG) {
+    request_tracker = std::make_shared<skyrise::RequestTracker>();
+    request_tracker->Install(&options);
+  }
+
+  auto run_handler_callback = [&](const aws::lambda_runtime::invocation_request& request) {
+    aws::lambda_runtime::invocation_response response = HandlerFunction(request);
+
+    /**
+     * In debug mode, metering is enabled. If HandlerFunction(...) returns a response containing a valid JSON object,
+     * the key "metering" is added, containing nested keys with counts for every kind of request made with the AWS
+     * SDK. The counts will get reset after each invocation.
+     */
+    if constexpr (SKYRISE_DEBUG) {
+      // TODO(jansiebert): Investigate if we want to enable this feature independently of debug mode.
+      Aws::Utils::Json::JsonValue response_json(response.get_payload());
+      if (response_json.WasParseSuccessful()) {
+        request_tracker->WriteSummaryToJson(&response_json);
+        response = aws::lambda_runtime::invocation_response(response_json.View().WriteCompact(),
+                                                            response.get_content_type(), response.is_success());
+      }
+      request_tracker->Reset();
+    }
+    return response;
+  };
+
   Aws::InitAPI(options);
   {
 #if SKYRISE_DEBUG
     if (!RunsInLambdaEnvironment()) {
-      RunStandalone();
+      RunStandalone(run_handler_callback);
     } else {
-#endif
-      aws::lambda_runtime::run_handler(
-          [&](const aws::lambda_runtime::invocation_request& request) { return HandlerFunction(request); });
-#if SKYRISE_DEBUG
+      aws::lambda_runtime::run_handler(run_handler_callback);
     }
+#else
+    aws::lambda_runtime::run_handler(run_handler_callback);
 #endif
   }
   Aws::ShutdownAPI(options);
@@ -88,7 +116,9 @@ bool Function::RunsInLambdaEnvironment() {
   return std::getenv("AWS_LAMBDA_FUNCTION_NAME") != nullptr;  // NOLINT(concurrency-mt-unsafe)
 }
 
-void Function::RunStandalone() const {
+void Function::RunStandalone(
+    const std::function<aws::lambda_runtime::invocation_response(aws::lambda_runtime::invocation_request const&)>&
+        handler) {
   std::cout << "Running cloud function locally. Reading from stdin ..." << std::endl;
 
   // Construct a mock request with payload from stdin.
@@ -98,7 +128,7 @@ void Function::RunStandalone() const {
   std::cout << "---------------------------------------" << std::endl;
 
   // Call the handler.
-  aws::lambda_runtime::invocation_response response = HandlerFunction(request);
+  aws::lambda_runtime::invocation_response response = handler(request);
 
   // Print information about the response.
   std::cout << "---------------------------------------\n"

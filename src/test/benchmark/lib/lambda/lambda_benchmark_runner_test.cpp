@@ -36,13 +36,12 @@ class AwsLambdaBenchmarkRunnerTest : public ::testing::Test {
 
       EXPECT_EQ(benchmark_repetitions[i].GetInvokeResults().size(), benchmark_config->concurrent_invocation_count_);
 
-      const auto response_body = Aws::Utils::Json::JsonValue().AsString("success");
-
       for (const auto& invoke_result : benchmark_repetitions[i].GetInvokeResults()) {
         EXPECT_TRUE(invoke_result.IsSuccess());
         EXPECT_TRUE(invoke_result.IsComplete());
 
-        EXPECT_EQ(invoke_result.GetResponseBody().WriteCompact(), response_body.View().WriteCompact());
+        EXPECT_TRUE(invoke_result.GetResponseBody().KeyExists("success"));
+        EXPECT_TRUE(invoke_result.GetResponseBody().GetBool("success"));
 
         if (benchmark_config->use_event_queue_ == UseEventQueue::kNo) {
           EXPECT_TRUE(invoke_result.HasLogResult());
