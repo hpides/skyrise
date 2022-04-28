@@ -19,7 +19,7 @@
 
 namespace {
 
-static const std::string kName = "Projection";
+const std::string kName = "Projection";
 
 }  // namespace
 
@@ -62,7 +62,7 @@ std::shared_ptr<const Table> ProjectionOperator::OnExecute(
     for (ColumnId column_id = 0; column_id < expression_count; ++column_id) {
       const auto& expression = expressions_[column_id];
       if (expression->type_ == ExpressionType::kPqpColumn) {
-        const auto& pqp_column_expression = static_cast<const PqpColumnExpression&>(*expression);
+        const auto& pqp_column_expression = dynamic_cast<const PqpColumnExpression&>(*expression);
         output_segments[column_id] = input_chunk->GetSegment(pqp_column_expression.column_id_);
         nullable_columns[column_id] = input_table->ColumnIsNullable(pqp_column_expression.column_id_);
       }

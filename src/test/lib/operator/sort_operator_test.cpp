@@ -1,5 +1,7 @@
 #include "operator/sort_operator.hpp"
 
+#include <random>
+
 #include <gtest/gtest.h>
 
 #include "operator/table_wrapper.hpp"
@@ -87,25 +89,25 @@ TEST_F(SortOperatorTest, SortMultiColumn) {
 }
 
 TEST_F(SortOperatorTest, SortLargeMultiChunkTable) {
-  const double kScaleFactor = 1.5;
-  const size_t kInputChunks = 3;
-  const size_t number_of_rows_per_chunk = kChunkDefaultSize * kScaleFactor;
-  const size_t number_of_rows_per_table = number_of_rows_per_chunk * kInputChunks;
+  const double scale_factor = 1.5;
+  const size_t input_chunk_count = 3;
+  const size_t number_of_rows_per_chunk = kChunkDefaultSize * scale_factor;
+  const size_t number_of_rows_per_table = number_of_rows_per_chunk * input_chunk_count;
   const size_t expected_number_of_output_chunks =
       number_of_rows_per_table / kChunkDefaultSize + (number_of_rows_per_table % kChunkDefaultSize == 0 ? 0 : 1);
 
   // (1) Create multiple shuffled chunks.
   std::vector<std::shared_ptr<Chunk>> chunks;
-  chunks.reserve(kInputChunks);
+  chunks.reserve(input_chunk_count);
 
   size_t value = 0;
-  for (size_t chunk_id = 0; chunk_id < kInputChunks; ++chunk_id) {
+  for (size_t chunk_id = 0; chunk_id < input_chunk_count; ++chunk_id) {
     std::vector<int> values;
     values.reserve(number_of_rows_per_chunk);
     for (size_t i = 0; i < number_of_rows_per_chunk; ++i) {
       values.push_back(value++);
     }
-    std::random_shuffle(values.begin(), values.end());
+    std::shuffle(values.begin(), values.end(), std::mt19937(std::random_device()()));
 
     const auto value_segment_int = std::make_shared<ValueSegment<int>>(std::move(values));
     chunks.push_back(std::make_shared<Chunk>(Segments({value_segment_int})));
@@ -114,7 +116,7 @@ TEST_F(SortOperatorTest, SortLargeMultiChunkTable) {
   // (2) Create a mock input operator with a data table.
   const TableColumnDefinitions definitions = {TableColumnDefinition("a", DataType::kInt, false)};
   const auto table = std::make_shared<Table>(definitions, std::move(chunks));
-  EXPECT_EQ(table->ChunkCount(), kInputChunks);
+  EXPECT_EQ(table->ChunkCount(), input_chunk_count);
 
   auto mock_input_operator = std::make_shared<TableWrapper>(table);
   mock_input_operator->Execute();

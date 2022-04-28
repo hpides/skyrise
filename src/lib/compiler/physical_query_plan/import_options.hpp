@@ -24,7 +24,7 @@ class ImportOptions {
    *          The factory uses custom reader options, if provided. Otherwise, the factory is initialized with default
    *          reader options for CSV and ORC data.
    */
-  const std::shared_ptr<AbstractChunkReaderFactory> CreateReaderFactory() const;
+  std::shared_ptr<AbstractChunkReaderFactory> CreateReaderFactory() const;
 
   /**
    * Serialization / Deserialization

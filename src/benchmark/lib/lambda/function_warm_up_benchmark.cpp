@@ -141,7 +141,7 @@ Aws::Utils::Json::JsonValue FunctionWarmUpBenchmark::GenerateResultOutput(
                             benchmark_result, benchmark_parameters.function_instance_mb_size,
                             benchmark_parameters.warm_up_strategy == "ProvisionedConcurrencyWarmUpStrategy")))
       .WithBoolInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
-        return std::make_tuple("is_warm_function", is_warm_function(invoke_result) ? true : false);
+        return std::make_tuple("is_warm_function", is_warm_function(invoke_result));
       })
       .Build();
 }

@@ -4,7 +4,7 @@ using namespace std::string_literals;  // NOLINT
 
 namespace {
 
-static const std::string kName = "Alias";
+const std::string kName = "Alias";
 
 }  // namespace
 

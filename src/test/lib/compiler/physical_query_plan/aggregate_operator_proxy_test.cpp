@@ -13,7 +13,8 @@
 
 namespace skyrise {
 
-using namespace skyrise::expression_functional;  // NOLINT(google-build-using-namespace)
+// NOLINTNEXTLINE(google-build-using-namespace)
+using namespace skyrise::expression_functional;
 
 class AggregateOperatorProxyTest : public ::testing::Test {
  public:

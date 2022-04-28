@@ -32,9 +32,9 @@ class SortOperator : public AbstractOperator {
   /**
    * Given an unsorted_table and a position_list defining the output order, this materializes all columns in the table.
    */
-  std::shared_ptr<Table> MaterializeOutputTable(const std::shared_ptr<const Table>& unsorted_table,
-                                                const RowIdPositionList& position_list,
-                                                const std::shared_ptr<FragmentScheduler>& fragment_scheduler) const;
+  static std::shared_ptr<Table> MaterializeOutputTable(const std::shared_ptr<const Table>& unsorted_table,
+                                                       const RowIdPositionList& position_list,
+                                                       const std::shared_ptr<FragmentScheduler>& fragment_scheduler);
 
   template <typename SortColumnType>
   class SortImplementation;

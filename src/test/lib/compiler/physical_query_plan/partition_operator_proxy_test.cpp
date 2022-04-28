@@ -18,32 +18,33 @@ class PartitionOperatorProxyTest : public ::testing::Test {
 
  protected:
   const std::set<ColumnId> partition_column_ids_ = {ColumnId{0}, ColumnId{1}};
-  static inline const size_t partition_count_ = 10;
+  static inline const size_t kPartitionCount = 10;
+  static inline const std::string kBucketName = "dummy_bucket";
 };
 
 TEST_F(PartitionOperatorProxyTest, BaseProperties) {
-  const auto partiton_proxy = PartitionOperatorProxy::Make(partition_count_, partition_column_ids_);
+  const auto partiton_proxy = PartitionOperatorProxy::Make(kPartitionCount, partition_column_ids_);
   EXPECT_EQ(partiton_proxy->Type(), OperatorType::kPartition);
-  EXPECT_EQ(partiton_proxy->PartitionCount(), partition_count_);
+  EXPECT_EQ(partiton_proxy->PartitionCount(), kPartitionCount);
   EXPECT_EQ(partiton_proxy->PartitionColumnIds(), partition_column_ids_);
   EXPECT_FALSE(partiton_proxy->IsPipelineBreaker());
 }
 
 TEST_F(PartitionOperatorProxyTest, Description) {
-  const auto partiton_proxy = PartitionOperatorProxy::Make(partition_count_, partition_column_ids_);
+  const auto partiton_proxy = PartitionOperatorProxy::Make(kPartitionCount, partition_column_ids_);
   EXPECT_EQ(partiton_proxy->Description(DescriptionMode::kSingleLine), "[Partition] 10 partition(s) ColumnIds{0, 1}");
   EXPECT_EQ(partiton_proxy->Description(DescriptionMode::kMultiLine), "[Partition]\n10 partition(s)\nColumnIds{0, 1}");
 }
 
 TEST_F(PartitionOperatorProxyTest, SerializeAndDeserialize) {
-  const auto proxy = PartitionOperatorProxy::Make(partition_count_, partition_column_ids_);
+  const auto proxy = PartitionOperatorProxy::Make(kPartitionCount, partition_column_ids_);
   // (1) Serialize
   const auto proxy_json = proxy->ToJson();
 
   // (2) Deserialize & verify attributes
   const auto deserialized_proxy = PartitionOperatorProxy::FromJson(proxy_json);
   const auto deserialized_partition_proxy = std::dynamic_pointer_cast<PartitionOperatorProxy>(deserialized_proxy);
-  EXPECT_EQ(deserialized_partition_proxy->PartitionCount(), partition_count_);
+  EXPECT_EQ(deserialized_partition_proxy->PartitionCount(), kPartitionCount);
   EXPECT_EQ(deserialized_partition_proxy->PartitionColumnIds(), partition_column_ids_);
 
   // (3) Serialize again
@@ -53,12 +54,12 @@ TEST_F(PartitionOperatorProxyTest, SerializeAndDeserialize) {
 TEST_F(PartitionOperatorProxyTest, DeepCopy) {
   // clang-format off
   const auto partition_proxy =
-  PartitionOperatorProxy::Make(partition_count_, partition_column_ids_,
-    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}}));
+  PartitionOperatorProxy::Make(kPartitionCount, partition_column_ids_,
+    ImportOperatorProxy::Make(kBucketName, std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}}));
 
   // clang-format on
   const auto partition_proxy_copy = std::dynamic_pointer_cast<PartitionOperatorProxy>(partition_proxy->DeepCopy());
-  EXPECT_EQ(partition_proxy_copy->PartitionCount(), partition_count_);
+  EXPECT_EQ(partition_proxy_copy->PartitionCount(), kPartitionCount);
   EXPECT_EQ(partition_proxy_copy->PartitionColumnIds(), partition_column_ids_);
   EXPECT_EQ(partition_proxy_copy->InputNodeCount(), 1);
   // Without input
@@ -69,8 +70,8 @@ TEST_F(PartitionOperatorProxyTest, DeepCopy) {
 TEST_F(PartitionOperatorProxyTest, CreateOperatorInstance) {
   // clang-format off
   const auto partition_proxy =
-  PartitionOperatorProxy::Make(partition_count_, partition_column_ids_,
-    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}}));
+  PartitionOperatorProxy::Make(kPartitionCount, partition_column_ids_,
+    ImportOperatorProxy::Make(kBucketName, std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}}));
 
   // clang-format on
   EXPECT_NE(partition_proxy->GetOrCreateOperatorInstance(), nullptr);

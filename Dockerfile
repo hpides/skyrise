@@ -1,17 +1,17 @@
 # Tool versions
-ARG AWS_SDK_VERSION=1.9.212
-ARG BOOST_VERSION=1.78.0
+ARG AWS_SDK_VERSION=1.9.241
+ARG BOOST_VERSION=1.79.0
 ARG CCACHE_VERSION=4.6
-ARG CMAKE_MAJOR_MINOR=3.22
-ARG CMAKE_PATCH=3
+ARG CMAKE_MAJOR_MINOR=3.23
+ARG CMAKE_PATCH=1
 ARG CPPCHECK_VERSION=2.7
-ARG CPPLINT_COMMIT=af78b49
+ARG CPPLINT_COMMIT=629edc1
 ARG GCC_VERSION=7.5.0
 ARG GCC_SUFFIX=75
 ARG HEAPTRACK_VERSION=1.3.0
-ARG LLVM_CLANG_VERSION=13.0.1
-ARG ORC_VERSION=1.7.3
-ARG VALGRIND_VERSION=3.18.1
+ARG LLVM_CLANG_VERSION=14.0.0
+ARG ORC_VERSION=1.7.4
+ARG VALGRIND_VERSION=3.19.0
 
 # Tool locations
 ARG AWS_SDK_DIR=/opt/build/aws-sdk-${AWS_SDK_VERSION}
@@ -40,7 +40,8 @@ RUN yum update -y && \
     libcurl-devel \
     libuuid-devel \
     openssl-devel \
-    # Boost dependency \
+    openssl-static \
+    # Boost dependency
     python-devel \
     which \
     # Ccache dependency
@@ -169,7 +170,8 @@ RUN wget -nv https://github.com/llvm/llvm-project/releases/download/llvmorg-${LL
     cmake ../llvm \
                  -DCMAKE_BUILD_TYPE=Release \
                  -DCMAKE_INSTALL_PREFIX=${LLVM_CLANG_DIR} \
-                 -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld;lldb" && \
+                 -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;compiler-rt;lld;lldb" \
+                 -DLLVM_INSTALL_UTILS=ON && \
     make -j$(nproc) && \
     make install && \
     rm -rf ${LLVM_CLANG_DIR}/src && \
@@ -193,7 +195,7 @@ RUN git clone --branch ${AWS_SDK_VERSION} --depth 1 --recurse-submodules --shall
     cmake .. \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=${AWS_SDK_DIR} \
-            -DBUILD_ONLY="dynamodb;ec2;glue;iam;lambda;logs;monitoring;pricing;s3;sqs;xray" \
+            -DBUILD_ONLY="dynamodb;ec2;glue;iam;lambda;logs;monitoring;pricing;s3;sqs;ssm;xray" \
             -DBUILD_SHARED_LIBS=OFF \
             -DCPP_STANDARD=17 \
             -DCUSTOM_MEMORY_MANAGEMENT=OFF \
@@ -281,6 +283,7 @@ RUN yum update -y && \
     libcurl-devel \
     libuuid-devel \
     openssl-devel \
+    openssl-static \
     system-lsb-core \
     # Build system
     ninja-build \
@@ -309,7 +312,7 @@ RUN yum update -y && \
     tqdm \
     yapf && \
     # Default commands
-    /usr/sbin/alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 1300 && \
+    /usr/sbin/alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 1400 && \
     /usr/sbin/alternatives --set ld /usr/bin/ld.lld
 
 COPY --from=base /opt /opt
@@ -329,7 +332,7 @@ ENV CC=clang \
 
 
 # Ubuntu Docker image for building Skyrise
-FROM ubuntu:21.10 AS ubuntu
+FROM ubuntu:22.04 AS ubuntu
 ARG AWS_SDK_VERSION
 ARG AWS_SDK_DIR
 
@@ -351,8 +354,8 @@ RUN git clone --branch ${AWS_SDK_VERSION} --depth 1 --recurse-submodules --shall
     cd src/build && \
     cmake .. \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_CXX_FLAGS="-Wno-error=nonnull" \
-            -DBUILD_ONLY="dynamodb;ec2;glue;iam;lambda;logs;monitoring;pricing;s3;sqs;xray" \
+-DCMAKE_CXX_FLAGS="-Wno-error=deprecated-declarations" \
+            -DBUILD_ONLY="dynamodb;ec2;glue;iam;lambda;logs;monitoring;pricing;s3;sqs;ssm;xray" \
             -DBUILD_SHARED_LIBS=OFF \
             -DCPP_STANDARD=17 \
             -DCUSTOM_MEMORY_MANAGEMENT=OFF \

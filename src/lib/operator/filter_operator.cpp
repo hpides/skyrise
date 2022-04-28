@@ -16,7 +16,7 @@
 
 namespace {
 
-static const std::string kName = "FilterOperator";
+const std::string kName = "FilterOperator";
 
 }  // namespace
 

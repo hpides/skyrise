@@ -127,7 +127,7 @@ Aws::Utils::Json::JsonValue FunctionWarmUpContinuousBenchmark::GenerateResultOut
       .WithDoubleMetric("benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
                                                   benchmark_result, benchmark_parameters.function_instance_mb_size)))
       .WithBoolInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
-        return std::make_tuple("is_warm_function", is_warm_function(invoke_result) ? true : false);
+        return std::make_tuple("is_warm_function", is_warm_function(invoke_result));
       })
       .Build();
 }

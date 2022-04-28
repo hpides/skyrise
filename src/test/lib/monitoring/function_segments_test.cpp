@@ -50,8 +50,8 @@ class AwsFunctionSegmentsAnalyzerTest : public ::testing::Test {
   static constexpr bool kIsLocal = true;
   static constexpr bool kEnableTracing = true;
   static constexpr std::string_view kPackageName = "skyriseFunctionSimple";
-  const std::string kFunctionPath = GetFunctionZipFilePath(kPackageName.data());
-  const std::string kFunctionName = kPackageName.data() + RandomString(8);
+  static inline const std::string kFunctionPath = GetFunctionZipFilePath(kPackageName.data());
+  static inline const std::string kFunctionName = kPackageName.data() + RandomString(8);
 };
 
 TEST_F(AwsFunctionSegmentsAnalyzerTest, GetCalculatedSegments) {

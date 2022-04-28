@@ -20,6 +20,7 @@ namespace {
 
 const std::string kName = "AggregateHash";
 constexpr uint64_t kShortStringIdCounter = 5'000'000'000;
+constexpr uint8_t kStringLengthThreshold = 5;
 
 }  // namespace
 
@@ -148,6 +149,7 @@ class AggregateResultContext : public SegmentVisitorContext {
   // re-allocations.
   explicit AggregateResultContext(const size_t pre_allocated_size = 0) : results_(pre_allocated_size) {}
 
+  // NOLINTNEXTLINE(readability-identifier-naming)
   AggregateResults<ColumnDataType, AggregateFunction> results_;
 };
 
@@ -158,6 +160,7 @@ class AggregateContext : public AggregateResultContext<ColumnDataType, Aggregate
       : AggregateResultContext<ColumnDataType, AggregateFunction>(pre_allocated_size),
         result_ids_(std::make_unique<AggregateResultIdMap<AggregateKey>>()) {}
 
+  // NOLINTNEXTLINE(readability-identifier-naming)
   std::unique_ptr<AggregateResultIdMap<AggregateKey>> result_ids_;
 };
 
@@ -165,6 +168,7 @@ AggregateHashOperator::AggregateHashOperator(std::shared_ptr<AbstractOperator> i
                                              std::vector<std::shared_ptr<AggregateExpression>> aggregates,
                                              std::vector<ColumnId> group_by_column_ids)
     : AbstractAggregateOperator(std::move(input_operator), std::move(aggregates), std::move(group_by_column_ids)) {
+  // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
   has_aggregate_functions_ =
       !aggregates_.empty() && !std::all_of(aggregates_.begin(), aggregates_.end(), [](const auto aggregate_expression) {
         return aggregate_expression->aggregate_function_ == AggregateFunction::kAny;
@@ -413,7 +417,6 @@ KeysPerChunk<AggregateKey> AggregateHashOperator::PartitionByGroupByKeys(
                   // value, no optimized ID generation was applied, and we need to generate the ID using the
                   // id_map.
                   AggregateKeyEntry partition_id = std::numeric_limits<AggregateKeyEntry>::max();
-                  uint8_t kStringLengthThreshold = 5;
 
                   if constexpr (std::is_same_v<ColumnDataType, std::string>) {
                     const std::string string_value = std::get<ColumnDataType>((*abstract_segment)[j]);

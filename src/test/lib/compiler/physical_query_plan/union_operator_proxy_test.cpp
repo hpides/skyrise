@@ -13,22 +13,22 @@ namespace skyrise {
 class UnionOperatorProxyTest : public ::testing::Test {
  public:
   void SetUp() override {
-    import_proxy_a = ImportOperatorProxy::Make("bucket1", kObjectKeys, kColumnIds);
-    import_proxy_b = ImportOperatorProxy::Make("bucket2", kObjectKeys, kColumnIds);
+    import_proxy_a_ = ImportOperatorProxy::Make("bucket1", kObjectKeys, kColumnIds);
+    import_proxy_b_ = ImportOperatorProxy::Make("bucket2", kObjectKeys, kColumnIds);
   }
 
  protected:
-  std::shared_ptr<ImportOperatorProxy> import_proxy_a, import_proxy_b;
+  std::shared_ptr<ImportOperatorProxy> import_proxy_a_, import_proxy_b_;
   static inline const std::vector<std::string> kObjectKeys = {"key1.orc", "key2.orc", "key3.orc"};
   static inline const std::vector<ColumnId> kColumnIds = {ColumnId{0}, ColumnId{3}, ColumnId{4}};
 };
 
 TEST_F(UnionOperatorProxyTest, BaseProperties) {
-  const auto union_all_proxy = UnionOperatorProxy::Make(SetOperationMode::kAll, import_proxy_a, import_proxy_b);
+  const auto union_all_proxy = UnionOperatorProxy::Make(SetOperationMode::kAll, import_proxy_a_, import_proxy_b_);
   EXPECT_EQ(union_all_proxy->Type(), OperatorType::kUnion);
   EXPECT_TRUE(union_all_proxy->IsPipelineBreaker());
-  EXPECT_EQ(union_all_proxy->OutputColumnsCount(), import_proxy_a->OutputColumnsCount());
-  EXPECT_EQ(union_all_proxy->OutputObjectsCount(), import_proxy_a->OutputObjectsCount());
+  EXPECT_EQ(union_all_proxy->OutputColumnsCount(), import_proxy_a_->OutputColumnsCount());
+  EXPECT_EQ(union_all_proxy->OutputObjectsCount(), import_proxy_a_->OutputObjectsCount());
 }
 
 TEST_F(UnionOperatorProxyTest, Description) {
@@ -68,8 +68,8 @@ TEST_F(UnionOperatorProxyTest, DeepCopy) {
   // clang-format off
   const auto union_proxy =
   UnionOperatorProxy::Make(SetOperationMode::kAll,
-    import_proxy_a,
-    import_proxy_b);
+    import_proxy_a_,
+    import_proxy_b_);
 
   // clang-format on
   const auto union_proxy_copy = std::dynamic_pointer_cast<UnionOperatorProxy>(union_proxy->DeepCopy());
@@ -86,8 +86,8 @@ TEST_F(UnionOperatorProxyTest, CreateOperatorInstance) {
   // clang-format off
   const auto union_proxy =
   UnionOperatorProxy::Make(SetOperationMode::kUnique,
-    import_proxy_a,
-    import_proxy_b);
+    import_proxy_a_,
+    import_proxy_b_);
 
   // clang-format on
   EXPECT_THROW(union_proxy->GetOrCreateOperatorInstance(), std::logic_error);

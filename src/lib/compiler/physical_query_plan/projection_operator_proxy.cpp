@@ -20,9 +20,7 @@ ProjectionOperatorProxy::ProjectionOperatorProxy(std::vector<std::shared_ptr<Abs
 
 const std::string& ProjectionOperatorProxy::Name() const { return kName; }
 
-const std::vector<std::shared_ptr<AbstractExpression>> ProjectionOperatorProxy::Expressions() const {
-  return expressions_;
-}
+std::vector<std::shared_ptr<AbstractExpression>> ProjectionOperatorProxy::Expressions() const { return expressions_; }
 
 bool ProjectionOperatorProxy::IsPipelineBreaker() const { return false; }
 

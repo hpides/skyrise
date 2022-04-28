@@ -25,7 +25,7 @@ SortOperatorProxy::SortOperatorProxy(std::vector<SortColumnDefinition> sort_defi
 
 const std::string& SortOperatorProxy::Name() const { return kName; }
 
-const std::vector<SortColumnDefinition> SortOperatorProxy::SortDefinitions() const { return sort_definitions_; }
+std::vector<SortColumnDefinition> SortOperatorProxy::SortDefinitions() const { return sort_definitions_; }
 
 bool SortOperatorProxy::IsPipelineBreaker() const { return true; }
 

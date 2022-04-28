@@ -16,7 +16,7 @@ class SortOperatorProxy : public EnableMakeForPlanNode<SortOperatorProxy, Abstra
 
   const std::string& Name() const override;
 
-  const std::vector<SortColumnDefinition> SortDefinitions() const;
+  std::vector<SortColumnDefinition> SortDefinitions() const;
 
   /**
    * Optimization-relevant attributes

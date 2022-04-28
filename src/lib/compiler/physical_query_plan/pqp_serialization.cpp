@@ -9,7 +9,6 @@
 #include "join_operator_proxy.hpp"
 #include "limit_operator_proxy.hpp"
 #include "partition_operator_proxy.hpp"
-#include "pqp_serialization.hpp"
 #include "projection_operator_proxy.hpp"
 #include "sort_operator_proxy.hpp"
 #include "union_operator_proxy.hpp"

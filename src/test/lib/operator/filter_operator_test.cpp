@@ -17,14 +17,15 @@
 #include "storage/table/value_segment.hpp"
 #include "testing/load_table.hpp"
 
-using namespace skyrise::expression_functional;
-
 namespace skyrise {
+
+// NOLINTNEXTLINE(google-build-using-namespace)
+using namespace skyrise::expression_functional;
 
 class FilterOperatorTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    const std::shared_ptr<Table> table = LoadTable<CsvFormatReader>("csv/input_a.csv", TestdataStorage());
+    std::shared_ptr<Table> table = LoadTable<CsvFormatReader>("csv/input_a.csv", TestdataStorage());
     table_wrapper_ = std::make_shared<TableWrapper>(std::move(table));
     table_wrapper_->Execute(nullptr);
 
@@ -32,8 +33,8 @@ class FilterOperatorTest : public ::testing::Test {
         nullptr, nullptr, []() { return std::make_shared<FragmentScheduler>(); });
   }
 
-  void AssertColumnsAreEqual(std::shared_ptr<const Table> table, const ColumnId& column_id,
-                             std::vector<AllTypeVariant> expected) {
+  static void AssertColumnsAreEqual(const std::shared_ptr<const Table>& table, const ColumnId& column_id,
+                                    std::vector<AllTypeVariant> expected) {
     for (ChunkId chunk_id = 0; chunk_id < table->ChunkCount(); ++chunk_id) {
       const auto& chunk = table->GetChunk(chunk_id);
 
@@ -41,7 +42,7 @@ class FilterOperatorTest : public ::testing::Test {
         const auto& segment = *chunk->GetSegment(column_id);
 
         const auto& found_value = segment[chunk_offset];
-        const auto comparator = [&found_value](const AllTypeVariant expected_value) {
+        const auto comparator = [&found_value](const AllTypeVariant& expected_value) {
           // Returns equivalency, not equality to simulate std::multiset.
           return !(found_value < expected_value) && !(expected_value < found_value);
         };
@@ -56,8 +57,8 @@ class FilterOperatorTest : public ::testing::Test {
     ASSERT_TRUE(expected.empty());
   }
 
-  std::shared_ptr<AbstractExpression> GetColumnExpression(const std::shared_ptr<AbstractOperator>& predecessor_operator,
-                                                          const ColumnId column_id) {
+  static std::shared_ptr<AbstractExpression> GetColumnExpression(
+      const std::shared_ptr<AbstractOperator>& predecessor_operator, const ColumnId column_id) {
     Assert(predecessor_operator->GetOutput(), "Expected Operator to be executed.");
     const auto& output_table = predecessor_operator->GetOutput();
     const auto& column_definition = output_table->ColumnDefinitions().at(column_id);
@@ -65,10 +66,10 @@ class FilterOperatorTest : public ::testing::Test {
     return PqpColumn_(column_id, column_definition.data_type, column_definition.nullable, column_definition.name);
   }
 
-  std::shared_ptr<FilterOperator> CreateBetweenFilter(const std::shared_ptr<AbstractOperator>& predecessor_operator,
-                                                      const ColumnId column_id, const AllTypeVariant& lower_bound,
-                                                      const AllTypeVariant& upper_bound,
-                                                      const PredicateCondition predicate_condition) {
+  static std::shared_ptr<FilterOperator> CreateBetweenFilter(
+      const std::shared_ptr<AbstractOperator>& predecessor_operator, const ColumnId column_id,
+      const AllTypeVariant& lower_bound, const AllTypeVariant& upper_bound,
+      const PredicateCondition predicate_condition) {
     const auto column_expression = GetColumnExpression(predecessor_operator, column_id);
     const auto predicate = std::make_shared<BetweenExpression>(predicate_condition, column_expression,
                                                                Value_(lower_bound), Value_(upper_bound));
@@ -76,10 +77,10 @@ class FilterOperatorTest : public ::testing::Test {
     return std::make_shared<FilterOperator>(predecessor_operator, predicate);
   }
 
-  std::shared_ptr<FilterOperator> CreateFilter(const std::shared_ptr<AbstractOperator>& predecessor_operator,
-                                               const ColumnId column_id, const PredicateCondition predicate_condition,
-                                               const AllTypeVariant& left_operand,
-                                               const std::optional<AllTypeVariant>& right_operand = std::nullopt) {
+  static std::shared_ptr<FilterOperator> CreateFilter(
+      const std::shared_ptr<AbstractOperator>& predecessor_operator, const ColumnId column_id,
+      const PredicateCondition predicate_condition, const AllTypeVariant& left_operand,
+      const std::optional<AllTypeVariant>& right_operand = std::nullopt) {
     const auto column_expression = GetColumnExpression(predecessor_operator, column_id);
 
     if (IsBetweenPredicateCondition(predicate_condition)) {
@@ -152,13 +153,13 @@ TEST_F(FilterOperatorTest, IntScanNotEquals) {
 }
 
 TEST_F(FilterOperatorTest, MultiChunkParallelScan) {
-  const int64_t kNumRows = kChunkDefaultSize;
-  const int64_t kLessThanEqualsValue = kNumRows / 2;
+  const int64_t row_count = kChunkDefaultSize;
+  const int64_t less_than_equals_value = row_count / 2;
 
   std::vector<int64_t> values;
-  values.reserve(kNumRows);
+  values.reserve(row_count);
 
-  for (int64_t i = 0; i < kNumRows; ++i) {
+  for (int64_t i = 0; i < row_count; ++i) {
     values.push_back(i);
   }
 
@@ -174,15 +175,15 @@ TEST_F(FilterOperatorTest, MultiChunkParallelScan) {
 
   // Create filter operator.
   const auto filter_operator =
-      CreateFilter(table_wrapper, ColumnId{0}, PredicateCondition::kLessThanEquals, kLessThanEqualsValue);
+      CreateFilter(table_wrapper, ColumnId{0}, PredicateCondition::kLessThanEquals, less_than_equals_value);
 
   const std::vector<std::shared_ptr<skyrise::AbstractTask>> tasks =
       OperatorTask::GenerateTasksFromOperator(filter_operator, operator_context_).first;
 
   operator_context_->GetScheduler()->ScheduleAndWaitForTasks(tasks);
 
-  EXPECT_EQ(filter_operator->GetOutput()->RowCount(), chunks.size() * (kLessThanEqualsValue + 1));
-  EXPECT_EQ(filter_operator->GetOutput()->ChunkCount(), chunks.size());
+  EXPECT_EQ(filter_operator->GetOutput()->RowCount(), table->ChunkCount() * (less_than_equals_value + 1));
+  EXPECT_EQ(filter_operator->GetOutput()->ChunkCount(), table->ChunkCount());
 }
 
 TEST_F(FilterOperatorTest, StringEquals) {

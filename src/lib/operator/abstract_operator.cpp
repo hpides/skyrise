@@ -4,9 +4,9 @@
 
 namespace skyrise {
 
-AbstractOperator::AbstractOperator(OperatorType type, const std::shared_ptr<const AbstractOperator>& left,
-                                   const std::shared_ptr<const AbstractOperator>& right)
-    : type_(type), left_input_(left), right_input_(right) {}
+AbstractOperator::AbstractOperator(OperatorType type, std::shared_ptr<const AbstractOperator> left,
+                                   std::shared_ptr<const AbstractOperator> right)
+    : type_(type), left_input_(std::move(left)), right_input_(std::move(right)) {}
 
 OperatorType AbstractOperator::Type() const { return type_; }
 

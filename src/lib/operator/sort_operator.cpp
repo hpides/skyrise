@@ -8,7 +8,7 @@
 
 namespace {
 
-static const std::string kName = "Sort";
+const std::string kName = "Sort";
 
 }  // namespace
 
@@ -57,7 +57,7 @@ std::shared_ptr<const Table> SortOperator::OnExecute(
 
 std::shared_ptr<Table> SortOperator::MaterializeOutputTable(
     const std::shared_ptr<const Table>& unsorted_table, const RowIdPositionList& position_list,
-    const std::shared_ptr<FragmentScheduler>& fragment_scheduler) const {
+    const std::shared_ptr<FragmentScheduler>& fragment_scheduler) {
   Assert(position_list.size() == unsorted_table->RowCount(),
          "The input table size does not match the number of row-positions.");
 

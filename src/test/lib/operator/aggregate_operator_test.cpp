@@ -21,7 +21,7 @@
 
 namespace skyrise {
 
-// NOLINTNEXTLINE (google-build-using-namespace)
+// NOLINTNEXTLINE(google-build-using-namespace)
 using namespace skyrise::expression_functional;
 
 class AggregateOperatorTest : public ::testing::Test {

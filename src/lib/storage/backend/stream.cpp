@@ -26,7 +26,7 @@ ObjectReaderStreamBuffer::pos_type ObjectReaderStreamBuffer::seekpos(pos_type po
                                                                      [[maybe_unused]] std::ios_base::openmode which) {
   const auto absolute_position = static_cast<size_t>(pos);
   if (absolute_position > GetObjectSize()) {
-    return {off_type(-1)};
+    return {static_cast<off_type>(-1)};
   }
 
   if (absolute_position >= current_offset_ && absolute_position < current_offset_ + buffer_.size()) {
@@ -56,7 +56,7 @@ ObjectReaderStreamBuffer::pos_type ObjectReaderStreamBuffer::seekoff(off_type of
       // Here `off` should be negative and be the absolute offset by adding it to the object size.
       return seekpos(pos_type(GetObjectSize() + off));
     default:
-      return {off_type(-1)};
+      return {static_cast<off_type>(-1)};
   }
 }
 

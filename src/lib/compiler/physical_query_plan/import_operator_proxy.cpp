@@ -145,7 +145,7 @@ std::shared_ptr<AbstractOperator> ImportOperatorProxy::CreateOperatorInstanceRec
       return first_object_key.find(file_extension, file_extension_start_pos) != std::string::npos;
     };
 
-    ImportFormat import_format;
+    ImportFormat import_format = ImportFormat::kCsv;
     if (specifies_format(kOrcExtension)) {
       import_format = ImportFormat::kOrc;
     } else if (specifies_format(kCsvExtension)) {

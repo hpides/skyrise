@@ -13,9 +13,9 @@ namespace skyrise {
 class SortOperatorProxyTest : public ::testing::Test {
  public:
   void SetUp() override {
-    const auto sort_definition1_ = SortColumnDefinition{ColumnId{0}, SortMode::kAscending};
-    const auto sort_definition2_ = SortColumnDefinition{ColumnId{1}, SortMode::kDescending};
-    sort_definitions_ = {sort_definition1_, sort_definition2_};
+    const auto sort_definition1 = SortColumnDefinition{ColumnId{0}, SortMode::kAscending};
+    const auto sort_definition2 = SortColumnDefinition{ColumnId{1}, SortMode::kDescending};
+    sort_definitions_ = {sort_definition1, sort_definition2};
   }
 
  protected:

@@ -161,7 +161,7 @@ class AggregateHashOperator : public AbstractAggregateOperator {
   bool has_aggregate_functions_;
 
   std::atomic_size_t expected_result_size_ = 0;
-  bool use_immediate_key_shortcut_;
+  bool use_immediate_key_shortcut_ = false;
 };
 
 }  // namespace skyrise

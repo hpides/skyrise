@@ -25,7 +25,7 @@ cxxopts::OptionAdder& BenchmarkExecutable::GetOptionAdder() { return cli_option_
 
 cxxopts::ParseResult& BenchmarkExecutable::GetParseResult(
     int argc, char* argv[]) {  // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
-  cli_option_adder_("metering", "Enable tracking of requests", cxxopts::value<bool>());
+  cli_option_adder_("metering", "Enable the tracking of requests", cxxopts::value<bool>());
   cli_option_adder_("verbose", "Show the verbose status log", cxxopts::value<bool>());
   cli_option_adder_("help", "Print the usage overview", cxxopts::value<bool>());
 
