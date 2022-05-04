@@ -2,9 +2,17 @@
 
 #include <sstream>
 
-#include "expression/expression_utils.hpp"
+#include "operator/hash_join_operator.hpp"
+#include "operator/join_operator_predicate.hpp"
 
 namespace {
+
+const std::string kJsonKeyJoinMode = "join_mode";
+const std::string kJsonKeyPrimaryPredicate = "primary_predicate";
+const std::string kJsonKeySecondaryPredicates = "secondary_predicates";
+const std::string kJsonKeyColumnIdLeft = "column_id_left";
+const std::string kJsonKeyColumnIdRight = "column_id_right";
+const std::string kJsonKeyPredicateCondition = "predicate_condition";
 
 const std::string kNameHash = "HashJoin";
 const std::string kNameNestedLoop = "NestedLoopJoin";
@@ -13,8 +21,8 @@ const std::string kNameNestedLoop = "NestedLoopJoin";
 
 namespace skyrise {
 
-JoinOperatorProxy::JoinOperatorProxy(const JoinMode mode, std::shared_ptr<AbstractExpression> primary_predicate,
-                                     std::vector<std::shared_ptr<AbstractExpression>> secondary_predicates)
+JoinOperatorProxy::JoinOperatorProxy(const JoinMode mode, std::shared_ptr<JoinOperatorPredicate> primary_predicate,
+                                     std::vector<std::shared_ptr<JoinOperatorPredicate>> secondary_predicates)
     : AbstractOperatorProxy(OperatorType::kNestedLoopJoin),
       mode_(mode),
       primary_predicate_(std::move(primary_predicate)),
@@ -42,14 +50,20 @@ std::string JoinOperatorProxy::Description(const DescriptionMode mode) const {
     return stream.str();
   }
 
-  stream << separator << "where " << primary_predicate_->AsColumnName();
+  // TODO(d-justen): resolve table names to display where clause
+  stream << separator << "where column #" << primary_predicate_->column_id_left << " ";
+  stream << magic_enum::enum_name(primary_predicate_->predicate_condition) << " ";
+  stream << "column #" << primary_predicate_->column_id_right;
 
   // Join predicates
   if (!secondary_predicates_.empty()) {
     stream << separator << "and ";
 
     for (size_t i = 0; i < secondary_predicates_.size(); ++i) {
-      stream << secondary_predicates_.at(i)->AsColumnName();
+      stream << "column #" << secondary_predicates_[i]->column_id_left << " ";
+      stream << magic_enum::enum_name(secondary_predicates_[i]->predicate_condition) << " ";
+      stream << "column #" << secondary_predicates_[i]->column_id_right;
+
       if (i < secondary_predicates_.size() - 1) {
         stream << separator << "and ";
       }
@@ -63,9 +77,9 @@ bool JoinOperatorProxy::RequiresRightInput() const { return true; }
 
 JoinMode JoinOperatorProxy::GetJoinMode() const { return mode_; }
 
-const std::shared_ptr<AbstractExpression>& JoinOperatorProxy::PrimaryPredicate() const { return primary_predicate_; }
+const std::shared_ptr<JoinOperatorPredicate>& JoinOperatorProxy::PrimaryPredicate() const { return primary_predicate_; }
 
-const std::vector<std::shared_ptr<AbstractExpression>>& JoinOperatorProxy::SecondaryPredicates() const {
+const std::vector<std::shared_ptr<JoinOperatorPredicate>>& JoinOperatorProxy::SecondaryPredicates() const {
   return secondary_predicates_;
 }
 
@@ -90,15 +104,55 @@ void JoinOperatorProxy::SetImplementation(OperatorType operator_type) {
 }
 
 Aws::Utils::Json::JsonValue JoinOperatorProxy::ToJson() const {
-  Fail("ToJson() is not yet implemented.");
-  return AbstractOperatorProxy::ToJson();
+  auto json = AbstractOperatorProxy::ToJson();
+  json.WithString(kJsonKeyJoinMode, std::string(magic_enum::enum_name(mode_)));
+
+  if (primary_predicate_) {
+    json.WithObject(kJsonKeyPrimaryPredicate, SerializePredicate(primary_predicate_));
+  }
+
+  if (!secondary_predicates_.empty()) {
+    Aws::Utils::Array<Aws::Utils::Json::JsonValue> json_secondary_predicates(secondary_predicates_.size());
+
+    for (size_t i = 0; i < secondary_predicates_.size(); ++i) {
+      json_secondary_predicates[i] = SerializePredicate(secondary_predicates_[i]);
+    }
+
+    json.WithArray(kJsonKeySecondaryPredicates, json_secondary_predicates);
+  }
+
+  return json;
 }
 
 std::shared_ptr<AbstractOperatorProxy> JoinOperatorProxy::FromJson(const Aws::Utils::Json::JsonView& json) {
+  Assert(json.ValueExists(kJsonKeyJoinMode), "JoinOperatorProxy must have a join mode.");
+  const JoinMode join_mode = magic_enum::enum_cast<JoinMode>(json.GetString(kJsonKeyJoinMode)).value();
+
+  std::shared_ptr<JoinOperatorPredicate> primary_predicate = nullptr;
+
+  if (json.ValueExists(kJsonKeyPrimaryPredicate)) {
+    primary_predicate = DeserializePredicate(json.GetObject(kJsonKeyPrimaryPredicate));
+  }
+
+  std::vector<std::shared_ptr<JoinOperatorPredicate>> secondary_predicates;
+
+  if (json.ValueExists(kJsonKeySecondaryPredicates)) {
+    const auto json_secondary_predicates = json.GetArray(kJsonKeySecondaryPredicates);
+    secondary_predicates.reserve(json_secondary_predicates.GetLength());
+
+    for (size_t i = 0; i < json_secondary_predicates.GetLength(); ++i) {
+      secondary_predicates.push_back(DeserializePredicate(json_secondary_predicates[i]));
+    }
+  }
+
   const auto operator_type = magic_enum::enum_cast<OperatorType>(json.GetString(kJsonKeyOperatorType)).value();
   switch (operator_type) {
-    case OperatorType::kHashJoin:
-      // TODO(anyone): Create JoinHash instance
+    case OperatorType::kHashJoin: {
+      auto join_proxy = JoinOperatorProxy::Make(join_mode, primary_predicate, secondary_predicates);
+      join_proxy->SetImplementation(operator_type);
+      join_proxy->SetAttributesFromJson(json);
+      return join_proxy;
+    }
     case OperatorType::kNestedLoopJoin:
       // TODO(anyone): Create JoinNestedLoop instance
     default:
@@ -109,18 +163,57 @@ std::shared_ptr<AbstractOperatorProxy> JoinOperatorProxy::FromJson(const Aws::Ut
 std::shared_ptr<AbstractOperatorProxy> JoinOperatorProxy::OnDeepCopy(
     const std::shared_ptr<AbstractOperatorProxy>& copied_left_input,
     const std::shared_ptr<AbstractOperatorProxy>& copied_right_input) const {
-  std::shared_ptr<AbstractExpression> primary_predicate_copy = nullptr;
-  std::vector<std::shared_ptr<AbstractExpression>> secondary_join_predicates_copy = {};
-  if (mode_ != JoinMode::kCross) {
-    primary_predicate_copy = primary_predicate_->DeepCopy();
-    secondary_join_predicates_copy = ExpressionsDeepCopy(secondary_predicates_);
+  std::shared_ptr<JoinOperatorPredicate> primary_predicate_copy = nullptr;
+
+  if (primary_predicate_) {
+    primary_predicate_copy = std::make_shared<JoinOperatorPredicate>(
+        JoinOperatorPredicate{primary_predicate_->column_id_left, primary_predicate_->column_id_right,
+                              primary_predicate_->predicate_condition});
   }
+
+  std::vector<std::shared_ptr<JoinOperatorPredicate>> secondary_join_predicates_copy;
+
+  if (!secondary_predicates_.empty()) {
+    secondary_join_predicates_copy.reserve(secondary_predicates_.size());
+
+    for (const auto& predicate : secondary_predicates_) {
+      secondary_join_predicates_copy.push_back(std::make_shared<JoinOperatorPredicate>(JoinOperatorPredicate{
+          predicate->column_id_left, predicate->column_id_right, predicate->predicate_condition}));
+    }
+  }
+
   return JoinOperatorProxy::Make(mode_, primary_predicate_copy, secondary_join_predicates_copy, copied_left_input,
                                  copied_right_input);
 }
 
 std::shared_ptr<AbstractOperator> JoinOperatorProxy::CreateOperatorInstanceRecursively() {
-  Fail("CreateOperatorInstanceRecursively() is not yet implemented.");
+  Assert(type_ == OperatorType::kHashJoin, "OperatorType must be HashJoin.");
+  Assert(secondary_predicates_.empty(), "Join does not support secondary predicates yet.");
+  Assert(LeftInput(), "Join needs a left input.");
+  Assert(RightInput(), "Join needs a right input.");
+
+  return std::make_shared<HashJoinOperator>(LeftInput()->GetOrCreateOperatorInstance(),
+                                            RightInput()->GetOrCreateOperatorInstance(), primary_predicate_, mode_);
+}
+
+Aws::Utils::Json::JsonValue JoinOperatorProxy::SerializePredicate(
+    const std::shared_ptr<JoinOperatorPredicate>& predicate) {
+  return Aws::Utils::Json::JsonValue()
+      .WithInteger(kJsonKeyColumnIdLeft, predicate->column_id_left)
+      .WithInteger(kJsonKeyColumnIdRight, predicate->column_id_right)
+      .WithString(kJsonKeyPredicateCondition, std::string(magic_enum::enum_name(predicate->predicate_condition)));
+}
+
+std::shared_ptr<JoinOperatorPredicate> JoinOperatorProxy::DeserializePredicate(
+    const Aws::Utils::Json::JsonView& predicate) {
+  Assert(predicate.ValueExists(kJsonKeyColumnIdLeft), "Predicate must contain a left column id.");
+  Assert(predicate.ValueExists(kJsonKeyColumnIdRight), "Predicate must contain a right column id.");
+  Assert(predicate.ValueExists(kJsonKeyPredicateCondition), "Predicate must contain a predicate condition.");
+
+  return std::make_shared<JoinOperatorPredicate>(JoinOperatorPredicate{
+      static_cast<ColumnId>(predicate.GetInteger(kJsonKeyColumnIdLeft)),
+      static_cast<ColumnId>(predicate.GetInteger(kJsonKeyColumnIdRight)),
+      magic_enum::enum_cast<PredicateCondition>(predicate.GetString(kJsonKeyPredicateCondition)).value()});
 }
 
 }  // namespace skyrise

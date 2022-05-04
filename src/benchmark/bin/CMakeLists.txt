@@ -159,6 +159,7 @@ target_link_libraries(
 add_executable(
     skyriseMicrobenchmarks
 
+    hash_join_microbenchmark.cpp
     partition_microbenchmark.cpp
 )
 

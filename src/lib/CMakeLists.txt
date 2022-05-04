@@ -190,8 +190,11 @@ set(
     operator/filter/abstract_filter_implementation.hpp
     operator/filter/expression_evaluator_filter_implementation.cpp
     operator/filter/expression_evaluator_filter_implementation.hpp
+    operator/hash_join_operator.cpp
+    operator/hash_join_operator.hpp
     operator/import_operator.cpp
     operator/import_operator.hpp
+    operator/join_operator_predicate.hpp
     operator/partition_operator.cpp
     operator/partition_operator.hpp
     operator/projection_operator.cpp

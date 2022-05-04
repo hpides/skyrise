@@ -50,6 +50,7 @@ set(
     lib/operator/alias_operator_test.cpp
     lib/operator/export_operator_test.cpp
     lib/operator/filter_operator_test.cpp
+    lib/operator/hash_join_operator_test.cpp
     lib/operator/import_operator_test.cpp
     lib/operator/partition_operator_test.cpp
     lib/operator/projection_operator_test.cpp
