@@ -140,15 +140,15 @@ std::ostream& operator<<(std::ostream& stream, SortMode sort_mode);
  * Defines in which order a certain column should be or is sorted.
  */
 struct SortColumnDefinition final {
-  explicit SortColumnDefinition(ColumnId column, SortMode sort_mode = SortMode::kAscending)
-      : column(column), sort_mode(sort_mode) {}
+  explicit SortColumnDefinition(ColumnId column_id, SortMode sort_mode = SortMode::kAscending)
+      : column_id(column_id), sort_mode(sort_mode) {}
 
-  ColumnId column;
+  ColumnId column_id;
   SortMode sort_mode;
 };
 
 inline bool operator==(const SortColumnDefinition& lhs, const SortColumnDefinition& rhs) {
-  return lhs.column == rhs.column && lhs.sort_mode == rhs.sort_mode;
+  return lhs.column_id == rhs.column_id && lhs.sort_mode == rhs.sort_mode;
 }
 
 }  // namespace skyrise

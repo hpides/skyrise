@@ -73,14 +73,13 @@ TEST_F(ProjectionOperatorProxyTest, DeepCopy) {
 }
 
 TEST_F(ProjectionOperatorProxyTest, CreateOperatorInstance) {
-  // TODO(anyone): Adjust test when adding the operator implementation.
   // clang-format off
   const auto projection_proxy =
-  ProjectionOperatorProxy::Make(expressions_,
+  ProjectionOperatorProxy::Make(expressions_, 
     ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
   // clang-format on
-  EXPECT_THROW(projection_proxy->GetOrCreateOperatorInstance(), std::logic_error);
+  EXPECT_TRUE(projection_proxy->GetOrCreateOperatorInstance());
 }
 
 }  // namespace skyrise

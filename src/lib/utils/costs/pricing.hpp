@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <regex>
 #include <string>
 #include <unordered_map>
 
@@ -104,6 +105,8 @@ class Pricing {
       {Aws::Region::ME_SOUTH_1, "Middle East (Bahrain)"},
       {Aws::Region::US_GOV_WEST_1, "AWS GovCloud (US)"},
       {Aws::Region::US_GOV_EAST_1, "AWS GovCloud (US-East)"}};
+
+  static inline const std::regex kUsageTypePrefixRegex = std::regex("^[A-Z]{2,3}\\d?-");
 };
 
 }  // namespace skyrise

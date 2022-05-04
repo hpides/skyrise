@@ -17,9 +17,9 @@ const std::string kName = "Partition";
 
 namespace skyrise {
 
-PartitionOperator::PartitionOperator(std::shared_ptr<AbstractOperator> input, const size_t partition_count,
+PartitionOperator::PartitionOperator(std::shared_ptr<AbstractOperator> input_operator, const size_t partition_count,
                                      const std::set<ColumnId>& partition_column_ids)
-    : AbstractOperator(OperatorType::kPartition, std::move(input), nullptr),
+    : AbstractOperator(OperatorType::kPartition, std::move(input_operator), nullptr),
       partition_count_(partition_count),
       partition_column_ids_(partition_column_ids) {}
 

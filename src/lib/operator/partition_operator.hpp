@@ -1,7 +1,7 @@
 #include <set>
 #include <vector>
 
-#include "operator/abstract_operator.hpp"
+#include "abstract_operator.hpp"
 #include "storage/table/table.hpp"
 
 namespace skyrise {
@@ -15,7 +15,7 @@ using PartitionedPositionLists = std::vector<std::vector<std::tuple<ChunkId, siz
  */
 class PartitionOperator : public AbstractOperator {
  public:
-  PartitionOperator(std::shared_ptr<AbstractOperator> input, const size_t partition_count,
+  PartitionOperator(std::shared_ptr<AbstractOperator> input_operator, const size_t partition_count,
                     const std::set<ColumnId>& partition_column_ids);
 
   const std::string& Name() const override;

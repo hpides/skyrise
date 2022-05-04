@@ -13,11 +13,13 @@ namespace skyrise {
 class AwsPricingTest : public ::testing::Test {
  private:
   const AwsApi aws_api_;
+
+ protected:
+  const Client client_;
 };
 
 TEST_F(AwsPricingTest, PricingLambda) {
-  Client client;
-  Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
+  Pricing pricing(client_.GetPricingClient(), client_.GetClientRegion());
 
   const auto& lambda_pricing1 = pricing.GetLambdaPricing();
 
@@ -36,8 +38,7 @@ TEST_F(AwsPricingTest, PricingLambda) {
 }
 
 TEST_F(AwsPricingTest, PricingS3) {
-  Client client;
-  Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
+  Pricing pricing(client_.GetPricingClient(), client_.GetClientRegion());
 
   const auto& s3_pricing1 = pricing.GetS3Pricing();
 
@@ -59,8 +60,7 @@ TEST_F(AwsPricingTest, PricingS3) {
 }
 
 TEST_F(AwsPricingTest, PricingXray) {
-  Client client;
-  Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
+  Pricing pricing(client_.GetPricingClient(), client_.GetClientRegion());
 
   const auto& xray_pricing_1 = pricing.GetXrayPricing();
 
@@ -71,6 +71,19 @@ TEST_F(AwsPricingTest, PricingXray) {
 
   EXPECT_EQ(xray_pricing_1->price_per_stored_trace, xray_pricing_2->price_per_stored_trace);
   EXPECT_EQ(xray_pricing_1->price_per_accessed_trace, xray_pricing_2->price_per_accessed_trace);
+}
+
+TEST_F(AwsPricingTest, DifferentPricingRegions) {
+  const std::vector<std::string> kPricingRegions = {Aws::Region::US_EAST_2, Aws::Region::US_WEST_1,
+                                                    Aws::Region::EU_CENTRAL_1, Aws::Region::EU_WEST_1,
+                                                    Aws::Region::AF_SOUTH_1};
+
+  for (const auto& pricing_region : kPricingRegions) {
+    Pricing pricing(client_.GetPricingClient(), pricing_region);
+    EXPECT_NE(pricing.GetLambdaPricing(), nullptr);
+    EXPECT_NE(pricing.GetS3Pricing(), nullptr);
+    EXPECT_NE(pricing.GetXrayPricing(), nullptr);
+  }
 }
 
 }  // namespace skyrise

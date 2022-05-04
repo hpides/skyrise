@@ -2,9 +2,9 @@
 
 #include <sstream>
 
+#include "expression/expression_serialization.hpp"
 #include "expression/expression_utils.hpp"
-#include "expression/serialization/expression_deserializer.hpp"
-#include "expression/serialization/expression_serializer.hpp"
+#include "operator/projection_operator.hpp"
 
 namespace {
 
@@ -32,7 +32,7 @@ Aws::Utils::Json::JsonValue ProjectionOperatorProxy::ToJson() const {
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> expressions_json(expressions_.size());
 
   for (size_t i = 0; i < expressions_.size(); ++i) {
-    expressions_json[i] = ExpressionSerializer::Serialize(*expressions_[i]);
+    expressions_json[i] = SerializeExpression(*expressions_[i]);
   }
   return AbstractOperatorProxy::ToJson().WithArray(kJsonKeyExpressions, expressions_json);
 }
@@ -43,7 +43,7 @@ std::shared_ptr<AbstractOperatorProxy> ProjectionOperatorProxy::FromJson(const A
   expressions.reserve(json_expressions.GetLength());
 
   for (size_t i = 0; i < json_expressions.GetLength(); ++i) {
-    auto deserialized_expression = ExpressionDeserializer::Deserialize(json_expressions.GetItem(i));
+    auto deserialized_expression = DeserializeExpression(json_expressions.GetItem(i));
     expressions.emplace_back(deserialized_expression);
   }
 
@@ -60,8 +60,9 @@ std::shared_ptr<AbstractOperatorProxy> ProjectionOperatorProxy::OnDeepCopy(
 }
 
 std::shared_ptr<AbstractOperator> ProjectionOperatorProxy::CreateOperatorInstanceRecursively() {
-  Fail("CreateOperatorInstanceRecursively() is not yet implemented.");
-  return nullptr;
+  Assert(LeftInput(), "Missing input operator proxy.");
+  Assert(!expressions_.empty(), "ProjectionOperatorProxy must specify at least one expression.");
+  return std::make_shared<ProjectionOperator>(LeftInput()->GetOrCreateOperatorInstance(), expressions_);
 }
 
 }  // namespace skyrise

@@ -21,7 +21,7 @@ class ExpressionEvaluatorToResultTest : public ::testing::Test {
  protected:
   void SetUp() override {
     // Load table_a_.
-    table_a_ = ExpressionEvaluatorToResultTest::LoadTable("csv/expression_evaluator/input_a.csv", storage_);
+    table_a_ = ExpressionEvaluatorToResultTest::LoadTable("csv/input_a.csv", storage_);
     a_ = PqpColumnExpression::FromTable(*table_a_, std::string("a"));
     b_ = PqpColumnExpression::FromTable(*table_a_, std::string("b"));
     d_ = PqpColumnExpression::FromTable(*table_a_, std::string("d"));

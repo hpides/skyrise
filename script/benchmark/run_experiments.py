@@ -1,38 +1,15 @@
 import argparse
-import enum
 import json
 import pathlib
 import subprocess
 import tempfile
 import time
-
+import pandas
 import pytictoc
-import termcolor
+
+from info_type import InfoType, print_info
 
 import experiment_specifications
-
-
-class InfoType(enum.Enum):
-    DOUBLE_SEPARATOR = 1
-    SINGLE_SEPARATOR = 2
-    RUN = 3
-    PASSED = 4
-    FAILED = 5
-
-
-info_type_texts = {
-    InfoType.DOUBLE_SEPARATOR: "[==========]",
-    InfoType.SINGLE_SEPARATOR: "[----------]",
-    InfoType.RUN: "[ RUN      ]",
-    InfoType.PASSED: "[  PASSED  ]",
-    InfoType.FAILED: "[  FAILED  ]",
-}
-
-
-def print_info(info_type: InfoType, info: str = ""):
-    print("%s %s" %
-          (termcolor.colored(info_type_texts[info_type], "red" if info_type == InfoType.FAILED else "green"), info))
-
 
 if __name__ == "__main__":
     experiment_specifications.init()
@@ -51,20 +28,20 @@ if __name__ == "__main__":
 
     experiment_identifiers = set(filter(None, arguments.experiments.split(",")))
 
-    experiments = [
-        experiment for experiment in experiment_specifications.experiments
-        if (experiment.identifier in experiment_identifiers)
-    ] if experiment_identifiers else experiment_specifications.experiments
+    experiments = experiment_specifications.experiments
+    if experiment_identifiers:
+        experiments = [
+            experiment for experiment in experiment_specifications.experiments
+            if (experiment.identifier in experiment_identifiers)
+        ]
 
     script_path = pathlib.Path(__file__).parent.resolve()
-    executable_path = pathlib.Path(script_path / experiment_specifications.executables_path).resolve()
-    experiment_path = pathlib.Path(script_path / experiment_specifications.experiments_path /
-                                   time.strftime("%Y_%m_%d_%H_%M_%S")).resolve()
+    executable_path = script_path / experiment_specifications.executables_path
+    experiment_path = script_path / experiment_specifications.experiments_path / time.strftime("%Y_%m_%d_%H_%M_%S")
 
     experiment_path.mkdir(parents=True, exist_ok=True)
 
-    print_info(InfoType.DOUBLE_SEPARATOR,
-               "Running %s experiment%s" % (len(experiments), "s" if len(experiments) > 1 else ""))
+    print_info(InfoType.DOUBLE_SEPARATOR, f"Running {len(experiments)} experiment{'s' if len(experiments) > 1 else ''}")
     print_info(InfoType.SINGLE_SEPARATOR)
 
     timer = pytictoc.TicToc()
@@ -74,43 +51,48 @@ if __name__ == "__main__":
         print_info(InfoType.RUN, experiment.identifier)
 
         is_success = True
+        json_output = {}
         timer.tic()
 
-        output_path = pathlib.Path(experiment_path / ("%s_%s.json" %
-                                                      (experiment.executable, experiment.identifier))).resolve()
+        for index, arguments in enumerate(experiment.arguments):
+            with tempfile.NamedTemporaryFile() as temporary_file:
+                command = f"{executable_path / experiment.executable} {temporary_file.name}"
+                for (parameter, argument) in zip(experiment.parameters, arguments):
+                    command += f" {parameter} {argument}"
 
-        with output_path.open("w") as output_file:
-            json_output = None
+                output = subprocess.run(command, stdout=subprocess.PIPE, universal_newlines=True, shell=True)
 
-            for index, arguments in enumerate(experiment.arguments):
-                with tempfile.NamedTemporaryFile() as temporary_file:
-                    command = "%s %s" % (pathlib.Path(
-                        executable_path / experiment.executable).resolve(), temporary_file.name)
-                    for (parameter, argument) in zip(experiment.parameters, arguments):
-                        command += " %s %s" % (parameter, argument)
+                if output.returncode == 0:
+                    temporary_json_output = json.loads(temporary_file.read())
 
-                    output = subprocess.run(command, stdout=subprocess.PIPE, universal_newlines=True, shell=True)
-
-                    if output.returncode == 0:
-                        temporary_json_output = json.loads(temporary_file.read())
-
-                        if index == 0:
-                            json_output = temporary_json_output
-                        else:
-                            json_output["benchmarks"].extend(temporary_json_output["benchmarks"])
+                    if index == 0:
+                        json_output = temporary_json_output
                     else:
-                        is_success = False
-                        break
+                        json_output["benchmarks"].extend(temporary_json_output["benchmarks"])
+                else:
+                    is_success = False
+                    break
 
-            if is_success and json_output:
+        if is_success and json_output:
+            output_filename = f"{experiment.executable}_{experiment.identifier}"
+
+            with (experiment_path / f"{output_filename}.json").open("w") as output_file:
                 output_file.write(json.dumps(json_output, indent=2))
+
+            csv_rows = []
+            for benchmark_json_output in json_output["benchmarks"]:
+                benchmark_json_output.pop("repetitions", None)
+
+                csv_rows.append(pandas.json_normalize(benchmark_json_output))
+
+            csv_output = pandas.concat(csv_rows)
+            csv_output.to_csv(experiment_path / f"{output_filename}.csv", index=False)
 
         elapsed_times.append(round(timer.tocvalue(), 2))
 
         print_info(InfoType.PASSED if is_success else InfoType.FAILED,
-                   "%s (%ss)" % (experiment.identifier, elapsed_times[-1]))
+                   f"{experiment.identifier} ({elapsed_times[-1]}s)")
         print_info(InfoType.SINGLE_SEPARATOR)
 
-    print_info(
-        InfoType.DOUBLE_SEPARATOR,
-        "%s experiment%s ran (%ss)" % (len(experiments), "s" if len(experiments) > 1 else "", sum(elapsed_times)))
+    print_info(InfoType.DOUBLE_SEPARATOR,
+               f"{len(experiments)} experiment{'s' if len(experiments) > 1 else ''} ran ({sum(elapsed_times)}s)")

@@ -73,14 +73,13 @@ TEST_F(FilterOperatorProxyTest, SerializeAndDeserialize) {
 }
 
 TEST_F(FilterOperatorProxyTest, CreateOperatorInstance) {
-  // TODO(anyone): Adjust test when adding the operator implementation.
   // clang-format off
   const auto filter_proxy =
   FilterOperatorProxy::Make(predicate_,
     ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
   // clang-format on
-  EXPECT_THROW(filter_proxy->GetOrCreateOperatorInstance(), std::logic_error);
+  EXPECT_TRUE(filter_proxy->GetOrCreateOperatorInstance());
 }
 
 }  // namespace skyrise

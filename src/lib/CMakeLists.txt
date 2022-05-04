@@ -189,6 +189,8 @@ set(
     expression/expression_functional.cpp
     expression/expression_functional.hpp
     expression/expression_precedence.hpp
+    expression/expression_serialization.cpp
+    expression/expression_serialization.hpp
     expression/expression_utils.cpp
     expression/expression_utils.hpp
     expression/extract_expression.cpp
@@ -203,10 +205,6 @@ set(
     expression/logical_expression.hpp
     expression/pqp_column_expression.cpp
     expression/pqp_column_expression.hpp
-    expression/serialization/expression_deserializer.cpp
-    expression/serialization/expression_deserializer.hpp
-    expression/serialization/expression_serializer.cpp
-    expression/serialization/expression_serializer.hpp
     expression/unary_minus_expression.cpp
     expression/unary_minus_expression.hpp
     expression/value_expression.cpp
@@ -222,14 +220,25 @@ set(
 
     operator/abstract_operator.cpp
     operator/abstract_operator.hpp
+    operator/alias_operator.cpp
+    operator/alias_operator.hpp
     operator/execution_context.cpp
     operator/execution_context.hpp
     operator/export_operator.cpp
     operator/export_operator.hpp
+    operator/filter_operator.cpp
+    operator/filter_operator.hpp
+    operator/filter/abstract_filter_implementation.hpp
+    operator/filter/expression_evaluator_filter_implementation.cpp
+    operator/filter/expression_evaluator_filter_implementation.hpp
     operator/import_operator.cpp
     operator/import_operator.hpp
     operator/partition_operator.cpp
     operator/partition_operator.hpp
+    operator/projection_operator.cpp
+    operator/projection_operator.hpp
+    operator/sort_operator.cpp
+    operator/sort_operator.hpp
     operator/table_wrapper.hpp
 
     scheduler/scheduler_types.hpp

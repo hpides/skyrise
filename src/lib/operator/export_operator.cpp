@@ -11,9 +11,9 @@ const std::string kName = "Export";
 
 namespace skyrise {
 
-ExportOperator::ExportOperator(const std::shared_ptr<const AbstractOperator>& input_operator, std::string bucket_name,
+ExportOperator::ExportOperator(std::shared_ptr<const AbstractOperator> input_operator, std::string bucket_name,
                                std::string target_object_key, ExportFormat export_format)
-    : AbstractOperator(OperatorType::kExport, input_operator),
+    : AbstractOperator(OperatorType::kExport, std::move(input_operator)),
       bucket_name_(std::move(bucket_name)),
       target_object_key_(std::move(target_object_key)),
       export_format_(export_format) {}

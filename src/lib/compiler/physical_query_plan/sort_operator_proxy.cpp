@@ -5,6 +5,8 @@
 #include <boost/container_hash/hash.hpp>
 #include <magic_enum.hpp>
 
+#include "operator/sort_operator.hpp"
+
 namespace {
 
 const std::string kJsonKeySortDefinitions = "sort_definitions";
@@ -34,7 +36,7 @@ Aws::Utils::Json::JsonValue SortOperatorProxy::ToJson() const {
     const auto& sort_column_definition = sort_definitions_[i];
     json_sort_definitions[i] =
         Aws::Utils::Json::JsonValue()
-            .WithInteger(kJsonKeySortColumnId, sort_column_definition.column)
+            .WithInteger(kJsonKeySortColumnId, sort_column_definition.column_id)
             .WithString(kJsonKeySortMode, std::string(magic_enum::enum_name(sort_column_definition.sort_mode)));
   }
 
@@ -65,8 +67,9 @@ std::shared_ptr<AbstractOperatorProxy> SortOperatorProxy::OnDeepCopy(
 }
 
 std::shared_ptr<AbstractOperator> SortOperatorProxy::CreateOperatorInstanceRecursively() {
-  Fail("CreateOperatorInstanceRecursively() is not yet implemented.");
-  return nullptr;
+  Assert(LeftInput(), "Missing input operator proxy.");
+  Assert(!sort_definitions_.empty(), "SortOperatorProxy must specify at least one sort definition.");
+  return std::make_shared<SortOperator>(LeftInput()->GetOrCreateOperatorInstance(), sort_definitions_);
 }
 
 }  // namespace skyrise

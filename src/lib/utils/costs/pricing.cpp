@@ -54,14 +54,13 @@ std::map<Aws::String, long double> Pricing::FetchPricing(const Aws::String& serv
       const Aws::Utils::Json::JsonValue price_value(price);
       const auto price_view = price_value.View();
 
-      // Retrieve and return price.
       auto usage_type = price_view.GetObject("product").GetObject("attributes").GetString("usagetype");
 
-      // TODO(anyone): Complete this list by adding all possible region prefixes.
-      // Remove prefix if present.
-      if (service_code == "AWSXRay" &&
-          (usage_type.find("USE1-") == 0 || usage_type.find("EUW1-") == 0 || usage_type.find("APN1-") == 0)) {
-        usage_type = usage_type.substr(5);
+      // Some usage types are prefixed (e.g., EUC1- for eu-central-1). We want to remove these prefixes to match billing
+      // types universally.
+      std::smatch prefix_match;
+      if (std::regex_search(usage_type, prefix_match, kUsageTypePrefixRegex)) {
+        usage_type = usage_type.substr(prefix_match[0].length());
       }
 
       const auto price_dimensions_view = price_view.GetObject("terms")
