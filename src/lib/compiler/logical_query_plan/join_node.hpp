@@ -21,13 +21,13 @@ namespace skyrise {
 class JoinNode : public EnableMakeForPlanNode<JoinNode, AbstractLqpNode>, public AbstractLqpNode {
  public:
   // Constructor for Cross Joins. join_mode has to be JoinMode::kCross
-  explicit JoinNode(const JoinMode init_join_mode);
+  explicit JoinNode(const JoinMode join_mode);
 
   // Utility constructor that just calls the multi predicated constructor
-  JoinNode(const JoinMode init_join_mode, const std::shared_ptr<AbstractExpression>& join_predicate);
+  JoinNode(const JoinMode join_mode, const std::shared_ptr<AbstractExpression>& join_predicate);
 
   // Constructor for multi predicated joins
-  JoinNode(const JoinMode init_join_mode, const std::vector<std::shared_ptr<AbstractExpression>>& init_join_predicates);
+  JoinNode(const JoinMode join_mode, const std::vector<std::shared_ptr<AbstractExpression>>& init_join_predicates);
 
   const std::string& Name() const override;
   using AbstractLqpNode::Description;
@@ -59,7 +59,7 @@ class JoinNode : public EnableMakeForPlanNode<JoinNode, AbstractLqpNode>, public
 
   const std::vector<std::shared_ptr<AbstractExpression>>& join_predicates() const;
 
-  JoinMode join_mode;
+  JoinMode join_mode_;
 
  protected:
   /**

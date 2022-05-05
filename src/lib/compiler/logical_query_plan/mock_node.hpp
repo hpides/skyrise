@@ -28,9 +28,9 @@ class MockNode : public EnableMakeForPlanNode<MockNode, AbstractLqpNode>, public
 
   explicit MockNode(const ColumnDefinitions& column_definitions, const std::optional<std::string>& init_name = {});
 
-  std::shared_ptr<LqpColumnExpression> get_column(const std::string& column_name) const;
+  std::shared_ptr<LqpColumnExpression> GetColumn(const std::string& column_name) const;
 
-  const ColumnDefinitions& column_definitions() const;
+  const ColumnDefinitions& ColumnDefinitions() const;
 
   std::vector<std::shared_ptr<AbstractExpression>> OutputExpressions() const override;
   bool IsColumnNullable(const ColumnId column_id) const override;
@@ -53,7 +53,7 @@ class MockNode : public EnableMakeForPlanNode<MockNode, AbstractLqpNode>, public
   void SetKeyConstraints(const TableKeyConstraints& key_constraints);
   const TableKeyConstraints& key_constraints() const;
 
-  void set_non_trivial_functional_dependencies(const std::vector<FunctionalDependency>& fds);
+  void SetNonTrivialFunctionalDependencies(const std::vector<FunctionalDependency>& fds);
   // Returns the specified set of non-trivial FDs.
   std::vector<FunctionalDependency> NonTrivialFunctionalDependencies() const override;
 

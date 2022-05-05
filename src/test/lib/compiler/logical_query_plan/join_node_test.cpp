@@ -26,11 +26,11 @@ class JoinNodeTest : public ::testing::Test {
         MockNode::ColumnDefinitions{{DataType::kInt, "a"}, {DataType::kInt, "b"}, {DataType::kInt, "c"}}, "t_a");
     mock_node_b_ = MockNode::Make(MockNode::ColumnDefinitions{{DataType::kInt, "x"}, {DataType::kFloat, "y"}}, "t_b");
 
-    t_a_a_ = mock_node_a_->get_column("a");
-    t_a_b_ = mock_node_a_->get_column("b");
-    t_a_c_ = mock_node_a_->get_column("c");
-    t_b_x_ = mock_node_b_->get_column("x");
-    t_b_y_ = mock_node_b_->get_column("y");
+    t_a_a_ = mock_node_a_->GetColumn("a");
+    t_a_b_ = mock_node_a_->GetColumn("b");
+    t_a_c_ = mock_node_a_->GetColumn("c");
+    t_b_x_ = mock_node_b_->GetColumn("x");
+    t_b_y_ = mock_node_b_->GetColumn("y");
 
     cross_join_node_ = JoinNode::Make(JoinMode::kCross, mock_node_a_, mock_node_b_);
     inner_join_node_ = JoinNode::Make(JoinMode::kInner, Equals_(t_a_a_, t_b_y_), mock_node_a_, mock_node_b_);
@@ -213,10 +213,10 @@ TEST_F(JoinNodeTest, FunctionalDependenciesSemiAndAntiJoins) {
   // Preparations
   const FunctionalDependency fd_a({t_a_a_}, {t_a_b_});
   const FunctionalDependency fd_x({t_b_x_}, {t_b_y_});
-  mock_node_a_->set_non_trivial_functional_dependencies({fd_a});
+  mock_node_a_->SetNonTrivialFunctionalDependencies({fd_a});
   EXPECT_EQ(mock_node_a_->NonTrivialFunctionalDependencies().size(), 1);
   EXPECT_EQ(mock_node_a_->NonTrivialFunctionalDependencies().at(0), fd_a);
-  mock_node_b_->set_non_trivial_functional_dependencies({fd_x});
+  mock_node_b_->SetNonTrivialFunctionalDependencies({fd_x});
   EXPECT_EQ(mock_node_b_->NonTrivialFunctionalDependencies().size(), 1);
   EXPECT_EQ(mock_node_b_->NonTrivialFunctionalDependencies().at(0), fd_x);
 
@@ -248,8 +248,8 @@ TEST_F(JoinNodeTest, FunctionalDependenciesForwardNonTrivialLeft) {
 
     // Left input Node has non-trivial FDs
     const FunctionalDependency fd_a({t_a_a_}, {t_a_b_});
-    mock_node_a_->set_non_trivial_functional_dependencies({fd_a});
-    mock_node_b_->set_non_trivial_functional_dependencies({});
+    mock_node_a_->SetNonTrivialFunctionalDependencies({fd_a});
+    mock_node_b_->SetNonTrivialFunctionalDependencies({});
     EXPECT_TRUE(mock_node_a_->UniqueConstraints()->empty());
     EXPECT_TRUE(mock_node_b_->UniqueConstraints()->empty());
 
@@ -274,8 +274,8 @@ TEST_F(JoinNodeTest, FunctionalDependenciesForwardNonTrivialRight) {
 
     // Right input Node has non-trivial FDs
     const FunctionalDependency fd_x({t_b_x_}, {t_b_y_});
-    mock_node_a_->set_non_trivial_functional_dependencies({});
-    mock_node_b_->set_non_trivial_functional_dependencies({fd_x});
+    mock_node_a_->SetNonTrivialFunctionalDependencies({});
+    mock_node_b_->SetNonTrivialFunctionalDependencies({fd_x});
     EXPECT_TRUE(mock_node_a_->UniqueConstraints()->empty());
     EXPECT_TRUE(mock_node_b_->UniqueConstraints()->empty());
 
@@ -301,8 +301,8 @@ TEST_F(JoinNodeTest, FunctionalDependenciesForwardNonTrivialBoth) {
     // Both input nodes have non-trivial FDs
     const FunctionalDependency fd_a({t_a_a_}, {t_a_b_});
     const FunctionalDependency fd_x({t_b_x_}, {t_b_y_});
-    mock_node_a_->set_non_trivial_functional_dependencies({fd_a});
-    mock_node_b_->set_non_trivial_functional_dependencies({fd_x});
+    mock_node_a_->SetNonTrivialFunctionalDependencies({fd_a});
+    mock_node_b_->SetNonTrivialFunctionalDependencies({fd_x});
     EXPECT_TRUE(mock_node_a_->UniqueConstraints()->empty());
     EXPECT_TRUE(mock_node_b_->UniqueConstraints()->empty());
 
@@ -340,8 +340,8 @@ TEST_F(JoinNodeTest, FunctionalDependenciesForwardNonTrivialBothAndDerive) {
      */
     const FunctionalDependency fd_a({t_a_a_}, {t_a_b_});
     const FunctionalDependency fd_x({t_b_x_}, {t_b_y_});
-    mock_node_a_->set_non_trivial_functional_dependencies({fd_a});
-    mock_node_b_->set_non_trivial_functional_dependencies({fd_x});
+    mock_node_a_->SetNonTrivialFunctionalDependencies({fd_a});
+    mock_node_b_->SetNonTrivialFunctionalDependencies({fd_x});
     mock_node_a_->SetKeyConstraints({*key_constraint_b_c_});
     mock_node_b_->SetKeyConstraints({*key_constraint_y_});
     const FunctionalDependency generated_fd_b_c({t_a_b_, t_a_c_}, {t_a_a_});
@@ -379,8 +379,8 @@ TEST_F(JoinNodeTest, FunctionalDependenciesDeriveNone) {
   // MockNodes with non-trivial FDs
   const FunctionalDependency fd_b({t_a_b_}, {t_a_a_});
   const FunctionalDependency fd_y({t_b_y_}, {t_b_x_});
-  mock_node_a_->set_non_trivial_functional_dependencies({fd_b});
-  mock_node_b_->set_non_trivial_functional_dependencies({fd_y});
+  mock_node_a_->SetNonTrivialFunctionalDependencies({fd_b});
+  mock_node_b_->SetNonTrivialFunctionalDependencies({fd_y});
 
   // clang-format off
   const auto& join_node =
@@ -439,7 +439,7 @@ TEST_F(JoinNodeTest, FunctionalDependenciesUnify) {
   // The following FD is trivial since it can be derived from a unique constraint (PRIMARY KEY across a & b).
   // However, we define it as non-trivial anyway, to verify the conflict resolution when merging FDs later on.
   const FunctionalDependency fd_a_b({t_a_a_, t_a_b_}, {t_a_c_});
-  mock_node_a_->set_non_trivial_functional_dependencies({fd_a_b});
+  mock_node_a_->SetNonTrivialFunctionalDependencies({fd_a_b});
 
   // Define an Inner Join, so that all unique constraints survive
   // clang-format off

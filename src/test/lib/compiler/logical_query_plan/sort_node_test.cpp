@@ -25,9 +25,9 @@ class SortNodeTest : public ::testing::Test {
     //
     //    table_node_ = StoredTableNode::Make("table_a");
     //
-    //    a_i_ = table_node_->get_column("i");
-    //    a_f_ = table_node_->get_column("f");
-    //    a_d_ = table_node_->get_column("d");
+    //    a_i_ = table_node_->GetColumn("i");
+    //    a_f_ = table_node_->GetColumn("f");
+    //    a_d_ = table_node_->GetColumn("d");
     //
     //    sort_node_ = SortNode::Make(ExpressionVector_(a_i_), std::vector<SortMode>{SortMode::kAscending},
     //    table_node_);

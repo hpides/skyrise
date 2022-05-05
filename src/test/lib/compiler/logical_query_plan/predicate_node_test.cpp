@@ -39,7 +39,7 @@ class PredicateNodeTest : public ::testing::Test {
 // TEST_F(PredicateNodeTest, HashingAndEqualityCheck) {
 //  EXPECT_EQ(*predicate_node_, *predicate_node_);
 //  const auto equal_table_node = StoredTableNode::Make("table_a");
-//  const auto equal_i = equal_table_node->get_column("i");
+//  const auto equal_i = equal_table_node->GetColumn("i");
 //
 //  const auto other_predicate_node_a = PredicateNode::Make(Equals_(i_, 5), table_node_);
 //  const auto other_predicate_node_b = PredicateNode::Make(Equals_(f_, 5), table_node_);

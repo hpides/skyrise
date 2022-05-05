@@ -19,8 +19,8 @@ namespace skyrise {
 MockNode::MockNode(const ColumnDefinitions& column_definitions, const std::optional<std::string>& init_name)
     : AbstractLqpNode(LqpNodeType::kMock), name(init_name), column_definitions_(column_definitions) {}
 
-std::shared_ptr<LqpColumnExpression> MockNode::get_column(const std::string& column_name) const {
-  const auto& column_definitions = this->column_definitions();
+std::shared_ptr<LqpColumnExpression> MockNode::GetColumn(const std::string& column_name) const {
+  const auto& column_definitions = this->ColumnDefinitions();
 
   for (ColumnId column_id = 0; column_id < column_definitions.size(); ++column_id) {
     if (column_definitions[column_id].second == column_name) {
@@ -31,7 +31,7 @@ std::shared_ptr<LqpColumnExpression> MockNode::get_column(const std::string& col
   Fail("Couldn't find column named '"s + column_name + "' in MockNode");
 }
 
-const MockNode::ColumnDefinitions& MockNode::column_definitions() const { return column_definitions_; }
+const MockNode::ColumnDefinitions& MockNode::ColumnDefinitions() const { return column_definitions_; }
 
 std::vector<std::shared_ptr<AbstractExpression>> MockNode::OutputExpressions() const {
   // Need to initialize the expressions lazily because they will have a weak_ptr to this node and we can't obtain that
@@ -104,7 +104,7 @@ std::shared_ptr<LqpUniqueConstraints> MockNode::UniqueConstraints() const {
 const std::vector<ColumnId>& MockNode::PrunedColumnIds() const { return pruned_column_ids_; }
 
 const std::string& MockNode::Name() const {
-  static const std::string kName{"Mock"};
+  static const std::string kName = "Mock";
   return kName;
 }
 
@@ -135,7 +135,7 @@ void MockNode::SetKeyConstraints(const TableKeyConstraints& key_constraints) {
 
 const TableKeyConstraints& MockNode::key_constraints() const { return table_key_constraints_; }
 
-void MockNode::set_non_trivial_functional_dependencies(const std::vector<FunctionalDependency>& fds) {
+void MockNode::SetNonTrivialFunctionalDependencies(const std::vector<FunctionalDependency>& fds) {
   functional_dependencies_ = fds;
 }
 
@@ -158,7 +158,7 @@ size_t MockNode::OnShallowHash() const {
 std::shared_ptr<AbstractLqpNode> MockNode::OnShallowCopy(LqpNodeMapping& /* node_mapping */) const {
   const auto mock_node = MockNode::Make(column_definitions_, name);
   mock_node->SetKeyConstraints(table_key_constraints_);
-  mock_node->set_non_trivial_functional_dependencies(functional_dependencies_);
+  mock_node->SetNonTrivialFunctionalDependencies(functional_dependencies_);
   mock_node->SetPrunedColumnIds(pruned_column_ids_);
   return mock_node;
 }

@@ -13,14 +13,14 @@ class LqpUniqueConstraintTest : public ::testing::Test {
     mock_node_a_ =
         MockNode::Make(MockNode::ColumnDefinitions{{DataType::kInt, "a"}, {DataType::kInt, "b"}, {DataType::kInt, "c"}},
                        "mock_node_a");
-    a_ = mock_node_a_->get_column("a");
-    b_ = mock_node_a_->get_column("b");
-    c_ = mock_node_a_->get_column("c");
+    a_ = mock_node_a_->GetColumn("a");
+    b_ = mock_node_a_->GetColumn("b");
+    c_ = mock_node_a_->GetColumn("c");
 
     mock_node_b_ =
         MockNode::Make(MockNode::ColumnDefinitions{{DataType::kInt, "x"}, {DataType::kInt, "y"}}, "mock_node_b");
-    x_ = mock_node_b_->get_column("x");
-    y_ = mock_node_b_->get_column("y");
+    x_ = mock_node_b_->GetColumn("x");
+    y_ = mock_node_b_->GetColumn("y");
   }
 
  protected:

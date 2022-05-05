@@ -23,7 +23,7 @@ namespace skyrise {
 AggregateNode::AggregateNode(const std::vector<std::shared_ptr<AbstractExpression>>& group_by_expressions,
                              const std::vector<std::shared_ptr<AbstractExpression>>& aggregate_expressions)
     : AbstractLqpNode(LqpNodeType::kAggregate, {/* Expressions added below */}),
-      aggregate_expressions_begin_index{group_by_expressions.size()} {
+      aggregate_expressions_begin_index_{group_by_expressions.size()} {
   if constexpr (SKYRISE_DEBUG) {
     for (const auto& aggregate_expression : aggregate_expressions) {
       Assert(aggregate_expression->type_ == ExpressionType::kAggregate,
@@ -38,7 +38,7 @@ AggregateNode::AggregateNode(const std::vector<std::shared_ptr<AbstractExpressio
 }
 
 const std::string& AggregateNode::Name() const {
-  static const std::string kName{"Aggregate"};
+  static const std::string kName = "Aggregate";
   return kName;
 }
 
@@ -49,16 +49,16 @@ std::string AggregateNode::Description(const DescriptionMode mode,
   stream << "[" << Name() << "]" << separator;
 
   stream << "GroupBy: [";
-  for (size_t i = 0; i < aggregate_expressions_begin_index; ++i) {
+  for (size_t i = 0; i < aggregate_expressions_begin_index_; ++i) {
     stream << node_expressions_[i]->Description(expression_mode);
-    if (i + 1 < aggregate_expressions_begin_index) {
+    if (i + 1 < aggregate_expressions_begin_index_) {
       stream << ", ";
     }
   }
   stream << "] ";
 
   stream << "Aggregates: [";
-  for (auto i = aggregate_expressions_begin_index; i < node_expressions_.size(); ++i) {
+  for (auto i = aggregate_expressions_begin_index_; i < node_expressions_.size(); ++i) {
     stream << node_expressions_[i]->Description(expression_mode);
     if (i + 1 < node_expressions_.size()) {
       stream << ", ";
@@ -75,7 +75,7 @@ std::vector<std::shared_ptr<AbstractExpression>> AggregateNode::OutputExpression
   // that reference the ANY'd column.
   auto output_expressions = node_expressions_;
 
-  for (auto i = aggregate_expressions_begin_index; i < output_expressions.size(); ++i) {
+  for (auto i = aggregate_expressions_begin_index_; i < output_expressions.size(); ++i) {
     auto& output_expression = output_expressions[i];
     DebugAssert(output_expression->type_ == ExpressionType::kAggregate,
                 "Unexpected non-aggregate in list of aggregates.");
@@ -134,7 +134,7 @@ std::shared_ptr<LqpUniqueConstraints> AggregateNode::UniqueConstraints() const {
   }
 
   // (2) Create a new unique constraint from the group-by column(s), which form a candidate key for the output relation.
-  const auto group_by_columns_count = aggregate_expressions_begin_index;
+  const auto group_by_columns_count = aggregate_expressions_begin_index_;
   if (group_by_columns_count > 0) {
     ExpressionUnorderedSet group_by_columns(group_by_columns_count);
     std::copy_n(node_expressions_.begin(), group_by_columns_count,
@@ -170,14 +170,14 @@ std::vector<FunctionalDependency> AggregateNode::NonTrivialFunctionalDependencie
   return non_trivial_fds;
 }
 
-size_t AggregateNode::OnShallowHash() const { return aggregate_expressions_begin_index; }
+size_t AggregateNode::OnShallowHash() const { return aggregate_expressions_begin_index_; }
 
 std::shared_ptr<AbstractLqpNode> AggregateNode::OnShallowCopy(LqpNodeMapping& node_mapping) const {
   const std::vector<std::shared_ptr<AbstractExpression>> group_by_expressions(
-      node_expressions_.begin(), node_expressions_.begin() + aggregate_expressions_begin_index);
+      node_expressions_.begin(), node_expressions_.begin() + aggregate_expressions_begin_index_);
 
   const std::vector<std::shared_ptr<AbstractExpression>> aggregate_expressions(
-      node_expressions_.begin() + aggregate_expressions_begin_index, node_expressions_.end());
+      node_expressions_.begin() + aggregate_expressions_begin_index_, node_expressions_.end());
 
   return std::make_shared<AggregateNode>(ExpressionsCopyAndAdaptToDifferentLqp(group_by_expressions, node_mapping),
                                          ExpressionsCopyAndAdaptToDifferentLqp(aggregate_expressions, node_mapping));
@@ -188,6 +188,6 @@ bool AggregateNode::OnShallowEquals(const AbstractLqpNode& rhs, const LqpNodeMap
 
   return ExpressionsEqualToExpressionsInDifferentLqp(node_expressions_, aggregate_node.node_expressions_,
                                                      node_mapping) &&
-         aggregate_expressions_begin_index == aggregate_node.aggregate_expressions_begin_index;
+         aggregate_expressions_begin_index_ == aggregate_node.aggregate_expressions_begin_index_;
 }
 }  // namespace skyrise

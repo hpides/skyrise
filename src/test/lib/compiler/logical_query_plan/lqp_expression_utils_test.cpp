@@ -20,8 +20,8 @@ class LqpExpressionUtilsTest : public ::testing::Test {
     mock_catalog_->AddTableSchemaFromFileHeader("int_float", "resources/test_data/tbl/int_float.tbl");
 
     int_float_node_ = StoredTableNode::Make("int_float", mock_catalog_);
-    a_ = int_float_node_->get_column("a");
-    b_ = int_float_node_->get_column("b");
+    a_ = int_float_node_->GetColumn("a");
+    b_ = int_float_node_->GetColumn("b");
   }
 
  protected:

@@ -12,7 +12,7 @@ namespace skyrise {
 LogicalPlanRootNode::LogicalPlanRootNode() : AbstractLqpNode(LqpNodeType::kRoot) {}
 
 const std::string& LogicalPlanRootNode::Name() const {
-  static const std::string kName{"LogicalPlanRoot"};
+  static const std::string kName = "LogicalPlanRoot";
   return kName;
 }
 

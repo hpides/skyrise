@@ -12,13 +12,13 @@
 namespace skyrise {
 
 AliasNode::AliasNode(const std::vector<std::shared_ptr<AbstractExpression>>& expressions,
-                     const std::vector<std::string>& init_aliases)
-    : AbstractLqpNode(LqpNodeType::kAlias, expressions), aliases(init_aliases) {
-  Assert(expressions.size() == aliases.size(), "Number of expressions and number of aliases has to be equal.");
+                     const std::vector<std::string>& aliases)
+    : AbstractLqpNode(LqpNodeType::kAlias, expressions), aliases_(aliases) {
+  Assert(expressions.size() == aliases_.size(), "Number of expressions and number of aliases has to be equal.");
 }
 
 const std::string& AliasNode::Name() const {
-  static const std::string kName{"Alias"};
+  static const std::string kName = "Alias";
   return kName;
 }
 
@@ -29,10 +29,10 @@ std::string AliasNode::Description(const DescriptionMode mode,
   stream << "[" << Name() << "]" << separator;
 
   for (ColumnId column_id = 0; column_id < node_expressions_.size(); ++column_id) {
-    if (node_expressions_[column_id]->Description(expression_mode) == aliases[column_id]) {
-      stream << aliases[column_id];
+    if (node_expressions_[column_id]->Description(expression_mode) == aliases_[column_id]) {
+      stream << aliases_[column_id];
     } else {
-      stream << node_expressions_[column_id]->Description(expression_mode) << " AS " << aliases[column_id];
+      stream << node_expressions_[column_id]->Description(expression_mode) << " AS " << aliases_[column_id];
     }
 
     if (column_id + 1u < node_expressions_.size()) {
@@ -48,20 +48,20 @@ std::shared_ptr<LqpUniqueConstraints> AliasNode::UniqueConstraints() const { ret
 
 size_t AliasNode::OnShallowHash() const {
   size_t hash{0};
-  for (const auto& alias : aliases) {
+  for (const auto& alias : aliases_) {
     boost::hash_combine(hash, alias);
   }
   return hash;
 }
 
 std::shared_ptr<AbstractLqpNode> AliasNode::OnShallowCopy(LqpNodeMapping& node_mapping) const {
-  return std::make_shared<AliasNode>(ExpressionsCopyAndAdaptToDifferentLqp(node_expressions_, node_mapping), aliases);
+  return std::make_shared<AliasNode>(ExpressionsCopyAndAdaptToDifferentLqp(node_expressions_, node_mapping), aliases_);
 }
 
 bool AliasNode::OnShallowEquals(const AbstractLqpNode& rhs, const LqpNodeMapping& node_mapping) const {
   const auto& alias_node = static_cast<const AliasNode&>(rhs);
   return ExpressionsEqualToExpressionsInDifferentLqp(node_expressions_, alias_node.node_expressions_, node_mapping) &&
-         aliases == alias_node.aliases;
+         aliases_ == alias_node.aliases_;
 }
 
 }  // namespace skyrise

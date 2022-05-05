@@ -46,8 +46,8 @@ std::string LqpColumnExpression::Description(const DescriptionMode mode) const {
 
     case LqpNodeType::kMock: {
       const auto mock_node = std::static_pointer_cast<const MockNode>(original_node_locked);
-      Assert(original_column_id_ < mock_node->column_definitions().size(), "ColumnId out of range");
-      output << mock_node->column_definitions()[original_column_id_].second;
+      Assert(original_column_id_ < mock_node->ColumnDefinitions().size(), "ColumnId out of range");
+      output << mock_node->ColumnDefinitions()[original_column_id_].second;
       return output.str();
     }
 
@@ -75,8 +75,8 @@ DataType LqpColumnExpression::GetDataType() const {
 
     case LqpNodeType::kMock: {
       const auto mock_node = std::static_pointer_cast<const MockNode>(original_node_locked);
-      Assert(original_column_id_ < mock_node->column_definitions().size(), "ColumnId out of range");
-      return mock_node->column_definitions()[original_column_id_].first;
+      Assert(original_column_id_ < mock_node->ColumnDefinitions().size(), "ColumnId out of range");
+      return mock_node->ColumnDefinitions()[original_column_id_].first;
     }
 
     default: {

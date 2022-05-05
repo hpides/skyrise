@@ -17,7 +17,7 @@ namespace skyrise {
 class SortNode : public EnableMakeForPlanNode<SortNode, AbstractLqpNode>, public AbstractLqpNode {
  public:
   explicit SortNode(const std::vector<std::shared_ptr<AbstractExpression>>& expressions,
-                    const std::vector<SortMode>& init_sort_modes);
+                    const std::vector<SortMode>& sort_modes);
 
   const std::string& Name() const override;
   using AbstractLqpNode::Description;
@@ -27,7 +27,7 @@ class SortNode : public EnableMakeForPlanNode<SortNode, AbstractLqpNode>, public
   // Forwards unique constraints from the left input node
   std::shared_ptr<LqpUniqueConstraints> UniqueConstraints() const override;
 
-  const std::vector<SortMode> sort_modes;
+  const std::vector<SortMode> sort_modes_;
 
  protected:
   size_t OnShallowHash() const override;

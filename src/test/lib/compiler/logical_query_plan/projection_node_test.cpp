@@ -22,9 +22,9 @@ class ProjectionNodeTest : public ::testing::Test {
     mock_node_ = MockNode::Make(
         MockNode::ColumnDefinitions{{DataType::kInt, "a"}, {DataType::kInt, "b"}, {DataType::kInt, "c"}}, "t_a");
 
-    a_ = mock_node_->get_column("a");
-    b_ = mock_node_->get_column("b");
-    c_ = mock_node_->get_column("c");
+    a_ = mock_node_->GetColumn("a");
+    b_ = mock_node_->GetColumn("b");
+    c_ = mock_node_->GetColumn("c");
 
     // SELECT c, a, b, b+c, a+c
     projection_node_ = ProjectionNode::Make(ExpressionVector_(c_, a_, b_, Add_(b_, c_), Add_(a_, c_)), mock_node_);
@@ -146,7 +146,7 @@ TEST_F(ProjectionNodeTest, FunctionalDependenciesForwarding) {
   const FunctionalDependency fd_a({a_}, {c_});
   const FunctionalDependency fd_b({b_}, {c_});
   const FunctionalDependency fd_b_two_dependent_expressions({b_}, {a_, c_});
-  mock_node_->set_non_trivial_functional_dependencies({fd_a, fd_b, fd_b_two_dependent_expressions});
+  mock_node_->SetNonTrivialFunctionalDependencies({fd_a, fd_b, fd_b_two_dependent_expressions});
   EXPECT_EQ(mock_node_->FunctionalDependencies().size(), 3);
 
   // Tests

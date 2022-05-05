@@ -23,22 +23,22 @@
 
 namespace skyrise {
 
-JoinNode::JoinNode(const JoinMode init_join_mode) : AbstractLqpNode(LqpNodeType::kJoin), join_mode(init_join_mode) {
-  Assert(join_mode == JoinMode::kCross, "Only Cross Joins can be constructed without predicate");
+JoinNode::JoinNode(const JoinMode join_mode) : AbstractLqpNode(LqpNodeType::kJoin), join_mode_(join_mode) {
+  Assert(join_mode_ == JoinMode::kCross, "Only Cross Joins can be constructed without predicate");
 }
 
-JoinNode::JoinNode(const JoinMode init_join_mode, const std::shared_ptr<AbstractExpression>& join_predicate)
-    : JoinNode(init_join_mode, std::vector<std::shared_ptr<AbstractExpression>>{join_predicate}) {}
+JoinNode::JoinNode(const JoinMode join_mode, const std::shared_ptr<AbstractExpression>& join_predicate)
+    : JoinNode(join_mode, std::vector<std::shared_ptr<AbstractExpression>>{join_predicate}) {}
 
-JoinNode::JoinNode(const JoinMode init_join_mode,
+JoinNode::JoinNode(const JoinMode join_mode,
                    const std::vector<std::shared_ptr<AbstractExpression>>& init_join_predicates)
-    : AbstractLqpNode(LqpNodeType::kJoin, init_join_predicates), join_mode(init_join_mode) {
-  Assert(join_mode != JoinMode::kCross, "Cross Joins take no predicate");
+    : AbstractLqpNode(LqpNodeType::kJoin, init_join_predicates), join_mode_(join_mode) {
+  Assert(join_mode_ != JoinMode::kCross, "Cross Joins take no predicate");
   Assert(!join_predicates().empty(), "Non-Cross Joins require predicates");
 }
 
 const std::string& JoinNode::Name() const {
-  static const std::string kName{"Join"};
+  static const std::string kName = "Join";
   return kName;
 }
 
@@ -47,7 +47,7 @@ std::string JoinNode::Description(const DescriptionMode mode,
   std::stringstream stream;
   const char separator = (mode == DescriptionMode::kSingleLine ? ' ' : '\n');
   stream << "[" << Name() << "]" << separator;
-  stream << "Mode: " << join_mode;
+  stream << "Mode: " << join_mode_;
 
   for (const auto& predicate : join_predicates()) {
     stream << separator;
@@ -71,8 +71,8 @@ std::vector<std::shared_ptr<AbstractExpression>> JoinNode::OutputExpressions() c
   const auto& left_expressions = LeftInput()->OutputExpressions();
   const auto& right_expressions = RightInput()->OutputExpressions();
 
-  const auto output_both_inputs =
-      join_mode != JoinMode::kSemi && join_mode != JoinMode::kAntiNullAsTrue && join_mode != JoinMode::kAntiNullAsFalse;
+  const auto output_both_inputs = join_mode_ != JoinMode::kSemi && join_mode_ != JoinMode::kAntiNullAsTrue &&
+                                  join_mode_ != JoinMode::kAntiNullAsFalse;
 
   std::vector<std::shared_ptr<AbstractExpression>> output_expressions;
   output_expressions.resize(left_expressions.size() + (output_both_inputs ? right_expressions.size() : 0));
@@ -89,8 +89,8 @@ std::vector<std::shared_ptr<AbstractExpression>> JoinNode::OutputExpressions() c
 std::shared_ptr<LqpUniqueConstraints> JoinNode::UniqueConstraints() const {
   // Semi- and Anti-Joins act as mere filters for input_left().
   // Therefore, existing unique constraints remain valid.
-  if (join_mode == JoinMode::kSemi || join_mode == JoinMode::kAntiNullAsTrue ||
-      join_mode == JoinMode::kAntiNullAsFalse) {
+  if (join_mode_ == JoinMode::kSemi || join_mode_ == JoinMode::kAntiNullAsTrue ||
+      join_mode_ == JoinMode::kAntiNullAsFalse) {
     return ForwardLeftUniqueConstraints();
   }
 
@@ -114,8 +114,8 @@ std::shared_ptr<LqpUniqueConstraints> JoinNode::_output_unique_constraints(
     return std::make_shared<LqpUniqueConstraints>();
   }
 
-  DebugAssert(join_mode == JoinMode::kInner || join_mode == JoinMode::kLeftOuter ||
-                  join_mode == JoinMode::kRightOuter || join_mode == JoinMode::kFullOuter,
+  DebugAssert(join_mode_ == JoinMode::kInner || join_mode_ == JoinMode::kLeftOuter ||
+                  join_mode_ == JoinMode::kRightOuter || join_mode_ == JoinMode::kFullOuter,
               "Unhandled JoinMode");
 
   const auto join_predicate = std::dynamic_pointer_cast<BinaryPredicateExpression>(join_predicates().front());
@@ -156,8 +156,8 @@ std::vector<FunctionalDependency> JoinNode::NonTrivialFunctionalDependencies() c
    * In the case of Semi- & Anti-Joins, this node acts as a filter for the left input node. The number of output
    * expressions does not change and therefore we should forward non-trivial FDs as follows:
    */
-  if (join_mode == JoinMode::kSemi || join_mode == JoinMode::kAntiNullAsTrue ||
-      join_mode == JoinMode::kAntiNullAsFalse) {
+  if (join_mode_ == JoinMode::kSemi || join_mode_ == JoinMode::kAntiNullAsTrue ||
+      join_mode_ == JoinMode::kAntiNullAsFalse) {
     return LeftInput()->NonTrivialFunctionalDependencies();
   }
 
@@ -201,8 +201,8 @@ std::vector<FunctionalDependency> JoinNode::NonTrivialFunctionalDependencies() c
   auto fds_out = UnionFds(fds_left, fds_right);
 
   // Outer joins lead to nullable columns, which may invalidate some FDs
-  if (!fds_out.empty() &&
-      (join_mode == JoinMode::kFullOuter || join_mode == JoinMode::kLeftOuter || join_mode == JoinMode::kRightOuter)) {
+  if (!fds_out.empty() && (join_mode_ == JoinMode::kFullOuter || join_mode_ == JoinMode::kLeftOuter ||
+                           join_mode_ == JoinMode::kRightOuter)) {
     RemoveInvalidFds(SharedFromBase(), fds_out);
   }
 
@@ -221,15 +221,15 @@ bool JoinNode::IsColumnNullable(const ColumnId column_id) const {
   const auto left_input_column_count = LeftInput()->OutputExpressions().size();
   const auto column_is_from_left_input = column_id < left_input_column_count;
 
-  if (join_mode == JoinMode::kLeftOuter && !column_is_from_left_input) {
+  if (join_mode_ == JoinMode::kLeftOuter && !column_is_from_left_input) {
     return true;
   }
 
-  if (join_mode == JoinMode::kRightOuter && column_is_from_left_input) {
+  if (join_mode_ == JoinMode::kRightOuter && column_is_from_left_input) {
     return true;
   }
 
-  if (join_mode == JoinMode::kFullOuter) {
+  if (join_mode_ == JoinMode::kFullOuter) {
     return true;
   }
 
@@ -243,19 +243,19 @@ bool JoinNode::IsColumnNullable(const ColumnId column_id) const {
 
 const std::vector<std::shared_ptr<AbstractExpression>>& JoinNode::join_predicates() const { return node_expressions_; }
 
-size_t JoinNode::OnShallowHash() const { return boost::hash_value(join_mode); }
+size_t JoinNode::OnShallowHash() const { return boost::hash_value(join_mode_); }
 
 std::shared_ptr<AbstractLqpNode> JoinNode::OnShallowCopy(LqpNodeMapping& node_mapping) const {
   if (!join_predicates().empty()) {
-    return JoinNode::Make(join_mode, ExpressionsCopyAndAdaptToDifferentLqp(join_predicates(), node_mapping));
+    return JoinNode::Make(join_mode_, ExpressionsCopyAndAdaptToDifferentLqp(join_predicates(), node_mapping));
   } else {
-    return JoinNode::Make(join_mode);
+    return JoinNode::Make(join_mode_);
   }
 }
 
 bool JoinNode::OnShallowEquals(const AbstractLqpNode& rhs, const LqpNodeMapping& node_mapping) const {
   const auto& join_node = static_cast<const JoinNode&>(rhs);
-  if (join_mode != join_node.join_mode) {
+  if (join_mode_ != join_node.join_mode_) {
     return false;
   }
   return ExpressionsEqualToExpressionsInDifferentLqp(join_predicates(), join_node.join_predicates(), node_mapping);

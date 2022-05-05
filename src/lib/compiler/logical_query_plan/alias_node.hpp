@@ -17,7 +17,7 @@ namespace skyrise {
 class AliasNode : public EnableMakeForPlanNode<AliasNode, AbstractLqpNode>, public AbstractLqpNode {
  public:
   AliasNode(const std::vector<std::shared_ptr<AbstractExpression>>& expressions,
-            const std::vector<std::string>& init_aliases);
+            const std::vector<std::string>& aliases);
 
   const std::string& Name() const override;
   using AbstractLqpNode::Description;
@@ -29,7 +29,7 @@ class AliasNode : public EnableMakeForPlanNode<AliasNode, AbstractLqpNode>, publ
   // Forwards unique constraints from the left input node
   std::shared_ptr<LqpUniqueConstraints> UniqueConstraints() const override;
 
-  const std::vector<std::string> aliases;
+  const std::vector<std::string> aliases_;
 
  protected:
   size_t OnShallowHash() const override;

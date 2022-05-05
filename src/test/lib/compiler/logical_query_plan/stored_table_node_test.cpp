@@ -26,9 +26,9 @@ class StoredTableNodeTest : public ::testing::Test {
     mock_catalog_->AddTableSchemaFromFileHeader("t_b", "resources/test_data/tbl/int_int_float.tbl");
 
     stored_table_node_ = StoredTableNode::Make("t_a", mock_catalog_);
-    a_ = stored_table_node_->get_column("a");
-    b_ = stored_table_node_->get_column("b");
-    c_ = stored_table_node_->get_column("c");
+    a_ = stored_table_node_->GetColumn("a");
+    b_ = stored_table_node_->GetColumn("b");
+    c_ = stored_table_node_->GetColumn("c");
   }
 
   std::shared_ptr<MockCatalog> mock_catalog_;
@@ -46,13 +46,13 @@ TEST_F(StoredTableNodeTest, Description) {
 }
 
 TEST_F(StoredTableNodeTest, GetColumn) {
-  EXPECT_EQ(*stored_table_node_->get_column("a"), *a_);
-  EXPECT_EQ(*stored_table_node_->get_column("b"), *b_);
+  EXPECT_EQ(*stored_table_node_->GetColumn("a"), *a_);
+  EXPECT_EQ(*stored_table_node_->GetColumn("b"), *b_);
 
-  // Column pruning does not interfere with get_column()
+  // Column pruning does not interfere with GetColumn()
   stored_table_node_->SetPrunedColumnIds({ColumnId{0}});
-  EXPECT_EQ(*stored_table_node_->get_column("a"), *a_);
-  EXPECT_EQ(*stored_table_node_->get_column("b"), *b_);
+  EXPECT_EQ(*stored_table_node_->GetColumn("a"), *a_);
+  EXPECT_EQ(*stored_table_node_->GetColumn("b"), *b_);
 }
 
 TEST_F(StoredTableNodeTest, ColumnExpressions) {
@@ -61,7 +61,7 @@ TEST_F(StoredTableNodeTest, ColumnExpressions) {
   EXPECT_EQ(*stored_table_node_->OutputExpressions().at(1u), *b_);
   EXPECT_EQ(*stored_table_node_->OutputExpressions().at(2u), *c_);
 
-  // Column pruning does not interfere with get_column()
+  // Column pruning does not interfere with GetColumn()
   stored_table_node_->SetPrunedColumnIds({ColumnId{0}});
   EXPECT_EQ(stored_table_node_->OutputExpressions().size(), 2u);
   EXPECT_EQ(*stored_table_node_->OutputExpressions().at(0u), *b_);
@@ -185,9 +185,9 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
     mock_catalog_->AddTableSchema("table_a", table_schema);
 
     const auto stored_table_node = StoredTableNode::Make("table_a", mock_catalog_);
-    const auto& a = stored_table_node->get_column("a");
-    const auto& b = stored_table_node->get_column("b");
-    const auto& c = stored_table_node->get_column("c");
+    const auto& a = stored_table_node->GetColumn("a");
+    const auto& b = stored_table_node->GetColumn("b");
+    const auto& c = stored_table_node->GetColumn("c");
     const auto& fds = stored_table_node->FunctionalDependencies();
 
     const FunctionalDependency fd_expected({a}, {b, c});
@@ -213,9 +213,9 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
     mock_catalog_->AddTableSchema("table_c", table_schema);
 
     const auto& stored_table_node = StoredTableNode::Make("table_c", mock_catalog_);
-    const auto& a = stored_table_node->get_column("a");
-    const auto& b = stored_table_node->get_column("b");
-    const auto& c = stored_table_node->get_column("c");
+    const auto& a = stored_table_node->GetColumn("a");
+    const auto& b = stored_table_node->GetColumn("b");
+    const auto& c = stored_table_node->GetColumn("c");
     const auto& fds = stored_table_node->FunctionalDependencies();
 
     const FunctionalDependency fd_expected({a, c}, {b});

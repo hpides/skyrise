@@ -25,7 +25,7 @@ PredicateNode::PredicateNode(const std::shared_ptr<AbstractExpression>& predicat
     : AbstractLqpNode(LqpNodeType::kPredicate, {predicate}) {}
 
 const std::string& PredicateNode::Name() const {
-  static const std::string kName{"Predicate"};
+  static const std::string kName = "Predicate";
   return kName;
 }
 
@@ -34,7 +34,7 @@ std::string PredicateNode::Description(const DescriptionMode mode,
   std::stringstream stream;
   const char separator = (mode == DescriptionMode::kSingleLine ? ' ' : '\n');
   stream << "[" << Name() << "]" << separator;
-  stream << predicate()->Description(expression_mode);
+  stream << Predicate()->Description(expression_mode);
   return stream.str();
 }
 
@@ -42,17 +42,17 @@ std::shared_ptr<LqpUniqueConstraints> PredicateNode::UniqueConstraints() const {
   return ForwardLeftUniqueConstraints();
 }
 
-std::shared_ptr<AbstractExpression> PredicateNode::predicate() const { return node_expressions_[0]; }
+std::shared_ptr<AbstractExpression> PredicateNode::Predicate() const { return node_expressions_[0]; }
 
 size_t PredicateNode::OnShallowHash() const { return boost::hash_value(scan_type); }
 
 std::shared_ptr<AbstractLqpNode> PredicateNode::OnShallowCopy(LqpNodeMapping& node_mapping) const {
-  return std::make_shared<PredicateNode>(ExpressionCopyAndAdaptToDifferentLqp(*predicate(), node_mapping));
+  return std::make_shared<PredicateNode>(ExpressionCopyAndAdaptToDifferentLqp(*Predicate(), node_mapping));
 }
 
 bool PredicateNode::OnShallowEquals(const AbstractLqpNode& rhs, const LqpNodeMapping& node_mapping) const {
   const auto& predicate_node = static_cast<const PredicateNode&>(rhs);
-  const auto equal = ExpressionEqualToExpressionInDifferentLqp(*predicate(), *predicate_node.predicate(), node_mapping);
+  const auto equal = ExpressionEqualToExpressionInDifferentLqp(*Predicate(), *predicate_node.Predicate(), node_mapping);
 
   return equal;
 }

@@ -17,8 +17,8 @@ class AliasNodeTest : public ::testing::Test {
  public:
   void SetUp() override {
     mock_node_ = MockNode::Make(MockNode::ColumnDefinitions{{DataType::kInt, "a"}, {DataType::kFloat, "b"}});
-    a_ = mock_node_->get_column("a");
-    b_ = mock_node_->get_column("b");
+    a_ = mock_node_->GetColumn("a");
+    b_ = mock_node_->GetColumn("b");
 
     aliases_ = {"x", "y"};
     expressions_ = {b_, a_};
@@ -56,8 +56,8 @@ TEST_F(AliasNodeTest, HashingAndEqualityCheck) {
 
   const auto other_mock_node_ =
       MockNode::Make(MockNode::ColumnDefinitions{{DataType::kInt, "a"}, {DataType::kFloat, "b"}}, "named");
-  const auto expr_a = other_mock_node_->get_column("a");
-  const auto expr_b = other_mock_node_->get_column("b");
+  const auto expr_a = other_mock_node_->GetColumn("a");
+  const auto expr_b = other_mock_node_->GetColumn("b");
   const std::vector<std::shared_ptr<AbstractExpression>> other_expressions = {expr_a, expr_b};
   const auto alias_node_other_expressions = AliasNode::Make(other_expressions, aliases_, mock_node_);
   EXPECT_NE(*alias_node_, *alias_node_other_expressions);

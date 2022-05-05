@@ -24,10 +24,10 @@ class LqpUtilsTest : public ::testing::Test {
     node_a = MockNode::Make(MockNode::ColumnDefinitions{{DataType::kInt, "a"}, {DataType::kInt, "b"}}, "node_a");
     node_b = MockNode::Make(MockNode::ColumnDefinitions{{DataType::kInt, "x"}, {DataType::kInt, "y"}}, "node_b");
 
-    a_a = node_a->get_column("a");
-    a_b = node_a->get_column("b");
-    b_x = node_b->get_column("x");
-    b_y = node_b->get_column("y");
+    a_a = node_a->GetColumn("a");
+    a_b = node_a->GetColumn("b");
+    b_x = node_b->GetColumn("x");
+    b_y = node_b->GetColumn("y");
   }
 
   std::shared_ptr<MockNode> node_a, node_b;

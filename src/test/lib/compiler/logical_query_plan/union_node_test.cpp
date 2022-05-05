@@ -23,17 +23,17 @@ class UnionNodeTest : public ::testing::Test {
   void SetUp() override {
     mock_node1_ = MockNode::Make(
         MockNode::ColumnDefinitions{{DataType::kInt, "a"}, {DataType::kInt, "b"}, {DataType::kInt, "c"}}, "t_a");
-    a_ = mock_node1_->get_column("a");
-    b_ = mock_node1_->get_column("b");
-    c_ = mock_node1_->get_column("c");
+    a_ = mock_node1_->GetColumn("a");
+    b_ = mock_node1_->GetColumn("b");
+    c_ = mock_node1_->GetColumn("c");
 
     union_node_ = UnionNode::Make(SetOperationMode::kAll);
     union_node_->SetLeftInput(mock_node1_);
     union_node_->SetRightInput(mock_node1_);
 
     mock_node2_ = MockNode::Make(MockNode::ColumnDefinitions{{DataType::kInt, "u"}, {DataType::kInt, "v"}}, "t_b");
-    u_ = mock_node2_->get_column("u");
-    v_ = mock_node2_->get_column("v");
+    u_ = mock_node2_->GetColumn("u");
+    v_ = mock_node2_->GetColumn("v");
   }
 
   std::shared_ptr<MockNode> mock_node1_, mock_node2_;
@@ -98,7 +98,7 @@ TEST_F(UnionNodeTest, FunctionalDependenciesUnionAllSimple) {
 
   // Set FDs
   mock_node1_->SetKeyConstraints({{{a_->original_column_id_}, KeyConstraintType::kUnique}});
-  mock_node1_->set_non_trivial_functional_dependencies({non_trivial_fd_b, non_trivial_fd_c});
+  mock_node1_->SetNonTrivialFunctionalDependencies({non_trivial_fd_b, non_trivial_fd_c});
   EXPECT_EQ(mock_node1_->FunctionalDependencies().size(), 3);
   EXPECT_EQ(mock_node1_->FunctionalDependencies().at(0), non_trivial_fd_b);
   EXPECT_EQ(mock_node1_->FunctionalDependencies().at(1), non_trivial_fd_c);
@@ -129,7 +129,7 @@ TEST_F(UnionNodeTest, FunctionalDependenciesUnionAllSimple) {
 TEST_F(UnionNodeTest, FunctionalDependenciesUnionAllIntersect) {
   // Create single non-trivial FD
   const auto non_trivial_fd_b = FunctionalDependency({a_}, {b_});
-  mock_node1_->set_non_trivial_functional_dependencies({non_trivial_fd_b});
+  mock_node1_->SetNonTrivialFunctionalDependencies({non_trivial_fd_b});
 
   /**
    * Create UnionNode

@@ -23,7 +23,7 @@ class StoredTableNode : public EnableMakeForPlanNode<StoredTableNode, AbstractLq
  public:
   explicit StoredTableNode(std::string table_name, std::shared_ptr<AbstractCatalog> catalog);
 
-  std::shared_ptr<LqpColumnExpression> get_column(const std::string& name) const;
+  std::shared_ptr<LqpColumnExpression> GetColumn(const std::string& name) const;
 
   /**
    * Vectors needs to be sorted and must not contain duplicates.

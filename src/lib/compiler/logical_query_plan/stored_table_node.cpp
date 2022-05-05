@@ -17,7 +17,7 @@ namespace skyrise {
 StoredTableNode::StoredTableNode(std::string table_name, std::shared_ptr<AbstractCatalog> catalog)
     : AbstractLqpNode(LqpNodeType::kStoredTable), table_name_(std::move(table_name)), catalog_(std::move(catalog)) {}
 
-std::shared_ptr<LqpColumnExpression> StoredTableNode::get_column(const std::string& name) const {
+std::shared_ptr<LqpColumnExpression> StoredTableNode::GetColumn(const std::string& name) const {
   const auto table_schema = catalog_->GetTableSchema(table_name_);
   const auto column_id = table_schema->ColumnIdByName(name);
   return std::make_shared<LqpColumnExpression>(SharedFromBase(), column_id);
@@ -43,7 +43,7 @@ void StoredTableNode::SetPrunedColumnIds(const std::vector<ColumnId>& pruned_col
 const std::vector<ColumnId>& StoredTableNode::PrunedColumnIds() const { return pruned_column_ids_; }
 
 const std::string& StoredTableNode::Name() const {
-  static const std::string kName{"StoredTable"};
+  static const std::string kName = "StoredTable";
   return kName;
 }
 

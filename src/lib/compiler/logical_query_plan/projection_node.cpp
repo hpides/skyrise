@@ -15,7 +15,7 @@ ProjectionNode::ProjectionNode(const std::vector<std::shared_ptr<AbstractExpress
     : AbstractLqpNode(LqpNodeType::kProjection, expressions) {}
 
 const std::string& ProjectionNode::Name() const {
-  static const std::string kName{"Projection"};
+  static const std::string kName = "Projection";
   return kName;
 }
 

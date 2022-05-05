@@ -17,7 +17,7 @@ namespace skyrise {
  */
 class UnionNode : public EnableMakeForPlanNode<UnionNode, AbstractLqpNode>, public AbstractLqpNode {
  public:
-  explicit UnionNode(const SetOperationMode init_set_operation_mode);
+  explicit UnionNode(const SetOperationMode set_operation_mode);
 
   const std::string& Name() const override;
   using AbstractLqpNode::Description;
@@ -37,7 +37,7 @@ class UnionNode : public EnableMakeForPlanNode<UnionNode, AbstractLqpNode>, publ
   // Implementation is limited to SetOperationMode::kAll only.
   std::vector<FunctionalDependency> NonTrivialFunctionalDependencies() const override;
 
-  const SetOperationMode set_operation_mode;
+  const SetOperationMode set_operation_mode_;
 
  protected:
   size_t OnShallowHash() const override;

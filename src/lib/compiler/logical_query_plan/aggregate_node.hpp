@@ -43,7 +43,7 @@ class AggregateNode : public EnableMakeForPlanNode<AggregateNode, AbstractLqpNod
   std::vector<FunctionalDependency> NonTrivialFunctionalDependencies() const override;
 
   // node_expression contains both the group_by- and the aggregate_expressions in that order.
-  size_t aggregate_expressions_begin_index;
+  size_t aggregate_expressions_begin_index_;
 
  protected:
   size_t OnShallowHash() const override;

@@ -17,11 +17,11 @@
 
 namespace skyrise {
 
-UnionNode::UnionNode(const SetOperationMode init_set_operation_mode)
-    : AbstractLqpNode(LqpNodeType::kUnion), set_operation_mode(init_set_operation_mode) {}
+UnionNode::UnionNode(const SetOperationMode set_operation_mode)
+    : AbstractLqpNode(LqpNodeType::kUnion), set_operation_mode_(set_operation_mode) {}
 
 const std::string& UnionNode::Name() const {
-  static const std::string kName{"Union"};
+  static const std::string kName = "Union";
   return kName;
 }
 
@@ -30,7 +30,7 @@ std::string UnionNode::Description(const DescriptionMode mode,
   std::stringstream stream;
   const char separator = (mode == DescriptionMode::kSingleLine ? ' ' : '\n');
   stream << "[UnionNode]" << separator;
-  stream << "Mode: " << set_operation_mode;
+  stream << "Mode: " << set_operation_mode_;
   return stream.str();
 }
 
@@ -49,7 +49,7 @@ bool UnionNode::IsColumnNullable(const ColumnId column_id) const {
 }
 
 std::shared_ptr<LqpUniqueConstraints> UnionNode::UniqueConstraints() const {
-  switch (set_operation_mode) {
+  switch (set_operation_mode_) {
     case SetOperationMode::kAll: {
       /**
        * With UnionAll, two tables become merged. The resulting table might contain duplicates.
@@ -65,7 +65,7 @@ std::shared_ptr<LqpUniqueConstraints> UnionNode::UniqueConstraints() const {
 }
 
 std::vector<FunctionalDependency> UnionNode::NonTrivialFunctionalDependencies() const {
-  switch (set_operation_mode) {
+  switch (set_operation_mode_) {
     case SetOperationMode::kAll: {
       /**
        * With UnionAll, unique constraints from both input nodes become discarded. To preserve trivial FDs, we
@@ -86,15 +86,15 @@ std::vector<FunctionalDependency> UnionNode::NonTrivialFunctionalDependencies() 
   }
 }
 
-size_t UnionNode::OnShallowHash() const { return boost::hash_value(set_operation_mode); }
+size_t UnionNode::OnShallowHash() const { return boost::hash_value(set_operation_mode_); }
 
 std::shared_ptr<AbstractLqpNode> UnionNode::OnShallowCopy(LqpNodeMapping& /* node_mapping */) const {
-  return UnionNode::Make(set_operation_mode);
+  return UnionNode::Make(set_operation_mode_);
 }
 
 bool UnionNode::OnShallowEquals(const AbstractLqpNode& rhs, const LqpNodeMapping& /* node_mapping */) const {
   const auto& union_node = static_cast<const UnionNode&>(rhs);
-  return set_operation_mode == union_node.set_operation_mode;
+  return set_operation_mode_ == union_node.set_operation_mode_;
 }
 
 }  // namespace skyrise

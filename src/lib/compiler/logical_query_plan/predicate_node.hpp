@@ -36,7 +36,7 @@ class PredicateNode : public EnableMakeForPlanNode<PredicateNode, AbstractLqpNod
   // Forwards unique constraints from the left input node
   std::shared_ptr<LqpUniqueConstraints> UniqueConstraints() const override;
 
-  std::shared_ptr<AbstractExpression> predicate() const;
+  std::shared_ptr<AbstractExpression> Predicate() const;
 
   ScanType scan_type{ScanType::TableScan};
 

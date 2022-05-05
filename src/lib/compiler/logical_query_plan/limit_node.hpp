@@ -14,7 +14,7 @@ namespace skyrise {
  */
 class LimitNode : public EnableMakeForPlanNode<LimitNode, AbstractLqpNode>, public AbstractLqpNode {
  public:
-  explicit LimitNode(const std::shared_ptr<AbstractExpression>& num_rows_expression);
+  explicit LimitNode(const std::shared_ptr<AbstractExpression>& number_of_rows_expression);
 
   const std::string& Name() const override;
   using AbstractLqpNode::Description;
@@ -24,7 +24,7 @@ class LimitNode : public EnableMakeForPlanNode<LimitNode, AbstractLqpNode>, publ
   // Forwards unique constraints from the left input node
   std::shared_ptr<LqpUniqueConstraints> UniqueConstraints() const override;
 
-  std::shared_ptr<AbstractExpression> num_rows_expression() const;
+  std::shared_ptr<AbstractExpression> NumberOfRowsExpression() const;
 
  protected:
   std::shared_ptr<AbstractLqpNode> OnShallowCopy(LqpNodeMapping& node_mapping) const override;

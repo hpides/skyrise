@@ -16,7 +16,7 @@ namespace skyrise {
 DummyTableNode::DummyTableNode() : AbstractLqpNode(LqpNodeType::kDummyTable) {}
 
 const std::string& DummyTableNode::Name() const {
-  static const std::string kName{"DummyTable"};
+  static const std::string kName = "DummyTable";
   return kName;
 }
 
