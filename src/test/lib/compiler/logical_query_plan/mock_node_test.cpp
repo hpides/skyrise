@@ -30,7 +30,7 @@ TEST_F(MockNodeTest, Description) {
   EXPECT_EQ(mock_node_a_->Description(), "[MockNode 'Unnamed'] Columns: a b c d | pruned: 0/4 columns");
   EXPECT_EQ(mock_node_b_->Description(), "[MockNode 'mock_name'] Columns: a b | pruned: 0/2 columns");
 
-  mock_node_a_->set_pruned_column_ids({ColumnId{2}});
+  mock_node_a_->SetPrunedColumnIds({ColumnId{2}});
   EXPECT_EQ(mock_node_a_->Description(), "[MockNode 'Unnamed'] Columns: a b d | pruned: 1/4 columns");
 }
 
@@ -51,7 +51,7 @@ TEST_F(MockNodeTest, OutputColumnExpression) {
   EXPECT_EQ(*mock_node_b_->OutputExpressions().at(1),
             *std::make_shared<LqpColumnExpression>(mock_node_b_, ColumnId{1}));
 
-  mock_node_a_->set_pruned_column_ids({ColumnId{0}, ColumnId{3}});
+  mock_node_a_->SetPrunedColumnIds({ColumnId{0}, ColumnId{3}});
   EXPECT_EQ(mock_node_a_->OutputExpressions().size(), 2u);
   EXPECT_EQ(*mock_node_a_->OutputExpressions().at(0),
             *std::make_shared<LqpColumnExpression>(mock_node_a_, ColumnId{1}));
@@ -80,7 +80,7 @@ TEST_F(MockNodeTest, Copy) {
   const auto copy = mock_node_b_->DeepCopy();
   EXPECT_EQ(*mock_node_b_, *copy);
 
-  mock_node_b_->set_pruned_column_ids({ColumnId{1}});
+  mock_node_b_->SetPrunedColumnIds({ColumnId{1}});
   EXPECT_NE(*mock_node_b_, *copy);
   EXPECT_EQ(*mock_node_b_, *mock_node_b_->DeepCopy());
 }
@@ -124,7 +124,7 @@ TEST_F(MockNodeTest, UniqueConstraintsPrunedColumns) {
   EXPECT_EQ(unique_constraints->size(), 3);
 
   // Prune column a, which should remove two unique constraints
-  mock_node_a_->set_pruned_column_ids({ColumnId{0}});
+  mock_node_a_->SetPrunedColumnIds({ColumnId{0}});
 
   // Basic check
   unique_constraints = mock_node_a_->UniqueConstraints();

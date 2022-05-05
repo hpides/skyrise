@@ -63,7 +63,7 @@ bool MockNode::IsColumnNullable(const ColumnId column_id) const {
   return false;
 }
 
-void MockNode::set_pruned_column_ids(const std::vector<ColumnId>& pruned_column_ids) {
+void MockNode::SetPrunedColumnIds(const std::vector<ColumnId>& pruned_column_ids) {
   DebugAssert(std::is_sorted(pruned_column_ids.begin(), pruned_column_ids.end()),
               "Expected sorted vector of ColumnIds");
   DebugAssert(std::adjacent_find(pruned_column_ids.begin(), pruned_column_ids.end()) == pruned_column_ids.end(),
@@ -101,7 +101,7 @@ std::shared_ptr<LqpUniqueConstraints> MockNode::UniqueConstraints() const {
   return unique_constraints;
 }
 
-const std::vector<ColumnId>& MockNode::pruned_column_ids() const { return pruned_column_ids_; }
+const std::vector<ColumnId>& MockNode::PrunedColumnIds() const { return pruned_column_ids_; }
 
 const std::string& MockNode::Name() const {
   static const std::string kName{"Mock"};
@@ -159,7 +159,7 @@ std::shared_ptr<AbstractLqpNode> MockNode::OnShallowCopy(LqpNodeMapping& /* node
   const auto mock_node = MockNode::Make(column_definitions_, name);
   mock_node->set_key_constraints(table_key_constraints_);
   mock_node->set_non_trivial_functional_dependencies(functional_dependencies_);
-  mock_node->set_pruned_column_ids(pruned_column_ids_);
+  mock_node->SetPrunedColumnIds(pruned_column_ids_);
   return mock_node;
 }
 

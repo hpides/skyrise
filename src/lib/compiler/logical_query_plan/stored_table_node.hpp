@@ -28,8 +28,8 @@ class StoredTableNode : public EnableMakeForPlanNode<StoredTableNode, AbstractLq
   /**
    * Vectors needs to be sorted and must not contain duplicates.
    */
-  void set_pruned_column_ids(const std::vector<ColumnId>& pruned_column_ids);
-  const std::vector<ColumnId>& pruned_column_ids() const;
+  void SetPrunedColumnIds(const std::vector<ColumnId>& pruned_column_ids);
+  const std::vector<ColumnId>& PrunedColumnIds() const;
 
   const std::string& Name() const override;
   using AbstractLqpNode::Description;

@@ -23,7 +23,7 @@ std::shared_ptr<LqpColumnExpression> StoredTableNode::get_column(const std::stri
   return std::make_shared<LqpColumnExpression>(SharedFromBase(), column_id);
 }
 
-void StoredTableNode::set_pruned_column_ids(const std::vector<ColumnId>& pruned_column_ids) {
+void StoredTableNode::SetPrunedColumnIds(const std::vector<ColumnId>& pruned_column_ids) {
   DebugAssert(std::is_sorted(pruned_column_ids.begin(), pruned_column_ids.end()),
               "Expected sorted vector of ColumnIds");
   DebugAssert(std::adjacent_find(pruned_column_ids.begin(), pruned_column_ids.end()) == pruned_column_ids.end(),
@@ -40,7 +40,7 @@ void StoredTableNode::set_pruned_column_ids(const std::vector<ColumnId>& pruned_
   output_expressions_.reset();
 }
 
-const std::vector<ColumnId>& StoredTableNode::pruned_column_ids() const { return pruned_column_ids_; }
+const std::vector<ColumnId>& StoredTableNode::PrunedColumnIds() const { return pruned_column_ids_; }
 
 const std::string& StoredTableNode::Name() const {
   static const std::string kName{"StoredTable"};
@@ -132,7 +132,7 @@ size_t StoredTableNode::OnShallowHash() const {
 
 std::shared_ptr<AbstractLqpNode> StoredTableNode::OnShallowCopy(LqpNodeMapping& /* node_mapping */) const {
   const auto copy = Make(table_name_, catalog_);
-  copy->set_pruned_column_ids(pruned_column_ids_);
+  copy->SetPrunedColumnIds(pruned_column_ids_);
   return copy;
 }
 

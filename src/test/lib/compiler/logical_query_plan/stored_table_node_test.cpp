@@ -41,7 +41,7 @@ TEST_F(StoredTableNodeTest, Description) {
   EXPECT_EQ(stored_table_node_a->Description(), "[StoredTable] Name: 't_a' pruned: 0/3 column(s)");
 
   const auto stored_table_node_b = StoredTableNode::Make("t_a", mock_catalog_);
-  stored_table_node_b->set_pruned_column_ids({ColumnId{1}});
+  stored_table_node_b->SetPrunedColumnIds({ColumnId{1}});
   EXPECT_EQ(stored_table_node_b->Description(), "[StoredTable] Name: 't_a' pruned: 1/3 column(s)");
 }
 
@@ -50,7 +50,7 @@ TEST_F(StoredTableNodeTest, GetColumn) {
   EXPECT_EQ(*stored_table_node_->get_column("b"), *b_);
 
   // Column pruning does not interfere with get_column()
-  stored_table_node_->set_pruned_column_ids({ColumnId{0}});
+  stored_table_node_->SetPrunedColumnIds({ColumnId{0}});
   EXPECT_EQ(*stored_table_node_->get_column("a"), *a_);
   EXPECT_EQ(*stored_table_node_->get_column("b"), *b_);
 }
@@ -62,7 +62,7 @@ TEST_F(StoredTableNodeTest, ColumnExpressions) {
   EXPECT_EQ(*stored_table_node_->OutputExpressions().at(2u), *c_);
 
   // Column pruning does not interfere with get_column()
-  stored_table_node_->set_pruned_column_ids({ColumnId{0}});
+  stored_table_node_->SetPrunedColumnIds({ColumnId{0}});
   EXPECT_EQ(stored_table_node_->OutputExpressions().size(), 2u);
   EXPECT_EQ(*stored_table_node_->OutputExpressions().at(0u), *b_);
   EXPECT_EQ(*stored_table_node_->OutputExpressions().at(1u), *c_);
@@ -71,30 +71,30 @@ TEST_F(StoredTableNodeTest, ColumnExpressions) {
 TEST_F(StoredTableNodeTest, HashingAndEqualityCheck) {
   EXPECT_EQ(*stored_table_node_, *stored_table_node_);
 
-  const auto different_node_a = StoredTableNode::Make("t_b", mock_catalog_);
-
-  const auto different_node_b = StoredTableNode::Make("t_a", mock_catalog_);
-
+  const auto different_node_a = StoredTableNode::Make("t_a", mock_catalog_);
+  const auto different_node_b = StoredTableNode::Make("t_b", mock_catalog_);
   const auto different_node_c = StoredTableNode::Make("t_b", mock_catalog_);
-  different_node_c->set_pruned_column_ids({ColumnId{1}});
+  different_node_c->SetPrunedColumnIds({ColumnId{1}});
   const auto different_node_c2 = StoredTableNode::Make("t_b", mock_catalog_);
-  different_node_c2->set_pruned_column_ids({ColumnId{1}});
+  different_node_c2->SetPrunedColumnIds({ColumnId{1}, ColumnId{2}});
 
-  EXPECT_NE(*stored_table_node_, *different_node_a);
+  EXPECT_EQ(*stored_table_node_, *different_node_a);
   EXPECT_NE(*stored_table_node_, *different_node_b);
   EXPECT_NE(*stored_table_node_, *different_node_c);
-  EXPECT_EQ(*different_node_c, *different_node_c2);
+  EXPECT_NE(*stored_table_node_, *different_node_c2);
+  EXPECT_NE(*different_node_c, *different_node_c2);
 
-  EXPECT_NE(stored_table_node_->Hash(), different_node_a->Hash());
+  EXPECT_EQ(stored_table_node_->Hash(), different_node_a->Hash());
   EXPECT_NE(stored_table_node_->Hash(), different_node_b->Hash());
   EXPECT_NE(stored_table_node_->Hash(), different_node_c->Hash());
-  EXPECT_EQ(different_node_c->Hash(), different_node_c2->Hash());
+  EXPECT_NE(stored_table_node_->Hash(), different_node_c2->Hash());
+  EXPECT_NE(different_node_c->Hash(), different_node_c2->Hash());
 }
 
 TEST_F(StoredTableNodeTest, Copy) {
   EXPECT_EQ(*stored_table_node_->DeepCopy(), *stored_table_node_);
 
-  stored_table_node_->set_pruned_column_ids({ColumnId{1}});
+  stored_table_node_->SetPrunedColumnIds({ColumnId{1}});
   EXPECT_EQ(*stored_table_node_->DeepCopy(), *stored_table_node_);
 }
 
@@ -115,6 +115,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesNone) {
 TEST_F(StoredTableNodeTest, FunctionalDependenciesSingle) {
   auto table_schema = mock_catalog_->GetEditableTableSchema("t_a");
   table_schema->AddKeyConstraint({{a_->original_column_id_}, KeyConstraintType::kUnique});
+  ASSERT_TRUE(mock_catalog_->GetTableSchema()->KeyConstraints().size(), 1);
 
   const auto& fds = stored_table_node_->FunctionalDependencies();
   const FunctionalDependency fd_expected({a_}, {b_, c_});
@@ -128,7 +129,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedLeftColumnSet) {
   table_schema->AddKeyConstraint({{a_->original_column_id_}, KeyConstraintType::kUnique});
 
   // Prune unique column "a", which would be part of the left column set in the resulting FD: {a} => {b, c}
-  stored_table_node_->set_pruned_column_ids({ColumnId{0}});
+  stored_table_node_->SetPrunedColumnIds({ColumnId{0}});
 
   EXPECT_TRUE(stored_table_node_->FunctionalDependencies().empty());
 }
@@ -138,7 +139,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedLeftColumnSet2) {
   table_schema->AddKeyConstraint({{b_->original_column_id_}, KeyConstraintType::kUnique});
 
   // Prune unique column "a", which would be part of the left column set in the resulting FD: {a} => {b, c}
-  stored_table_node_->set_pruned_column_ids({ColumnId{0}});
+  stored_table_node_->SetPrunedColumnIds({ColumnId{0}});
 
   const FunctionalDependency fd_expected({b_}, {c_});
   EXPECT_EQ(stored_table_node_->FunctionalDependencies().size(), 1);
@@ -150,7 +151,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedRightColumnSet) {
   table_schema->AddKeyConstraint({{a_->original_column_id_}, KeyConstraintType::kUnique});
 
   // Prune column "b", which would be part of the right column set in the resulting FD: {a} => {b, c}
-  stored_table_node_->set_pruned_column_ids({ColumnId{1}});
+  stored_table_node_->SetPrunedColumnIds({ColumnId{1}});
 
   const FunctionalDependency fd_expected({a_}, {c_});
   EXPECT_EQ(stored_table_node_->FunctionalDependencies().size(), 1);
@@ -276,7 +277,7 @@ TEST_F(StoredTableNodeTest, UniqueConstraintsPrunedColumns) {
   EXPECT_EQ(stored_table_node_->UniqueConstraints()->size(), 3);
 
   // Prune column a, which should remove two unique constraints
-  stored_table_node_->set_pruned_column_ids({ColumnId{0}});
+  stored_table_node_->SetPrunedColumnIds({ColumnId{0}});
 
   // Basic check
   const auto& unique_constraints = stored_table_node_->UniqueConstraints();
