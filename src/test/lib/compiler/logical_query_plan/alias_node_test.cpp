@@ -84,8 +84,8 @@ TEST_F(AliasNodeTest, UniqueConstraintsEmpty) {
 
 TEST_F(AliasNodeTest, UniqueConstraintsForwarding) {
   // Add constraints to MockNode
-  const auto key_constraint_a_b = TableKeyConstraint{{ColumnId{0}, ColumnId{1}}, KeyConstraintType::kPrimaryKey};
-  const auto key_constraint_b = TableKeyConstraint{{ColumnId{1}}, KeyConstraintType::kUnique};
+  const TableKeyConstraint key_constraint_a_b({ColumnId{0}, ColumnId{1}}, KeyConstraintType::kPrimaryKey)
+  const TableKeyConstraint key_constraint_b({ColumnId{1}}, KeyConstraintType::kUnique)
   mock_node_->set_key_constraints({key_constraint_a_b, key_constraint_b});
 
   // Basic check
