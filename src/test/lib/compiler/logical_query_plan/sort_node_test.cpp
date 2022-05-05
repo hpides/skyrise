@@ -65,9 +65,9 @@ class SortNodeTest : public ::testing::Test {
 //  EXPECT_NE(*sort_node_, *sort_b);
 //  EXPECT_EQ(*sort_node_, *sort_c);
 //
-//  EXPECT_NE(sort_node_->hash(), sort_a->hash());
-//  EXPECT_NE(sort_node_->hash(), sort_b->hash());
-//  EXPECT_EQ(sort_node_->hash(), sort_c->hash());
+//  EXPECT_NE(sort_node_->Hash(), sort_a->Hash());
+//  EXPECT_NE(sort_node_->Hash(), sort_b->Hash());
+//  EXPECT_EQ(sort_node_->Hash(), sort_c->Hash());
 //}
 //
 // TEST_F(SortNodeTest, Copy) {

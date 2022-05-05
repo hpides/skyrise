@@ -28,8 +28,8 @@ TEST_F(LimitNodeTest, HashingAndEqualityCheck) {
   EXPECT_EQ(*LimitNode::Make(Value_(10)), *limit_node_);
   EXPECT_NE(*LimitNode::Make(Value_(11)), *limit_node_);
 
-  EXPECT_EQ(LimitNode::Make(Value_(10))->hash(), limit_node_->hash());
-  EXPECT_NE(LimitNode::Make(Value_(11))->hash(), limit_node_->hash());
+  EXPECT_EQ(LimitNode::Make(Value_(10))->Hash(), limit_node_->Hash());
+  EXPECT_NE(LimitNode::Make(Value_(11))->Hash(), limit_node_->Hash());
 }
 
 TEST_F(LimitNodeTest, Copy) { EXPECT_EQ(*limit_node_->DeepCopy(), *limit_node_); }

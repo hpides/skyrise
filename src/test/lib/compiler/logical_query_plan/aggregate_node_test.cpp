@@ -87,12 +87,12 @@ TEST_F(AggregateNodeTest, HashingAndEqualityCheck) {
   EXPECT_NE(*aggregate_node_, *different_aggregate_node_c);
   EXPECT_NE(*aggregate_node_, *different_aggregate_node_d);
 
-  EXPECT_NE(aggregate_node_->hash(), different_aggregate_node_a->hash());
+  EXPECT_NE(aggregate_node_->Hash(), different_aggregate_node_a->Hash());
   // aggregate_node_ and different_aggregate_node_b are known to conflict because we do not recurse deep enough to
   // identify the difference in the aggregate expressions. That is acceptable, as long as the comparison identifies
   // the two nodes as non-equal.
-  EXPECT_NE(aggregate_node_->hash(), different_aggregate_node_c->hash());
-  EXPECT_NE(aggregate_node_->hash(), different_aggregate_node_d->hash());
+  EXPECT_NE(aggregate_node_->Hash(), different_aggregate_node_c->Hash());
+  EXPECT_NE(aggregate_node_->Hash(), different_aggregate_node_d->Hash());
 }
 
 TEST_F(AggregateNodeTest, Copy) {
@@ -130,8 +130,8 @@ TEST_F(AggregateNodeTest, UniqueConstraintsAdd) {
 }
 
 TEST_F(AggregateNodeTest, UniqueConstraintsForwardingSimple) {
-  const auto key_constraint_b = TableKeyConstraint{{b_->original_column_id_}, KeyConstraintType::UNIQUE};
-  const auto key_constraint_c = TableKeyConstraint{{c_->original_column_id_}, KeyConstraintType::UNIQUE};
+  const auto key_constraint_b = TableKeyConstraint{{b_->original_column_id_}, KeyConstraintType::kUnique};
+  const auto key_constraint_c = TableKeyConstraint{{c_->original_column_id_}, KeyConstraintType::kUnique};
   mock_node_->set_key_constraints({key_constraint_b, key_constraint_c});
   EXPECT_EQ(mock_node_->UniqueConstraints()->size(), 2);
 
@@ -152,8 +152,8 @@ TEST_F(AggregateNodeTest, UniqueConstraintsForwardingSimple) {
 }
 
 TEST_F(AggregateNodeTest, UniqueConstraintsForwardingAnyAggregates) {
-  const auto key_constraint_b = TableKeyConstraint{{b_->original_column_id_}, KeyConstraintType::UNIQUE};
-  const auto key_constraint_c = TableKeyConstraint{{c_->original_column_id_}, KeyConstraintType::UNIQUE};
+  const auto key_constraint_b = TableKeyConstraint{{b_->original_column_id_}, KeyConstraintType::kUnique};
+  const auto key_constraint_c = TableKeyConstraint{{c_->original_column_id_}, KeyConstraintType::kUnique};
   mock_node_->set_key_constraints({key_constraint_b, key_constraint_c});
   EXPECT_EQ(mock_node_->UniqueConstraints()->size(), 2);
 
@@ -174,13 +174,13 @@ TEST_F(AggregateNodeTest, UniqueConstraintsForwardingAnyAggregates) {
   EXPECT_EQ(unique_constraints->size(), 2);
   // In-depth check
   EXPECT_TRUE(find_unique_constraint_by_key_constraint(key_constraint_b, unique_constraints));
-  const auto key_constraint_group_by = TableKeyConstraint{{a_->original_column_id_}, KeyConstraintType::UNIQUE};
+  const auto key_constraint_group_by = TableKeyConstraint{{a_->original_column_id_}, KeyConstraintType::kUnique};
   EXPECT_TRUE(find_unique_constraint_by_key_constraint(key_constraint_group_by, unique_constraints));
 }
 
 TEST_F(AggregateNodeTest, UniqueConstraintsNoDuplicates) {
   // Prepare single unique constraint
-  const auto table_key_constraint = TableKeyConstraint{{a_->original_column_id_}, KeyConstraintType::UNIQUE};
+  const auto table_key_constraint = TableKeyConstraint{{a_->original_column_id_}, KeyConstraintType::kUnique};
   mock_node_->set_key_constraints({table_key_constraint});
   EXPECT_EQ(mock_node_->UniqueConstraints()->size(), 1);
 
@@ -204,7 +204,7 @@ TEST_F(AggregateNodeTest, UniqueConstraintsNoDuplicates) {
 
 TEST_F(AggregateNodeTest, UniqueConstraintsNoSupersets) {
   // Prepare single unique constraint
-  const auto table_key_constraint = TableKeyConstraint{{a_->original_column_id_}, KeyConstraintType::UNIQUE};
+  const auto table_key_constraint = TableKeyConstraint{{a_->original_column_id_}, KeyConstraintType::kUnique};
   mock_node_->set_key_constraints({table_key_constraint});
   EXPECT_EQ(mock_node_->UniqueConstraints()->size(), 1);
 

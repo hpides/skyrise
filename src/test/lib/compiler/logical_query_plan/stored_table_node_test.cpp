@@ -88,10 +88,10 @@ TEST_F(StoredTableNodeTest, HashingAndEqualityCheck) {
   EXPECT_NE(*stored_table_node_, *different_node_c);
   EXPECT_EQ(*different_node_c, *different_node_c2);
 
-  EXPECT_NE(stored_table_node_->hash(), different_node_a->hash());
-  EXPECT_NE(stored_table_node_->hash(), different_node_b->hash());
-  EXPECT_NE(stored_table_node_->hash(), different_node_c->hash());
-  EXPECT_EQ(different_node_c->hash(), different_node_c2->hash());
+  EXPECT_NE(stored_table_node_->Hash(), different_node_a->Hash());
+  EXPECT_NE(stored_table_node_->Hash(), different_node_b->Hash());
+  EXPECT_NE(stored_table_node_->Hash(), different_node_c->Hash());
+  EXPECT_EQ(different_node_c->Hash(), different_node_c2->Hash());
 }
 
 TEST_F(StoredTableNodeTest, Copy) {
@@ -147,14 +147,14 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesNone) {
   // Constraint across all columns => No more columns available to create a functional dependency from
   const auto table = Hyrise::get().storage_manager.get_table("t_a");
   table->add_soft_key_constraint(
-      {{a_->original_column_id_, b_->original_column_id_, c_->original_column_id_}, KeyConstraintType::UNIQUE});
+      {{a_->original_column_id_, b_->original_column_id_, c_->original_column_id_}, KeyConstraintType::kUnique});
 
   EXPECT_TRUE(stored_table_node_->FunctionalDependencies().empty());
 }
 
 TEST_F(StoredTableNodeTest, FunctionalDependenciesSingle) {
   const auto table = Hyrise::get().storage_manager.get_table("t_a");
-  table->add_soft_key_constraint({{a_->original_column_id_}, KeyConstraintType::UNIQUE});
+  table->add_soft_key_constraint({{a_->original_column_id_}, KeyConstraintType::kUnique});
 
   const auto& fds = stored_table_node_->FunctionalDependencies();
   const auto fd_expected = FunctionalDependency{{a_}, {b_, c_}};
@@ -165,7 +165,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesSingle) {
 
 TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedLeftColumnSet) {
   const auto table = Hyrise::get().storage_manager.get_table("t_a");
-  table->add_soft_key_constraint({{a_->original_column_id_}, KeyConstraintType::UNIQUE});
+  table->add_soft_key_constraint({{a_->original_column_id_}, KeyConstraintType::kUnique});
 
   // Prune unique column "a", which would be part of the left column set in the resulting FD: {a} => {b, c}
   stored_table_node_->set_pruned_column_ids({ColumnId{0}});
@@ -175,7 +175,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedLeftColumnSet) {
 
 TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedLeftColumnSet2) {
   const auto table = Hyrise::get().storage_manager.get_table("t_a");
-  table->add_soft_key_constraint({{b_->original_column_id_}, KeyConstraintType::UNIQUE});
+  table->add_soft_key_constraint({{b_->original_column_id_}, KeyConstraintType::kUnique});
 
   // Prune unique column "a", which would be part of the left column set in the resulting FD: {a} => {b, c}
   stored_table_node_->set_pruned_column_ids({ColumnId{0}});
@@ -187,7 +187,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedLeftColumnSet2) {
 
 TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedRightColumnSet) {
   const auto table = Hyrise::get().storage_manager.get_table("t_a");
-  table->add_soft_key_constraint({{a_->original_column_id_}, KeyConstraintType::UNIQUE});
+  table->add_soft_key_constraint({{a_->original_column_id_}, KeyConstraintType::kUnique});
 
   // Prune column "b", which would be part of the right column set in the resulting FD: {a} => {b, c}
   stored_table_node_->set_pruned_column_ids({ColumnId{1}});
@@ -199,8 +199,8 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedRightColumnSet) {
 
 TEST_F(StoredTableNodeTest, FunctionalDependenciesMultiple) {
   const auto table = Hyrise::get().storage_manager.get_table("t_a");  // int_int_float.tbl
-  table->add_soft_key_constraint({{a_->original_column_id_}, KeyConstraintType::UNIQUE});
-  table->add_soft_key_constraint({{a_->original_column_id_, b_->original_column_id_}, KeyConstraintType::UNIQUE});
+  table->add_soft_key_constraint({{a_->original_column_id_}, KeyConstraintType::kUnique});
+  table->add_soft_key_constraint({{a_->original_column_id_, b_->original_column_id_}, KeyConstraintType::kUnique});
 
   const auto& fds = stored_table_node_->FunctionalDependencies();
 
@@ -220,7 +220,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
   // Test {a} => {b, c}
   {
     const auto table = std::make_shared<Table>(column_definitions, TableType::Data);
-    table->add_soft_key_constraint({{ColumnId{0}}, KeyConstraintType::UNIQUE});
+    table->add_soft_key_constraint({{ColumnId{0}}, KeyConstraintType::kUnique});
 
     Hyrise::get().storage_manager.add_table("table_a", table);
     const auto stored_table_node = StoredTableNode::Make("table_a");
@@ -237,7 +237,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
   // Test {a, b} => {c}
   {
     const auto table = std::make_shared<Table>(column_definitions, TableType::Data);
-    table->add_soft_key_constraint({{ColumnId{0}, ColumnId{1}}, KeyConstraintType::UNIQUE});
+    table->add_soft_key_constraint({{ColumnId{0}, ColumnId{1}}, KeyConstraintType::kUnique});
 
     Hyrise::get().storage_manager.add_table("table_b", table);
     const auto& stored_table_node = StoredTableNode::Make("table_b");
@@ -248,7 +248,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
   // Test {a, c} => {b}
   {
     const auto table = std::make_shared<Table>(column_definitions, TableType::Data);
-    table->add_soft_key_constraint({{ColumnId{0}, ColumnId{2}}, KeyConstraintType::UNIQUE});
+    table->add_soft_key_constraint({{ColumnId{0}, ColumnId{2}}, KeyConstraintType::kUnique});
 
     Hyrise::get().storage_manager.add_table("table_c", table);
     const auto& stored_table_node = StoredTableNode::Make("table_c");
@@ -265,7 +265,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
   // Test {b} => {a, c}
   {
     const auto table = std::make_shared<Table>(column_definitions, TableType::Data);
-    table->add_soft_key_constraint({{ColumnId{1}}, KeyConstraintType::UNIQUE});
+    table->add_soft_key_constraint({{ColumnId{1}}, KeyConstraintType::kUnique});
 
     Hyrise::get().storage_manager.add_table("table_d", table);
     const auto& stored_table_node = StoredTableNode::Make("table_d");
@@ -277,8 +277,8 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
 TEST_F(StoredTableNodeTest, UniqueConstraints) {
   const auto table = Hyrise::get().storage_manager.get_table("t_a");
 
-  const auto key_constraint_a_b = TableKeyConstraint{{ColumnId{0}, ColumnId{1}}, KeyConstraintType::PRIMARY_KEY};
-  const auto key_constraint_c = TableKeyConstraint{{ColumnId{2}}, KeyConstraintType::UNIQUE};
+  const auto key_constraint_a_b = TableKeyConstraint{{ColumnId{0}, ColumnId{1}}, KeyConstraintType::kPrimaryKey};
+  const auto key_constraint_c = TableKeyConstraint{{ColumnId{2}}, KeyConstraintType::kUnique};
   table->add_soft_key_constraint(key_constraint_a_b);
   table->add_soft_key_constraint(key_constraint_c);
 
@@ -304,9 +304,9 @@ TEST_F(StoredTableNodeTest, UniqueConstraintsPrunedColumns) {
   const auto table = Hyrise::get().storage_manager.get_table("t_a");
 
   // Prepare unique constraints
-  const auto key_constraint_a = TableKeyConstraint{{ColumnId{0}}, KeyConstraintType::UNIQUE};
-  const auto key_constraint_a_b = TableKeyConstraint{{ColumnId{0}, ColumnId{1}}, KeyConstraintType::UNIQUE};
-  const auto key_constraint_c = TableKeyConstraint{{ColumnId{2}}, KeyConstraintType::UNIQUE};
+  const auto key_constraint_a = TableKeyConstraint{{ColumnId{0}}, KeyConstraintType::kUnique};
+  const auto key_constraint_a_b = TableKeyConstraint{{ColumnId{0}, ColumnId{1}}, KeyConstraintType::kUnique};
+  const auto key_constraint_c = TableKeyConstraint{{ColumnId{2}}, KeyConstraintType::kUnique};
   table->add_soft_key_constraint(key_constraint_a);
   table->add_soft_key_constraint(key_constraint_a_b);
   table->add_soft_key_constraint(key_constraint_c);
@@ -331,7 +331,7 @@ TEST_F(StoredTableNodeTest, UniqueConstraintsEmpty) {
 
 TEST_F(StoredTableNodeTest, HasMatchingUniqueConstraint) {
   const auto table = Hyrise::get().storage_manager.get_table("t_a");
-  const auto key_constraint_a = TableKeyConstraint{{a_->original_column_id_}, KeyConstraintType::UNIQUE};
+  const auto key_constraint_a = TableKeyConstraint{{a_->original_column_id_}, KeyConstraintType::kUnique};
   table->add_soft_key_constraint(key_constraint_a);
   EXPECT_EQ(stored_table_node_->UniqueConstraints()->size(), 1);
 

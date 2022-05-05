@@ -29,8 +29,8 @@ class ProjectionNodeTest : public ::testing::Test {
     // SELECT c, a, b, b+c, a+c
     projection_node_ = ProjectionNode::Make(ExpressionVector_(c_, a_, b_, Add_(b_, c_), Add_(a_, c_)), mock_node_);
 
-    key_constraint_a_b_pk_ = TableKeyConstraint{{ColumnId{0}, ColumnId{1}}, KeyConstraintType::PRIMARY_KEY};
-    key_constraint_b_ = TableKeyConstraint{{ColumnId{1}}, KeyConstraintType::UNIQUE};
+    key_constraint_a_b_pk_ = TableKeyConstraint{{ColumnId{0}, ColumnId{1}}, KeyConstraintType::kPrimaryKey};
+    key_constraint_b_ = TableKeyConstraint{{ColumnId{1}}, KeyConstraintType::kUnique};
   }
 
   std::optional<TableKeyConstraint> key_constraint_a_b_pk_;
@@ -54,8 +54,8 @@ TEST_F(ProjectionNodeTest, HashingAndEqualityCheck) {
   EXPECT_NE(*projection_node_, *different_projection_node_a);
   EXPECT_NE(*projection_node_, *different_projection_node_b);
 
-  EXPECT_NE(projection_node_->hash(), different_projection_node_a->hash());
-  EXPECT_NE(projection_node_->hash(), different_projection_node_b->hash());
+  EXPECT_NE(projection_node_->Hash(), different_projection_node_a->Hash());
+  EXPECT_NE(projection_node_->Hash(), different_projection_node_b->Hash());
 }
 
 TEST_F(ProjectionNodeTest, Copy) { EXPECT_EQ(*projection_node_->DeepCopy(), *projection_node_); }

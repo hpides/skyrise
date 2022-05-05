@@ -21,7 +21,7 @@ struct LqpUniqueConstraint final {
 
   bool operator==(const LqpUniqueConstraint& rhs) const;
   bool operator!=(const LqpUniqueConstraint& rhs) const;
-  size_t hash() const;
+  size_t Hash() const;
 
   ExpressionUnorderedSet expressions;
 };

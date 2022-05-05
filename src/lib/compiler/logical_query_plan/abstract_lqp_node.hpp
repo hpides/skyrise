@@ -133,7 +133,7 @@ class AbstractLqpNode : public AbstractPlanNode<AbstractLqpNode> {
   /**
    * @return a hash for the (sub)plan whose root this node is
    */
-  size_t hash() const;
+  size_t Hash() const;
 
   const LqpNodeType type_;
 
@@ -172,7 +172,7 @@ std::ostream& operator<<(std::ostream& stream, const AbstractLqpNode& root_node)
 
 // Wrapper around node->hash(), to enable hash-based containers containing std::shared_ptr<AbstractLqpNode>
 struct LqpNodeSharedPtrHash final {
-  size_t operator()(const std::shared_ptr<AbstractLqpNode>& node) const { return node->hash(); }
+  size_t operator()(const std::shared_ptr<AbstractLqpNode>& node) const { return node->Hash(); }
 };
 
 // Wrapper around AbstractLqpNode::operator==(), to enable hash-based containers containing

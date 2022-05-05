@@ -49,16 +49,16 @@ TEST_F(LqpUniqueConstraintTest, Hash) {
   const auto unique_constraint_a_b_c = LqpUniqueConstraint({a_, b_, c_});
 
   // Equal Hash
-  EXPECT_EQ(unique_constraint_a.hash(), LqpUniqueConstraint({a_}).hash());
-  EXPECT_EQ(unique_constraint_a_b_c.hash(), LqpUniqueConstraint({a_, b_, c_}).hash());
-  EXPECT_EQ(unique_constraint_a_b_c.hash(), LqpUniqueConstraint({c_, a_, b_}).hash());
-  EXPECT_EQ(unique_constraint_a_b_c.hash(), LqpUniqueConstraint({c_, b_, a_}).hash());
+  EXPECT_EQ(unique_constraint_a.Hash(), LqpUniqueConstraint({a_}).Hash());
+  EXPECT_EQ(unique_constraint_a_b_c.Hash(), LqpUniqueConstraint({a_, b_, c_}).Hash());
+  EXPECT_EQ(unique_constraint_a_b_c.Hash(), LqpUniqueConstraint({c_, a_, b_}).Hash());
+  EXPECT_EQ(unique_constraint_a_b_c.Hash(), LqpUniqueConstraint({c_, b_, a_}).Hash());
 
   // Non-Equal Hash
-  EXPECT_NE(unique_constraint_a.hash(), LqpUniqueConstraint({a_, b_}).hash());
-  EXPECT_NE(unique_constraint_a.hash(), LqpUniqueConstraint({b_}).hash());
-  EXPECT_NE(unique_constraint_a_b_c.hash(), LqpUniqueConstraint({a_, b_}).hash());
-  EXPECT_NE(unique_constraint_a_b_c.hash(), LqpUniqueConstraint({a_, b_, c_, x_}).hash());
+  EXPECT_NE(unique_constraint_a.Hash(), LqpUniqueConstraint({a_, b_}).Hash());
+  EXPECT_NE(unique_constraint_a.Hash(), LqpUniqueConstraint({b_}).Hash());
+  EXPECT_NE(unique_constraint_a_b_c.Hash(), LqpUniqueConstraint({a_, b_}).Hash());
+  EXPECT_NE(unique_constraint_a_b_c.Hash(), LqpUniqueConstraint({a_, b_, c_, x_}).Hash());
 }
 
 }  // namespace skyrise

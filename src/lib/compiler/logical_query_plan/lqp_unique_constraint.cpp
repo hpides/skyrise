@@ -24,7 +24,7 @@ bool LqpUniqueConstraint::operator==(const LqpUniqueConstraint& rhs) const {
 
 bool LqpUniqueConstraint::operator!=(const LqpUniqueConstraint& rhs) const { return !(rhs == *this); }
 
-size_t LqpUniqueConstraint::hash() const {
+size_t LqpUniqueConstraint::Hash() const {
   size_t hash = 0;
   for (const auto& expression : expressions) {
     // To make the hash independent of the expressions' order, we have to use a commutative operator like XOR.
@@ -52,7 +52,7 @@ std::ostream& operator<<(std::ostream& stream, const LqpUniqueConstraint& unique
 namespace std {
 
 size_t hash<skyrise::LqpUniqueConstraint>::operator()(const skyrise::LqpUniqueConstraint& lqp_unique_constraint) const {
-  return lqp_unique_constraint.hash();
+  return lqp_unique_constraint.Hash();
 }
 
 }  // namespace std

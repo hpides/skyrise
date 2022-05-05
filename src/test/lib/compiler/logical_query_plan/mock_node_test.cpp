@@ -71,9 +71,9 @@ TEST_F(MockNodeTest, HashingAndEqualityCheck) {
   EXPECT_NE(*mock_node_b_, *different_mock_node_2);
   EXPECT_EQ(*mock_node_b_, *same_mock_node_b);
 
-  EXPECT_NE(mock_node_b_->hash(), different_mock_node_1->hash());
-  EXPECT_EQ(mock_node_b_->hash(), different_mock_node_2->hash());
-  EXPECT_EQ(mock_node_b_->hash(), same_mock_node_b->hash());
+  EXPECT_NE(mock_node_b_->Hash(), different_mock_node_1->Hash());
+  EXPECT_EQ(mock_node_b_->Hash(), different_mock_node_2->Hash());
+  EXPECT_EQ(mock_node_b_->Hash(), same_mock_node_b->Hash());
 }
 
 TEST_F(MockNodeTest, Copy) {
@@ -89,8 +89,8 @@ TEST_F(MockNodeTest, NodeExpressions) { ASSERT_EQ(mock_node_a_->node_expressions
 
 TEST_F(MockNodeTest, UniqueConstraints) {
   // Add constraints to MockNode
-  const auto key_constraint_a_b = TableKeyConstraint{{ColumnId{0}, ColumnId{1}}, KeyConstraintType::PRIMARY_KEY};
-  const auto key_constraint_c = TableKeyConstraint{{ColumnId{2}}, KeyConstraintType::UNIQUE};
+  const auto key_constraint_a_b = TableKeyConstraint{{ColumnId{0}, ColumnId{1}}, KeyConstraintType::kPrimaryKey};
+  const auto key_constraint_c = TableKeyConstraint{{ColumnId{2}}, KeyConstraintType::kUnique};
   const auto table_key_constraints = TableKeyConstraints{key_constraint_a_b, key_constraint_c};
   mock_node_a_->set_key_constraints(table_key_constraints);
 
@@ -115,9 +115,9 @@ TEST_F(MockNodeTest, UniqueConstraints) {
 
 TEST_F(MockNodeTest, UniqueConstraintsPrunedColumns) {
   // Prepare unique constraints
-  const auto key_constraint_a = TableKeyConstraint{{ColumnId{0}}, KeyConstraintType::UNIQUE};
-  const auto key_constraint_a_b = TableKeyConstraint{{ColumnId{0}, ColumnId{1}}, KeyConstraintType::UNIQUE};
-  const auto key_constraint_c = TableKeyConstraint{{ColumnId{2}}, KeyConstraintType::UNIQUE};
+  const auto key_constraint_a = TableKeyConstraint{{ColumnId{0}}, KeyConstraintType::kUnique};
+  const auto key_constraint_a_b = TableKeyConstraint{{ColumnId{0}, ColumnId{1}}, KeyConstraintType::kUnique};
+  const auto key_constraint_c = TableKeyConstraint{{ColumnId{2}}, KeyConstraintType::kUnique};
   mock_node_a_->set_key_constraints({key_constraint_a, key_constraint_a_b, key_constraint_c});
   EXPECT_EQ(mock_node_a_->key_constraints().size(), 3);
   auto unique_constraints = mock_node_a_->UniqueConstraints();

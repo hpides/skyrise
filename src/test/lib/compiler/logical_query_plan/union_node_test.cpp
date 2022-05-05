@@ -78,13 +78,13 @@ TEST_F(UnionNodeTest, HashingAndEqualityCheck) {
   EXPECT_NE(*union_node_, *UnionNode::Make(SetOperationMode::kUnique));
   EXPECT_NE(*union_node_, *UnionNode::Make(SetOperationMode::kAll));
 
-  EXPECT_EQ(union_node_->hash(), same_union_node->hash());
-  EXPECT_NE(union_node_->hash(), different_union_node->hash());
-  EXPECT_NE(union_node_->hash(), different_union_node_1->hash());
-  EXPECT_NE(union_node_->hash(), different_union_node_2->hash());
-  EXPECT_NE(union_node_->hash(), different_union_node_3->hash());
-  EXPECT_NE(union_node_->hash(), UnionNode::Make(SetOperationMode::kUnique)->hash());
-  EXPECT_NE(union_node_->hash(), UnionNode::Make(SetOperationMode::kAll)->hash());
+  EXPECT_EQ(union_node_->Hash(), same_union_node->Hash());
+  EXPECT_NE(union_node_->Hash(), different_union_node->Hash());
+  EXPECT_NE(union_node_->Hash(), different_union_node_1->Hash());
+  EXPECT_NE(union_node_->Hash(), different_union_node_2->Hash());
+  EXPECT_NE(union_node_->Hash(), different_union_node_3->Hash());
+  EXPECT_NE(union_node_->Hash(), UnionNode::Make(SetOperationMode::kUnique)->Hash());
+  EXPECT_NE(union_node_->Hash(), UnionNode::Make(SetOperationMode::kAll)->Hash());
 }
 
 TEST_F(UnionNodeTest, Copy) { EXPECT_EQ(*union_node_->DeepCopy(), *union_node_); }
@@ -97,7 +97,7 @@ TEST_F(UnionNodeTest, FunctionalDependenciesUnionAllSimple) {
   const auto non_trivial_fd_c = FunctionalDependency({c_}, {b_});
 
   // Set FDs
-  mock_node1_->set_key_constraints({{{a_->original_column_id_}, KeyConstraintType::UNIQUE}});
+  mock_node1_->set_key_constraints({{{a_->original_column_id_}, KeyConstraintType::kUnique}});
   mock_node1_->set_non_trivial_functional_dependencies({non_trivial_fd_b, non_trivial_fd_c});
   EXPECT_EQ(mock_node1_->FunctionalDependencies().size(), 3);
   EXPECT_EQ(mock_node1_->FunctionalDependencies().at(0), non_trivial_fd_b);

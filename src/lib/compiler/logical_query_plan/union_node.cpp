@@ -78,7 +78,7 @@ std::vector<FunctionalDependency> UnionNode::NonTrivialFunctionalDependencies() 
        * might differ. For example, the left input node could have discarded FDs, whereas the right one has not. To work
        * around this issue, we return the intersected set of FDs which is valid for both input nodes.
        */
-      return intersect_fds(fds_left, fds_right);
+      return IntersectFds(fds_left, fds_right);
     }
     default: {
       Fail("Unhandled UnionMode");

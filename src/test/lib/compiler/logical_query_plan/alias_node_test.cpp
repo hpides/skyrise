@@ -64,8 +64,8 @@ TEST_F(AliasNodeTest, HashingAndEqualityCheck) {
   const auto alias_node_other_left_input = AliasNode::Make(expressions_, aliases_, other_mock_node_);
   EXPECT_NE(*alias_node_, *alias_node_other_left_input);
 
-  EXPECT_NE(alias_node_->hash(), alias_node_other_expressions->hash());
-  EXPECT_EQ(alias_node_->hash(), alias_node_other_left_input->hash());
+  EXPECT_NE(alias_node_->Hash(), alias_node_other_expressions->Hash());
+  EXPECT_EQ(alias_node_->Hash(), alias_node_other_left_input->Hash());
   // alias_node_ == alias_node_other_left_input is false but the hash codes of these nodes are equal. The reason for
   // this is in the LqpColumnExpressions: Semantically equal LqpColumnExpressions are not equal if they refer to
   // different original_nodes. This allows, e.g., for self-joins. The hash function does not take the actual pointer
@@ -84,8 +84,8 @@ TEST_F(AliasNodeTest, UniqueConstraintsEmpty) {
 
 TEST_F(AliasNodeTest, UniqueConstraintsForwarding) {
   // Add constraints to MockNode
-  const auto key_constraint_a_b = TableKeyConstraint{{ColumnId{0}, ColumnId{1}}, KeyConstraintType::PRIMARY_KEY};
-  const auto key_constraint_b = TableKeyConstraint{{ColumnId{1}}, KeyConstraintType::UNIQUE};
+  const auto key_constraint_a_b = TableKeyConstraint{{ColumnId{0}, ColumnId{1}}, KeyConstraintType::kPrimaryKey};
+  const auto key_constraint_b = TableKeyConstraint{{ColumnId{1}}, KeyConstraintType::kUnique};
   mock_node_->set_key_constraints({key_constraint_a_b, key_constraint_b});
 
   // Basic check

@@ -53,11 +53,11 @@ class PredicateNodeTest : public ::testing::Test {
 //  EXPECT_NE(*other_predicate_node_d, *predicate_node_);
 //  EXPECT_EQ(*other_predicate_node_e, *predicate_node_);
 //
-//  EXPECT_EQ(other_predicate_node_a->hash(), predicate_node_->hash());
-//  EXPECT_NE(other_predicate_node_b->hash(), predicate_node_->hash());
-//  EXPECT_NE(other_predicate_node_c->hash(), predicate_node_->hash());
-//  EXPECT_NE(other_predicate_node_d->hash(), predicate_node_->hash());
-//  EXPECT_EQ(other_predicate_node_e->hash(), predicate_node_->hash());
+//  EXPECT_EQ(other_predicate_node_a->Hash(), predicate_node_->Hash());
+//  EXPECT_NE(other_predicate_node_b->Hash(), predicate_node_->Hash());
+//  EXPECT_NE(other_predicate_node_c->Hash(), predicate_node_->Hash());
+//  EXPECT_NE(other_predicate_node_d->Hash(), predicate_node_->Hash());
+//  EXPECT_EQ(other_predicate_node_e->Hash(), predicate_node_->Hash());
 //}
 //
 // TEST_F(PredicateNodeTest, Copy) { EXPECT_EQ(*predicate_node_->DeepCopy(), *predicate_node_); }

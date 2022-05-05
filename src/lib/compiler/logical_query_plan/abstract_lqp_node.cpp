@@ -24,7 +24,7 @@ AbstractLqpNode::AbstractLqpNode(LqpNodeType node_type,
                                  const std::vector<std::shared_ptr<AbstractExpression>>& init_node_expressions)
     : type_(node_type), node_expressions_(init_node_expressions) {}
 
-size_t AbstractLqpNode::hash() const {
+size_t AbstractLqpNode::Hash() const {
   size_t hash{0};
 
   VisitLqp(SharedFromBase(), [&hash](const auto& node) {
@@ -173,7 +173,7 @@ std::vector<FunctionalDependency> AbstractLqpNode::FunctionalDependencies() cons
   auto trivial_fds = fds_from_unique_constraints(SharedFromBase(), unique_constraints);
 
   // (3) Merge and return FDs
-  return union_fds(non_trivial_fds, trivial_fds);
+  return UnionFds(non_trivial_fds, trivial_fds);
 }
 
 std::vector<FunctionalDependency> AbstractLqpNode::NonTrivialFunctionalDependencies() const {

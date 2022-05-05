@@ -38,11 +38,11 @@ class JoinNodeTest : public ::testing::Test {
     anti_join_node_ = JoinNode::Make(JoinMode::kAntiNullAsTrue, Equals_(t_a_a_, t_b_y_), mock_node_a_, mock_node_b_);
 
     // Prepare constraint definitions
-    key_constraint_a_ = TableKeyConstraint{{t_a_a_->original_column_id_}, KeyConstraintType::UNIQUE};
+    key_constraint_a_ = TableKeyConstraint{{t_a_a_->original_column_id_}, KeyConstraintType::kUnique};
     key_constraint_b_c_ =
-        TableKeyConstraint{{t_a_b_->original_column_id_, t_a_c_->original_column_id_}, KeyConstraintType::UNIQUE};
-    key_constraint_x_ = TableKeyConstraint{{t_b_x_->original_column_id_}, KeyConstraintType::UNIQUE};
-    key_constraint_y_ = TableKeyConstraint{{t_b_y_->original_column_id_}, KeyConstraintType::UNIQUE};
+        TableKeyConstraint{{t_a_b_->original_column_id_, t_a_c_->original_column_id_}, KeyConstraintType::kUnique};
+    key_constraint_x_ = TableKeyConstraint{{t_b_x_->original_column_id_}, KeyConstraintType::kUnique};
+    key_constraint_y_ = TableKeyConstraint{{t_b_y_->original_column_id_}, KeyConstraintType::kUnique};
   }
 
   std::shared_ptr<MockNode> mock_node_a_;
@@ -97,10 +97,10 @@ TEST_F(JoinNodeTest, HashingAndEqualityCheck) {
   EXPECT_NE(*other_join_node_c, *inner_join_node_);
   EXPECT_EQ(*other_join_node_d, *inner_join_node_);
 
-  EXPECT_NE(other_join_node_a->hash(), inner_join_node_->hash());
-  EXPECT_NE(other_join_node_b->hash(), inner_join_node_->hash());
-  EXPECT_NE(other_join_node_c->hash(), inner_join_node_->hash());
-  EXPECT_EQ(other_join_node_d->hash(), inner_join_node_->hash());
+  EXPECT_NE(other_join_node_a->Hash(), inner_join_node_->Hash());
+  EXPECT_NE(other_join_node_b->Hash(), inner_join_node_->Hash());
+  EXPECT_NE(other_join_node_c->Hash(), inner_join_node_->Hash());
+  EXPECT_EQ(other_join_node_d->Hash(), inner_join_node_->Hash());
 }
 
 TEST_F(JoinNodeTest, Copy) {
@@ -431,8 +431,8 @@ TEST_F(JoinNodeTest, FunctionalDependenciesDeriveLeftOnly) {
 
 TEST_F(JoinNodeTest, FunctionalDependenciesUnify) {
   const auto key_constraint_a_b =
-      TableKeyConstraint{{t_a_a_->original_column_id_, t_a_b_->original_column_id_}, KeyConstraintType::PRIMARY_KEY};
-  const auto key_constraint_c = TableKeyConstraint{{t_a_c_->original_column_id_}, KeyConstraintType::UNIQUE};
+      TableKeyConstraint{{t_a_a_->original_column_id_, t_a_b_->original_column_id_}, KeyConstraintType::kPrimaryKey};
+  const auto key_constraint_c = TableKeyConstraint{{t_a_c_->original_column_id_}, KeyConstraintType::kUnique};
   mock_node_a_->set_key_constraints({key_constraint_a_b, key_constraint_c});
   mock_node_b_->set_key_constraints({*key_constraint_x_});
 
@@ -471,7 +471,7 @@ TEST_F(JoinNodeTest, FunctionalDependenciesUnify) {
    *   {a, b} => {c, x, y}
    * can be merged into one.
    */
-  const auto fds_unified = union_fds(non_trivial_fds, trivial_fds);
+  const auto fds_unified = UnionFds(non_trivial_fds, trivial_fds);
   EXPECT_EQ(fds_unified.size(), 3);
   const auto fds_unified_set = std::unordered_set<FunctionalDependency>(fds_unified.begin(), fds_unified.end());
   // TODO(julianmenzler) C++20: Replace with .contains

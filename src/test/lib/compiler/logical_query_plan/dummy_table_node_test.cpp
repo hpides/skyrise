@@ -26,8 +26,8 @@ TEST_F(DummyTableNodeTest, HashingAndEqualityCheck) {
   EXPECT_EQ(*dummy_table_node_, *dummy_table_node_);
   EXPECT_EQ(*dummy_table_node_, *DummyTableNode::Make());
 
-  EXPECT_EQ(dummy_table_node_->hash(), dummy_table_node_->hash());
-  EXPECT_EQ(dummy_table_node_->hash(), DummyTableNode::Make()->hash());
+  EXPECT_EQ(dummy_table_node_->Hash(), dummy_table_node_->Hash());
+  EXPECT_EQ(dummy_table_node_->Hash(), DummyTableNode::Make()->Hash());
 }
 
 TEST_F(DummyTableNodeTest, Copy) { EXPECT_EQ(*dummy_table_node_->DeepCopy(), *DummyTableNode::Make()); }
