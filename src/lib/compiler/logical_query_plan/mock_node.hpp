@@ -39,13 +39,10 @@ class MockNode : public EnableMakeForPlanNode<MockNode, AbstractLqpNode>, public
   std::shared_ptr<LqpUniqueConstraints> UniqueConstraints() const override;
 
   /**
-   * @defgroup ColumnIds to be pruned from the mocked Table.
    * Vector passed to `set_pruned_column_ids()` needs to be sorted and unique
-   * @{
    */
   void set_pruned_column_ids(const std::vector<ColumnId>& pruned_column_ids);
   const std::vector<ColumnId>& pruned_column_ids() const;
-  /** @} */
 
   const std::string& Name() const override;
   using AbstractLqpNode::Description;

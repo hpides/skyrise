@@ -23,16 +23,6 @@ std::shared_ptr<LqpColumnExpression> StoredTableNode::get_column(const std::stri
   return std::make_shared<LqpColumnExpression>(SharedFromBase(), column_id);
 }
 
-void StoredTableNode::set_pruned_chunk_ids(const std::vector<ChunkId>& pruned_chunk_ids) {
-  DebugAssert(std::is_sorted(pruned_chunk_ids.begin(), pruned_chunk_ids.end()), "Expected sorted vector of ChunkIds");
-  DebugAssert(std::adjacent_find(pruned_chunk_ids.begin(), pruned_chunk_ids.end()) == pruned_chunk_ids.end(),
-              "Expected vector of unique ChunkIds");
-
-  pruned_chunk_ids_ = pruned_chunk_ids;
-}
-
-const std::vector<ChunkId>& StoredTableNode::pruned_chunk_ids() const { return pruned_chunk_ids_; }
-
 void StoredTableNode::set_pruned_column_ids(const std::vector<ColumnId>& pruned_column_ids) {
   DebugAssert(std::is_sorted(pruned_column_ids.begin(), pruned_column_ids.end()),
               "Expected sorted vector of ColumnIds");
@@ -134,9 +124,6 @@ std::shared_ptr<LqpUniqueConstraints> StoredTableNode::UniqueConstraints() const
 size_t StoredTableNode::OnShallowHash() const {
   size_t hash{0};
   boost::hash_combine(hash, table_name_);
-  for (const auto& pruned_chunk_id : pruned_chunk_ids_) {
-    boost::hash_combine(hash, static_cast<size_t>(pruned_chunk_id));
-  }
   for (const auto& pruned_column_id : pruned_column_ids_) {
     boost::hash_combine(hash, static_cast<size_t>(pruned_column_id));
   }
@@ -145,15 +132,13 @@ size_t StoredTableNode::OnShallowHash() const {
 
 std::shared_ptr<AbstractLqpNode> StoredTableNode::OnShallowCopy(LqpNodeMapping& /* node_mapping */) const {
   const auto copy = Make(table_name_, catalog_);
-  copy->set_pruned_chunk_ids(pruned_chunk_ids_);
   copy->set_pruned_column_ids(pruned_column_ids_);
   return copy;
 }
 
 bool StoredTableNode::OnShallowEquals(const AbstractLqpNode& rhs, const LqpNodeMapping& /* node_mapping */) const {
   const auto& stored_table_node = static_cast<const StoredTableNode&>(rhs);
-  return table_name_ == stored_table_node.table_name_ && pruned_chunk_ids_ == stored_table_node.pruned_chunk_ids_ &&
-         pruned_column_ids_ == stored_table_node.pruned_column_ids_;
+  return table_name_ == stored_table_node.table_name_ && pruned_column_ids_ == stored_table_node.pruned_column_ids_;
 }
 
 }  // namespace skyrise

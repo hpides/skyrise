@@ -17,7 +17,7 @@ namespace skyrise {
 class LqpColumnExpression;
 
 /**
- * Represents a Table and holds Column and Chunk pruning information.
+ * Represents a Table and holds Column pruning information.
  */
 class StoredTableNode : public EnableMakeForPlanNode<StoredTableNode, AbstractLqpNode>, public AbstractLqpNode {
  public:
@@ -26,16 +26,10 @@ class StoredTableNode : public EnableMakeForPlanNode<StoredTableNode, AbstractLq
   std::shared_ptr<LqpColumnExpression> get_column(const std::string& name) const;
 
   /**
-   * @defgroup ColumnIds and ChunkIds to be pruned from the table.
-   * Both vectors need to be sorted and must not contain duplicates when passed to `set_pruned_{chunk/column}_ids()`
-   * @{
+   * Vectors needs to be sorted and must not contain duplicates.
    */
-  void set_pruned_chunk_ids(const std::vector<ChunkId>& pruned_chunk_ids);
-  const std::vector<ChunkId>& pruned_chunk_ids() const;
-
   void set_pruned_column_ids(const std::vector<ColumnId>& pruned_column_ids);
   const std::vector<ColumnId>& pruned_column_ids() const;
-  /** @} */
 
   const std::string& Name() const override;
   using AbstractLqpNode::Description;
@@ -58,7 +52,6 @@ class StoredTableNode : public EnableMakeForPlanNode<StoredTableNode, AbstractLq
 
  private:
   mutable std::optional<std::vector<std::shared_ptr<AbstractExpression>>> output_expressions_;
-  std::vector<ChunkId> pruned_chunk_ids_;  // TODO(julianmenzler): rename to pruned partition ids
   std::vector<ColumnId> pruned_column_ids_;
 };
 
