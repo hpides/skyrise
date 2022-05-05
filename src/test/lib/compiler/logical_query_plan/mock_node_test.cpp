@@ -89,8 +89,8 @@ TEST_F(MockNodeTest, NodeExpressions) { ASSERT_EQ(mock_node_a_->node_expressions
 
 TEST_F(MockNodeTest, UniqueConstraints) {
   // Add constraints to MockNode
-  const TableKeyConstraint key_constraint_a_b({ColumnId{0}, ColumnId{1}}, KeyConstraintType::kPrimaryKey)
-  const TableKeyConstraint key_constraint_c({ColumnId{2}}, KeyConstraintType::kUnique)
+  const TableKeyConstraint key_constraint_a_b({ColumnId{0}, ColumnId{1}}, KeyConstraintType::kPrimaryKey);
+  const TableKeyConstraint key_constraint_c({ColumnId{2}}, KeyConstraintType::kUnique);
   const auto table_key_constraints = TableKeyConstraints{key_constraint_a_b, key_constraint_c};
   mock_node_a_->set_key_constraints(table_key_constraints);
 
@@ -115,9 +115,9 @@ TEST_F(MockNodeTest, UniqueConstraints) {
 
 TEST_F(MockNodeTest, UniqueConstraintsPrunedColumns) {
   // Prepare unique constraints
-  const TableKeyConstraint key_constraint_a({ColumnId{0}}, KeyConstraintType::kUnique)
-  const TableKeyConstraint key_constraint_a_b({ColumnId{0}, ColumnId{1}}, KeyConstraintType::kUnique)
-  const TableKeyConstraint key_constraint_c({ColumnId{2}}, KeyConstraintType::kUnique)
+  const TableKeyConstraint key_constraint_a({ColumnId{0}}, KeyConstraintType::kUnique);
+  const TableKeyConstraint key_constraint_a_b({ColumnId{0}, ColumnId{1}}, KeyConstraintType::kUnique);
+  const TableKeyConstraint key_constraint_c({ColumnId{2}}, KeyConstraintType::kUnique);
   mock_node_a_->set_key_constraints({key_constraint_a, key_constraint_a_b, key_constraint_c});
   EXPECT_EQ(mock_node_a_->key_constraints().size(), 3);
   auto unique_constraints = mock_node_a_->UniqueConstraints();

@@ -228,8 +228,8 @@ TEST_F(AggregateNodeTest, UniqueConstraintsNoSupersets) {
 
 TEST_F(AggregateNodeTest, FunctionalDependenciesForwarding) {
   // Preparations
-  const FunctionalDependency fd_a({a_}, {c_})
-  const FunctionalDependency fd_b_two_dependent_expressions({b_}, {a_, c_})
+  const FunctionalDependency fd_a({a_}, {c_});
+  const FunctionalDependency fd_b_two_dependent_expressions({b_}, {a_, c_});
   mock_node_->set_non_trivial_functional_dependencies({fd_a, fd_b_two_dependent_expressions});
   EXPECT_EQ(mock_node_->FunctionalDependencies().size(), 2);
 
@@ -250,7 +250,7 @@ TEST_F(AggregateNodeTest, FunctionalDependenciesForwarding) {
   // Special case: All determinant expressions, but only some of the dependent expressions are part of the output
   const auto& agg_node_c =
       AggregateNode::Make(ExpressionVector_(b_, c_), ExpressionVector_(aggregate1, aggregate2), mock_node_);
-  const FunctionalDependency expected_fd({b_}, {c_})
+  const FunctionalDependency expected_fd({b_}, {c_});
   EXPECT_EQ(agg_node_c->NonTrivialFunctionalDependencies().size(), 1);
   EXPECT_EQ(agg_node_c->NonTrivialFunctionalDependencies().at(0), expected_fd);
 }

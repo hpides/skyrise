@@ -211,8 +211,8 @@ TEST_F(JoinNodeTest, IsColumnNullableWithOuterJoin) {
 
 TEST_F(JoinNodeTest, FunctionalDependenciesSemiAndAntiJoins) {
   // Preparations
-  const FunctionalDependency fd_a({t_a_a_}, {t_a_b_})
-  const FunctionalDependency fd_x({t_b_x_}, {t_b_y_})
+  const FunctionalDependency fd_a({t_a_a_}, {t_a_b_});
+  const FunctionalDependency fd_x({t_b_x_}, {t_b_y_});
   mock_node_a_->set_non_trivial_functional_dependencies({fd_a});
   EXPECT_EQ(mock_node_a_->NonTrivialFunctionalDependencies().size(), 1);
   EXPECT_EQ(mock_node_a_->NonTrivialFunctionalDependencies().at(0), fd_a);
@@ -247,7 +247,7 @@ TEST_F(JoinNodeTest, FunctionalDependenciesForwardNonTrivialLeft) {
     }
 
     // Left input Node has non-trivial FDs
-    const FunctionalDependency fd_a({t_a_a_}, {t_a_b_})
+    const FunctionalDependency fd_a({t_a_a_}, {t_a_b_});
     mock_node_a_->set_non_trivial_functional_dependencies({fd_a});
     mock_node_b_->set_non_trivial_functional_dependencies({});
     EXPECT_TRUE(mock_node_a_->UniqueConstraints()->empty());
@@ -273,7 +273,7 @@ TEST_F(JoinNodeTest, FunctionalDependenciesForwardNonTrivialRight) {
     }
 
     // Right input Node has non-trivial FDs
-    const FunctionalDependency fd_x({t_b_x_}, {t_b_y_})
+    const FunctionalDependency fd_x({t_b_x_}, {t_b_y_});
     mock_node_a_->set_non_trivial_functional_dependencies({});
     mock_node_b_->set_non_trivial_functional_dependencies({fd_x});
     EXPECT_TRUE(mock_node_a_->UniqueConstraints()->empty());
@@ -299,8 +299,8 @@ TEST_F(JoinNodeTest, FunctionalDependenciesForwardNonTrivialBoth) {
     }
 
     // Both input nodes have non-trivial FDs
-    const FunctionalDependency fd_a({t_a_a_}, {t_a_b_})
-    const FunctionalDependency fd_x({t_b_x_}, {t_b_y_})
+    const FunctionalDependency fd_a({t_a_a_}, {t_a_b_});
+    const FunctionalDependency fd_x({t_b_x_}, {t_b_y_});
     mock_node_a_->set_non_trivial_functional_dependencies({fd_a});
     mock_node_b_->set_non_trivial_functional_dependencies({fd_x});
     EXPECT_TRUE(mock_node_a_->UniqueConstraints()->empty());
@@ -338,14 +338,14 @@ TEST_F(JoinNodeTest, FunctionalDependenciesForwardNonTrivialBothAndDerive) {
      *  - We enforce the dismissal of unique constraints for all join modes by making none of the join columns unique.
      *    Consequently, we expect non-trivial FDs, which were derived from the input nodes' unique constraints.
      */
-    const FunctionalDependency fd_a({t_a_a_}, {t_a_b_})
-    const FunctionalDependency fd_x({t_b_x_}, {t_b_y_})
+    const FunctionalDependency fd_a({t_a_a_}, {t_a_b_});
+    const FunctionalDependency fd_x({t_b_x_}, {t_b_y_});
     mock_node_a_->set_non_trivial_functional_dependencies({fd_a});
     mock_node_b_->set_non_trivial_functional_dependencies({fd_x});
     mock_node_a_->set_key_constraints({*key_constraint_b_c_});
     mock_node_b_->set_key_constraints({*key_constraint_y_});
-    const FunctionalDependency generated_fd_b_c({t_a_b_, t_a_c_}, {t_a_a_})
-    const FunctionalDependency generated_fd_y({t_b_y_}, {t_b_x_})
+    const FunctionalDependency generated_fd_b_c({t_a_b_, t_a_c_}, {t_a_a_});
+    const FunctionalDependency generated_fd_y({t_b_y_}, {t_b_x_});
 
     if (join_mode == JoinMode::kFullOuter) {
       EXPECT_EQ(join_node->NonTrivialFunctionalDependencies().size(), 0);
@@ -377,8 +377,8 @@ TEST_F(JoinNodeTest, FunctionalDependenciesDeriveNone) {
   mock_node_b_->set_key_constraints({*key_constraint_x_});
 
   // MockNodes with non-trivial FDs
-  const FunctionalDependency fd_b({t_a_b_}, {t_a_a_})
-  const FunctionalDependency fd_y({t_b_y_}, {t_b_x_})
+  const FunctionalDependency fd_b({t_a_b_}, {t_a_a_});
+  const FunctionalDependency fd_y({t_b_y_}, {t_b_x_});
   mock_node_a_->set_non_trivial_functional_dependencies({fd_b});
   mock_node_b_->set_non_trivial_functional_dependencies({fd_y});
 
@@ -397,9 +397,9 @@ TEST_F(JoinNodeTest, FunctionalDependenciesDeriveNone) {
   EXPECT_EQ(join_node->FunctionalDependencies().size(), 4);
   EXPECT_EQ(join_node->FunctionalDependencies().at(0), fd_b);
   EXPECT_EQ(join_node->FunctionalDependencies().at(1), fd_y);
-  const FunctionalDependency generated_fd_a({t_a_a_}, {t_a_b_, t_a_c_, t_b_x_, t_b_y_})
+  const FunctionalDependency generated_fd_a({t_a_a_}, {t_a_b_, t_a_c_, t_b_x_, t_b_y_});
   EXPECT_EQ(join_node->FunctionalDependencies().at(2), generated_fd_a);
-  const FunctionalDependency generated_fd_x({t_b_x_}, {t_b_y_, t_a_a_, t_a_b_, t_a_c_})
+  const FunctionalDependency generated_fd_x({t_b_x_}, {t_b_y_, t_a_a_, t_a_b_, t_a_c_});
   EXPECT_EQ(join_node->FunctionalDependencies().at(3), generated_fd_x);
 }
 
@@ -419,11 +419,11 @@ TEST_F(JoinNodeTest, FunctionalDependenciesDeriveLeftOnly) {
   // clang-format on
 
   // Tests
-  const FunctionalDependency generated_fd_a({t_a_a_}, {t_a_b_, t_a_c_})
+  const FunctionalDependency generated_fd_a({t_a_a_}, {t_a_b_, t_a_c_});
   EXPECT_EQ(join_node->NonTrivialFunctionalDependencies().size(), 1);
   EXPECT_EQ(join_node->NonTrivialFunctionalDependencies().at(0), generated_fd_a);
 
-  const FunctionalDependency generated_fd_x({t_b_x_}, {t_a_a_, t_a_b_, t_a_c_, t_b_y_})
+  const FunctionalDependency generated_fd_x({t_b_x_}, {t_a_a_, t_a_b_, t_a_c_, t_b_y_});
   EXPECT_EQ(join_node->FunctionalDependencies().size(), 2);
   EXPECT_EQ(join_node->FunctionalDependencies().at(0), generated_fd_a);
   EXPECT_EQ(join_node->FunctionalDependencies().at(1), generated_fd_x);
@@ -438,7 +438,7 @@ TEST_F(JoinNodeTest, FunctionalDependenciesUnify) {
 
   // The following FD is trivial since it can be derived from a unique constraint (PRIMARY KEY across a & b).
   // However, we define it as non-trivial anyway, to verify the conflict resolution when merging FDs later on.
-  const FunctionalDependency fd_a_b({t_a_a_, t_a_b_}, {t_a_c_})
+  const FunctionalDependency fd_a_b({t_a_a_, t_a_b_}, {t_a_c_});
   mock_node_a_->set_non_trivial_functional_dependencies({fd_a_b});
 
   // Define an Inner Join, so that all unique constraints survive
@@ -450,9 +450,9 @@ TEST_F(JoinNodeTest, FunctionalDependenciesUnify) {
   // clang-format on
 
   // After the join, we expect the following FDs to be returned:
-  const FunctionalDependency expected_fd_a_b({t_a_a_, t_a_b_}, {t_a_c_, t_b_x_, t_b_y_})
-  const FunctionalDependency expected_fd_c({t_a_c_}, {t_a_a_, t_a_b_, t_b_x_, t_b_y_})
-  const FunctionalDependency expected_fd_x({t_b_x_}, {t_a_a_, t_a_b_, t_a_c_, t_b_y_})
+  const FunctionalDependency expected_fd_a_b({t_a_a_, t_a_b_}, {t_a_c_, t_b_x_, t_b_y_});
+  const FunctionalDependency expected_fd_c({t_a_c_}, {t_a_a_, t_a_b_, t_b_x_, t_b_y_});
+  const FunctionalDependency expected_fd_x({t_b_x_}, {t_a_a_, t_a_b_, t_a_c_, t_b_y_});
 
   // Prerequisites
   const auto& non_trivial_fds = join_node->NonTrivialFunctionalDependencies();

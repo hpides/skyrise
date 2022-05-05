@@ -143,9 +143,9 @@ TEST_F(ProjectionNodeTest, UniqueConstraintsRemovedColumns) {
 
 TEST_F(ProjectionNodeTest, FunctionalDependenciesForwarding) {
   // Preparations
-  const FunctionalDependency fd_a({a_}, {c_})
-  const FunctionalDependency fd_b({b_}, {c_})
-  const FunctionalDependency fd_b_two_dependent_expressions({b_}, {a_, c_})
+  const FunctionalDependency fd_a({a_}, {c_});
+  const FunctionalDependency fd_b({b_}, {c_});
+  const FunctionalDependency fd_b_two_dependent_expressions({b_}, {a_, c_});
   mock_node_->set_non_trivial_functional_dependencies({fd_a, fd_b, fd_b_two_dependent_expressions});
   EXPECT_EQ(mock_node_->FunctionalDependencies().size(), 3);
 
@@ -164,7 +164,7 @@ TEST_F(ProjectionNodeTest, FunctionalDependenciesForwarding) {
   // FDs are adjusted if some, but not all dependent_expressions are missing
   const auto& projection_node_4 = ProjectionNode::Make(ExpressionVector_(a_, b_), mock_node_);
   EXPECT_EQ(projection_node_4->FunctionalDependencies().size(), 1);
-  const FunctionalDependency expected_fd({b_}, {a_})
+  const FunctionalDependency expected_fd({b_}, {a_});
   EXPECT_EQ(projection_node_4->FunctionalDependencies().at(0), expected_fd);
 }
 
