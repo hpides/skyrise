@@ -110,7 +110,8 @@ std::shared_ptr<LqpUniqueConstraints> StoredTableNode::UniqueConstraints() const
                     })) {
       continue;
     }
-    std::cout << "KeyConstraint ColumnIds: " << key_constraint_column_ids << " -- valid" << std::endl;
+    std::cout << "KeyConstraint ColumnIds: " << std::vector<ColumnId>(key_constraint_column_ids.cbegin(), key_constraint_column_ids.cend())
+              << " -- valid" << std::endl;
 
     // Search for expressions representing the key constraint's ColumnIds
     const auto& column_expressions = FindColumnExpressions(*this, table_key_constraint.Columns());
