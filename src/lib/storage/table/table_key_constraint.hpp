@@ -25,7 +25,7 @@ class TableKeyConstraint final : public AbstractTableConstraint {
   bool OnEquals(const AbstractTableConstraint& table_constraint) const override;
 
  private:
-  const KeyConstraintType key_type_;
+  KeyConstraintType key_type_;
 };
 
 using TableKeyConstraints = std::vector<TableKeyConstraint>;
