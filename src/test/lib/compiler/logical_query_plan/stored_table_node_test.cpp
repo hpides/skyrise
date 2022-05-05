@@ -105,7 +105,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesNone) {
   EXPECT_TRUE(stored_table_node_->FunctionalDependencies().empty());
 
   // Constraint across all columns => No more columns available to create a functional dependency from
-  auto& table_schema = mock_catalog_->GetNonConstTableSchema("t_a");
+  auto& table_schema = mock_catalog_->GetEditableTableSchema("t_a");
   table_schema->AddKeyConstraint(
       {{a_->original_column_id_, b_->original_column_id_, c_->original_column_id_}, KeyConstraintType::kUnique});
 
@@ -113,7 +113,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesNone) {
 }
 
 TEST_F(StoredTableNodeTest, FunctionalDependenciesSingle) {
-  auto& table_schema = mock_catalog_->GetNonConstTableSchema("t_a");
+  auto& table_schema = mock_catalog_->GetEditableTableSchema("t_a");
   table_schema->AddKeyConstraint({{a_->original_column_id_}, KeyConstraintType::kUnique});
 
   const auto& fds = stored_table_node_->FunctionalDependencies();
@@ -124,7 +124,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesSingle) {
 }
 
 TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedLeftColumnSet) {
-  auto& table_schema = mock_catalog_->GetNonConstTableSchema("t_a");
+  auto& table_schema = mock_catalog_->GetEditableTableSchema("t_a");
   table_schema->AddKeyConstraint({{a_->original_column_id_}, KeyConstraintType::kUnique});
 
   // Prune unique column "a", which would be part of the left column set in the resulting FD: {a} => {b, c}
@@ -134,7 +134,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedLeftColumnSet) {
 }
 
 TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedLeftColumnSet2) {
-  auto& table_schema = mock_catalog_->GetNonConstTableSchema("t_a");
+  auto& table_schema = mock_catalog_->GetEditableTableSchema("t_a");
   table_schema->AddKeyConstraint({{b_->original_column_id_}, KeyConstraintType::kUnique});
 
   // Prune unique column "a", which would be part of the left column set in the resulting FD: {a} => {b, c}
@@ -146,7 +146,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedLeftColumnSet2) {
 }
 
 TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedRightColumnSet) {
-  auto& table_schema = mock_catalog_->GetNonConstTableSchema("t_a");
+  auto& table_schema = mock_catalog_->GetEditableTableSchema("t_a");
   table_schema->AddKeyConstraint({{a_->original_column_id_}, KeyConstraintType::kUnique});
 
   // Prune column "b", which would be part of the right column set in the resulting FD: {a} => {b, c}
@@ -158,7 +158,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedRightColumnSet) {
 }
 
 TEST_F(StoredTableNodeTest, FunctionalDependenciesMultiple) {
-  auto& table_schema = mock_catalog_->GetNonConstTableSchema("t_a");  // int_int_float.tbl
+  auto& table_schema = mock_catalog_->GetEditableTableSchema("t_a");  // int_int_float.tbl
   table_schema->AddKeyConstraint({{a_->original_column_id_}, KeyConstraintType::kUnique});
   table_schema->AddKeyConstraint({{a_->original_column_id_, b_->original_column_id_}, KeyConstraintType::kUnique});
 
@@ -235,7 +235,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
 }
 
 TEST_F(StoredTableNodeTest, UniqueConstraints) {
-  auto& table_schema = mock_catalog_->GetNonConstTableSchema("t_a");
+  auto& table_schema = mock_catalog_->GetEditableTableSchema("t_a");
 
   const TableKeyConstraint key_constraint_a_b({ColumnId{0}, ColumnId{1}}, KeyConstraintType::kPrimaryKey);
   const TableKeyConstraint key_constraint_c({ColumnId{2}}, KeyConstraintType::kUnique);
@@ -261,7 +261,7 @@ TEST_F(StoredTableNodeTest, UniqueConstraints) {
 }
 
 TEST_F(StoredTableNodeTest, UniqueConstraintsPrunedColumns) {
-  auto& table_schema = mock_catalog_->GetNonConstTableSchema("t_a");
+  auto& table_schema = mock_catalog_->GetEditableTableSchema("t_a");
 
   // Prepare unique constraints
   const TableKeyConstraint key_constraint_a({ColumnId{0}}, KeyConstraintType::kUnique);
@@ -286,12 +286,12 @@ TEST_F(StoredTableNodeTest, UniqueConstraintsPrunedColumns) {
 }
 
 TEST_F(StoredTableNodeTest, UniqueConstraintsEmpty) {
-  ASSERT_TRUE(mock_catalog_->GetNonConstTableSchema(stored_table_node_->table_name)->KeyConstraints().empty());
+  ASSERT_TRUE(mock_catalog_->GetEditableTableSchema(stored_table_node_->table_name)->KeyConstraints().empty());
   EXPECT_TRUE(stored_table_node_->UniqueConstraints()->empty());
 }
 
 TEST_F(StoredTableNodeTest, HasMatchingUniqueConstraint) {
-  auto& table_schema = mock_catalog_->GetNonConstTableSchema("t_a");
+  auto& table_schema = mock_catalog_->GetEditableTableSchema("t_a");
   const TableKeyConstraint key_constraint_a({a_->original_column_id_}, KeyConstraintType::kUnique);
   table_schema->AddKeyConstraint(key_constraint_a);
   EXPECT_EQ(stored_table_node_->UniqueConstraints()->size(), 1);
