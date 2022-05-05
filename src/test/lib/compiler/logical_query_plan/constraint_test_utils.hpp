@@ -13,7 +13,7 @@ namespace skyrise {
  */
 static bool find_unique_constraint_by_key_constraint(const TableKeyConstraint& table_key_constraint,
                                                      const std::shared_ptr<LqpUniqueConstraints>& unique_constraints) {
-  const auto& column_ids = table_key_constraint.columns();
+  const auto& column_ids = table_key_constraint.Columns();
 
   for (const auto& unique_constraint : *unique_constraints) {
     // Basic comparison: Column count
