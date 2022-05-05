@@ -229,8 +229,8 @@ TEST_F(AggregateNodeTest, UniqueConstraintsNoSupersets) {
 TEST_F(AggregateNodeTest, FunctionalDependenciesForwarding) {
   // Preparations
   const auto fd_a = FunctionalDependency{{a_}, {c_}};
-  const auto fd_b_two_dependents = FunctionalDependency{{b_}, {a_, c_}};
-  mock_node_->set_non_trivial_functional_dependencies({fd_a, fd_b_two_dependents});
+  const auto fd_b_two_dependent_expressions = FunctionalDependency{{b_}, {a_, c_}};
+  mock_node_->set_non_trivial_functional_dependencies({fd_a, fd_b_two_dependent_expressions});
   EXPECT_EQ(mock_node_->FunctionalDependencies().size(), 2);
 
   const auto aggregate1 = Sum_(Add_(a_, b_));
@@ -263,12 +263,12 @@ TEST_F(AggregateNodeTest, FunctionalDependenciesAdd) {
   const auto& fds = aggregate_node_->FunctionalDependencies();
   EXPECT_EQ(fds.size(), 1);
   const auto& fd = fds.at(0);
-  const auto expected_determinants =
+  const auto expected_determinant_expressions =
       ExpressionUnorderedSet{group_by_expressions_.cbegin(), group_by_expressions_.cend()};
-  const auto expected_dependents =
+  const auto expected_dependent_expressions =
       ExpressionUnorderedSet{aggregate_expressions_.cbegin(), aggregate_expressions_.cend()};
-  EXPECT_EQ(fd.determinants, expected_determinants);
-  EXPECT_EQ(fd.dependents, expected_dependents);
+  EXPECT_EQ(fd.determinant_expressions, expected_determinant_expressions);
+  EXPECT_EQ(fd.dependent_expressions, expected_dependent_expressions);
 }
 
 }  // namespace skyrise

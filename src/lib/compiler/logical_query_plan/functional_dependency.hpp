@@ -9,7 +9,7 @@ namespace skyrise {
 
 /**
  * Models a functional dependency (FD), which consists out of two sets of expressions.
- * The left set of expressions (determinants) unambigiously identifies the right set (dependents):
+ * The left set of expressions (determinant_expressions) unambigiously identifies the right set (dependent_expressions):
  * {Left} => {Right}
  *
  * Example A:

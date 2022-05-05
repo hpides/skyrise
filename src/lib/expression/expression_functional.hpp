@@ -107,6 +107,8 @@ inline detail::Binary<ArithmeticOperator::kMultiplication, ArithmeticExpression>
 inline detail::Binary<ArithmeticOperator::kAddition, ArithmeticExpression> Add_;
 inline detail::Binary<ArithmeticOperator::kSubtraction, ArithmeticExpression> Sub_;
 inline detail::Binary<ArithmeticOperator::kModulo, ArithmeticExpression> Mod_;
+inline detail::binary<PredicateCondition::Like, BinaryPredicateExpression> Like_;
+inline detail::binary<PredicateCondition::NotLike, BinaryPredicateExpression> NotLike_;
 inline detail::Binary<PredicateCondition::kEquals, BinaryPredicateExpression> Equals_;
 inline detail::Binary<PredicateCondition::kNotEquals, BinaryPredicateExpression> NotEquals_;
 inline detail::Binary<PredicateCondition::kLessThan, BinaryPredicateExpression> LessThan_;

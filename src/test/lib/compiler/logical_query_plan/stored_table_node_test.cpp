@@ -42,7 +42,6 @@ TEST_F(StoredTableNodeTest, Description) {
   EXPECT_EQ(stored_table_node_a->Description(), "[StoredTable] Name: 't_a' pruned: 0/3 column(s)");
 
   const auto stored_table_node_b = StoredTableNode::Make("t_a");
-  stored_table_node_b->set_pruned_chunk_ids({ChunkID{2}});
   stored_table_node_b->set_pruned_column_ids({ColumnId{1}});
   EXPECT_EQ(stored_table_node_b->Description(), "[StoredTable] Name: 't_a' pruned: 1/3 column(s)");
 }
@@ -74,7 +73,6 @@ TEST_F(StoredTableNodeTest, HashingAndEqualityCheck) {
   EXPECT_EQ(*stored_table_node_, *stored_table_node_);
 
   const auto different_node_a = StoredTableNode::Make("t_b");
-  different_node_a->set_pruned_chunk_ids({ChunkID{2}});
 
   const auto different_node_b = StoredTableNode::Make("t_a");
 
@@ -97,48 +95,11 @@ TEST_F(StoredTableNodeTest, HashingAndEqualityCheck) {
 TEST_F(StoredTableNodeTest, Copy) {
   EXPECT_EQ(*stored_table_node_->DeepCopy(), *stored_table_node_);
 
-  stored_table_node_->set_pruned_chunk_ids({ChunkID{2}});
   stored_table_node_->set_pruned_column_ids({ColumnId{1}});
   EXPECT_EQ(*stored_table_node_->DeepCopy(), *stored_table_node_);
 }
 
 TEST_F(StoredTableNodeTest, NodeExpressions) { ASSERT_EQ(stored_table_node_->node_expressions_.size(), 0u); }
-
-TEST_F(StoredTableNodeTest, GetStatisticsPruneFirstColumn) {
-  EXPECT_EQ(stored_table_node_->indexes_statistics().size(), 4u);
-
-  auto expected_statistics = stored_table_node_->indexes_statistics().at(1u);
-
-  stored_table_node_->set_pruned_column_ids({ColumnId{0}});
-
-  // column with ColumnId{0} was pruned, therefore the column has to be left shifted
-  expected_statistics.column_ids[0] -= 1;
-
-  EXPECT_EQ(stored_table_node_->indexes_statistics().size(), 1u);
-  EXPECT_EQ(stored_table_node_->indexes_statistics().at(0u), expected_statistics);
-}
-
-TEST_F(StoredTableNodeTest, GetStatisticsPruneSecondColumn) {
-  EXPECT_EQ(stored_table_node_->indexes_statistics().size(), 4u);
-
-  auto expected_statistics = stored_table_node_->indexes_statistics().at(0u);
-
-  stored_table_node_->set_pruned_column_ids({ColumnId{1}});
-
-  // column with ColumnId{1} was pruned, so ColumnId{0} should be untouched
-
-  EXPECT_EQ(stored_table_node_->indexes_statistics().size(), 1u);
-  EXPECT_EQ(stored_table_node_->indexes_statistics().at(0u), expected_statistics);
-}
-
-TEST_F(StoredTableNodeTest, GetStatisticsPruneBothColumns) {
-  EXPECT_EQ(stored_table_node_->indexes_statistics().size(), 4u);
-
-  stored_table_node_->set_pruned_column_ids({ColumnId{0}, ColumnId{1}});
-
-  // All indexed columns were pruned, therefore the index statistics should be empty
-  EXPECT_EQ(stored_table_node_->indexes_statistics().size(), 0u);
-}
 
 TEST_F(StoredTableNodeTest, FunctionalDependenciesNone) {
   // No constraints => No functional dependencies

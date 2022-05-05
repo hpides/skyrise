@@ -185,10 +185,10 @@ std::vector<FunctionalDependency> fds_from_unique_constraints(
   }
 
   for (const auto& unique_constraint : *unique_constraints) {
-    auto determinants = unique_constraint.expressions;
+    auto determinant_expressions = unique_constraint.expressions;
 
     // (1) Verify whether we can create an FD from the given unique constraint (non-nullable determinant expressions)
-    if (!std::all_of(determinants.cbegin(), determinants.cend(),
+    if (!std::all_of(determinant_expressions.cbegin(), determinant_expressions.cend(),
                      [&output_expressions_non_nullable](const auto& determinant_expression) {
                        // TODO(julianmenzler): C++20: Replace with .contains
                        return output_expressions_non_nullable.find(determinant_expression) !=
@@ -198,25 +198,26 @@ std::vector<FunctionalDependency> fds_from_unique_constraints(
     }
 
     // (2) Collect the dependent output expressions
-    auto dependents = ExpressionUnorderedSet();
+    auto dependent_expressions = ExpressionUnorderedSet();
     for (const auto& output_expression : output_expressions) {
       // TODO(julianmenzler): C++20: Replace with .contains
-      if (determinants.find(output_expression) != determinants.end()) {
+      if (determinant_expressions.find(output_expression) != determinant_expressions.end()) {
         continue;
       }
-      dependents.insert(output_expression);
+      dependent_expressions.insert(output_expression);
     }
 
     // (3) Add FD to output
-    if (dependents.empty()) {
+    if (dependent_expressions.empty()) {
       continue;
     }
     DebugAssert(std::find_if(fds.cbegin(), fds.cend(),
-                             [&determinants, &dependents](const auto& fd) {
-                               return (fd.determinants == determinants) && (fd.dependents == dependents);
+                             [&determinant_expressions, &dependent_expressions](const auto& fd) {
+                               return (fd.determinant_expressions == determinant_expressions) &&
+                                      (fd.dependent_expressions == dependent_expressions);
                              }) == fds.cend(),
                 "Creating duplicate functional dependencies is unexpected.");
-    fds.emplace_back(determinants, dependents);
+    fds.emplace_back(determinant_expressions, dependent_expressions);
   }
   return fds;
 }
@@ -228,16 +229,17 @@ void remove_invalid_fds(const std::shared_ptr<const AbstractLqpNode>& lqp, std::
   const auto& output_expressions = lqp->OutputExpressions();
   const auto& output_expressions_set = ExpressionUnorderedSet{output_expressions.cbegin(), output_expressions.cend()};
 
-  // Adjust FDs: Remove dependents that are not part of the node's output expressions
+  // Adjust FDs: Remove dependent_expressions that are not part of the node's output expressions
   auto not_part_of_output_expressions = [&output_expressions_set](const auto& fd_dependent_expression) {
     // TODO(julianmenzler): C++20: Replace with .contains
     return output_expressions_set.find(fd_dependent_expression) == output_expressions_set.end();
   };
   for (auto& fd : fds) {
     // TODO(julianmenzler): C++20: Replace with std::erase_if
-    for (auto dependent = fd.dependents.begin(), last_dependent = fd.dependents.end(); dependent != last_dependent;) {
+    for (auto dependent = fd.dependent_expressions.begin(), last_dependent = fd.dependent_expressions.end();
+         dependent != last_dependent;) {
       if (not_part_of_output_expressions(*dependent)) {
-        dependent = fd.dependents.erase(dependent);
+        dependent = fd.dependent_expressions.erase(dependent);
       } else {
         ++dependent;
       }
@@ -248,8 +250,8 @@ void remove_invalid_fds(const std::shared_ptr<const AbstractLqpNode>& lqp, std::
   fds.erase(
       std::remove_if(fds.begin(), fds.end(),
                      [&lqp, &output_expressions_set](auto& fd) {
-                       // If there are no dependents left, we can discard the FD altogether
-                       if (fd.dependents.empty()) {
+                       // If there are no dependent_expressions left, we can discard the FD altogether
+                       if (fd.dependent_expressions.empty()) {
                          return true;
                        }
 
@@ -258,7 +260,7 @@ void remove_invalid_fds(const std::shared_ptr<const AbstractLqpNode>& lqp, std::
                         *  a) not part of the node's output expressions
                         *  b) are nullable
                         */
-                       for (const auto& fd_determinant_expression : fd.determinants) {
+                       for (const auto& fd_determinant_expression : fd.determinant_expressions) {
                          // TODO(julianmenzler): C++20: Replace with .contains
                          if (output_expressions_set.find(fd_determinant_expression) == output_expressions_set.end() ||
                              lqp->IsColumnNullable(lqp->GetColumnId(*fd_determinant_expression))) {

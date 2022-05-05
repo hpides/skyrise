@@ -145,23 +145,23 @@ TEST_F(ProjectionNodeTest, FunctionalDependenciesForwarding) {
   // Preparations
   const auto fd_a = FunctionalDependency{{a_}, {c_}};
   const auto fd_b = FunctionalDependency{{b_}, {c_}};
-  const auto fd_b_two_dependents = FunctionalDependency{{b_}, {a_, c_}};
-  mock_node_->set_non_trivial_functional_dependencies({fd_a, fd_b, fd_b_two_dependents});
+  const auto fd_b_two_dependent_expressions = FunctionalDependency{{b_}, {a_, c_}};
+  mock_node_->set_non_trivial_functional_dependencies({fd_a, fd_b, fd_b_two_dependent_expressions});
   EXPECT_EQ(mock_node_->FunctionalDependencies().size(), 3);
 
   // Tests
-  // FDs without dependents are discarded
+  // FDs without dependent_expressions are discarded
   const auto& projection_node_1 = ProjectionNode::Make(ExpressionVector_(a_, Add_(b_, c_)), mock_node_);
   EXPECT_TRUE(projection_node_1->FunctionalDependencies().empty());
   const auto& projection_node_2 = ProjectionNode::Make(ExpressionVector_(b_, Sub_(b_, c_)), mock_node_);
   EXPECT_TRUE(projection_node_2->FunctionalDependencies().empty());
 
-  // Missing determinants lead to FD removal
+  // Missing determinant_expressions lead to FD removal
   const auto& projection_node_3 = ProjectionNode::Make(ExpressionVector_(a_, c_), mock_node_);
   EXPECT_EQ(projection_node_3->FunctionalDependencies().size(), 1);
   EXPECT_EQ(projection_node_3->FunctionalDependencies().at(0), fd_a);
 
-  // FDs are adjusted if some, but not all dependents are missing
+  // FDs are adjusted if some, but not all dependent_expressions are missing
   const auto& projection_node_4 = ProjectionNode::Make(ExpressionVector_(a_, b_), mock_node_);
   EXPECT_EQ(projection_node_4->FunctionalDependencies().size(), 1);
   const auto expected_fd = FunctionalDependency{{b_}, {a_}};
