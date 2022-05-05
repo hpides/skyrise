@@ -105,7 +105,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesNone) {
   EXPECT_TRUE(stored_table_node_->FunctionalDependencies().empty());
 
   // Constraint across all columns => No more columns available to create a functional dependency from
-  const auto table_schema = mock_catalog_->GetTableSchema("t_a")
+  auto table_schema = mock_catalog_->GetTableSchema("t_a");
   table_schema->AddKeyConstraint(
       {{a_->original_column_id_, b_->original_column_id_, c_->original_column_id_}, KeyConstraintType::kUnique});
 
@@ -113,7 +113,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesNone) {
 }
 
 TEST_F(StoredTableNodeTest, FunctionalDependenciesSingle) {
-  const auto table_schema = mock_catalog_->GetTableSchema("t_a")
+  auto table_schema = mock_catalog_->GetTableSchema("t_a");
   table_schema->AddKeyConstraint({{a_->original_column_id_}, KeyConstraintType::kUnique});
 
   const auto& fds = stored_table_node_->FunctionalDependencies();
@@ -124,7 +124,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesSingle) {
 }
 
 TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedLeftColumnSet) {
-  const auto table_schema = mock_catalog_->GetTableSchema("t_a")
+  auto table_schema = mock_catalog_->GetTableSchema("t_a");
   table_schema->AddKeyConstraint({{a_->original_column_id_}, KeyConstraintType::kUnique});
 
   // Prune unique column "a", which would be part of the left column set in the resulting FD: {a} => {b, c}
@@ -134,7 +134,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedLeftColumnSet) {
 }
 
 TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedLeftColumnSet2) {
-  const auto table_schema = mock_catalog_->GetTableSchema("t_a")
+  auto table_schema = mock_catalog_->GetTableSchema("t_a");
   table_schema->AddKeyConstraint({{b_->original_column_id_}, KeyConstraintType::kUnique});
 
   // Prune unique column "a", which would be part of the left column set in the resulting FD: {a} => {b, c}
@@ -146,7 +146,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedLeftColumnSet2) {
 }
 
 TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedRightColumnSet) {
-  const auto table_schema = mock_catalog_->GetTableSchema("t_a")
+  auto table_schema = mock_catalog_->GetTableSchema("t_a");
   table_schema->AddKeyConstraint({{a_->original_column_id_}, KeyConstraintType::kUnique});
 
   // Prune column "b", which would be part of the right column set in the resulting FD: {a} => {b, c}
@@ -158,7 +158,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedRightColumnSet) {
 }
 
 TEST_F(StoredTableNodeTest, FunctionalDependenciesMultiple) {
-  const auto table_schema = mock_catalog_a->GetTableSchema("t_a");  // int_int_float.tbl
+  auto table_schema = mock_catalog_->GetTableSchema("t_a");  // int_int_float.tbl
   table_schema->AddKeyConstraint({{a_->original_column_id_}, KeyConstraintType::kUnique});
   table_schema->AddKeyConstraint({{a_->original_column_id_, b_->original_column_id_}, KeyConstraintType::kUnique});
 
