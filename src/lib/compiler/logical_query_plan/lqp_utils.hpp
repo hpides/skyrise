@@ -22,7 +22,7 @@ using LqpMismatch = std::pair<std::shared_ptr<const AbstractLqpNode>, std::share
  * For two equally structured LQPs lhs and rhs, create a mapping for each node in lhs pointing to its equivalent in rhs.
  */
 LqpNodeMapping LqpCreateNodeMapping(const std::shared_ptr<AbstractLqpNode>& lhs,
-                                       const std::shared_ptr<AbstractLqpNode>& rhs);
+                                    const std::shared_ptr<AbstractLqpNode>& rhs);
 
 /**
  * Perform a deep equality check of two LQPs.
@@ -30,7 +30,7 @@ LqpNodeMapping LqpCreateNodeMapping(const std::shared_ptr<AbstractLqpNode>& lhs,
  *         discovered to differ.
  */
 std::optional<LqpMismatch> LqpFindSubplanMismatch(const std::shared_ptr<const AbstractLqpNode>& lhs,
-                                                     const std::shared_ptr<const AbstractLqpNode>& rhs);
+                                                  const std::shared_ptr<const AbstractLqpNode>& rhs);
 
 enum class LqpVisitation { kVisitInputs, kDoNotVisitInputs };
 
@@ -120,14 +120,14 @@ std::vector<std::shared_ptr<AbstractLqpNode>> LqpFindLeaves(const std::shared_pt
  *         it only works on data source nodes. Currently, these are StoredTableNodes, StaticTableNodes and MockNodes.
  */
 ExpressionUnorderedSet FindColumnExpressions(const AbstractLqpNode& lqp_node,
-                                               const std::unordered_set<ColumnId>& column_ids);
+                                             const std::unordered_set<ColumnId>& column_ids);
 
 /**
  * @return True, if there is unique constraint in the given set of @param unique_constraints matching the given
  *         set of expressions. A unique constraint matches if it covers a subset of @param expressions.
  */
 bool ContainsMatchingUniqueConstraint(const std::shared_ptr<LqpUniqueConstraints>& unique_constraints,
-                                         const ExpressionUnorderedSet& expressions);
+                                      const ExpressionUnorderedSet& expressions);
 
 /**
  * @return A set of FDs, derived from the given @param unique_constraints and based on the output expressions of the

@@ -430,7 +430,8 @@ TEST_F(JoinNodeTest, FunctionalDependenciesDeriveLeftOnly) {
 }
 
 TEST_F(JoinNodeTest, FunctionalDependenciesUnify) {
-  const TableKeyConstraint key_constraint_a_b({t_a_a_->original_column_id_, t_a_b_->original_column_id_}, KeyConstraintType::kPrimaryKey);
+  const TableKeyConstraint key_constraint_a_b({t_a_a_->original_column_id_, t_a_b_->original_column_id_},
+                                              KeyConstraintType::kPrimaryKey);
   const TableKeyConstraint key_constraint_c({t_a_c_->original_column_id_}, KeyConstraintType::kUnique);
   mock_node_a_->SetKeyConstraints({key_constraint_a_b, key_constraint_c});
   mock_node_b_->SetKeyConstraints({*key_constraint_x_});

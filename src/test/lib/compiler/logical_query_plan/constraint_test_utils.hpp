@@ -12,7 +12,7 @@ namespace skyrise {
  * Verifies whether a given table key constraint is represented in a given set of unique constraints.
  */
 static bool FindUniqueConstraintByKeyConstraint(const TableKeyConstraint& table_key_constraint,
-                                                     const std::shared_ptr<LqpUniqueConstraints>& unique_constraints) {
+                                                const std::shared_ptr<LqpUniqueConstraints>& unique_constraints) {
   const auto& column_ids = table_key_constraint.Columns();
 
   for (const auto& unique_constraint : *unique_constraints) {

@@ -13,7 +13,7 @@ namespace {
 using namespace skyrise;  // NOLINT(google-build-using-namespace)
 
 void LqpCreateNodeMapping_impl(LqpNodeMapping& mapping, const std::shared_ptr<AbstractLqpNode>& lhs,
-                                  const std::shared_ptr<AbstractLqpNode>& rhs) {
+                               const std::shared_ptr<AbstractLqpNode>& rhs) {
   if (!lhs && !rhs) {
     return;
   }
@@ -51,8 +51,8 @@ std::optional<LqpMismatch> lqp_find_structure_mismatch(const std::shared_ptr<con
 }
 
 std::optional<LqpMismatch> LqpFindSubplanMismatch_impl(const LqpNodeMapping& node_mapping,
-                                                          const std::shared_ptr<const AbstractLqpNode>& lhs,
-                                                          const std::shared_ptr<const AbstractLqpNode>& rhs) {
+                                                       const std::shared_ptr<const AbstractLqpNode>& lhs,
+                                                       const std::shared_ptr<const AbstractLqpNode>& rhs) {
   if (!lhs && !rhs) {
     return std::nullopt;
   }
@@ -73,14 +73,14 @@ std::optional<LqpMismatch> LqpFindSubplanMismatch_impl(const LqpNodeMapping& nod
 namespace skyrise {
 
 LqpNodeMapping LqpCreateNodeMapping(const std::shared_ptr<AbstractLqpNode>& lhs,
-                                       const std::shared_ptr<AbstractLqpNode>& rhs) {
+                                    const std::shared_ptr<AbstractLqpNode>& rhs) {
   LqpNodeMapping mapping;
   LqpCreateNodeMapping_impl(mapping, lhs, rhs);
   return mapping;
 }
 
 std::optional<LqpMismatch> LqpFindSubplanMismatch(const std::shared_ptr<const AbstractLqpNode>& lhs,
-                                                     const std::shared_ptr<const AbstractLqpNode>& rhs) {
+                                                  const std::shared_ptr<const AbstractLqpNode>& rhs) {
   // Check for type/structural mismatched
   auto mismatch = lqp_find_structure_mismatch(lhs, rhs);
   if (mismatch) {
@@ -124,7 +124,7 @@ std::vector<std::shared_ptr<AbstractLqpNode>> LqpFindLeaves(const std::shared_pt
 }
 
 ExpressionUnorderedSet FindColumnExpressions(const AbstractLqpNode& lqp_node,
-                                               const std::unordered_set<ColumnId>& column_ids) {
+                                             const std::unordered_set<ColumnId>& column_ids) {
   DebugAssert(lqp_node.Type() == LqpNodeType::kStoredTable || lqp_node.Type() == LqpNodeType::kMock,
               "Did not expect other node types than StoredTableNode, StaticTableNode and MockNode.");
   DebugAssert(!lqp_node.LeftInput(), "Only valid for data source nodes");
@@ -148,7 +148,7 @@ ExpressionUnorderedSet FindColumnExpressions(const AbstractLqpNode& lqp_node,
 }
 
 bool ContainsMatchingUniqueConstraint(const std::shared_ptr<LqpUniqueConstraints>& unique_constraints,
-                                         const ExpressionUnorderedSet& expressions) {
+                                      const ExpressionUnorderedSet& expressions) {
   DebugAssert(!unique_constraints->empty(), "Invalid input: Set of unique constraints should not be empty.");
   DebugAssert(!expressions.empty(), "Invalid input: Set of expressions should not be empty.");
 
