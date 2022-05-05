@@ -74,12 +74,14 @@ std::vector<std::shared_ptr<AbstractExpression>> JoinNode::OutputExpressions() c
   const auto output_both_inputs =
       join_mode != JoinMode::kSemi && join_mode != JoinMode::kAntiNullAsTrue && join_mode != JoinMode::kAntiNullAsFalse;
 
-  auto output_expressions = std::vector<std::shared_ptr<AbstractExpression>>{};
+  std::vector<std::shared_ptr<AbstractExpression>> output_expressions;
   output_expressions.resize(left_expressions.size() + (output_both_inputs ? right_expressions.size() : 0));
 
   auto right_begin = std::copy(left_expressions.begin(), left_expressions.end(), output_expressions.begin());
 
-  if (output_both_inputs) std::copy(right_expressions.begin(), right_expressions.end(), right_begin);
+  if (output_both_inputs) {
+    std::copy(right_expressions.begin(), right_expressions.end(), right_begin);
+  }
 
   return output_expressions;
 }
@@ -253,7 +255,9 @@ std::shared_ptr<AbstractLqpNode> JoinNode::OnShallowCopy(LqpNodeMapping& node_ma
 
 bool JoinNode::OnShallowEquals(const AbstractLqpNode& rhs, const LqpNodeMapping& node_mapping) const {
   const auto& join_node = static_cast<const JoinNode&>(rhs);
-  if (join_mode != join_node.join_mode) return false;
+  if (join_mode != join_node.join_mode) {
+    return false;
+  }
   return ExpressionsEqualToExpressionsInDifferentLqp(join_predicates(), join_node.join_predicates(), node_mapping);
 }
 

@@ -14,14 +14,18 @@ using namespace skyrise;  // NOLINT(google-build-using-namespace)
 
 void lqp_create_node_mapping_impl(LqpNodeMapping& mapping, const std::shared_ptr<AbstractLqpNode>& lhs,
                                   const std::shared_ptr<AbstractLqpNode>& rhs) {
-  if (!lhs && !rhs) return;
+  if (!lhs && !rhs) {
+    return;
+  }
 
   Assert(lhs && rhs, "LQPs aren't equally structured, can't create mapping.");
   Assert(lhs->Type() == rhs->Type(), "LQPs aren't equally structured, can't create mapping.");
 
   // To avoid traversing subgraphs of ORs twice, check whether we've been here already
   const auto mapping_iter = mapping.find(lhs);
-  if (mapping_iter != mapping.end()) return;
+  if (mapping_iter != mapping.end()) {
+    return;
+  }
 
   mapping[lhs] = rhs;
 
@@ -31,11 +35,17 @@ void lqp_create_node_mapping_impl(LqpNodeMapping& mapping, const std::shared_ptr
 
 std::optional<LqpMismatch> lqp_find_structure_mismatch(const std::shared_ptr<const AbstractLqpNode>& lhs,
                                                        const std::shared_ptr<const AbstractLqpNode>& rhs) {
-  if (!lhs && !rhs) return std::nullopt;
-  if (!(lhs && rhs) || lhs->Type() != rhs->Type()) return LqpMismatch(lhs, rhs);
+  if (!lhs && !rhs) {
+    return std::nullopt;
+  }
+  if (!(lhs && rhs) || lhs->Type() != rhs->Type()) {
+    return LqpMismatch(lhs, rhs);
+  }
 
   auto mismatch_left = lqp_find_structure_mismatch(lhs->LeftInput(), rhs->LeftInput());
-  if (mismatch_left) return mismatch_left;
+  if (mismatch_left) {
+    return mismatch_left;
+  }
 
   return lqp_find_structure_mismatch(lhs->RightInput(), rhs->RightInput());
 }
@@ -43,11 +53,17 @@ std::optional<LqpMismatch> lqp_find_structure_mismatch(const std::shared_ptr<con
 std::optional<LqpMismatch> lqp_find_subplan_mismatch_impl(const LqpNodeMapping& node_mapping,
                                                           const std::shared_ptr<const AbstractLqpNode>& lhs,
                                                           const std::shared_ptr<const AbstractLqpNode>& rhs) {
-  if (!lhs && !rhs) return std::nullopt;
-  if (!lhs->ShallowEquals(*rhs, node_mapping)) return LqpMismatch(lhs, rhs);
+  if (!lhs && !rhs) {
+    return std::nullopt;
+  }
+  if (!lhs->ShallowEquals(*rhs, node_mapping)) {
+    return LqpMismatch(lhs, rhs);
+  }
 
   auto mismatch_left = lqp_find_subplan_mismatch_impl(node_mapping, lhs->LeftInput(), rhs->LeftInput());
-  if (mismatch_left) return mismatch_left;
+  if (mismatch_left) {
+    return mismatch_left;
+  }
 
   return lqp_find_subplan_mismatch_impl(node_mapping, lhs->RightInput(), rhs->RightInput());
 }
@@ -67,7 +83,9 @@ std::optional<LqpMismatch> lqp_find_subplan_mismatch(const std::shared_ptr<const
                                                      const std::shared_ptr<const AbstractLqpNode>& rhs) {
   // Check for type/structural mismatched
   auto mismatch = lqp_find_structure_mismatch(lhs, rhs);
-  if (mismatch) return mismatch;
+  if (mismatch) {
+    return mismatch;
+  }
 
   // For lqp_create_node_mapping() we need mutable pointers - but won't use them to manipulate, promised.
   // It's just that NodeMapping has takes a mutable ptr in as the value type
@@ -112,7 +130,8 @@ ExpressionUnorderedSet find_column_expressions(const AbstractLqpNode& lqp_node,
   DebugAssert(!lqp_node.LeftInput(), "Only valid for data source nodes");
 
   const auto& output_expressions = lqp_node.OutputExpressions();
-  auto column_expressions = ExpressionUnorderedSet{};
+  ExpressionUnorderedSet column_expressions;
+  ;
   column_expressions.reserve(column_ids.size());
 
   for (const auto& output_expression : output_expressions) {
@@ -154,12 +173,12 @@ std::vector<FunctionalDependency> fds_from_unique_constraints(
     const std::shared_ptr<LqpUniqueConstraints>& unique_constraints) {
   Assert(!unique_constraints->empty(), "Did not expect empty vector of unique constraints");
 
-  auto fds = std::vector<FunctionalDependency>{};
+  std::vector<FunctionalDependency> fds;
 
   // Collect non-nullable output expressions
   const auto& output_expressions = lqp->OutputExpressions();
-  auto output_expressions_non_nullable = ExpressionUnorderedSet{};
-  for (auto column_id = ColumnId{0}; column_id < output_expressions.size(); ++column_id) {
+  ExpressionUnorderedSet output_expressions_non_nullable;
+  for (ColumnId column_id = 0; column_id < output_expressions.size(); ++column_id) {
     if (!lqp->IsColumnNullable(column_id)) {
       output_expressions_non_nullable.insert(output_expressions.at(column_id));
     }
@@ -182,12 +201,16 @@ std::vector<FunctionalDependency> fds_from_unique_constraints(
     auto dependents = ExpressionUnorderedSet();
     for (const auto& output_expression : output_expressions) {
       // TODO(julianmenzler): C++20: Replace with .contains
-      if (determinants.find(output_expression) != determinants.end()) continue;
+      if (determinants.find(output_expression) != determinants.end()) {
+        continue;
+      }
       dependents.insert(output_expression);
     }
 
     // (3) Add FD to output
-    if (dependents.empty()) continue;
+    if (dependents.empty()) {
+      continue;
+    }
     DebugAssert(std::find_if(fds.cbegin(), fds.cend(),
                              [&determinants, &dependents](const auto& fd) {
                                return (fd.determinants == determinants) && (fd.dependents == dependents);
@@ -199,7 +222,9 @@ std::vector<FunctionalDependency> fds_from_unique_constraints(
 }
 
 void remove_invalid_fds(const std::shared_ptr<const AbstractLqpNode>& lqp, std::vector<FunctionalDependency>& fds) {
-  if (fds.empty()) return;
+  if (fds.empty()) {
+    return;
+  }
   const auto& output_expressions = lqp->OutputExpressions();
   const auto& output_expressions_set = ExpressionUnorderedSet{output_expressions.cbegin(), output_expressions.cend()};
 
@@ -224,7 +249,9 @@ void remove_invalid_fds(const std::shared_ptr<const AbstractLqpNode>& lqp, std::
       std::remove_if(fds.begin(), fds.end(),
                      [&lqp, &output_expressions_set](auto& fd) {
                        // If there are no dependents left, we can discard the FD altogether
-                       if (fd.dependents.empty()) return true;
+                       if (fd.dependents.empty()) {
+                         return true;
+                       }
 
                        /**
                         * Remove FDs with determinant expressions that are

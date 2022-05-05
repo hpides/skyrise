@@ -105,13 +105,17 @@ bool IsCountStarAggregateExpression(const std::shared_ptr<AbstractExpression> ex
 bool ExpressionsEqualToExpressionsInDifferentLqp(
     const std::vector<std::shared_ptr<AbstractExpression>>& expressions_left,
     const std::vector<std::shared_ptr<AbstractExpression>>& expressions_right, const LqpNodeMapping& node_mapping) {
-  if (expressions_left.size() != expressions_right.size()) return false;
+  if (expressions_left.size() != expressions_right.size()) {
+    return false;
+  }
 
-  for (auto expression_idx = size_t{0}; expression_idx < expressions_left.size(); ++expression_idx) {
+  for (size_t expression_idx = 0; expression_idx < expressions_left.size(); ++expression_idx) {
     const auto& expression_left = *expressions_left[expression_idx];
     const auto& expression_right = *expressions_right[expression_idx];
 
-    if (!ExpressionEqualToExpressionInDifferentLqp(expression_left, expression_right, node_mapping)) return false;
+    if (!ExpressionEqualToExpressionInDifferentLqp(expression_left, expression_right, node_mapping)) {
+      return false;
+    }
   }
 
   return true;
@@ -152,7 +156,9 @@ std::shared_ptr<AbstractExpression> ExpressionCopyAndAdaptToDifferentLqp(const A
 void ExpressionAdaptToDifferentLqp(std::shared_ptr<AbstractExpression>& expression,
                                    const LqpNodeMapping& node_mapping) {
   VisitExpression(expression, [&](auto& expression_ptr) {
-    if (expression_ptr->type_ != ExpressionType::kLqpColumn) return ExpressionVisitation::kVisitArguments;
+    if (expression_ptr->type_ != ExpressionType::kLqpColumn) {
+      return ExpressionVisitation::kVisitArguments;
+    }
 
     const auto lqp_column_expression_ptr = std::dynamic_pointer_cast<LqpColumnExpression>(expression_ptr);
     Assert(lqp_column_expression_ptr, "Asked to adapt expression in LQP, but encountered non-LQP ColumnExpression");
@@ -178,7 +184,9 @@ bool ExpressionEvaluableOnLqp(const std::shared_ptr<AbstractExpression>& express
   auto evaluable = true;
 
   VisitExpression(expression, [&](const auto& sub_expression) {
-    if (lqp.FindColumnId(*sub_expression)) return ExpressionVisitation::kDoNotVisitArguments;
+    if (lqp.FindColumnId(*sub_expression)) {
+      return ExpressionVisitation::kDoNotVisitArguments;
+    }
 
     if (IsCountStarAggregateExpression(sub_expression)) {
       // COUNT(*) needs special treatment. Because its argument is the invalid column id, it is not part of any node's
@@ -201,7 +209,9 @@ bool ExpressionEvaluableOnLqp(const std::shared_ptr<AbstractExpression>& express
       return ExpressionVisitation::kDoNotVisitArguments;
     }
 
-    if (sub_expression->type_ == ExpressionType::kLqpColumn) evaluable = false;
+    if (sub_expression->type_ == ExpressionType::kLqpColumn) {
+      evaluable = false;
+    }
 
     return ExpressionVisitation::kVisitArguments;
   });

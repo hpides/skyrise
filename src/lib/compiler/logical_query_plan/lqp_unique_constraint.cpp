@@ -13,7 +13,9 @@ LqpUniqueConstraint::LqpUniqueConstraint(ExpressionUnorderedSet init_expressions
 }
 
 bool LqpUniqueConstraint::operator==(const LqpUniqueConstraint& rhs) const {
-  if (expressions.size() != rhs.expressions.size()) return false;
+  if (expressions.size() != rhs.expressions.size()) {
+    return false;
+  }
   return std::all_of(expressions.cbegin(), expressions.cend(), [&rhs](const auto column_expression) {
     // TODO(julianmenzler): C++20: Replace with .contains
     return rhs.expressions.find(column_expression) != rhs.expressions.end();
@@ -34,10 +36,10 @@ size_t LqpUniqueConstraint::hash() const {
 
 std::ostream& operator<<(std::ostream& stream, const LqpUniqueConstraint& unique_constraint) {
   stream << "{";
-  auto expressions_vector = std::vector<std::shared_ptr<AbstractExpression>>{unique_constraint.expressions.begin(),
-                                                                             unique_constraint.expressions.end()};
+  std::vector<std::shared_ptr<AbstractExpression>> expressions_vector(unique_constraint.expressions.begin(),
+                                                                      unique_constraint.expressions.end());
   stream << expressions_vector.at(0)->AsColumnName();
-  for (auto expression_idx = size_t{1}; expression_idx < expressions_vector.size(); ++expression_idx) {
+  for (size_t expression_idx = 1; expression_idx < expressions_vector.size(); ++expression_idx) {
     stream << ", " << expressions_vector[expression_idx]->AsColumnName();
   }
   stream << "}";

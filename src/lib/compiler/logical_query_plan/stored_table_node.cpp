@@ -81,8 +81,8 @@ std::vector<std::shared_ptr<AbstractExpression>> StoredTableNode::OutputExpressi
     output_expressions_ = std::vector<std::shared_ptr<AbstractExpression>>(num_unpruned_columns);
 
     auto pruned_column_ids_iter = pruned_column_ids_.begin();
-    auto output_column_id = ColumnId{0};
-    for (auto stored_column_id = ColumnId{0}; stored_column_id < table_schema->TableColumnCount(); ++stored_column_id) {
+    ColumnId output_column_id = 0;
+    for (ColumnId stored_column_id = 0; stored_column_id < table_schema->TableColumnCount(); ++stored_column_id) {
       // Skip `stored_column_id` if it is in the sorted vector `pruned_column_ids_`
       if (pruned_column_ids_iter != pruned_column_ids_.end() && stored_column_id == *pruned_column_ids_iter) {
         ++pruned_column_ids_iter;

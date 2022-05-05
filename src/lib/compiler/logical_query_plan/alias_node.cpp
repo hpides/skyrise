@@ -28,14 +28,16 @@ std::string AliasNode::Description(const DescriptionMode mode,
   const char separator = (mode == DescriptionMode::kSingleLine ? ' ' : '\n');
   stream << "[" << Name() << "]" << separator;
 
-  for (auto column_id = ColumnId{0}; column_id < node_expressions_.size(); ++column_id) {
+  for (ColumnId column_id = 0; column_id < node_expressions_.size(); ++column_id) {
     if (node_expressions_[column_id]->Description(expression_mode) == aliases[column_id]) {
       stream << aliases[column_id];
     } else {
       stream << node_expressions_[column_id]->Description(expression_mode) << " AS " << aliases[column_id];
     }
 
-    if (column_id + 1u < node_expressions_.size()) stream << ", ";
+    if (column_id + 1u < node_expressions_.size()) {
+      stream << ", ";
+    }
   }
   return stream.str();
 }

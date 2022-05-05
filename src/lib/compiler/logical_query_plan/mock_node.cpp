@@ -22,7 +22,7 @@ MockNode::MockNode(const ColumnDefinitions& column_definitions, const std::optio
 std::shared_ptr<LqpColumnExpression> MockNode::get_column(const std::string& column_name) const {
   const auto& column_definitions = this->column_definitions();
 
-  for (auto column_id = ColumnId{0}; column_id < column_definitions.size(); ++column_id) {
+  for (ColumnId column_id = 0; column_id < column_definitions.size(); ++column_id) {
     if (column_definitions[column_id].second == column_name) {
       return std::make_shared<LqpColumnExpression>(SharedFromBase(), column_id);
     }
@@ -41,8 +41,8 @@ std::vector<std::shared_ptr<AbstractExpression>> MockNode::OutputExpressions() c
 
     auto pruned_column_ids_iter = pruned_column_ids_.begin();
 
-    auto output_column_id = ColumnId{0};
-    for (auto stored_column_id = ColumnId{0}; stored_column_id < column_definitions_.size(); ++stored_column_id) {
+    ColumnId output_column_id = 0;
+    for (ColumnId stored_column_id = 0; stored_column_id < column_definitions_.size(); ++stored_column_id) {
       // Skip `stored_column_id` if it is in the sorted vector `pruned_column_ids_`
       if (pruned_column_ids_iter != pruned_column_ids_.end() && stored_column_id == *pruned_column_ids_iter) {
         ++pruned_column_ids_iter;
@@ -114,7 +114,7 @@ std::string MockNode::Description(const DescriptionMode /* mode */,
   // const char separator = (mode == DescriptionMode::kSingleLine ? ' ' : '\n');
   stream << "[MockNode '"s << name.value_or("Unnamed") << "'] Columns:";
 
-  auto column_id = ColumnId{0};
+  ColumnId column_id = 0;
   for (const auto& column : column_definitions_) {
     if (std::find(pruned_column_ids_.begin(), pruned_column_ids_.end(), column_id) != pruned_column_ids_.end()) {
       ++column_id;
@@ -144,7 +144,7 @@ std::vector<FunctionalDependency> MockNode::NonTrivialFunctionalDependencies() c
 }
 
 size_t MockNode::OnShallowHash() const {
-  auto hash = size_t{0};
+  size_t hash = 0;
   for (const auto& pruned_column_id : pruned_column_ids_) {
     boost::hash_combine(hash, static_cast<size_t>(pruned_column_id));
   }

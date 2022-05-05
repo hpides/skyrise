@@ -49,9 +49,11 @@ std::string AggregateNode::Description(const DescriptionMode mode,
   stream << "[" << Name() << "]" << separator;
 
   stream << "GroupBy: [";
-  for (auto expression_idx = size_t{0}; expression_idx < aggregate_expressions_begin_idx; ++expression_idx) {
+  for (size_t expression_idx = 0; expression_idx < aggregate_expressions_begin_idx; ++expression_idx) {
     stream << node_expressions_[expression_idx]->Description(expression_mode);
-    if (expression_idx + 1 < aggregate_expressions_begin_idx) stream << ", ";
+    if (expression_idx + 1 < aggregate_expressions_begin_idx) {
+      stream << ", ";
+    }
   }
   stream << "] ";
 
@@ -59,7 +61,9 @@ std::string AggregateNode::Description(const DescriptionMode mode,
   for (auto expression_idx = aggregate_expressions_begin_idx; expression_idx < node_expressions_.size();
        ++expression_idx) {
     stream << node_expressions_[expression_idx]->Description(expression_mode);
-    if (expression_idx + 1 < node_expressions_.size()) stream << ", ";
+    if (expression_idx + 1 < node_expressions_.size()) {
+      stream << ", ";
+    }
   }
   stream << "]";
 
@@ -123,7 +127,9 @@ std::shared_ptr<LqpUniqueConstraints> AggregateNode::UniqueConstraints() const {
   // Check each constraint for applicability
   const auto& input_unique_constraints = LeftInput()->UniqueConstraints();
   for (const auto& input_unique_constraint : *input_unique_constraints) {
-    if (!HasOutputExpressions(input_unique_constraint.expressions)) continue;
+    if (!HasOutputExpressions(input_unique_constraint.expressions)) {
+      continue;
+    }
 
     // Forward constraint
     unique_constraints->emplace_back(input_unique_constraint);
@@ -169,11 +175,11 @@ std::vector<FunctionalDependency> AggregateNode::NonTrivialFunctionalDependencie
 size_t AggregateNode::OnShallowHash() const { return aggregate_expressions_begin_idx; }
 
 std::shared_ptr<AbstractLqpNode> AggregateNode::OnShallowCopy(LqpNodeMapping& node_mapping) const {
-  const auto group_by_expressions = std::vector<std::shared_ptr<AbstractExpression>>{
-      node_expressions_.begin(), node_expressions_.begin() + aggregate_expressions_begin_idx};
+  const std::vector<std::shared_ptr<AbstractExpression>> group_by_expressions(
+      node_expressions_.begin(), node_expressions_.begin() + aggregate_expressions_begin_idx);
 
-  const auto aggregate_expressions = std::vector<std::shared_ptr<AbstractExpression>>{
-      node_expressions_.begin() + aggregate_expressions_begin_idx, node_expressions_.end()};
+  const std::vector<std::shared_ptr<AbstractExpression>> aggregate_expressions(
+      node_expressions_.begin() + aggregate_expressions_begin_idx, node_expressions_.end());
 
   return std::make_shared<AggregateNode>(ExpressionsCopyAndAdaptToDifferentLqp(group_by_expressions, node_mapping),
                                          ExpressionsCopyAndAdaptToDifferentLqp(aggregate_expressions, node_mapping));

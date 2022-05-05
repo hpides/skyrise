@@ -32,7 +32,7 @@ std::string SortNode::Description(const DescriptionMode mode,
   const char separator = (mode == DescriptionMode::kSingleLine ? ' ' : '\n');
   stream << "[" << Name() << "]" << separator;
 
-  for (auto expression_idx = size_t{0}; expression_idx < node_expressions_.size(); ++expression_idx) {
+  for (size_t expression_idx = 0; expression_idx < node_expressions_.size(); ++expression_idx) {
     stream << node_expressions_[expression_idx]->Description(expression_mode) << " ";
     stream << "(" << sort_modes[expression_idx] << ")";
 

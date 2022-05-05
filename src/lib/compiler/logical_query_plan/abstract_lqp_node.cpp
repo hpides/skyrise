@@ -59,8 +59,12 @@ std::shared_ptr<AbstractLqpNode> AbstractLqpNode::DeepCopyImpl(LqpNodeMapping& n
   std::shared_ptr<AbstractLqpNode> copied_left_input;
   std::shared_ptr<AbstractLqpNode> copied_right_input;
 
-  if (LeftInput()) copied_left_input = LeftInput()->DeepCopyImpl(node_mapping);
-  if (RightInput()) copied_right_input = RightInput()->DeepCopyImpl(node_mapping);
+  if (LeftInput()) {
+    copied_left_input = LeftInput()->DeepCopyImpl(node_mapping);
+  }
+  if (RightInput()) {
+    copied_right_input = RightInput()->DeepCopyImpl(node_mapping);
+  }
 
   auto copy = ShallowCopy(node_mapping);
   copy->SetLeftInput(copied_left_input);
@@ -70,7 +74,9 @@ std::shared_ptr<AbstractLqpNode> AbstractLqpNode::DeepCopyImpl(LqpNodeMapping& n
 }
 
 bool AbstractLqpNode::ShallowEquals(const AbstractLqpNode& rhs, const LqpNodeMapping& node_mapping) const {
-  if (type_ != rhs.type_) return false;
+  if (type_ != rhs.type_) {
+    return false;
+  }
   return OnShallowEquals(rhs, node_mapping);
 }
 
@@ -82,8 +88,10 @@ std::vector<std::shared_ptr<AbstractExpression>> AbstractLqpNode::OutputExpressi
 
 std::optional<ColumnId> AbstractLqpNode::FindColumnId(const AbstractExpression& expression) const {
   const auto& output_expressions = this->OutputExpressions();  // Avoid redundant retrieval in loop below
-  for (auto column_id = ColumnId{0}; column_id < output_expressions.size(); ++column_id) {
-    if (*output_expressions[column_id] == expression) return column_id;
+  for (ColumnId column_id = 0; column_id < output_expressions.size(); ++column_id) {
+    if (*output_expressions[column_id] == expression) {
+      return column_id;
+    }
   }
   return std::nullopt;
 }
@@ -120,7 +128,9 @@ bool AbstractLqpNode::HasMatchingUniqueConstraint(const ExpressionUnorderedSet& 
               "The given expressions are not a subset of the LQP's output expressions.");
 
   const auto& unique_constraints = this->UniqueConstraints();
-  if (unique_constraints->empty()) return false;
+  if (unique_constraints->empty()) {
+    return false;
+  }
 
   return contains_matching_unique_constraint(unique_constraints, expressions);
 }
@@ -129,7 +139,7 @@ std::vector<FunctionalDependency> AbstractLqpNode::FunctionalDependencies() cons
   // (1) Gather non-trivial FDs and perform sanity checks
   auto non_trivial_fds = NonTrivialFunctionalDependencies();
   if constexpr (SKYRISE_DEBUG) {
-    auto fds_set = std::unordered_set<FunctionalDependency>{};
+    std::unordered_set<FunctionalDependency> fds_set;
     const auto& output_expressions = this->OutputExpressions();
     const auto& output_expressions_set = ExpressionUnorderedSet{output_expressions.cbegin(), output_expressions.cend()};
 
@@ -156,7 +166,9 @@ std::vector<FunctionalDependency> AbstractLqpNode::FunctionalDependencies() cons
   // (2) Derive trivial FDs from the node's unique constraints
   const auto& unique_constraints = this->UniqueConstraints();
   // Early exit, if there are no unique constraints
-  if (unique_constraints->empty()) return non_trivial_fds;
+  if (unique_constraints->empty()) {
+    return non_trivial_fds;
+  }
 
   auto trivial_fds = fds_from_unique_constraints(SharedFromBase(), unique_constraints);
 
@@ -175,7 +187,9 @@ std::vector<FunctionalDependency> AbstractLqpNode::NonTrivialFunctionalDependenc
 }
 
 bool AbstractLqpNode::operator==(const AbstractLqpNode& rhs) const {
-  if (this == &rhs) return true;
+  if (this == &rhs) {
+    return true;
+  }
   return !lqp_find_subplan_mismatch(SharedFromBase(), rhs.SharedFromBase());
 }
 
@@ -185,7 +199,9 @@ std::shared_ptr<AbstractLqpNode> AbstractLqpNode::ShallowCopy(LqpNodeMapping& no
   const auto node_mapping_iter = node_mapping.find(SharedFromBase());
 
   // Handle diamond shapes in the LQP; don't copy nodes twice
-  if (node_mapping_iter != node_mapping.end()) return node_mapping_iter->second;
+  if (node_mapping_iter != node_mapping.end()) {
+    return node_mapping_iter->second;
+  }
 
   auto shallow_copy = OnShallowCopy(node_mapping);
   node_mapping.emplace(SharedFromBase(), shallow_copy);
@@ -211,8 +227,12 @@ std::ostream& operator<<(std::ostream& stream, const AbstractLqpNode& root_node)
   // Functor returning the inputs of a given node
   const auto get_inputs_fn = [](const auto& node) {
     std::vector<std::shared_ptr<const AbstractLqpNode>> inputs;
-    if (node->LeftInput()) inputs.emplace_back(node->LeftInput());
-    if (node->RightInput()) inputs.emplace_back(node->RightInput());
+    if (node->LeftInput()) {
+      inputs.emplace_back(node->LeftInput());
+    }
+    if (node->RightInput()) {
+      inputs.emplace_back(node->RightInput());
+    }
     return inputs;
   };
 

@@ -21,7 +21,9 @@ LqpColumnExpression::LqpColumnExpression(const std::shared_ptr<const AbstractLqp
 std::string LqpColumnExpression::Description(const DescriptionMode mode) const {
   // Even if the LQP is invalid, we still want to be able to print it as good as possible
   const auto original_node_locked = original_node_.lock();
-  if (!original_node_locked) return "<Expired Column>";
+  if (!original_node_locked) {
+    return "<Expired Column>";
+  }
 
   std::stringstream output;
   if (mode == AbstractExpression::DescriptionMode::kDetailed) {

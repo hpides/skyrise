@@ -56,11 +56,17 @@ void VisitLqp(const std::shared_ptr<Node>& lqp, Visitor visitor) {
     auto node = node_queue.front();
     node_queue.pop();
 
-    if (!visited_nodes.emplace(node).second) continue;
+    if (!visited_nodes.emplace(node).second) {
+      continue;
+    }
 
     if (visitor(node) == LqpVisitation::kVisitInputs) {
-      if (node->LeftInput()) node_queue.push(node->LeftInput());
-      if (node->RightInput()) node_queue.push(node->RightInput());
+      if (node->LeftInput()) {
+        node_queue.push(node->LeftInput());
+      }
+      if (node->RightInput()) {
+        node_queue.push(node->RightInput());
+      }
     }
   }
 }
@@ -88,7 +94,9 @@ void VisitLqpUpwards(const std::shared_ptr<AbstractLqpNode>& lqp, Visitor visito
     auto node = node_queue.front();
     node_queue.pop();
 
-    if (!visited_nodes.emplace(node).second) continue;
+    if (!visited_nodes.emplace(node).second) {
+      continue;
+    }
 
     if (visitor(node) == LqpUpwardVisitation::kVisitOutputs) {
       for (const auto& output : node->Outputs()) node_queue.push(output);
