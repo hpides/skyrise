@@ -17,12 +17,12 @@ TEST(TableKeyConstraintTest, DuplicateColumnIds) {
 }
 
 TEST(TableKeyConstraintTest, Equals) {
-  const TableKeyConstraint key_constraint_a = {{ColumnId{0}, ColumnId{2}}, KeyConstraintType::kUnique};
-  const TableKeyConstraint key_constraint_a_reordered = {{ColumnId{2}, ColumnId{0}}, KeyConstraintType::kUnique};
-  const TableKeyConstraint primary_key_constraint_a = {{ColumnId{0}, ColumnId{2}}, KeyConstraintType::kPrimaryKey};
+  const TableKeyConstraint key_constraint_a({ColumnId{0}, ColumnId{2}}, KeyConstraintType::kUnique);
+  const TableKeyConstraint key_constraint_a_reordered({ColumnId{2}, ColumnId{0}}, KeyConstraintType::kUnique);
+  const TableKeyConstraint primary_key_constraint_a({ColumnId{0}, ColumnId{2}}, KeyConstraintType::kPrimaryKey);
 
-  const TableKeyConstraint key_constraint_b = {{ColumnId{2}, ColumnId{3}}, KeyConstraintType::kUnique};
-  const TableKeyConstraint key_constraint_c = {{ColumnId{0}}, KeyConstraintType::kUnique};
+  const TableKeyConstraint key_constraint_b({ColumnId{2}, ColumnId{3}}, KeyConstraintType::kUnique);
+  const TableKeyConstraint key_constraint_c({ColumnId{0}}, KeyConstraintType::kUnique);
 
   EXPECT_TRUE(key_constraint_a == key_constraint_a);
   EXPECT_TRUE(key_constraint_a == key_constraint_a_reordered);
