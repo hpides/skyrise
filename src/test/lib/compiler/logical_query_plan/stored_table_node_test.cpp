@@ -25,7 +25,7 @@ class StoredTableNodeTest : public ::testing::Test {
     mock_catalog_->AddTableSchemaFromFileHeader("t_a", "resources/test_data/tbl/int_int_float.tbl");
     mock_catalog_->AddTableSchemaFromFileHeader("t_b", "resources/test_data/tbl/int_int_float.tbl");
 
-    stored_table_node_ = StoredTableNode::Make("t_a");
+    stored_table_node_ = StoredTableNode::Make("t_a", mock_catalog_);
     a_ = stored_table_node_->get_column("a");
     b_ = stored_table_node_->get_column("b");
     c_ = stored_table_node_->get_column("c");
@@ -37,10 +37,10 @@ class StoredTableNodeTest : public ::testing::Test {
 };
 
 TEST_F(StoredTableNodeTest, Description) {
-  const auto stored_table_node_a = StoredTableNode::Make("t_a");
+  const auto stored_table_node_a = StoredTableNode::Make("t_a", mock_catalog_);
   EXPECT_EQ(stored_table_node_a->Description(), "[StoredTable] Name: 't_a' pruned: 0/3 column(s)");
 
-  const auto stored_table_node_b = StoredTableNode::Make("t_a");
+  const auto stored_table_node_b = StoredTableNode::Make("t_a", mock_catalog_);
   stored_table_node_b->set_pruned_column_ids({ColumnId{1}});
   EXPECT_EQ(stored_table_node_b->Description(), "[StoredTable] Name: 't_a' pruned: 1/3 column(s)");
 }
@@ -71,13 +71,13 @@ TEST_F(StoredTableNodeTest, ColumnExpressions) {
 TEST_F(StoredTableNodeTest, HashingAndEqualityCheck) {
   EXPECT_EQ(*stored_table_node_, *stored_table_node_);
 
-  const auto different_node_a = StoredTableNode::Make("t_b");
+  const auto different_node_a = StoredTableNode::Make("t_b", mock_catalog_);
 
-  const auto different_node_b = StoredTableNode::Make("t_a");
+  const auto different_node_b = StoredTableNode::Make("t_a", mock_catalog_);
 
-  const auto different_node_c = StoredTableNode::Make("t_b");
+  const auto different_node_c = StoredTableNode::Make("t_b", mock_catalog_);
   different_node_c->set_pruned_column_ids({ColumnId{1}});
-  const auto different_node_c2 = StoredTableNode::Make("t_b");
+  const auto different_node_c2 = StoredTableNode::Make("t_b", mock_catalog_);
   different_node_c2->set_pruned_column_ids({ColumnId{1}});
 
   EXPECT_NE(*stored_table_node_, *different_node_a);
@@ -183,7 +183,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
     table_schema->AddKeyConstraint({{ColumnId{0}}, KeyConstraintType::kUnique});
     mock_catalog_->AddTableSchema("table_a", table_schema);
 
-    const auto stored_table_node = StoredTableNode::Make("table_a");
+    const auto stored_table_node = StoredTableNode::Make("table_a", mock_catalog_);
     const auto& a = stored_table_node->get_column("a");
     const auto& b = stored_table_node->get_column("b");
     const auto& c = stored_table_node->get_column("c");
@@ -200,7 +200,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
     table_schema->AddKeyConstraint({{ColumnId{0}, ColumnId{1}}, KeyConstraintType::kUnique});
     mock_catalog_->AddTableSchema("table_b", table_schema);
 
-    const auto& stored_table_node = StoredTableNode::Make("table_b");
+    const auto& stored_table_node = StoredTableNode::Make("table_b", mock_catalog_);
 
     EXPECT_EQ(stored_table_node->FunctionalDependencies().size(), 0);
   }
@@ -211,7 +211,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
     table_schema->AddKeyConstraint({{ColumnId{0}, ColumnId{2}}, KeyConstraintType::kUnique});
     mock_catalog_->AddTableSchema("table_c", table_schema);
 
-    const auto& stored_table_node = StoredTableNode::Make("table_c");
+    const auto& stored_table_node = StoredTableNode::Make("table_c", mock_catalog_);
     const auto& a = stored_table_node->get_column("a");
     const auto& b = stored_table_node->get_column("b");
     const auto& c = stored_table_node->get_column("c");
@@ -228,7 +228,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
     table_schema->AddKeyConstraint({{ColumnId{1}}, KeyConstraintType::kUnique});
     mock_catalog_->AddTableSchema("table_d", table_schema);
 
-    const auto& stored_table_node = StoredTableNode::Make("table_d");
+    const auto& stored_table_node = StoredTableNode::Make("table_d", mock_catalog_);
 
     EXPECT_EQ(stored_table_node->FunctionalDependencies().size(), 0);
   }
