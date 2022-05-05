@@ -27,7 +27,7 @@ using AllTypeVariant = std::variant<NullValue, int32_t, int64_t, float, double, 
  *  - Comparing any AllTypeVariant to kNullValue returns false in accordance with the ternary logic.
  *  - Use VariantIsNull() if you want to check if an AllTypeVariant represents NULL.
  */
-inline const auto kNullValue = AllTypeVariant{};
+inline const AllTypeVariant kNullValue;
 
 /**
  * @return The DataType of an AllTypeVariant.

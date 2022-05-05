@@ -60,7 +60,7 @@ TEST_F(LqpUtilsTest, VisitLqp) {
 
   {
     // Visit PredicateNode
-    auto actual_nodes = std::vector<std::shared_ptr<AbstractLqpNode>>{};
+    std::vector<std::shared_ptr<AbstractLqpNode>> actual_nodes;
     VisitLqp(std::static_pointer_cast<PredicateNode>(expected_nodes[0]), [&](const auto& node) {
       actual_nodes.emplace_back(node);
       return LqpVisitation::kVisitInputs;
