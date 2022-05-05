@@ -5,8 +5,8 @@
 #include <vector>
 
 #include "abstract_operator_proxy.hpp"
-#include "expression/binary_predicate_expression.hpp"
 #include "magic_enum.hpp"
+#include "operator/join_operator_predicate.hpp"
 #include "types.hpp"
 
 namespace skyrise {
@@ -18,16 +18,16 @@ namespace skyrise {
 class JoinOperatorProxy : public EnableMakeForPlanNode<JoinOperatorProxy, AbstractOperatorProxy>,
                           public AbstractOperatorProxy {
  public:
-  JoinOperatorProxy(const JoinMode mode, std::shared_ptr<AbstractExpression> primary_predicate,
-                    std::vector<std::shared_ptr<AbstractExpression>> secondary_predicates);
+  JoinOperatorProxy(const JoinMode mode, std::shared_ptr<JoinOperatorPredicate> primary_predicate,
+                    std::vector<std::shared_ptr<JoinOperatorPredicate>> secondary_predicates);
 
   const std::string& Name() const override;
   std::string Description(const DescriptionMode mode) const override;
   bool RequiresRightInput() const override;
 
   JoinMode GetJoinMode() const;
-  const std::shared_ptr<AbstractExpression>& PrimaryPredicate() const;
-  const std::vector<std::shared_ptr<AbstractExpression>>& SecondaryPredicates() const;
+  const std::shared_ptr<JoinOperatorPredicate>& PrimaryPredicate() const;
+  const std::vector<std::shared_ptr<JoinOperatorPredicate>>& SecondaryPredicates() const;
 
   /**
    * Optimization-relevant attributes
@@ -50,10 +50,13 @@ class JoinOperatorProxy : public EnableMakeForPlanNode<JoinOperatorProxy, Abstra
       const std::shared_ptr<AbstractOperatorProxy>& copied_right_input) const override;
   std::shared_ptr<AbstractOperator> CreateOperatorInstanceRecursively() override;
 
+  static Aws::Utils::Json::JsonValue SerializePredicate(const std::shared_ptr<JoinOperatorPredicate>& predicate);
+  static std::shared_ptr<JoinOperatorPredicate> DeserializePredicate(const Aws::Utils::Json::JsonView& predicate);
+
  private:
   const JoinMode mode_;
-  const std::shared_ptr<AbstractExpression> primary_predicate_;
-  const std::vector<std::shared_ptr<AbstractExpression>> secondary_predicates_;
+  const std::shared_ptr<JoinOperatorPredicate> primary_predicate_;
+  const std::vector<std::shared_ptr<JoinOperatorPredicate>> secondary_predicates_;
 };
 
 }  // namespace skyrise

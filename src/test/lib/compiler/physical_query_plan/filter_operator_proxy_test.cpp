@@ -11,7 +11,8 @@
 
 namespace skyrise {
 
-using namespace skyrise::expression_functional;  // NOLINT(google-build-using-namespace)
+// NOLINTNEXTLINE(google-build-using-namespace)
+using namespace skyrise::expression_functional;
 
 class FilterOperatorProxyTest : public ::testing::Test {
  public:
@@ -24,8 +25,7 @@ class FilterOperatorProxyTest : public ::testing::Test {
  protected:
   std::shared_ptr<AbstractExpression> a_, b_;
   std::shared_ptr<AbstractExpression> predicate_;
-  static inline const std::string bucket_ = "dummy_bucket";
-  static inline const std::vector<std::string> object_keys_ = {"key1", "key2"};
+  static inline const std::string kBucketName = "dummy_bucket";
 };
 
 TEST_F(FilterOperatorProxyTest, BaseProperties) {
@@ -46,7 +46,7 @@ TEST_F(FilterOperatorProxyTest, DeepCopy) {
   // clang-format off
   const auto filter_proxy =
   FilterOperatorProxy::Make(predicate_,
-    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
+    ImportOperatorProxy::Make(kBucketName, std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
   // clang-format on
   const auto filter_proxy_copy = std::dynamic_pointer_cast<FilterOperatorProxy>(filter_proxy->DeepCopy());
@@ -76,7 +76,7 @@ TEST_F(FilterOperatorProxyTest, CreateOperatorInstance) {
   // clang-format off
   const auto filter_proxy =
   FilterOperatorProxy::Make(predicate_,
-    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
+    ImportOperatorProxy::Make(kBucketName, std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
   // clang-format on
   EXPECT_TRUE(filter_proxy->GetOrCreateOperatorInstance());

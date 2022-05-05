@@ -28,7 +28,7 @@ class AwsFunctionSegmentsAnalyzerTest : public ::testing::Test {
 
     client_ = std::make_shared<skyrise::Client>();
 
-    UploadFunctions(client_->GetIAMClient(), client_->GetLambdaClient(),
+    UploadFunctions(client_->GetIamClient(), client_->GetLambdaClient(),
                     std::vector<FunctionConfig>{{kFunctionPath, kFunctionName, kMemorySize, kIsLocal}}, kEnableTracing);
     const auto time_points = InvokeFunction(client_, kFunctionName);
 
@@ -50,8 +50,8 @@ class AwsFunctionSegmentsAnalyzerTest : public ::testing::Test {
   static constexpr bool kIsLocal = true;
   static constexpr bool kEnableTracing = true;
   static constexpr std::string_view kPackageName = "skyriseFunctionSimple";
-  const std::string kFunctionPath = GetFunctionZipFilePath(kPackageName.data());
-  const std::string kFunctionName = kPackageName.data() + RandomString(8);
+  static inline const std::string kFunctionPath = GetFunctionZipFilePath(kPackageName.data());
+  static inline const std::string kFunctionName = kPackageName.data() + RandomString(8);
 };
 
 TEST_F(AwsFunctionSegmentsAnalyzerTest, GetCalculatedSegments) {

@@ -6,31 +6,21 @@
 #include <gtest/gtest.h>
 
 #include "compiler/physical_query_plan/import_operator_proxy.hpp"
-#include "expression/expression_functional.hpp"
-#include "expression/expression_utils.hpp"
-#include "expression/pqp_column_expression.hpp"
+#include "operator/join_operator_predicate.hpp"
 #include "types.hpp"
 
 namespace skyrise {
 
-using namespace skyrise::expression_functional;  // NOLINT(google-build-using-namespace)
-
 class JoinOperatorProxyTest : public ::testing::Test {
  public:
   void SetUp() override {
-    a_ = PqpColumn_(ColumnId{0}, DataType::kLong, false, "a");
-    b_ = PqpColumn_(ColumnId{1}, DataType::kLong, false, "b");
-    x_ = PqpColumn_(ColumnId{0}, DataType::kLong, false, "x");
-    y_ = PqpColumn_(ColumnId{1}, DataType::kLong, false, "y");
-
-    primary_predicate_ = Equals_(a_, x_);
-    empty_secondary_predicates_ = {};
+    primary_predicate_ =
+        std::make_shared<JoinOperatorPredicate>(JoinOperatorPredicate{0, 0, PredicateCondition::kEquals});
   }
 
  protected:
-  std::shared_ptr<PqpColumnExpression> a_, b_, x_, y_;
-  std::shared_ptr<AbstractExpression> primary_predicate_;
-  std::vector<std::shared_ptr<AbstractExpression>> empty_secondary_predicates_;
+  std::shared_ptr<JoinOperatorPredicate> primary_predicate_;
+  std::vector<std::shared_ptr<JoinOperatorPredicate>> empty_secondary_predicates_;
   static inline const std::string kBucketName = "dummy_bucket";
   static inline const std::vector<std::string> kObjectKeys = {"key1.orc", "key2.orc", "key3.orc"};
 };
@@ -46,18 +36,24 @@ TEST_F(JoinOperatorProxyTest, Description) {
   const auto join_proxy = JoinOperatorProxy::Make(JoinMode::kInner, primary_predicate_, empty_secondary_predicates_);
   join_proxy->SetImplementation(OperatorType::kHashJoin);
 
-  EXPECT_EQ(join_proxy->Description(DescriptionMode::kSingleLine), "[HashJoin] Inner where a = x");
-  EXPECT_EQ(join_proxy->Description(DescriptionMode::kMultiLine), "[HashJoin]\nInner\nwhere a = x");
+  EXPECT_EQ(join_proxy->Description(DescriptionMode::kSingleLine),
+            "[HashJoin] Inner where column #0 kEquals column #0");
+  EXPECT_EQ(join_proxy->Description(DescriptionMode::kMultiLine),
+            "[HashJoin]\nInner\nwhere column #0 kEquals column #0");
 }
 
 TEST_F(JoinOperatorProxyTest, DescriptionMultiPredicate) {
-  const auto secondary_predicates = ExpressionVector_(NotEquals_(b_, y_), GreaterThanEquals_(b_, y_));
+  const std::vector<std::shared_ptr<JoinOperatorPredicate>> secondary_predicates{
+      std::make_shared<JoinOperatorPredicate>(JoinOperatorPredicate{0, 1, PredicateCondition::kEquals}),
+      std::make_shared<JoinOperatorPredicate>(JoinOperatorPredicate{1, 1, PredicateCondition::kEquals})};
   const auto join_proxy = JoinOperatorProxy::Make(JoinMode::kFullOuter, primary_predicate_, secondary_predicates);
 
   EXPECT_EQ(join_proxy->Description(DescriptionMode::kSingleLine),
-            "[NestedLoopJoin] Full Outer where a = x and b != y and b >= y");
+            "[NestedLoopJoin] Full Outer where column #0 kEquals column #0 and column #0 kEquals column #1 and column "
+            "#1 kEquals column #1");
   EXPECT_EQ(join_proxy->Description(DescriptionMode::kMultiLine),
-            "[NestedLoopJoin]\nFull Outer\nwhere a = x\nand b != y\nand b >= y");
+            "[NestedLoopJoin]\nFull Outer\nwhere column #0 kEquals column #0\nand column #0 kEquals column #1\nand "
+            "column #1 kEquals column #1");
 }
 
 TEST_F(JoinOperatorProxyTest, DescriptionCross) {
@@ -94,22 +90,32 @@ TEST_F(JoinOperatorProxyTest, OutputColumnsCount) {
 }
 
 TEST_F(JoinOperatorProxyTest, SerializeAndDeserialize) {
-  // TODO(d-justen): Add test as part of #560 Add HashJoinOperatorProxy
-  // clang-format off
-  const auto join_proxy =
-  JoinOperatorProxy::Make(JoinMode::kInner, primary_predicate_, empty_secondary_predicates_,
-    ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}}),
-    ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
-  // clang-format on
+  const auto join_proxy = JoinOperatorProxy::Make(JoinMode::kInner, primary_predicate_, empty_secondary_predicates_);
 
-  EXPECT_THROW(join_proxy->ToJson(), std::logic_error);
-  Aws::Utils::Json::JsonValue json;
-  json.WithString(kJsonKeyOperatorType, std::string(magic_enum::enum_name(OperatorType::kHashJoin)));
-  EXPECT_THROW(JoinOperatorProxy::FromJson(json), std::logic_error);
+  join_proxy->SetImplementation(OperatorType::kHashJoin);
+
+  const auto proxy_json = join_proxy->ToJson();
+
+  const auto deserialized_proxy = JoinOperatorProxy::FromJson(proxy_json);
+  const auto deserialized_join_proxy = std::dynamic_pointer_cast<JoinOperatorProxy>(deserialized_proxy);
+
+  EXPECT_EQ(deserialized_join_proxy->PrimaryPredicate()->column_id_left, primary_predicate_->column_id_left);
+  EXPECT_EQ(deserialized_join_proxy->PrimaryPredicate()->column_id_right, primary_predicate_->column_id_right);
+  EXPECT_EQ(deserialized_join_proxy->PrimaryPredicate()->predicate_condition, primary_predicate_->predicate_condition);
+
+  EXPECT_EQ(deserialized_join_proxy->SecondaryPredicates().size(), empty_secondary_predicates_.size());
+  EXPECT_EQ(deserialized_join_proxy->GetJoinMode(), JoinMode::kInner);
+  EXPECT_EQ(deserialized_join_proxy->Type(), OperatorType::kHashJoin);
+
+  const auto reserialized_proxy_json = deserialized_proxy->ToJson();
+
+  EXPECT_EQ(proxy_json.View().WriteCompact(), reserialized_proxy_json.View().WriteCompact());
 }
 
 TEST_F(JoinOperatorProxyTest, DeepCopy) {
-  const auto secondary_predicates = ExpressionVector_(NotEquals_(b_, y_), GreaterThanEquals_(b_, y_));
+  const std::vector<std::shared_ptr<JoinOperatorPredicate>> secondary_predicates{
+      std::make_shared<JoinOperatorPredicate>(JoinOperatorPredicate{0, 1, PredicateCondition::kEquals}),
+      std::make_shared<JoinOperatorPredicate>(JoinOperatorPredicate{1, 1, PredicateCondition::kEquals})};
   // clang-format off
   const auto join_proxy =
   JoinOperatorProxy::Make(JoinMode::kLeftOuter, primary_predicate_, secondary_predicates,
@@ -120,9 +126,7 @@ TEST_F(JoinOperatorProxyTest, DeepCopy) {
   const auto join_proxy_copy = std::dynamic_pointer_cast<JoinOperatorProxy>(join_proxy->DeepCopy());
   EXPECT_EQ(join_proxy_copy->GetJoinMode(), JoinMode::kLeftOuter);
   EXPECT_NE(join_proxy_copy->PrimaryPredicate(), primary_predicate_);
-  EXPECT_EQ(*join_proxy_copy->PrimaryPredicate(), *primary_predicate_);
   EXPECT_NE(join_proxy_copy->SecondaryPredicates(), secondary_predicates);
-  EXPECT_TRUE(ExpressionsEqual(join_proxy_copy->SecondaryPredicates(), secondary_predicates));
   EXPECT_EQ(join_proxy_copy->InputNodeCount(), 2);
   // Without input
   join_proxy->SetLeftInput(nullptr);
@@ -139,7 +143,8 @@ TEST_F(JoinOperatorProxyTest, CreateOperatorInstance) {
     ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
   // clang-format on
-  EXPECT_THROW(join_proxy->GetOrCreateOperatorInstance(), std::logic_error);
+  join_proxy->SetImplementation(OperatorType::kHashJoin);
+  EXPECT_TRUE(join_proxy->GetOrCreateOperatorInstance());
 }
 
 }  // namespace skyrise

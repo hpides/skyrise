@@ -16,28 +16,28 @@ class ExportOperatorProxyTest : public ::testing::Test {
 
  protected:
   static inline const std::string kBucketName = "dummy_bucket";
-  static inline const std::string kTargetObjectkey = "dummy_target_object_key";
+  static inline const std::string kTargetObjectKey = "dummy_target_object_key";
   static inline const auto kExportFormat = ExportFormat::kCsv;
 };
 
 TEST_F(ExportOperatorProxyTest, BaseProperties) {
-  const auto export_proxy = ExportOperatorProxy::Make(kBucketName, kTargetObjectkey, kExportFormat);
+  const auto export_proxy = ExportOperatorProxy::Make(kBucketName, kTargetObjectKey, kExportFormat);
   EXPECT_EQ(export_proxy->Type(), OperatorType::kExport);
   EXPECT_EQ(export_proxy->BucketName(), kBucketName);
-  EXPECT_EQ(export_proxy->TargetObjectKey(), kTargetObjectkey);
+  EXPECT_EQ(export_proxy->TargetObjectKey(), kTargetObjectKey);
   EXPECT_EQ(export_proxy->GetExportFormat(), kExportFormat);
   EXPECT_FALSE(export_proxy->IsPipelineBreaker());
 }
 
 TEST_F(ExportOperatorProxyTest, Description) {
-  const auto export_proxy = ExportOperatorProxy::Make(kBucketName, kTargetObjectkey, kExportFormat);
+  const auto export_proxy = ExportOperatorProxy::Make(kBucketName, kTargetObjectKey, kExportFormat);
 
   EXPECT_EQ(export_proxy->Description(DescriptionMode::kSingleLine), "[Export] dummy_bucket/dummy_target_object_key");
   EXPECT_EQ(export_proxy->Description(DescriptionMode::kMultiLine), "[Export]\ndummy_bucket/\ndummy_target_object_key");
 }
 
 TEST_F(ExportOperatorProxyTest, SerializeAndDeserialize) {
-  const auto proxy = ExportOperatorProxy::Make(kBucketName, kTargetObjectkey, kExportFormat);
+  const auto proxy = ExportOperatorProxy::Make(kBucketName, kTargetObjectKey, kExportFormat);
   // (1) Serialize
   const auto export_json = proxy->ToJson();
 
@@ -45,7 +45,7 @@ TEST_F(ExportOperatorProxyTest, SerializeAndDeserialize) {
   const auto deserialized_proxy = ExportOperatorProxy::FromJson(export_json);
   const auto deserialized_export_proxy = std::dynamic_pointer_cast<ExportOperatorProxy>(deserialized_proxy);
   EXPECT_EQ(deserialized_export_proxy->BucketName(), kBucketName);
-  EXPECT_EQ(deserialized_export_proxy->TargetObjectKey(), kTargetObjectkey);
+  EXPECT_EQ(deserialized_export_proxy->TargetObjectKey(), kTargetObjectKey);
   EXPECT_EQ(deserialized_export_proxy->GetExportFormat(), kExportFormat);
 
   // (3) Serialize again
@@ -64,14 +64,14 @@ TEST_F(ExportOperatorProxyTest, DummyExportOperatorProxy) {
 TEST_F(ExportOperatorProxyTest, DeepCopy) {
   // clang-format off
   const auto export_proxy =
-  ExportOperatorProxy::Make(kBucketName, kTargetObjectkey, ExportFormat::kCsv,
+  ExportOperatorProxy::Make(kBucketName, kTargetObjectKey, ExportFormat::kCsv,
     ImportOperatorProxy::Make(kBucketName, std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}}));
 
   // clang-format on
   const auto export_proxy_copy = std::dynamic_pointer_cast<ExportOperatorProxy>(export_proxy->DeepCopy());
   EXPECT_EQ(export_proxy_copy->GetExportFormat(), ExportFormat::kCsv);
   EXPECT_EQ(export_proxy_copy->BucketName(), kBucketName);
-  EXPECT_EQ(export_proxy_copy->TargetObjectKey(), kTargetObjectkey);
+  EXPECT_EQ(export_proxy_copy->TargetObjectKey(), kTargetObjectKey);
   EXPECT_EQ(export_proxy_copy->InputNodeCount(), 1);
   // Without input
   export_proxy->SetLeftInput(nullptr);
@@ -81,11 +81,11 @@ TEST_F(ExportOperatorProxyTest, DeepCopy) {
 TEST_F(ExportOperatorProxyTest, CreateOperatorInstance) {
   // clang-format off
   const auto export_proxy_orc =
-  ExportOperatorProxy::Make(kBucketName, kTargetObjectkey, ExportFormat::kOrc,
+  ExportOperatorProxy::Make(kBucketName, kTargetObjectKey, ExportFormat::kOrc,
     ImportOperatorProxy::Make(kBucketName, std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}}));
 
   const auto export_proxy_csv =
-  ExportOperatorProxy::Make(kBucketName, kTargetObjectkey, ExportFormat::kCsv,
+  ExportOperatorProxy::Make(kBucketName, kTargetObjectKey, ExportFormat::kCsv,
     ImportOperatorProxy::Make(kBucketName, std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}}));
 
   // clang-format on

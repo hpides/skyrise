@@ -17,6 +17,7 @@ Checks: '
         -cert-dcl16-c,
         -cert-dcl58-cpp,
         -cert-env33-c,
+        -cert-err33-c,
         -cert-err58-cpp,
         -cppcoreguidelines-avoid-non-const-global-variables,
         -cppcoreguidelines-interfaces-global-init,
@@ -29,6 +30,7 @@ Checks: '
         -fuchsia-overloaded-operator,
         -fuchsia-statically-constructed-objects,
         -fuchsia-trailing-return,
+        -google-readability-casting,
         -google-runtime-int,
         -hicpp-no-array-decay,
         -llvm-header-guard,
@@ -41,6 +43,7 @@ Checks: '
         -modernize-use-trailing-return-type,
         -readability-avoid-const-params-in-decls,
         -readability-function-cognitive-complexity,
+        -readability-identifier-length,
         -readability-implicit-bool-conversion
         '
 
@@ -61,6 +64,7 @@ Checks: '
 #   bugprone-easily-swappable-parameters                    We allow subsequent function parameters of convertible types
 #   cert-dcl16-c                                            Using 1.0f instead of 1.0F is fine for us
 #   cert-env33-c                                            We use popen()
+#   cert-err33-c                                            We use strftime()
 #   cert-err58-cpp                                          We are okay with uncaught errors
 #   cppcoreguidelines-avoid-non-const-global-variables      Does not like Google Test
 #   cppcoreguidelines-interfaces-global-init                Does not like std::vector<std::function<void()>> a{[]() { std::cout << "a"; }};
@@ -73,6 +77,7 @@ Checks: '
 #   fuchsia-overloaded-operator                             We overload operators
 #   fuchsia-statically-constructed-objects                  Does not like Google Test
 #   fuchsia-trailing-return                                 Gives various false positives
+#   google-readability-casting                              We do allow C-style casts
 #   google-runtime-int                                      We want to use "long long" instead of int64_t, because of tpch-dbgen
 #   hicpp-no-array-decay                                    Does not like Pricing pricing(Aws::Region::US_EAST_1);
 #   llvm-header-guard                                       We do not use LLVM header guards
@@ -85,6 +90,7 @@ Checks: '
 #   modernize-use-trailing-return-type                      We do not want to use trailing return types
 #   readability-avoid-const-params-in-decls                 This is used in Hyrise and we do not want to enforce changes
 #   readability-function-cognitive-complexity               We nest code extensively in our parameterizable benchmarks
+#   readability-identifier-length                           We do allow short names in loops, tests, and benchmarks
 #   readability-implicit-bool-conversion                    We use some C-functions like unlink, isalpha, ...
 
 CheckOptions:

@@ -14,7 +14,7 @@ class ProjectionOperatorProxy : public EnableMakeForPlanNode<ProjectionOperatorP
   ProjectionOperatorProxy(std::vector<std::shared_ptr<AbstractExpression>> expressions);
 
   const std::string& Name() const override;
-  const std::vector<std::shared_ptr<AbstractExpression>> Expressions() const;
+  std::vector<std::shared_ptr<AbstractExpression>> Expressions() const;
 
   /**
    * Optimization-relevant attributes

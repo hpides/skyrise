@@ -16,16 +16,14 @@ namespace skyrise {
  */
 class AbstractTableConstraint {
  public:
-  explicit AbstractTableConstraint(std::unordered_set<ColumnId> init_columns);
+  explicit AbstractTableConstraint(const std::unordered_set<ColumnId> columns);
 
   AbstractTableConstraint(const AbstractTableConstraint&) = default;
   AbstractTableConstraint(AbstractTableConstraint&&) = default;
-  AbstractTableConstraint& operator=(const AbstractTableConstraint&) = default;
-  AbstractTableConstraint& operator=(AbstractTableConstraint&&) = default;
 
   virtual ~AbstractTableConstraint() = default;
 
-  const std::unordered_set<ColumnId>& columns() const;
+  const std::unordered_set<ColumnId>& Columns() const;
 
   bool operator==(const AbstractTableConstraint& rhs) const;
   bool operator!=(const AbstractTableConstraint& rhs) const;
@@ -35,10 +33,10 @@ class AbstractTableConstraint {
    * Compare two table constraints of the same type. Only additional fields have to be compared since column ids are
    * already compared by the caller.
    */
-  virtual bool _on_equals(const AbstractTableConstraint& table_constraint) const = 0;
+  virtual bool OnEquals(const AbstractTableConstraint& table_constraint) const = 0;
 
  private:
-  std::unordered_set<ColumnId> columns_;
+  const std::unordered_set<ColumnId> columns_;
 };
 
 }  // namespace skyrise

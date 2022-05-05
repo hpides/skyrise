@@ -3,6 +3,20 @@ include_directories(
 )
 
 add_executable(
+    skyriseBenchmarkEc2Invocation
+
+    benchmark_executable.cpp
+    benchmark_executable.hpp
+    benchmark_ec2_invocation.cpp
+)
+
+target_link_libraries(
+    skyriseBenchmarkEc2Invocation
+
+    skyriseBenchmark
+)
+
+add_executable(
     skyriseBenchmarkFunctionColocation
 
     benchmark_executable.cpp
@@ -145,6 +159,7 @@ target_link_libraries(
 add_executable(
     skyriseMicrobenchmarks
 
+    hash_join_microbenchmark.cpp
     partition_microbenchmark.cpp
 )
 

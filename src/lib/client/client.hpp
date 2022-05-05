@@ -6,6 +6,7 @@
 #include <aws/core/Region.h>
 #include <aws/core/auth/AWSCredentialsProvider.h>
 #include <aws/core/client/ClientConfiguration.h>
+#include <aws/ec2/EC2Client.h>
 #include <aws/iam/IAMClient.h>
 #include <aws/lambda/LambdaClient.h>
 #include <aws/monitoring/CloudWatchClient.h>
@@ -28,11 +29,12 @@ class Client {
   ~Client() = default;
 
   std::shared_ptr<const Aws::CloudWatch::CloudWatchClient> GetCloudWatchClient() const;
-  std::shared_ptr<const Aws::IAM::IAMClient> GetIAMClient() const;
+  std::shared_ptr<const Aws::EC2::EC2Client> GetEc2Client() const;
+  std::shared_ptr<const Aws::IAM::IAMClient> GetIamClient() const;
   std::shared_ptr<const Aws::Lambda::LambdaClient> GetLambdaClient() const;
   std::shared_ptr<const Aws::Pricing::PricingClient> GetPricingClient() const;
   std::shared_ptr<const Aws::S3::S3Client> GetS3Client() const;
-  std::shared_ptr<const Aws::SQS::SQSClient> GetSQSClient() const;
+  std::shared_ptr<const Aws::SQS::SQSClient> GetSqsClient() const;
   std::shared_ptr<const Aws::XRay::XRayClient> GetXRayClient() const;
 
   const Aws::String& GetClientRegion() const;
@@ -41,6 +43,7 @@ class Client {
   static Aws::Client::ClientConfiguration GenerateClientConfig();
 
   std::shared_ptr<const Aws::CloudWatch::CloudWatchClient> cloudwatch_client_;
+  std::shared_ptr<const Aws::EC2::EC2Client> ec2_client_;
   std::shared_ptr<const Aws::IAM::IAMClient> iam_client_;
   std::shared_ptr<const Aws::Lambda::LambdaClient> lambda_client_;
   std::shared_ptr<const Aws::Pricing::PricingClient> pricing_client_;

@@ -45,23 +45,23 @@ std::shared_ptr<TableSchema> TableSchema::FromTableColumnDefinitions(const Table
 
 void TableSchema::AddKeyConstraint(const TableKeyConstraint& table_key_constraint) {
   // Check validity of specified columns
-  for (const auto& column_id : table_key_constraint.columns()) {
+  for (const auto& column_id : table_key_constraint.Columns()) {
     Assert(column_id < TableColumnCount(), "ColumnId out of range");
 
     // PRIMARY KEY requires non-nullable columns
-    if (table_key_constraint.key_type() == KeyConstraintType::PRIMARY_KEY) {
+    if (table_key_constraint.KeyType() == KeyConstraintType::kPrimaryKey) {
       Assert(!ColumnIsNullable(column_id), "Column must be non-nullable to comply with PRIMARY KEY.");
     }
   }
 
   for (const auto& existing_constraint : table_key_constraints_) {
     // Ensure that no other PRIMARY KEY is defined
-    Assert(existing_constraint.key_type() == KeyConstraintType::UNIQUE ||
-               table_key_constraint.key_type() == KeyConstraintType::UNIQUE,
+    Assert(existing_constraint.KeyType() == KeyConstraintType::kUnique ||
+               table_key_constraint.KeyType() == KeyConstraintType::kUnique,
            "Another primary key already exists for this table.");
 
     // Ensure there is only one key constraint per column set.
-    Assert(table_key_constraint.columns() != existing_constraint.columns(),
+    Assert(table_key_constraint.Columns() != existing_constraint.Columns(),
            "Another key constraint for the same column set has already been defined.");
   }
 

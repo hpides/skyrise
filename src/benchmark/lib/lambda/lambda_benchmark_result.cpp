@@ -202,7 +202,7 @@ bool LambdaBenchmarkResult::HasRepetitionFinished(const size_t repetition) const
   return benchmark_repetitions_[repetition].IsComplete();
 }
 
-bool LambdaBenchmarkResult::IsComplete() const {
+bool LambdaBenchmarkResult::IsResultComplete() const {
   return std::all_of(
       benchmark_repetitions_.cbegin(), benchmark_repetitions_.cend(),
       [](const LambdaBenchmarkRepetition& benchmark_repetition) { return benchmark_repetition.IsComplete(); });

@@ -21,16 +21,11 @@ LambdaBenchmarkConfig::LambdaBenchmarkConfig(const Aws::String& function_zip_nam
                                              const UseEventQueue use_event_queue,
                                              const std::vector<std::function<void()>>& after_repetition_callbacks,
                                              const Aws::String& function_bucket, const bool enable_tracing)
-    : AbstractBenchmarkConfig(concurrent_invocation_count, repetition_count),
+    : AbstractBenchmarkConfig(concurrent_invocation_count, repetition_count, after_repetition_callbacks),
       warm_up_(warm_up),
       use_one_function_per_repetition_(use_one_function_per_repetition),
       use_event_queue_(use_event_queue),
-      after_repetition_callbacks_(after_repetition_callbacks.empty()
-                                      ? std::vector<std::function<void()>>(repetition_count_, [] {})
-                                      : after_repetition_callbacks),
-      enable_tracing_(enable_tracing),
-      benchmark_id_(RandomString(8)),
-      benchmark_timestamp_(GetFormattedTimestamp("%Y%m%dT%H%M%S")) {
+      enable_tracing_(enable_tracing) {
   Assert(after_repetition_callbacks_.size() == repetition_count_,
          "The number of repetition callbacks and the repetition count must be equal.");
 

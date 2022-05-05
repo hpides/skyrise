@@ -114,7 +114,7 @@ enum class ExchangeMode { kFullMerge, kPartialMerge };
 std::ostream& operator<<(std::ostream& stream, ExchangeMode exchange_mode);
 
 /**
- * Let R and S be two tables and we want to perform `R <JoinMode> S ON <condition>`
+ * Let R and S be two tables and we want to perform R <JoinMode> S ON <condition>
  * kAntiNullAsTrue:    If for a tuple Ri in R, there is a tuple Sj in S so that <condition> is NULL or TRUE, Ri is
  *                      dropped. This behavior mirrors NOT IN.
  * kAntiNullAsFalse:   If for a tuple Ri in R, there is a tuple Sj in S so that <condition> is TRUE, Ri is
@@ -131,7 +131,7 @@ std::ostream& operator<<(std::ostream& stream, SetOperationMode set_operation_mo
 
 /**
  * According to the SQL standard, the position of NULLs is implementation-defined. In Skyrise, NULLs come before all
- * values, both for ascending and descending sorts. See sort.cpp for details.
+ * values, both for ascending and descending sorts.
  */
 enum class SortMode { kAscending, kDescending };
 std::ostream& operator<<(std::ostream& stream, SortMode sort_mode);

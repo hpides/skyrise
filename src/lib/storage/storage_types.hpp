@@ -31,6 +31,8 @@ struct RowId {
   ChunkOffset chunk_offset = kInvalidChunkOffset;
 };
 
+inline constexpr RowId kNullRowId = RowId{kInvalidChunkId, kInvalidChunkOffset};
+
 inline std::ostream& operator<<(std::ostream& stream, const RowId& row_id) {
   stream << "RowId(" << row_id.chunk_id << ", " << row_id.chunk_offset << ")";
   return stream;

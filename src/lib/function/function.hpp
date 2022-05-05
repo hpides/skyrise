@@ -4,6 +4,8 @@
 #include <aws/core/utils/json/JsonSerializer.h>
 #include <aws/lambda-runtime/runtime.h>
 
+#include "metering/request_tracker/request_tracker.hpp"
+
 namespace skyrise {
 
 class Function {
@@ -20,7 +22,9 @@ class Function {
 
 #if SKYRISE_DEBUG
   static bool RunsInLambdaEnvironment();
-  void RunStandalone() const;
+  static void RunStandalone(
+      const std::function<aws::lambda_runtime::invocation_response(aws::lambda_runtime::invocation_request const&)>&
+          handler);
 #endif
 };
 

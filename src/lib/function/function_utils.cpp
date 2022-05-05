@@ -16,6 +16,7 @@
 namespace skyrise {
 
 std::string GetProjectDirectoryPath() {
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
   std::array<char, PATH_MAX> executable_path_buffer;
   const auto path_name_length =
       readlink("/proc/self/exe", executable_path_buffer.data(), sizeof(executable_path_buffer) - 1);

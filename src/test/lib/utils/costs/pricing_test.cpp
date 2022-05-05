@@ -74,11 +74,11 @@ TEST_F(AwsPricingTest, PricingXray) {
 }
 
 TEST_F(AwsPricingTest, DifferentPricingRegions) {
-  const std::vector<std::string> kPricingRegions = {Aws::Region::US_EAST_2, Aws::Region::US_WEST_1,
+  const std::vector<std::string> pricing_regions = {Aws::Region::US_EAST_2, Aws::Region::US_WEST_1,
                                                     Aws::Region::EU_CENTRAL_1, Aws::Region::EU_WEST_1,
                                                     Aws::Region::AF_SOUTH_1};
 
-  for (const auto& pricing_region : kPricingRegions) {
+  for (const auto& pricing_region : pricing_regions) {
     Pricing pricing(client_.GetPricingClient(), pricing_region);
     EXPECT_NE(pricing.GetLambdaPricing(), nullptr);
     EXPECT_NE(pricing.GetS3Pricing(), nullptr);

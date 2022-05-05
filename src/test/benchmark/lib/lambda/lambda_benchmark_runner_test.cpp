@@ -36,13 +36,12 @@ class AwsLambdaBenchmarkRunnerTest : public ::testing::Test {
 
       EXPECT_EQ(benchmark_repetitions[i].GetInvokeResults().size(), benchmark_config->concurrent_invocation_count_);
 
-      const auto response_body = Aws::Utils::Json::JsonValue().AsString("success");
-
       for (const auto& invoke_result : benchmark_repetitions[i].GetInvokeResults()) {
         EXPECT_TRUE(invoke_result.IsSuccess());
         EXPECT_TRUE(invoke_result.IsComplete());
 
-        EXPECT_EQ(invoke_result.GetResponseBody().WriteCompact(), response_body.View().WriteCompact());
+        EXPECT_TRUE(invoke_result.GetResponseBody().KeyExists("success"));
+        EXPECT_TRUE(invoke_result.GetResponseBody().GetBool("success"));
 
         if (benchmark_config->use_event_queue_ == UseEventQueue::kNo) {
           EXPECT_TRUE(invoke_result.HasLogResult());
@@ -54,7 +53,7 @@ class AwsLambdaBenchmarkRunnerTest : public ::testing::Test {
   const AwsApi aws_api_;
   const Client client_;
   LambdaBenchmarkRunner benchmark_runner_ =
-      LambdaBenchmarkRunner(client_.GetIAMClient(), client_.GetLambdaClient(), client_.GetSQSClient(),
+      LambdaBenchmarkRunner(client_.GetIamClient(), client_.GetLambdaClient(), client_.GetSqsClient(),
                             std::make_shared<CostCalculator>(client_.GetPricingClient(), client_.GetClientRegion()));
 };
 

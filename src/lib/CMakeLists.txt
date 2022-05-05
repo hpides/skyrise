@@ -136,6 +136,10 @@ set(
 
     compiler/abstract_plan_node.hpp
     compiler/enable_make_for_plan_node.hpp
+
+    compiler/logical_query_plan/functional_dependency.cpp
+    compiler/logical_query_plan/functional_dependency.hpp
+
     compiler/physical_query_plan/abstract_operator_proxy.cpp
     compiler/physical_query_plan/abstract_operator_proxy.hpp
     compiler/physical_query_plan/aggregate_operator_proxy.cpp
@@ -217,7 +221,18 @@ set(
     metadata/table_partition.hpp
     metadata/table_schema.cpp
     metadata/table_schema.hpp
+    metadata/tpch_mock_catalog.cpp
+    metadata/tpch_mock_catalog.hpp
 
+    metering/request_tracker/monitor.cpp
+    metering/request_tracker/monitor.hpp
+    metering/request_tracker/request_tracker.cpp
+    metering/request_tracker/request_tracker.hpp
+
+    operator/abstract_aggregate_operator.cpp
+    operator/abstract_aggregate_operator.hpp
+    operator/aggregate_hash_operator.cpp
+    operator/aggregate_hash_operator.hpp
     operator/abstract_operator.cpp
     operator/abstract_operator.hpp
     operator/alias_operator.cpp
@@ -231,8 +246,11 @@ set(
     operator/filter/abstract_filter_implementation.hpp
     operator/filter/expression_evaluator_filter_implementation.cpp
     operator/filter/expression_evaluator_filter_implementation.hpp
+    operator/hash_join_operator.cpp
+    operator/hash_join_operator.hpp
     operator/import_operator.cpp
     operator/import_operator.hpp
+    operator/join_operator_predicate.hpp
     operator/partition_operator.cpp
     operator/partition_operator.hpp
     operator/projection_operator.cpp
@@ -328,6 +346,7 @@ set(
 
 set(
     COORDINATOR_LIBRARIES
+    aws-cpp-sdk-ec2
     aws-cpp-sdk-iam
     aws-cpp-sdk-lambda
     aws-cpp-sdk-monitoring

@@ -160,7 +160,7 @@ std::shared_ptr<const ImportOptions> ImportOptions::FromJson(const Aws::Utils::J
   Fail("Failed to create ImportOptions because JSON values are missing.");
 }
 
-const std::shared_ptr<AbstractChunkReaderFactory> ImportOptions::CreateReaderFactory() const {
+std::shared_ptr<AbstractChunkReaderFactory> ImportOptions::CreateReaderFactory() const {
   switch (import_format_) {
     case ImportFormat::kCsv:
       return std::make_shared<FormatReaderFactory<CsvFormatReader>>(std::get<CsvFormatReaderOptions>(reader_options_));

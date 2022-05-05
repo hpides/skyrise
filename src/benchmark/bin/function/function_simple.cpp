@@ -7,7 +7,7 @@ namespace skyrise {
 
 aws::lambda_runtime::invocation_response FunctionSimple::OnHandleRequest(
     const Aws::Utils::Json::JsonView& /*request*/) const {
-  const auto response_body = Aws::Utils::Json::JsonValue().AsString("success");
+  const auto response_body = Aws::Utils::Json::JsonValue().WithBool("success", true);
   return aws::lambda_runtime::invocation_response::success(response_body.View().WriteCompact(), "application/json");
 }
 

@@ -27,10 +27,11 @@
 #include "types.hpp"
 #include "utils/assert.hpp"
 
-// NOLINTNEXTLINE (google-build-using-namespace)
+namespace skyrise {
+
+// NOLINTNEXTLINE(google-build-using-namespace)
 using namespace skyrise::expression_functional;
 
-namespace skyrise {
 namespace {
 
 template <typename Functor>
@@ -137,8 +138,7 @@ std::shared_ptr<AbstractExpression> RewriteInListExpression(const InExpression& 
 }  // namespace
 
 ExpressionEvaluator::ExpressionEvaluator(const std::shared_ptr<const Table>& table, const ChunkId chunk_id)
-    : table_(table), chunk_(table_->GetChunk(chunk_id)), chunk_id_(chunk_id) {
-  output_row_count_ = chunk_->Size();
+    : table_(table), chunk_(table_->GetChunk(chunk_id)), chunk_id_(chunk_id), output_row_count_(chunk_->Size()) {
   segment_materializations_.resize(chunk_->GetColumnCount());
 }
 

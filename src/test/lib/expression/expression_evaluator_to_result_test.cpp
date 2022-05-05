@@ -12,10 +12,10 @@
 #include "storage/table/table.hpp"
 #include "storage/table/value_segment.hpp"
 
-// NOLINTNEXTLINE (google-build-using-namespace)
-using namespace skyrise::expression_functional;
-
 namespace skyrise {
+
+// NOLINTNEXTLINE(google-build-using-namespace)
+using namespace skyrise::expression_functional;
 
 class ExpressionEvaluatorToResultTest : public ::testing::Test {
  protected:

@@ -11,6 +11,9 @@ set(
     benchmark/lib/benchmark_result_aggregate_test.cpp
     benchmark/lib/compression/compression_test.cpp
     benchmark/lib/data_generation/tpch_test.cpp
+    benchmark/lib/ec2/ec2_benchmark_config_test.cpp
+    benchmark/lib/ec2/ec2_benchmark_result_test.cpp
+    benchmark/lib/ec2/ec2_benchmark_runner_test.cpp
     benchmark/lib/lambda/lambda_benchmark_output_test.cpp
     benchmark/lib/lambda/lambda_benchmark_result_test.cpp
     benchmark/lib/lambda/lambda_benchmark_runner_test.cpp
@@ -60,9 +63,11 @@ set(
     lib/monitoring/monitoring_test_utils.cpp
     lib/monitoring/monitoring_test_utils.hpp
 
+    lib/operator/aggregate_operator_test.cpp
     lib/operator/alias_operator_test.cpp
     lib/operator/export_operator_test.cpp
     lib/operator/filter_operator_test.cpp
+    lib/operator/hash_join_operator_test.cpp
     lib/operator/import_operator_test.cpp
     lib/operator/partition_operator_test.cpp
     lib/operator/projection_operator_test.cpp
@@ -108,6 +113,7 @@ set(
     lib/storage/table/chunk_reader_test.cpp
     lib/storage/table/chunk_writer_test.cpp
     lib/storage/table/value_segment_test.cpp
+    lib/storage/table/table_key_constraint_test.cpp
     lib/storage/table/table_test.cpp
 
     lib/utils/costs/cost_calculator_test.cpp

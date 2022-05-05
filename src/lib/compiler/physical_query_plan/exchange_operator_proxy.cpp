@@ -45,6 +45,7 @@ void ExchangeOperatorProxy::SetToPartialMerge(size_t output_objects_count) {
   mode_ = ExchangeMode::kPartialMerge;
 }
 
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 void ExchangeOperatorProxy::SetToFullyMeshedExchange() {
   // TODO(anyone): Currently, only FullMerge and PartialMerge are implemented, which cover staged aggregations.
   //               For joins, we need to specify fully meshed data exchanges.

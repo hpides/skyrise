@@ -121,6 +121,9 @@ inline detail::Ternary<PredicateCondition::kBetweenLowerExclusive, BetweenExpres
 inline detail::Ternary<PredicateCondition::kBetweenUpperExclusive, BetweenExpression> BetweenUpperExclusive_;
 inline detail::Ternary<PredicateCondition::kBetweenExclusive, BetweenExpression> BetweenExclusive_;
 
+inline detail::Unary<AggregateFunction::kAny, AggregateExpression> Any_;
+inline detail::Unary<AggregateFunction::kStandardDeviationSample, AggregateExpression> StandardDeviationSample_;
+
 template <typename Argument>
 std::shared_ptr<CastExpression> Cast_(const Argument& argument, const DataType data_type) {
   return std::make_shared<CastExpression>(ToExpression(argument), data_type);

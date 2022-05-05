@@ -18,8 +18,6 @@ class LambdaBenchmark : public AbstractBenchmark {
   LambdaBenchmark(const LambdaBenchmark&) = delete;
   LambdaBenchmark& operator=(const LambdaBenchmark&) = delete;
 
-  virtual ~LambdaBenchmark() = default;
-
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> Run(
       const std::shared_ptr<AbstractBenchmarkRunner>& benchmark_runner) override;
 

@@ -18,6 +18,14 @@ set(
     data_generation/table_builder.hpp
     data_generation/tpch/tpch_generator.hpp
     data_generation/tpch/tpch_generator.cpp
+    ec2/ec2_benchmark_config.cpp
+    ec2/ec2_benchmark_config.hpp
+    ec2/ec2_benchmark_result.cpp
+    ec2/ec2_benchmark_result.hpp
+    ec2/ec2_benchmark_runner.cpp
+    ec2/ec2_benchmark_runner.hpp
+    ec2/ec2_invocation_benchmark.cpp
+    ec2/ec2_invocation_benchmark.hpp
     lambda/function_colocation_benchmark.cpp
     lambda/function_colocation_benchmark.hpp
     lambda/function_invocation_config.hpp
@@ -58,6 +66,7 @@ set(
 set(
     BENCHMARK_LIBRARIES
     aws-cpp-sdk-core
+    aws-cpp-sdk-ec2
     aws-cpp-sdk-iam
     aws-cpp-sdk-lambda
     aws-cpp-sdk-s3

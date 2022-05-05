@@ -88,7 +88,7 @@ class LambdaBenchmarkResult : public AbstractBenchmarkResult {
   long double GetWarmUpCost() const;
 
   bool HasRepetitionFinished(const size_t repetition) const;
-  bool IsComplete() const override;
+  bool IsResultComplete() const override;
 
  private:
   const size_t repetition_count_;

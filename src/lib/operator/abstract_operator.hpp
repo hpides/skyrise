@@ -34,8 +34,8 @@ enum class OperatorType {
  */
 class AbstractOperator : public std::enable_shared_from_this<AbstractOperator>, private Noncopyable {
  public:
-  AbstractOperator(OperatorType type, const std::shared_ptr<const AbstractOperator>& left = nullptr,
-                   const std::shared_ptr<const AbstractOperator>& right = nullptr);
+  AbstractOperator(OperatorType type, std::shared_ptr<const AbstractOperator> left = nullptr,
+                   std::shared_ptr<const AbstractOperator> right = nullptr);
 
   virtual ~AbstractOperator() = default;
 

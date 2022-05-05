@@ -31,14 +31,15 @@ namespace skyrise {
  * Combining null values and FDs is not trivial. For more reference, see https://arxiv.org/abs/1404.4963.
  */
 struct FunctionalDependency {
-  FunctionalDependency(ExpressionUnorderedSet init_determinants, ExpressionUnorderedSet init_dependents);
+  FunctionalDependency(ExpressionUnorderedSet init_determinant_expressions,
+                       ExpressionUnorderedSet init_dependent_expressions);
 
   bool operator==(const FunctionalDependency& other) const;
   bool operator!=(const FunctionalDependency& other) const;
-  size_t hash() const;
+  size_t Hash() const;
 
-  ExpressionUnorderedSet determinants;
-  ExpressionUnorderedSet dependents;
+  ExpressionUnorderedSet determinant_expressions;
+  ExpressionUnorderedSet dependent_expressions;
 };
 
 std::ostream& operator<<(std::ostream& stream, const FunctionalDependency& expression);
@@ -51,7 +52,7 @@ std::ostream& operator<<(std::ostream& stream, const FunctionalDependency& expre
  *                             {a} => {b, c, d}   -->   {a} => {c}
  *                                                      {a} => {d}
  */
-std::unordered_set<FunctionalDependency> inflate_fds(const std::vector<FunctionalDependency>& fds);
+std::unordered_set<FunctionalDependency> InflateFds(const std::vector<FunctionalDependency>& fds);
 
 /**
  * @return Reduces the given vector of FDs, so that there are no more FD objects with the same determinant expressions.
@@ -61,20 +62,20 @@ std::unordered_set<FunctionalDependency> inflate_fds(const std::vector<Functiona
  *                             {a} => {c}         -->   {a} => {b, c, d}
  *                             {a} => {d}
  */
-std::vector<FunctionalDependency> deflate_fds(const std::vector<FunctionalDependency>& fds);
+std::vector<FunctionalDependency> DeflateFds(const std::vector<FunctionalDependency>& fds);
 
 /**
  * @return Unified FDs from the given @param fds_a and @param fds_b vectors. FDs with the same determinant
  *         expressions are merged into single objects by merging their dependent expressions.
  */
-std::vector<FunctionalDependency> union_fds(const std::vector<FunctionalDependency>& fds_a,
-                                            const std::vector<FunctionalDependency>& fds_b);
+std::vector<FunctionalDependency> UnionFds(const std::vector<FunctionalDependency>& fds_a,
+                                           const std::vector<FunctionalDependency>& fds_b);
 
 /**
  * @return Returns FDs that are included in both of the given vectors.
  */
-std::vector<FunctionalDependency> intersect_fds(const std::vector<FunctionalDependency>& fds_a,
-                                                const std::vector<FunctionalDependency>& fds_b);
+std::vector<FunctionalDependency> IntersectFds(const std::vector<FunctionalDependency>& fds_a,
+                                               const std::vector<FunctionalDependency>& fds_b);
 
 /**
  * Future Work: Transitive FDs
