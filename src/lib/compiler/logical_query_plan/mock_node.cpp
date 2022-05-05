@@ -112,7 +112,7 @@ std::string MockNode::Description(const DescriptionMode /* mode */,
                                   const AbstractExpression::DescriptionMode /* expression_mode */) const {
   std::ostringstream stream;
   // const char separator = (mode == DescriptionMode::kSingleLine ? ' ' : '\n');
-  stream << "[MockNode '"s << name.value_or("Unnamed") << "'] Columns:";
+  stream << "[MockNode '"s << name_.value_or("Unnamed") << "'] Columns:";
 
   ColumnId column_id = 0;
   for (const auto& column : column_definitions_) {
@@ -156,7 +156,7 @@ size_t MockNode::OnShallowHash() const {
 }
 
 std::shared_ptr<AbstractLqpNode> MockNode::OnShallowCopy(LqpNodeMapping& /* node_mapping */) const {
-  const auto mock_node = MockNode::Make(column_definitions_, name);
+  const auto mock_node = MockNode::Make(column_definitions_, name_);
   mock_node->SetKeyConstraints(table_key_constraints_);
   mock_node->SetNonTrivialFunctionalDependencies(functional_dependencies_);
   mock_node->SetPrunedColumnIds(pruned_column_ids_);
@@ -166,7 +166,7 @@ std::shared_ptr<AbstractLqpNode> MockNode::OnShallowCopy(LqpNodeMapping& /* node
 bool MockNode::OnShallowEquals(const AbstractLqpNode& rhs, const LqpNodeMapping& /* node_mapping */) const {
   const auto& mock_node = static_cast<const MockNode&>(rhs);
   return column_definitions_ == mock_node.column_definitions_ && pruned_column_ids_ == mock_node.pruned_column_ids_ &&
-         mock_node.name == name && mock_node.key_constraints() == table_key_constraints_ &&
+         mock_node.name_ == name_ && mock_node.key_constraints() == table_key_constraints_ &&
          mock_node.FunctionalDependencies() == functional_dependencies_;
 }
 
