@@ -1,6 +1,5 @@
 /**
  * Taken and modified from our sister project Hyrise (https://github.com/hyrise/hyrise)
- * TODO(julianmenzler): Enable after we found a solution for load_table("..")
  */
 #include "compiler/logical_query_plan/stored_table_node.hpp"
 
@@ -118,7 +117,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesSingle) {
   table_schema->AddKeyConstraint({{a_->original_column_id_}, KeyConstraintType::kUnique});
 
   const auto& fds = stored_table_node_->FunctionalDependencies();
-  const auto fd_expected = FunctionalDependency{{a_}, {b_, c_}};
+  const FunctionalDependency fd_expected({a_}, {b_, c_});
 
   EXPECT_EQ(fds.size(), 1);
   EXPECT_EQ(fds.at(0), fd_expected);
@@ -141,7 +140,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedLeftColumnSet2) {
   // Prune unique column "a", which would be part of the left column set in the resulting FD: {a} => {b, c}
   stored_table_node_->set_pruned_column_ids({ColumnId{0}});
 
-  const auto fd_expected = FunctionalDependency{{b_}, {c_}};
+  const FunctionalDependency fd_expected({b_}, {c_});
   EXPECT_EQ(stored_table_node_->FunctionalDependencies().size(), 1);
   EXPECT_EQ(stored_table_node_->FunctionalDependencies().at(0), fd_expected);
 }
@@ -153,7 +152,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesPrunedRightColumnSet) {
   // Prune column "b", which would be part of the right column set in the resulting FD: {a} => {b, c}
   stored_table_node_->set_pruned_column_ids({ColumnId{1}});
 
-  const auto fd_expected = FunctionalDependency{{a_}, {c_}};
+  const FunctionalDependency fd_expected({a_}, {c_});
   EXPECT_EQ(stored_table_node_->FunctionalDependencies().size(), 1);
   EXPECT_EQ(stored_table_node_->FunctionalDependencies().at(0), fd_expected);
 }
@@ -165,8 +164,8 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesMultiple) {
 
   const auto& fds = stored_table_node_->FunctionalDependencies();
 
-  const auto fd1_expected = FunctionalDependency{{a_}, {b_, c_}};
-  const auto fd2_expected = FunctionalDependency{{a_, b_}, {c_}};
+  const FunctionalDependency fd1_expected({a_}, {b_, c_});
+  const FunctionalDependency fd2_expected({a_, b_}, {c_});
 
   EXPECT_EQ(fds.size(), 2);
   EXPECT_EQ(fds.at(0), fd1_expected);
@@ -180,7 +179,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
 
   // Test {a} => {b, c}
   {
-    const auto table_schema = TableSchema::FromTableColumnDefinitions(column_definitions);
+    auto table_schema = TableSchema::FromTableColumnDefinitions(column_definitions);
     table_schema->AddKeyConstraint({{ColumnId{0}}, KeyConstraintType::kUnique});
     mock_catalog_->AddTableSchema("table_a", table_schema);
 
@@ -190,14 +189,14 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
     const auto& c = stored_table_node->get_column("c");
     const auto& fds = stored_table_node->FunctionalDependencies();
 
-    const auto fd_expected = FunctionalDependency{{a}, {b, c}};
+    const FunctionalDependency fd_expected({a}, {b, c});
     EXPECT_EQ(fds.size(), 1);
     EXPECT_EQ(fds.at(0), fd_expected);
   }
 
   // Test {a, b} => {c}
   {
-    const auto table_schema = TableSchema::FromTableColumnDefinitions(column_definitions);
+    auto table_schema = TableSchema::FromTableColumnDefinitions(column_definitions);
     table_schema->AddKeyConstraint({{ColumnId{0}, ColumnId{1}}, KeyConstraintType::kUnique});
     mock_catalog_->AddTableSchema("table_b", table_schema);
 
@@ -208,7 +207,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
 
   // Test {a, c} => {b}
   {
-    const auto table_schema = TableSchema::FromTableColumnDefinitions(column_definitions);
+    auto table_schema = TableSchema::FromTableColumnDefinitions(column_definitions);
     table_schema->AddKeyConstraint({{ColumnId{0}, ColumnId{2}}, KeyConstraintType::kUnique});
     mock_catalog_->AddTableSchema("table_c", table_schema);
 
@@ -218,14 +217,14 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
     const auto& c = stored_table_node->get_column("c");
     const auto& fds = stored_table_node->FunctionalDependencies();
 
-    const auto fd_expected = FunctionalDependency{{a, c}, {b}};
+    const FunctionalDependency fd_expected({a, c}, {b});
     EXPECT_EQ(fds.size(), 1);
     EXPECT_EQ(fds.at(0), fd_expected);
   }
 
   // Test {b} => {a, c}
   {
-    const auto table_schema = TableSchema::FromTableColumnDefinitions(column_definitions);
+    auto table_schema = TableSchema::FromTableColumnDefinitions(column_definitions);
     table_schema->AddKeyConstraint({{ColumnId{1}}, KeyConstraintType::kUnique});
     mock_catalog_->AddTableSchema("table_d", table_schema);
 
@@ -236,10 +235,10 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
 }
 
 TEST_F(StoredTableNodeTest, UniqueConstraints) {
-  const auto table_schema = mock_catalog_a->GetTableSchema("t_a");
+  auto table_schema = mock_catalog_->GetTableSchema("t_a");
 
-  const auto key_constraint_a_b = TableKeyConstraint{{ColumnId{0}, ColumnId{1}}, KeyConstraintType::kPrimaryKey};
-  const auto key_constraint_c = TableKeyConstraint{{ColumnId{2}}, KeyConstraintType::kUnique};
+  const TableKeyConstraint key_constraint_a_b({ColumnId{0}, ColumnId{1}}, KeyConstraintType::kPrimaryKey);
+  const TableKeyConstraint key_constraint_c({ColumnId{2}}, KeyConstraintType::kUnique);
   table_schema->AddKeyConstraint(key_constraint_a_b);
   table_schema->AddKeyConstraint(key_constraint_c);
 
@@ -262,16 +261,17 @@ TEST_F(StoredTableNodeTest, UniqueConstraints) {
 }
 
 TEST_F(StoredTableNodeTest, UniqueConstraintsPrunedColumns) {
-  const auto table_schema = mock_catalog_a->GetTableSchema("t_a");
+  auto table_schema = mock_catalog_->GetTableSchema("t_a");
 
   // Prepare unique constraints
-  const auto key_constraint_a = TableKeyConstraint{{ColumnId{0}}, KeyConstraintType::kUnique};
-  const auto key_constraint_a_b = TableKeyConstraint{{ColumnId{0}, ColumnId{1}}, KeyConstraintType::kUnique};
-  const auto key_constraint_c = TableKeyConstraint{{ColumnId{2}}, KeyConstraintType::kUnique};
+  const TableKeyConstraint key_constraint_a({ColumnId{0}}, KeyConstraintType::kUnique);
+  const TableKeyConstraint key_constraint_a_b({ColumnId{0}, ColumnId{1}}, KeyConstraintType::kUnique);
+  const TableKeyConstraint key_constraint_c({ColumnId{2}}, KeyConstraintType::kUnique);
   table_schema->AddKeyConstraint(key_constraint_a);
   table_schema->AddKeyConstraint(key_constraint_a_b);
   table_schema->AddKeyConstraint(key_constraint_c);
-  const auto& table_key_constraints = table->soft_key_constraints();
+
+  const auto& table_key_constraints = table_schema->KeyConstraints();
   EXPECT_EQ(table_key_constraints.size(), 3);
   EXPECT_EQ(stored_table_node_->UniqueConstraints()->size(), 3);
 
@@ -286,12 +286,12 @@ TEST_F(StoredTableNodeTest, UniqueConstraintsPrunedColumns) {
 }
 
 TEST_F(StoredTableNodeTest, UniqueConstraintsEmpty) {
-  EXPECT_TRUE(Hyrise::get().storage_manager.get_table(stored_table_node_->table_name)->soft_key_constraints().empty());
+  ASSERT_TRUE(mock_catalog_->GetTableSchema(stored_table_node_->table_name)->KeyConstraints().empty());
   EXPECT_TRUE(stored_table_node_->UniqueConstraints()->empty());
 }
 
 TEST_F(StoredTableNodeTest, HasMatchingUniqueConstraint) {
-  const auto table_schema = mock_catalog_a->GetTableSchema("t_a");
+  auto table_schema = mock_catalog_->GetTableSchema("t_a");
   const TableKeyConstraint key_constraint_a({a_->original_column_id_}, KeyConstraintType::kUnique);
   table_schema->AddKeyConstraint(key_constraint_a);
   EXPECT_EQ(stored_table_node_->UniqueConstraints()->size(), 1);
