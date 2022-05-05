@@ -152,8 +152,8 @@ TEST_F(AggregateNodeTest, UniqueConstraintsForwardingSimple) {
   }
 
 TEST_F(AggregateNodeTest, UniqueConstraintsForwardingAnyAggregates) {
-  const TableKeyConstraint key_constraint_b = ({b_->original_column_id_}, KeyConstraintType::kUnique);
-  const TableKeyConstraint key_constraint_c = ({c_->original_column_id_}, KeyConstraintType::kUnique);
+  const TableKeyConstraint key_constraint_b({b_->original_column_id_}, KeyConstraintType::kUnique);
+  const TableKeyConstraint key_constraint_c({c_->original_column_id_}, KeyConstraintType::kUnique);
   mock_node_->SetKeyConstraints({key_constraint_b, key_constraint_c});
   EXPECT_EQ(mock_node_->UniqueConstraints()->size(), 2);
 
