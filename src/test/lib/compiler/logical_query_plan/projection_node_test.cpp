@@ -87,8 +87,8 @@ TEST_F(ProjectionNodeTest, UniqueConstraintsReorderedColumns) {
     const auto& unique_constraints = projection_node_->UniqueConstraints();
     EXPECT_EQ(unique_constraints->size(), 2);
     // In-depth check
-    EXPECT_TRUE(find_unique_constraint_by_key_constraint(*key_constraint_a_b_pk_, unique_constraints));
-    EXPECT_TRUE(find_unique_constraint_by_key_constraint(*key_constraint_b_, unique_constraints));
+    EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(*key_constraint_a_b_pk_, unique_constraints));
+    EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(*key_constraint_b_, unique_constraints));
   }
 
   {
@@ -99,8 +99,8 @@ TEST_F(ProjectionNodeTest, UniqueConstraintsReorderedColumns) {
     const auto& unique_constraints = projection_node_->UniqueConstraints();
     EXPECT_EQ(unique_constraints->size(), 2);
     // In-depth check
-    EXPECT_TRUE(find_unique_constraint_by_key_constraint(*key_constraint_a_b_pk_, unique_constraints));
-    EXPECT_TRUE(find_unique_constraint_by_key_constraint(*key_constraint_b_, unique_constraints));
+    EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(*key_constraint_a_b_pk_, unique_constraints));
+    EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(*key_constraint_b_, unique_constraints));
   }
 }
 
@@ -125,8 +125,8 @@ TEST_F(ProjectionNodeTest, UniqueConstraintsRemovedColumns) {
     const auto& unique_constraints = projection_node_->UniqueConstraints();
     EXPECT_EQ(unique_constraints->size(), 2);
     // In-depth check
-    EXPECT_TRUE(find_unique_constraint_by_key_constraint(*key_constraint_a_b_pk_, unique_constraints));
-    EXPECT_TRUE(find_unique_constraint_by_key_constraint(*key_constraint_b_, unique_constraints));
+    EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(*key_constraint_a_b_pk_, unique_constraints));
+    EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(*key_constraint_b_, unique_constraints));
   }
 
   {
@@ -137,7 +137,7 @@ TEST_F(ProjectionNodeTest, UniqueConstraintsRemovedColumns) {
     const auto& unique_constraints = projection_node_->UniqueConstraints();
     EXPECT_EQ(unique_constraints->size(), 1);
     // In-depth check
-    EXPECT_TRUE(find_unique_constraint_by_key_constraint(*key_constraint_b_, unique_constraints));
+    EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(*key_constraint_b_, unique_constraints));
   }
 }
 

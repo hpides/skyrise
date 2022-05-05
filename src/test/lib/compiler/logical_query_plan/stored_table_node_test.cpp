@@ -237,19 +237,19 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesExcludeNullableColumns) {
 
 TEST_F(StoredTableNodeTest, UniqueConstraints) {
   auto table_schema = mock_catalog_->GetEditableTableSchema("t_a");
-
   const TableKeyConstraint key_constraint_a_b({ColumnId{0}, ColumnId{1}}, KeyConstraintType::kPrimaryKey);
   const TableKeyConstraint key_constraint_c({ColumnId{2}}, KeyConstraintType::kUnique);
   table_schema->AddKeyConstraint(key_constraint_a_b);
   table_schema->AddKeyConstraint(key_constraint_c);
+  ASSERT_TRUE(table_schema->KeyConstraints().size(), 2);
 
   const auto& unique_constraints = stored_table_node_->UniqueConstraints();
 
   // Basic check
   EXPECT_EQ(unique_constraints->size(), 2);
   // In-depth check
-  EXPECT_TRUE(find_unique_constraint_by_key_constraint(key_constraint_a_b, unique_constraints));
-  EXPECT_TRUE(find_unique_constraint_by_key_constraint(key_constraint_c, unique_constraints));
+  EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(key_constraint_a_b, unique_constraints));
+  EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(key_constraint_c, unique_constraints));
 
   // Check whether StoredTableNode is referenced by the constraint's expressions
   for (const auto& unique_constraint : *unique_constraints) {
@@ -283,7 +283,7 @@ TEST_F(StoredTableNodeTest, UniqueConstraintsPrunedColumns) {
   const auto& unique_constraints = stored_table_node_->UniqueConstraints();
   EXPECT_EQ(unique_constraints->size(), 1);
   // In-depth check
-  EXPECT_TRUE(find_unique_constraint_by_key_constraint(key_constraint_c, unique_constraints));
+  EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(key_constraint_c, unique_constraints));
 }
 
 TEST_F(StoredTableNodeTest, UniqueConstraintsEmpty) {

@@ -17,7 +17,7 @@ bool LqpUniqueConstraint::operator==(const LqpUniqueConstraint& rhs) const {
     return false;
   }
   return std::all_of(expressions.cbegin(), expressions.cend(), [&rhs](const auto column_expression) {
-    // TODO(julianmenzler): C++20: Replace with .contains
+    // TODO(anyone): C++20: Replace with .contains
     return rhs.expressions.find(column_expression) != rhs.expressions.end();
   });
 }

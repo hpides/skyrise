@@ -100,8 +100,8 @@ TEST_F(MockNodeTest, UniqueConstraints) {
   EXPECT_TRUE(mock_node_b_->UniqueConstraints()->empty());
 
   // In-depth verification
-  EXPECT_TRUE(find_unique_constraint_by_key_constraint(key_constraint_a_b, unique_constraints_mock_node_a));
-  EXPECT_TRUE(find_unique_constraint_by_key_constraint(key_constraint_c, unique_constraints_mock_node_a));
+  EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(key_constraint_a_b, unique_constraints_mock_node_a));
+  EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(key_constraint_c, unique_constraints_mock_node_a));
 
   // Check whether MockNode is referenced by the constraint's expressions
   for (const auto& unique_constraint : *unique_constraints_mock_node_a) {
@@ -130,7 +130,7 @@ TEST_F(MockNodeTest, UniqueConstraintsPrunedColumns) {
   unique_constraints = mock_node_a_->UniqueConstraints();
   EXPECT_EQ(unique_constraints->size(), 1);
   // In-depth check
-  EXPECT_TRUE(find_unique_constraint_by_key_constraint(key_constraint_c, unique_constraints));
+  EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(key_constraint_c, unique_constraints));
 }
 
 }  // namespace skyrise

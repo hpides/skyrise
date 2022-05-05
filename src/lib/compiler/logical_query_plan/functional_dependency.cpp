@@ -27,14 +27,14 @@ bool FunctionalDependency::operator==(const FunctionalDependency& other) const {
 
   // Compare determinant_expressions
   for (const auto& determinant_expression : other.determinant_expressions) {
-    // TODO(julianmenzler): C++20: Replace with .contains
+    // TODO(anyone): C++20: Replace with .contains
     if (determinant_expressions.find(determinant_expression) == determinant_expressions.cend()) {
       return false;
     }
   }
   // Compare dependants
   for (const auto& dependent_expression : other.dependent_expressions) {
-    // TODO(julianmenzler): C++20: Replace with .contains
+    // TODO(anyone): C++20: Replace with .contains
     if (dependent_expressions.find(dependent_expression) == dependent_expressions.cend()) {
       return false;
     }
@@ -117,7 +117,7 @@ std::vector<FunctionalDependency> DeflateFds(const std::vector<FunctionalDepende
 
       // Compare determinant_expressions
       for (const auto& expression : fd_to_add.determinant_expressions) {
-        // TODO(julianmenzler): C++20: Replace with .contains
+        // TODO(anyone): C++20: Replace with .contains
         if (fd.determinant_expressions.find(expression) == fd.determinant_expressions.cend()) {
           return false;
         }
@@ -175,7 +175,7 @@ std::vector<FunctionalDependency> IntersectFds(const std::vector<FunctionalDepen
   intersected_fds.reserve(fds_a.size());
 
   for (const auto& fd : inflated_fds_a) {
-    // TODO(julianmenzler): C++20: Replace with .contains
+    // TODO(anyone): C++20: Replace with .contains
     if (inflated_fds_b.find(fd) != inflated_fds_b.cend()) {
       intersected_fds.push_back(fd);
     }

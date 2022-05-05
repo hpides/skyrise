@@ -116,14 +116,14 @@ TEST_F(AggregateNodeTest, UniqueConstraintsAdd) {
     EXPECT_EQ(agg_node_a->UniqueConstraints()->size(), 1);
     const auto unique_constraint = *agg_node_a->UniqueConstraints()->cbegin();
     EXPECT_EQ(unique_constraint.expressions.size(), 1);
-    // TODO(julianmenzler): C++20: Replace with .contains
+    // TODO(anyone): C++20: Replace with .contains
     EXPECT_TRUE(unique_constraint.expressions.find(a_) != unique_constraint.expressions.end());
   }
   {
     EXPECT_EQ(agg_node_b->UniqueConstraints()->size(), 1);
     const auto unique_constraint = *agg_node_b->UniqueConstraints()->cbegin();
     EXPECT_EQ(unique_constraint.expressions.size(), 2);
-    // TODO(julianmenzler): C++20: Replace with .contains
+    // TODO(anyone): C++20: Replace with .contains
     EXPECT_TRUE(unique_constraint.expressions.find(a_) != unique_constraint.expressions.end());
     EXPECT_TRUE(unique_constraint.expressions.find(b_) != unique_constraint.expressions.end());
   }
@@ -148,7 +148,7 @@ TEST_F(AggregateNodeTest, UniqueConstraintsForwardingSimple) {
   // Basic check
   EXPECT_EQ(unique_constraints->size(), 1);
   // In-depth check
-  EXPECT_TRUE(find_unique_constraint_by_key_constraint(key_constraint_b, unique_constraints));
+  EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(key_constraint_b, unique_constraints));
 }
 
 TEST_F(AggregateNodeTest, UniqueConstraintsForwardingAnyAggregates) {
@@ -173,9 +173,9 @@ TEST_F(AggregateNodeTest, UniqueConstraintsForwardingAnyAggregates) {
   // Basic check
   EXPECT_EQ(unique_constraints->size(), 2);
   // In-depth check
-  EXPECT_TRUE(find_unique_constraint_by_key_constraint(key_constraint_b, unique_constraints));
+  EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(key_constraint_b, unique_constraints));
   const auto key_constraint_group_by = TableKeyConstraint{{a_->original_column_id_}, KeyConstraintType::kUnique};
-  EXPECT_TRUE(find_unique_constraint_by_key_constraint(key_constraint_group_by, unique_constraints));
+  EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(key_constraint_group_by, unique_constraints));
 }
 
 TEST_F(AggregateNodeTest, UniqueConstraintsNoDuplicates) {
@@ -199,7 +199,7 @@ TEST_F(AggregateNodeTest, UniqueConstraintsNoDuplicates) {
   const auto& unique_constraints = aggregate_node_->UniqueConstraints();
   EXPECT_EQ(unique_constraints->size(), 1);
   // In-depth check
-  EXPECT_TRUE(find_unique_constraint_by_key_constraint(table_key_constraint, unique_constraints));
+  EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(table_key_constraint, unique_constraints));
 }
 
 TEST_F(AggregateNodeTest, UniqueConstraintsNoSupersets) {
@@ -223,7 +223,7 @@ TEST_F(AggregateNodeTest, UniqueConstraintsNoSupersets) {
   const auto& unique_constraints = aggregate_node_->UniqueConstraints();
   EXPECT_EQ(unique_constraints->size(), 1);
   // In-depth check
-  EXPECT_TRUE(find_unique_constraint_by_key_constraint(table_key_constraint, unique_constraints));
+  EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(table_key_constraint, unique_constraints));
 }
 
 TEST_F(AggregateNodeTest, FunctionalDependenciesForwarding) {

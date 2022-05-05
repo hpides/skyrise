@@ -549,10 +549,10 @@ TEST_F(JoinNodeTest, UniqueConstraintsInnerAndOuterJoins) {
     // Basic check
     EXPECT_EQ(join_unique_constraints->size(), 4);
     // In-depth checks
-    EXPECT_TRUE(find_unique_constraint_by_key_constraint(*key_constraint_a_, join_unique_constraints));
-    EXPECT_TRUE(find_unique_constraint_by_key_constraint(*key_constraint_b_c_, join_unique_constraints));
-    EXPECT_TRUE(find_unique_constraint_by_key_constraint(*key_constraint_x_, join_unique_constraints));
-    EXPECT_TRUE(find_unique_constraint_by_key_constraint(*key_constraint_y_, join_unique_constraints));
+    EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(*key_constraint_a_, join_unique_constraints));
+    EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(*key_constraint_b_c_, join_unique_constraints));
+    EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(*key_constraint_x_, join_unique_constraints));
+    EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(*key_constraint_y_, join_unique_constraints));
   }
 }
 

@@ -136,7 +136,7 @@ ExpressionUnorderedSet FindColumnExpressions(const AbstractLqpNode& lqp_node,
 
   for (const auto& output_expression : output_expressions) {
     const auto column_expression = std::dynamic_pointer_cast<LqpColumnExpression>(output_expression);
-    // TODO(julianmenzler): C++20: Replace with .contains
+    // TODO(anyone): C++20: Replace with .contains
     if (column_expression && column_ids.find(column_expression->original_column_id_) != column_ids.end() &&
         *column_expression->original_node_.lock() == lqp_node) {
       [[maybe_unused]] const auto [_, success] = column_expressions.emplace(column_expression);
@@ -157,7 +157,7 @@ bool ContainsMatchingUniqueConstraint(const std::shared_ptr<LqpUniqueConstraints
     if (unique_constraint.expressions.size() <= expressions.size() &&
         std::all_of(unique_constraint.expressions.cbegin(), unique_constraint.expressions.cend(),
                     [&expressions](const auto unique_constraint_expression) {
-                      // TODO(julianmenzler): C++20: Replace with .contains
+                      // TODO(anyone): C++20: Replace with .contains
                       return expressions.find(unique_constraint_expression) != expressions.end();
                     })) {
       // Found a matching unique constraint
@@ -190,7 +190,7 @@ std::vector<FunctionalDependency> FdsFromUniqueConstraints(
     // (1) Verify whether we can create an FD from the given unique constraint (non-nullable determinant expressions)
     if (!std::all_of(determinant_expressions.cbegin(), determinant_expressions.cend(),
                      [&output_expressions_non_nullable](const auto& determinant_expression) {
-                       // TODO(julianmenzler): C++20: Replace with .contains
+                       // TODO(anyone): C++20: Replace with .contains
                        return output_expressions_non_nullable.find(determinant_expression) !=
                               output_expressions_non_nullable.end();
                      })) {
@@ -200,7 +200,7 @@ std::vector<FunctionalDependency> FdsFromUniqueConstraints(
     // (2) Collect the dependent output expressions
     auto dependent_expressions = ExpressionUnorderedSet();
     for (const auto& output_expression : output_expressions) {
-      // TODO(julianmenzler): C++20: Replace with .contains
+      // TODO(anyone): C++20: Replace with .contains
       if (determinant_expressions.find(output_expression) != determinant_expressions.end()) {
         continue;
       }
@@ -231,7 +231,7 @@ void RemoveInvalidFds(const std::shared_ptr<const AbstractLqpNode>& lqp, std::ve
 
   // Adjust FDs: Remove dependent_expressions that are not part of the node's output expressions
   auto not_part_of_output_expressions = [&output_expressions_set](const auto& fd_dependent_expression) {
-    // TODO(julianmenzler): C++20: Replace with .contains
+    // TODO(anyone): C++20: Replace with .contains
     return output_expressions_set.find(fd_dependent_expression) == output_expressions_set.end();
   };
   for (auto& fd : fds) {
@@ -261,7 +261,7 @@ void RemoveInvalidFds(const std::shared_ptr<const AbstractLqpNode>& lqp, std::ve
                         *  b) are nullable
                         */
                        for (const auto& fd_determinant_expression : fd.determinant_expressions) {
-                         // TODO(julianmenzler): C++20: Replace with .contains
+                         // TODO(anyone): C++20: Replace with .contains
                          if (output_expressions_set.find(fd_determinant_expression) == output_expressions_set.end() ||
                              lqp->IsColumnNullable(lqp->GetColumnId(*fd_determinant_expression))) {
                            return true;

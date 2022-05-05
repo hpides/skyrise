@@ -83,7 +83,7 @@ std::shared_ptr<LqpUniqueConstraints> MockNode::UniqueConstraints() const {
     const auto& key_constraint_column_ids = table_key_constraint.Columns();
     if (std::any_of(pruned_column_ids_.cbegin(), pruned_column_ids_.cend(),
                     [&key_constraint_column_ids](const auto& pruned_column_id) {
-                      // TODO(julianmenzler): C++20: Replace with .contains
+                      // TODO(anyone): C++20: Replace with .contains
                       return key_constraint_column_ids.find(pruned_column_id) != key_constraint_column_ids.end();
                     })) {
       continue;

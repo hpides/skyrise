@@ -148,7 +148,7 @@ std::vector<FunctionalDependency> AbstractLqpNode::FunctionalDependencies() cons
       Assert(inserted, "FDs with the same set of determinant expressions should be merged.");
 
       for (const auto& fd_determinant_expression : fd.determinant_expressions) {
-        // TODO(julianmenzler): C++20: Replace with .contains
+        // TODO(anyone): C++20: Replace with .contains
         Assert(output_expressions_set.find(fd_determinant_expression) != output_expressions_set.end(),
                "Expected FD's determinant expressions to be a subset of the node's output expressions.");
         Assert(!IsColumnNullable(GetColumnId(*fd_determinant_expression)),
@@ -156,7 +156,7 @@ std::vector<FunctionalDependency> AbstractLqpNode::FunctionalDependencies() cons
       }
       Assert(std::all_of(fd.dependent_expressions.cbegin(), fd.dependent_expressions.cend(),
                          [&output_expressions_set](const auto& fd_dependent_expression) {
-                           // TODO(julianmenzler): C++20: Replace with .contains
+                           // TODO(anyone): C++20: Replace with .contains
                            return output_expressions_set.find(fd_dependent_expression) != output_expressions_set.end();
                          }),
              "Expected the FD's dependent expressions to be a subset of the node's output expressions.");
