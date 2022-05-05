@@ -12,7 +12,7 @@ namespace {
 
 using namespace skyrise;  // NOLINT(google-build-using-namespace)
 
-void lqp_create_node_mapping_impl(LqpNodeMapping& mapping, const std::shared_ptr<AbstractLqpNode>& lhs,
+void LqpCreateNodeMapping_impl(LqpNodeMapping& mapping, const std::shared_ptr<AbstractLqpNode>& lhs,
                                   const std::shared_ptr<AbstractLqpNode>& rhs) {
   if (!lhs && !rhs) {
     return;
@@ -29,8 +29,8 @@ void lqp_create_node_mapping_impl(LqpNodeMapping& mapping, const std::shared_ptr
 
   mapping[lhs] = rhs;
 
-  lqp_create_node_mapping_impl(mapping, lhs->LeftInput(), rhs->LeftInput());
-  lqp_create_node_mapping_impl(mapping, lhs->RightInput(), rhs->RightInput());
+  LqpCreateNodeMapping_impl(mapping, lhs->LeftInput(), rhs->LeftInput());
+  LqpCreateNodeMapping_impl(mapping, lhs->RightInput(), rhs->RightInput());
 }
 
 std::optional<LqpMismatch> lqp_find_structure_mismatch(const std::shared_ptr<const AbstractLqpNode>& lhs,
@@ -50,7 +50,7 @@ std::optional<LqpMismatch> lqp_find_structure_mismatch(const std::shared_ptr<con
   return lqp_find_structure_mismatch(lhs->RightInput(), rhs->RightInput());
 }
 
-std::optional<LqpMismatch> lqp_find_subplan_mismatch_impl(const LqpNodeMapping& node_mapping,
+std::optional<LqpMismatch> LqpFindSubplanMismatch_impl(const LqpNodeMapping& node_mapping,
                                                           const std::shared_ptr<const AbstractLqpNode>& lhs,
                                                           const std::shared_ptr<const AbstractLqpNode>& rhs) {
   if (!lhs && !rhs) {
@@ -60,26 +60,26 @@ std::optional<LqpMismatch> lqp_find_subplan_mismatch_impl(const LqpNodeMapping& 
     return LqpMismatch(lhs, rhs);
   }
 
-  auto mismatch_left = lqp_find_subplan_mismatch_impl(node_mapping, lhs->LeftInput(), rhs->LeftInput());
+  auto mismatch_left = LqpFindSubplanMismatch_impl(node_mapping, lhs->LeftInput(), rhs->LeftInput());
   if (mismatch_left) {
     return mismatch_left;
   }
 
-  return lqp_find_subplan_mismatch_impl(node_mapping, lhs->RightInput(), rhs->RightInput());
+  return LqpFindSubplanMismatch_impl(node_mapping, lhs->RightInput(), rhs->RightInput());
 }
 
 }  // namespace
 
 namespace skyrise {
 
-LqpNodeMapping lqp_create_node_mapping(const std::shared_ptr<AbstractLqpNode>& lhs,
+LqpNodeMapping LqpCreateNodeMapping(const std::shared_ptr<AbstractLqpNode>& lhs,
                                        const std::shared_ptr<AbstractLqpNode>& rhs) {
   LqpNodeMapping mapping;
-  lqp_create_node_mapping_impl(mapping, lhs, rhs);
+  LqpCreateNodeMapping_impl(mapping, lhs, rhs);
   return mapping;
 }
 
-std::optional<LqpMismatch> lqp_find_subplan_mismatch(const std::shared_ptr<const AbstractLqpNode>& lhs,
+std::optional<LqpMismatch> LqpFindSubplanMismatch(const std::shared_ptr<const AbstractLqpNode>& lhs,
                                                      const std::shared_ptr<const AbstractLqpNode>& rhs) {
   // Check for type/structural mismatched
   auto mismatch = lqp_find_structure_mismatch(lhs, rhs);
@@ -87,13 +87,13 @@ std::optional<LqpMismatch> lqp_find_subplan_mismatch(const std::shared_ptr<const
     return mismatch;
   }
 
-  // For lqp_create_node_mapping() we need mutable pointers - but won't use them to manipulate, promised.
+  // For LqpCreateNodeMapping() we need mutable pointers - but won't use them to manipulate, promised.
   // It's just that NodeMapping has takes a mutable ptr in as the value type
   const auto mutable_lhs = std::const_pointer_cast<AbstractLqpNode>(lhs);
   const auto mutable_rhs = std::const_pointer_cast<AbstractLqpNode>(rhs);
-  const auto node_mapping = lqp_create_node_mapping(mutable_lhs, mutable_rhs);
+  const auto node_mapping = LqpCreateNodeMapping(mutable_lhs, mutable_rhs);
 
-  return lqp_find_subplan_mismatch_impl(node_mapping, lhs, rhs);
+  return LqpFindSubplanMismatch_impl(node_mapping, lhs, rhs);
 }
 
 std::vector<std::shared_ptr<AbstractLqpNode>> LqpFindNodesByType(const std::shared_ptr<AbstractLqpNode>& lqp,
@@ -109,7 +109,7 @@ std::vector<std::shared_ptr<AbstractLqpNode>> LqpFindNodesByType(const std::shar
   return nodes;
 }
 
-std::vector<std::shared_ptr<AbstractLqpNode>> lqp_find_leaves(const std::shared_ptr<AbstractLqpNode>& lqp) {
+std::vector<std::shared_ptr<AbstractLqpNode>> LqpFindLeaves(const std::shared_ptr<AbstractLqpNode>& lqp) {
   std::vector<std::shared_ptr<AbstractLqpNode>> nodes;
   VisitLqp(lqp, [&](const auto& node) {
     if (node->InputNodeCount() > 0) {
@@ -123,7 +123,7 @@ std::vector<std::shared_ptr<AbstractLqpNode>> lqp_find_leaves(const std::shared_
   return nodes;
 }
 
-ExpressionUnorderedSet find_column_expressions(const AbstractLqpNode& lqp_node,
+ExpressionUnorderedSet FindColumnExpressions(const AbstractLqpNode& lqp_node,
                                                const std::unordered_set<ColumnId>& column_ids) {
   DebugAssert(lqp_node.Type() == LqpNodeType::kStoredTable || lqp_node.Type() == LqpNodeType::kMock,
               "Did not expect other node types than StoredTableNode, StaticTableNode and MockNode.");
@@ -147,7 +147,7 @@ ExpressionUnorderedSet find_column_expressions(const AbstractLqpNode& lqp_node,
   return column_expressions;
 }
 
-bool contains_matching_unique_constraint(const std::shared_ptr<LqpUniqueConstraints>& unique_constraints,
+bool ContainsMatchingUniqueConstraint(const std::shared_ptr<LqpUniqueConstraints>& unique_constraints,
                                          const ExpressionUnorderedSet& expressions) {
   DebugAssert(!unique_constraints->empty(), "Invalid input: Set of unique constraints should not be empty.");
   DebugAssert(!expressions.empty(), "Invalid input: Set of expressions should not be empty.");
@@ -168,7 +168,7 @@ bool contains_matching_unique_constraint(const std::shared_ptr<LqpUniqueConstrai
   return false;
 }
 
-std::vector<FunctionalDependency> fds_from_unique_constraints(
+std::vector<FunctionalDependency> FdsFromUniqueConstraints(
     const std::shared_ptr<const AbstractLqpNode>& lqp,
     const std::shared_ptr<LqpUniqueConstraints>& unique_constraints) {
   Assert(!unique_constraints->empty(), "Did not expect empty vector of unique constraints");
@@ -222,7 +222,7 @@ std::vector<FunctionalDependency> fds_from_unique_constraints(
   return fds;
 }
 
-void remove_invalid_fds(const std::shared_ptr<const AbstractLqpNode>& lqp, std::vector<FunctionalDependency>& fds) {
+void RemoveInvalidFds(const std::shared_ptr<const AbstractLqpNode>& lqp, std::vector<FunctionalDependency>& fds) {
   if (fds.empty()) {
     return;
   }

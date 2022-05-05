@@ -145,7 +145,7 @@ TEST_F(LqpUtilsTest, LqpFindLeaves) {
       dummy_table_node));
   // clang-format on
 
-  const auto leaf_nodes = lqp_find_leaves(lqp);
+  const auto leaf_nodes = LqpFindLeaves(lqp);
   ASSERT_EQ(leaf_nodes.size(), 3);
   EXPECT_EQ(leaf_nodes.at(0), node_b);
   EXPECT_EQ(leaf_nodes.at(1), dummy_table_node);

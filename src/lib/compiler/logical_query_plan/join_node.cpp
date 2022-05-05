@@ -127,10 +127,10 @@ std::shared_ptr<LqpUniqueConstraints> JoinNode::_output_unique_constraints(
   // Check uniqueness of join columns
   bool left_operand_is_unique =
       !left_unique_constraints->empty() &&
-      contains_matching_unique_constraint(left_unique_constraints, {join_predicate->LeftOperand()});
+      ContainsMatchingUniqueConstraint(left_unique_constraints, {join_predicate->LeftOperand()});
   bool right_operand_is_unique =
       !right_unique_constraints->empty() &&
-      contains_matching_unique_constraint(right_unique_constraints, {join_predicate->RightOperand()});
+      ContainsMatchingUniqueConstraint(right_unique_constraints, {join_predicate->RightOperand()});
 
   if (left_operand_is_unique && right_operand_is_unique) {
     // Due to the one-to-one relationship, the constraints of both sides remain valid.
@@ -203,7 +203,7 @@ std::vector<FunctionalDependency> JoinNode::NonTrivialFunctionalDependencies() c
   // Outer joins lead to nullable columns, which may invalidate some FDs
   if (!fds_out.empty() &&
       (join_mode == JoinMode::kFullOuter || join_mode == JoinMode::kLeftOuter || join_mode == JoinMode::kRightOuter)) {
-    remove_invalid_fds(SharedFromBase(), fds_out);
+    RemoveInvalidFds(SharedFromBase(), fds_out);
   }
 
   /**

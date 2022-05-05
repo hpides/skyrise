@@ -42,7 +42,7 @@ TEST_F(AliasNodeTest, NodeExpressions) {
 
 TEST_F(AliasNodeTest, ShallowEqualsAndCopy) {
   const auto alias_node_copy = alias_node_->DeepCopy();
-  const auto node_mapping = lqp_create_node_mapping(alias_node_, alias_node_copy);
+  const auto node_mapping = LqpCreateNodeMapping(alias_node_, alias_node_copy);
 
   EXPECT_TRUE(alias_node_->ShallowEquals(*alias_node_copy, node_mapping));
 }

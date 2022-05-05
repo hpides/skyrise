@@ -459,7 +459,7 @@ TEST_F(JoinNodeTest, FunctionalDependenciesUnify) {
   EXPECT_EQ(non_trivial_fds.size(), 1);
   EXPECT_EQ(non_trivial_fds.at(0), fd_a_b);
 
-  const auto& trivial_fds = fds_from_unique_constraints(join_node, join_node->UniqueConstraints());
+  const auto& trivial_fds = FdsFromUniqueConstraints(join_node, join_node->UniqueConstraints());
   EXPECT_EQ(trivial_fds.size(), 3);
   EXPECT_EQ(trivial_fds.at(0), expected_fd_a_b);
   EXPECT_EQ(trivial_fds.at(1), expected_fd_c);

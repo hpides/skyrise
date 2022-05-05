@@ -141,7 +141,7 @@ std::shared_ptr<LqpUniqueConstraints> AggregateNode::UniqueConstraints() const {
                 std::inserter(group_by_columns, group_by_columns.begin()));
 
     // Make sure, we do not add an already existing or a superset unique constraint.
-    if (unique_constraints->empty() || !contains_matching_unique_constraint(unique_constraints, group_by_columns)) {
+    if (unique_constraints->empty() || !ContainsMatchingUniqueConstraint(unique_constraints, group_by_columns)) {
       unique_constraints->emplace_back(group_by_columns);
     }
   }
@@ -165,7 +165,7 @@ std::vector<FunctionalDependency> AggregateNode::NonTrivialFunctionalDependencie
 
   // In AggregateNode, some expressions get wrapped inside of AggregateExpressions. Therefore, we have to discard
   // all FDs whose expressions are no longer part of the node's output expressions.
-  remove_invalid_fds(SharedFromBase(), non_trivial_fds);
+  RemoveInvalidFds(SharedFromBase(), non_trivial_fds);
 
   return non_trivial_fds;
 }

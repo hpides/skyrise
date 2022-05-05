@@ -110,7 +110,7 @@ std::shared_ptr<LqpUniqueConstraints> StoredTableNode::UniqueConstraints() const
     }
 
     // Search for expressions representing the key constraint's ColumnIds
-    const auto& column_expressions = find_column_expressions(*this, table_key_constraint.Columns());
+    const auto& column_expressions = FindColumnExpressions(*this, table_key_constraint.Columns());
     DebugAssert(column_expressions.size() == table_key_constraint.Columns().size(),
                 "Unexpected count of column expressions.");
 

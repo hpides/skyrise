@@ -64,7 +64,7 @@ std::vector<FunctionalDependency> ProjectionNode::NonTrivialFunctionalDependenci
   auto non_trivial_fds = LeftInput()->NonTrivialFunctionalDependencies();
 
   // Currently, we remove non-trivial FDs whose expressions are no longer part of the node's output expressions.
-  remove_invalid_fds(SharedFromBase(), non_trivial_fds);
+  RemoveInvalidFds(SharedFromBase(), non_trivial_fds);
 
   /**
    * Future Work: By analyzing the output expressions in more depth, we can save some of the input FDs. For example:

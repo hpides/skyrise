@@ -21,7 +21,7 @@ using LqpMismatch = std::pair<std::shared_ptr<const AbstractLqpNode>, std::share
 /**
  * For two equally structured LQPs lhs and rhs, create a mapping for each node in lhs pointing to its equivalent in rhs.
  */
-LqpNodeMapping lqp_create_node_mapping(const std::shared_ptr<AbstractLqpNode>& lhs,
+LqpNodeMapping LqpCreateNodeMapping(const std::shared_ptr<AbstractLqpNode>& lhs,
                                        const std::shared_ptr<AbstractLqpNode>& rhs);
 
 /**
@@ -29,7 +29,7 @@ LqpNodeMapping lqp_create_node_mapping(const std::shared_ptr<AbstractLqpNode>& l
  * @return std::nullopt if the LQPs were equal. A pair of a node in this LQP and a node in the rhs LQP that were first
  *         discovered to differ.
  */
-std::optional<LqpMismatch> lqp_find_subplan_mismatch(const std::shared_ptr<const AbstractLqpNode>& lhs,
+std::optional<LqpMismatch> LqpFindSubplanMismatch(const std::shared_ptr<const AbstractLqpNode>& lhs,
                                                      const std::shared_ptr<const AbstractLqpNode>& rhs);
 
 enum class LqpVisitation { kVisitInputs, kDoNotVisitInputs };
@@ -112,34 +112,34 @@ std::vector<std::shared_ptr<AbstractLqpNode>> LqpFindNodesByType(const std::shar
 /**
  * Traverses @param lqp from the top to the bottom and @returns all leaf nodes.
  */
-std::vector<std::shared_ptr<AbstractLqpNode>> lqp_find_leaves(const std::shared_ptr<AbstractLqpNode>& lqp);
+std::vector<std::shared_ptr<AbstractLqpNode>> LqpFindLeaves(const std::shared_ptr<AbstractLqpNode>& lqp);
 
 /**
  * @return A set of column expressions created by the given @param lqp_node, matching the given @param column_ids.
  *         This is a helper method that maps column ids from tables to the matching output expressions. Conceptually,
  *         it only works on data source nodes. Currently, these are StoredTableNodes, StaticTableNodes and MockNodes.
  */
-ExpressionUnorderedSet find_column_expressions(const AbstractLqpNode& lqp_node,
+ExpressionUnorderedSet FindColumnExpressions(const AbstractLqpNode& lqp_node,
                                                const std::unordered_set<ColumnId>& column_ids);
 
 /**
  * @return True, if there is unique constraint in the given set of @param unique_constraints matching the given
  *         set of expressions. A unique constraint matches if it covers a subset of @param expressions.
  */
-bool contains_matching_unique_constraint(const std::shared_ptr<LqpUniqueConstraints>& unique_constraints,
+bool ContainsMatchingUniqueConstraint(const std::shared_ptr<LqpUniqueConstraints>& unique_constraints,
                                          const ExpressionUnorderedSet& expressions);
 
 /**
  * @return A set of FDs, derived from the given @param unique_constraints and based on the output expressions of the
  *         given @param lqp node.
  */
-std::vector<FunctionalDependency> fds_from_unique_constraints(
+std::vector<FunctionalDependency> FdsFromUniqueConstraints(
     const std::shared_ptr<const AbstractLqpNode>& lqp, const std::shared_ptr<LqpUniqueConstraints>& unique_constraints);
 
 /**
  * This is a helper method that removes invalid or unnecessary FDs from the given input set @param fds by looking at
  * the @param lqp node's output expressions.
  */
-void remove_invalid_fds(const std::shared_ptr<const AbstractLqpNode>& lqp, std::vector<FunctionalDependency>& fds);
+void RemoveInvalidFds(const std::shared_ptr<const AbstractLqpNode>& lqp, std::vector<FunctionalDependency>& fds);
 
 }  // namespace skyrise

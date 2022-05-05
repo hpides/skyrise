@@ -132,7 +132,7 @@ bool AbstractLqpNode::HasMatchingUniqueConstraint(const ExpressionUnorderedSet& 
     return false;
   }
 
-  return contains_matching_unique_constraint(unique_constraints, expressions);
+  return ContainsMatchingUniqueConstraint(unique_constraints, expressions);
 }
 
 std::vector<FunctionalDependency> AbstractLqpNode::FunctionalDependencies() const {
@@ -170,7 +170,7 @@ std::vector<FunctionalDependency> AbstractLqpNode::FunctionalDependencies() cons
     return non_trivial_fds;
   }
 
-  auto trivial_fds = fds_from_unique_constraints(SharedFromBase(), unique_constraints);
+  auto trivial_fds = FdsFromUniqueConstraints(SharedFromBase(), unique_constraints);
 
   // (3) Merge and return FDs
   return UnionFds(non_trivial_fds, trivial_fds);
@@ -190,7 +190,7 @@ bool AbstractLqpNode::operator==(const AbstractLqpNode& rhs) const {
   if (this == &rhs) {
     return true;
   }
-  return !lqp_find_subplan_mismatch(SharedFromBase(), rhs.SharedFromBase());
+  return !LqpFindSubplanMismatch(SharedFromBase(), rhs.SharedFromBase());
 }
 
 bool AbstractLqpNode::operator!=(const AbstractLqpNode& rhs) const { return !operator==(rhs); }

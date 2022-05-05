@@ -97,7 +97,7 @@ class AbstractLqpNode : public AbstractPlanNode<AbstractLqpNode> {
   /**
    * @return True, if there is a unique constraint matching the given subset of output expressions.
    *         (i.e., the rows are guaranteed to be unique). This is preferred over calling
-   *         contains_matching_unique_constraint(UniqueConstraints(), ...) as it performs additional sanity
+   *         ContainsMatchingUniqueConstraint(UniqueConstraints(), ...) as it performs additional sanity
    *         checks.
    */
   bool HasMatchingUniqueConstraint(const ExpressionUnorderedSet& expressions) const;
