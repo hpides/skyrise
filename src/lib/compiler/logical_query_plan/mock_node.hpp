@@ -30,7 +30,7 @@ class MockNode : public EnableMakeForPlanNode<MockNode, AbstractLqpNode>, public
 
   std::shared_ptr<LqpColumnExpression> GetColumn(const std::string& column_name) const;
 
-  const ColumnDefinitions& ColumnDefinitions() const;
+  const ColumnDefinitions& GetColumnDefinitions() const;
 
   std::vector<std::shared_ptr<AbstractExpression>> OutputExpressions() const override;
   bool IsColumnNullable(const ColumnId column_id) const override;

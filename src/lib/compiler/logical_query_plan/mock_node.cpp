@@ -20,7 +20,7 @@ MockNode::MockNode(const ColumnDefinitions& column_definitions, const std::optio
     : AbstractLqpNode(LqpNodeType::kMock), name(init_name), column_definitions_(column_definitions) {}
 
 std::shared_ptr<LqpColumnExpression> MockNode::GetColumn(const std::string& column_name) const {
-  const auto& column_definitions = this->ColumnDefinitions();
+  const auto& column_definitions = this->GetColumnDefinitions();
 
   for (ColumnId column_id = 0; column_id < column_definitions.size(); ++column_id) {
     if (column_definitions[column_id].second == column_name) {
@@ -31,7 +31,7 @@ std::shared_ptr<LqpColumnExpression> MockNode::GetColumn(const std::string& colu
   Fail("Couldn't find column named '"s + column_name + "' in MockNode");
 }
 
-const MockNode::ColumnDefinitions& MockNode::ColumnDefinitions() const { return column_definitions_; }
+const MockNode::ColumnDefinitions& MockNode::GetColumnDefinitions() const { return column_definitions_; }
 
 std::vector<std::shared_ptr<AbstractExpression>> MockNode::OutputExpressions() const {
   // Need to initialize the expressions lazily because they will have a weak_ptr to this node and we can't obtain that
