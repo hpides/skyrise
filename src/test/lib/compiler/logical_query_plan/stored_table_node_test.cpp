@@ -115,7 +115,7 @@ TEST_F(StoredTableNodeTest, FunctionalDependenciesNone) {
 TEST_F(StoredTableNodeTest, FunctionalDependenciesSingle) {
   auto table_schema = mock_catalog_->GetEditableTableSchema("t_a");
   table_schema->AddKeyConstraint({{a_->original_column_id_}, KeyConstraintType::kUnique});
-  ASSERT_TRUE(mock_catalog_->GetTableSchema()->KeyConstraints().size(), 1);
+  ASSERT_EQ(mock_catalog_->GetTableSchema()->KeyConstraints().size(), 1);
 
   const auto& fds = stored_table_node_->FunctionalDependencies();
   const FunctionalDependency fd_expected({a_}, {b_, c_});
