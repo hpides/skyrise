@@ -241,7 +241,7 @@ TEST_F(StoredTableNodeTest, UniqueConstraints) {
   const TableKeyConstraint key_constraint_c({ColumnId{2}}, KeyConstraintType::kUnique);
   table_schema->AddKeyConstraint(key_constraint_a_b);
   table_schema->AddKeyConstraint(key_constraint_c);
-  ASSERT_TRUE(table_schema->KeyConstraints().size(), 2);
+  ASSERT_EQ(table_schema->KeyConstraints().size(), 2);
 
   const auto& unique_constraints = stored_table_node_->UniqueConstraints();
 
