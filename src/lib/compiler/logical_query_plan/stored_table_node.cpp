@@ -104,7 +104,7 @@ std::shared_ptr<LqpUniqueConstraints> StoredTableNode::UniqueConstraints() const
     const auto& key_constraint_column_ids = table_key_constraint.Columns();
     std::cout << "KeyConstraint ColumnIds: " << std::vector<ColumnId>(key_constraint_column_ids.cbegin(), key_constraint_column_ids.cend())
               << std::endl;
-    if (std::none_of(pruned_column_ids_.cbegin(), pruned_column_ids_.cend(),
+    if (std::any_of(pruned_column_ids_.cbegin(), pruned_column_ids_.cend(),
                     [&key_constraint_column_ids](const auto& pruned_column_id) {
                       // TODO(anyone): C++20: Replace with .contains
                       return (key_constraint_column_ids.find(pruned_column_id) != key_constraint_column_ids.end());
