@@ -11,6 +11,7 @@
 #include "expression/lqp_column_expression.hpp"
 #include "lqp_utils.hpp"
 #include "utils/assert.hpp"
+#include "types.hpp"
 
 namespace skyrise {
 
