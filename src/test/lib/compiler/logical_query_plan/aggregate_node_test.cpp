@@ -130,9 +130,9 @@ TEST_F(AggregateNodeTest, UniqueConstraintsAdd) {
 }
 
 TEST_F(AggregateNodeTest, UniqueConstraintsForwardingSimple) {
-  const auto key_constraint_b = TableKeyConstraint{{b_->original_column_id_}, KeyConstraintType::kUnique};
-  const auto key_constraint_c = TableKeyConstraint{{c_->original_column_id_}, KeyConstraintType::kUnique};
-  mock_node_->set_key_constraints({key_constraint_b, key_constraint_c});
+  const TableKeyConstraint key_constraint_b({b_->original_column_id_}, KeyConstraintType::kUnique});
+  const TableKeyConstraint key_constraint_c({c_->original_column_id_}, KeyConstraintType::kUnique});
+  mock_node_->SetKeyConstraints({key_constraint_b, key_constraint_c});
   EXPECT_EQ(mock_node_->UniqueConstraints()->size(), 2);
 
   const auto aggregate_c = Sum_(c_);
@@ -152,9 +152,9 @@ TEST_F(AggregateNodeTest, UniqueConstraintsForwardingSimple) {
 }
 
 TEST_F(AggregateNodeTest, UniqueConstraintsForwardingAnyAggregates) {
-  const auto key_constraint_b = TableKeyConstraint{{b_->original_column_id_}, KeyConstraintType::kUnique};
-  const auto key_constraint_c = TableKeyConstraint{{c_->original_column_id_}, KeyConstraintType::kUnique};
-  mock_node_->set_key_constraints({key_constraint_b, key_constraint_c});
+  const TableKeyConstraint key_constraint_b = ({b_->original_column_id_}, KeyConstraintType::kUnique});
+  const TableKeyConstraint key_constraint_c = ({c_->original_column_id_}, KeyConstraintType::kUnique});
+  mock_node_->SetKeyConstraints({key_constraint_b, key_constraint_c});
   EXPECT_EQ(mock_node_->UniqueConstraints()->size(), 2);
 
   const auto aggregate_b = Any_(b_);
@@ -174,14 +174,14 @@ TEST_F(AggregateNodeTest, UniqueConstraintsForwardingAnyAggregates) {
   EXPECT_EQ(unique_constraints->size(), 2);
   // In-depth check
   EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(key_constraint_b, unique_constraints));
-  const auto key_constraint_group_by = TableKeyConstraint{{a_->original_column_id_}, KeyConstraintType::kUnique};
+  const TableKeyConstraint key_constraint_group_by({a_->original_column_id_}, KeyConstraintType::kUnique);
   EXPECT_TRUE(FindUniqueConstraintByKeyConstraint(key_constraint_group_by, unique_constraints));
 }
 
 TEST_F(AggregateNodeTest, UniqueConstraintsNoDuplicates) {
   // Prepare single unique constraint
-  const auto table_key_constraint = TableKeyConstraint{{a_->original_column_id_}, KeyConstraintType::kUnique};
-  mock_node_->set_key_constraints({table_key_constraint});
+  const TableKeyConstraint table_key_constraint({a_->original_column_id_}, KeyConstraintType::kUnique);
+  mock_node_->SetKeyConstraints({table_key_constraint});
   EXPECT_EQ(mock_node_->UniqueConstraints()->size(), 1);
 
   const auto aggregate1 = Sum_(b_);
@@ -204,8 +204,8 @@ TEST_F(AggregateNodeTest, UniqueConstraintsNoDuplicates) {
 
 TEST_F(AggregateNodeTest, UniqueConstraintsNoSupersets) {
   // Prepare single unique constraint
-  const auto table_key_constraint = TableKeyConstraint{{a_->original_column_id_}, KeyConstraintType::kUnique};
-  mock_node_->set_key_constraints({table_key_constraint});
+  const TableKeyConstraint table_key_constraint({a_->original_column_id_}, KeyConstraintType::kUnique);
+  mock_node_->SetKeyConstraints({table_key_constraint});
   EXPECT_EQ(mock_node_->UniqueConstraints()->size(), 1);
 
   const auto aggregate = Sum_(c_);
@@ -257,16 +257,14 @@ TEST_F(AggregateNodeTest, FunctionalDependenciesForwarding) {
 
 TEST_F(AggregateNodeTest, FunctionalDependenciesAdd) {
   // The group-by columns form a new candidate key / unique constraint from which we should derive a trivial FD.
-  mock_node_->set_key_constraints({});
+  mock_node_->SetKeyConstraints({});
   mock_node_->set_non_trivial_functional_dependencies({});
 
   const auto& fds = aggregate_node_->FunctionalDependencies();
   EXPECT_EQ(fds.size(), 1);
   const auto& fd = fds.at(0);
-  const auto expected_determinant_expressions =
-      ExpressionUnorderedSet{group_by_expressions_.cbegin(), group_by_expressions_.cend()};
-  const auto expected_dependent_expressions =
-      ExpressionUnorderedSet{aggregate_expressions_.cbegin(), aggregate_expressions_.cend()};
+  const ExpressionUnorderedSet expected_determinant_expressions(group_by_expressions_.cbegin(), group_by_expressions_.cend());
+  const ExpressionUnorderedSet expected_dependent_expressions(aggregate_expressions_.cbegin(), aggregate_expressions_.cend());
   EXPECT_EQ(fd.determinant_expressions, expected_determinant_expressions);
   EXPECT_EQ(fd.dependent_expressions, expected_dependent_expressions);
 }

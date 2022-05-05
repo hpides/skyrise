@@ -76,7 +76,7 @@ TEST_F(ProjectionNodeTest, UniqueConstraintsEmpty) {
 
 TEST_F(ProjectionNodeTest, UniqueConstraintsReorderedColumns) {
   // Add constraints to MockNode
-  mock_node_->set_key_constraints({*key_constraint_a_b_pk_, *key_constraint_b_});
+  mock_node_->SetKeyConstraints({*key_constraint_a_b_pk_, *key_constraint_b_});
   EXPECT_EQ(mock_node_->UniqueConstraints()->size(), 2);
 
   {
@@ -106,7 +106,7 @@ TEST_F(ProjectionNodeTest, UniqueConstraintsReorderedColumns) {
 
 TEST_F(ProjectionNodeTest, UniqueConstraintsRemovedColumns) {
   // Prepare two unique constraints for MockNode
-  mock_node_->set_key_constraints({*key_constraint_a_b_pk_, *key_constraint_b_});
+  mock_node_->SetKeyConstraints({*key_constraint_a_b_pk_, *key_constraint_b_});
   EXPECT_EQ(mock_node_->UniqueConstraints()->size(), 2);
 
   // Test (a, b, c) -> (a, c) - no more constraints valid

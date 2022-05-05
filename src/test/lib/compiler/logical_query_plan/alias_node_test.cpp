@@ -58,7 +58,7 @@ TEST_F(AliasNodeTest, HashingAndEqualityCheck) {
       MockNode::Make(MockNode::ColumnDefinitions{{DataType::kInt, "a"}, {DataType::kFloat, "b"}}, "named");
   const auto expr_a = other_mock_node_->get_column("a");
   const auto expr_b = other_mock_node_->get_column("b");
-  const auto other_expressions = std::vector<std::shared_ptr<AbstractExpression>>{expr_a, expr_b};
+  const std::vector<std::shared_ptr<AbstractExpression>> other_expressions = {expr_a, expr_b};
   const auto alias_node_other_expressions = AliasNode::Make(other_expressions, aliases_, mock_node_);
   EXPECT_NE(*alias_node_, *alias_node_other_expressions);
   const auto alias_node_other_left_input = AliasNode::Make(expressions_, aliases_, other_mock_node_);
@@ -86,7 +86,7 @@ TEST_F(AliasNodeTest, UniqueConstraintsForwarding) {
   // Add constraints to MockNode
   const TableKeyConstraint key_constraint_a_b({ColumnId{0}, ColumnId{1}}, KeyConstraintType::kPrimaryKey);
   const TableKeyConstraint key_constraint_b({ColumnId{1}}, KeyConstraintType::kUnique);
-  mock_node_->set_key_constraints({key_constraint_a_b, key_constraint_b});
+  mock_node_->SetKeyConstraints({key_constraint_a_b, key_constraint_b});
 
   // Basic check
   const auto& unique_constraints = alias_node_->UniqueConstraints();

@@ -342,8 +342,8 @@ TEST_F(JoinNodeTest, FunctionalDependenciesForwardNonTrivialBothAndDerive) {
     const FunctionalDependency fd_x({t_b_x_}, {t_b_y_});
     mock_node_a_->set_non_trivial_functional_dependencies({fd_a});
     mock_node_b_->set_non_trivial_functional_dependencies({fd_x});
-    mock_node_a_->set_key_constraints({*key_constraint_b_c_});
-    mock_node_b_->set_key_constraints({*key_constraint_y_});
+    mock_node_a_->SetKeyConstraints({*key_constraint_b_c_});
+    mock_node_b_->SetKeyConstraints({*key_constraint_y_});
     const FunctionalDependency generated_fd_b_c({t_a_b_, t_a_c_}, {t_a_a_});
     const FunctionalDependency generated_fd_y({t_b_y_}, {t_b_x_});
 
@@ -373,8 +373,8 @@ TEST_F(JoinNodeTest, FunctionalDependenciesDeriveNone) {
    * forwarded. Consequently, we do not expect non-trivial FDs from the left or right input node's unique constraints
    * to be derived.
    */
-  mock_node_a_->set_key_constraints({*key_constraint_a_});
-  mock_node_b_->set_key_constraints({*key_constraint_x_});
+  mock_node_a_->SetKeyConstraints({*key_constraint_a_});
+  mock_node_b_->SetKeyConstraints({*key_constraint_x_});
 
   // MockNodes with non-trivial FDs
   const FunctionalDependency fd_b({t_a_b_}, {t_a_a_});
@@ -409,8 +409,8 @@ TEST_F(JoinNodeTest, FunctionalDependenciesDeriveLeftOnly) {
    * constraints of the left input node become discarded whereas the unique constraints of the right input node survive.
    * Therefore, we have to check whether left input node's trivial FDs become forwarded as non-trivial ones.
    */
-  mock_node_a_->set_key_constraints({*key_constraint_a_});
-  mock_node_b_->set_key_constraints({*key_constraint_x_});
+  mock_node_a_->SetKeyConstraints({*key_constraint_a_});
+  mock_node_b_->SetKeyConstraints({*key_constraint_x_});
   // clang-format off
   const auto& join_node =
   JoinNode::Make(JoinMode::kInner, Equals_(t_a_a_, t_b_y_),
@@ -430,11 +430,10 @@ TEST_F(JoinNodeTest, FunctionalDependenciesDeriveLeftOnly) {
 }
 
 TEST_F(JoinNodeTest, FunctionalDependenciesUnify) {
-  const auto key_constraint_a_b =
-      TableKeyConstraint{{t_a_a_->original_column_id_, t_a_b_->original_column_id_}, KeyConstraintType::kPrimaryKey};
-  const auto key_constraint_c = TableKeyConstraint{{t_a_c_->original_column_id_}, KeyConstraintType::kUnique};
-  mock_node_a_->set_key_constraints({key_constraint_a_b, key_constraint_c});
-  mock_node_b_->set_key_constraints({*key_constraint_x_});
+  const TableKeyConstraint key_constraint_a_b({t_a_a_->original_column_id_, t_a_b_->original_column_id_}, KeyConstraintType::kPrimaryKey);
+  const TableKeyConstraint key_constraint_c({t_a_c_->original_column_id_}, KeyConstraintType::kUnique);
+  mock_node_a_->SetKeyConstraints({key_constraint_a_b, key_constraint_c});
+  mock_node_b_->SetKeyConstraints({*key_constraint_x_});
 
   // The following FD is trivial since it can be derived from a unique constraint (PRIMARY KEY across a & b).
   // However, we define it as non-trivial anyway, to verify the conflict resolution when merging FDs later on.
@@ -482,8 +481,8 @@ TEST_F(JoinNodeTest, FunctionalDependenciesUnify) {
 }
 
 TEST_F(JoinNodeTest, UniqueConstraintsSemiAndAntiJoins) {
-  mock_node_a_->set_key_constraints({*key_constraint_a_, *key_constraint_b_c_});
-  mock_node_b_->set_key_constraints({*key_constraint_x_});
+  mock_node_a_->SetKeyConstraints({*key_constraint_a_, *key_constraint_b_c_});
+  mock_node_b_->SetKeyConstraints({*key_constraint_x_});
 
   for (const auto join_mode : {JoinMode::kSemi, JoinMode::kAntiNullAsTrue, JoinMode::kAntiNullAsFalse}) {
     // clang-format off
@@ -514,14 +513,14 @@ TEST_F(JoinNodeTest, UniqueConstraintsInnerAndOuterJoins) {
 
     // Case 1 – LEFT  table's join column (a) uniqueness : No
     //          RIGHT table's join column (y) uniqueness : No
-    mock_node_a_->set_key_constraints({*key_constraint_b_c_});
-    mock_node_b_->set_key_constraints({*key_constraint_x_});
+    mock_node_a_->SetKeyConstraints({*key_constraint_b_c_});
+    mock_node_b_->SetKeyConstraints({*key_constraint_x_});
     EXPECT_TRUE(join_node->UniqueConstraints()->empty());
 
     // Case 2 – LEFT  table's join column (a) uniqueness : Yes
     //          RIGHT table's join column (y) uniqueness : No
-    mock_node_a_->set_key_constraints({*key_constraint_a_, *key_constraint_b_c_});
-    mock_node_b_->set_key_constraints({*key_constraint_x_});
+    mock_node_a_->SetKeyConstraints({*key_constraint_a_, *key_constraint_b_c_});
+    mock_node_b_->SetKeyConstraints({*key_constraint_x_});
 
     // Expect unique constraints of RIGHT table to be forwarded
     auto join_unique_constraints = join_node->UniqueConstraints();
@@ -530,8 +529,8 @@ TEST_F(JoinNodeTest, UniqueConstraintsInnerAndOuterJoins) {
 
     // Case 3 – LEFT  table's join column (a) uniqueness : No
     //          RIGHT table's join column (y) uniqueness : Yes
-    mock_node_a_->set_key_constraints({*key_constraint_b_c_});
-    mock_node_b_->set_key_constraints({*key_constraint_x_, *key_constraint_y_});
+    mock_node_a_->SetKeyConstraints({*key_constraint_b_c_});
+    mock_node_b_->SetKeyConstraints({*key_constraint_x_, *key_constraint_y_});
 
     // Expect unique constraints of LEFT table (b_c) to be forwarded
     join_unique_constraints = join_node->UniqueConstraints();
@@ -540,8 +539,8 @@ TEST_F(JoinNodeTest, UniqueConstraintsInnerAndOuterJoins) {
 
     // Case 4 – LEFT  table's join column (a) uniqueness : Yes
     //          RIGHT table's join column (y) uniqueness : Yes
-    mock_node_a_->set_key_constraints({*key_constraint_a_, *key_constraint_b_c_});
-    mock_node_b_->set_key_constraints({*key_constraint_x_, *key_constraint_y_});
+    mock_node_a_->SetKeyConstraints({*key_constraint_a_, *key_constraint_b_c_});
+    mock_node_b_->SetKeyConstraints({*key_constraint_x_, *key_constraint_y_});
 
     // Expect unique constraints of both, LEFT (a, b_c) and RIGHT (x, y) table to be forwarded
     join_unique_constraints = join_node->UniqueConstraints();
@@ -558,8 +557,8 @@ TEST_F(JoinNodeTest, UniqueConstraintsInnerAndOuterJoins) {
 
 TEST_F(JoinNodeTest, UniqueConstraintsNonEquiJoin) {
   // Currently, we do not support unique constraint forwarding for Non-Equi- or Theta-Joins
-  mock_node_a_->set_key_constraints({*key_constraint_a_, *key_constraint_b_c_});
-  mock_node_b_->set_key_constraints({*key_constraint_x_, *key_constraint_y_});
+  mock_node_a_->SetKeyConstraints({*key_constraint_a_, *key_constraint_b_c_});
+  mock_node_b_->SetKeyConstraints({*key_constraint_x_, *key_constraint_y_});
   // clang-format off
   const auto theta_join_node =
   JoinNode::Make(JoinMode::kInner, GreaterThan_(t_a_a_, t_b_x_),
@@ -572,8 +571,8 @@ TEST_F(JoinNodeTest, UniqueConstraintsNonEquiJoin) {
 
 TEST_F(JoinNodeTest, UniqueConstraintsNonSemiNonAntiMultiPredicateJoin) {
   // Except for Semi- and Anti-Joins, we do not support forwarding of unique constraints for multi-predicate joins.
-  mock_node_a_->set_key_constraints({*key_constraint_a_, *key_constraint_b_c_});
-  mock_node_b_->set_key_constraints({*key_constraint_x_, *key_constraint_y_});
+  mock_node_a_->SetKeyConstraints({*key_constraint_a_, *key_constraint_b_c_});
+  mock_node_b_->SetKeyConstraints({*key_constraint_x_, *key_constraint_y_});
   // clang-format off
   const auto join_node =
   JoinNode::Make(JoinMode::kInner, ExpressionVector_(LessThan_(t_a_a_, t_b_x_), GreaterThan_(t_a_a_, t_b_y_)),
@@ -585,8 +584,8 @@ TEST_F(JoinNodeTest, UniqueConstraintsNonSemiNonAntiMultiPredicateJoin) {
 }
 
 TEST_F(JoinNodeTest, UniqueConstraintsCrossJoin) {
-  mock_node_a_->set_key_constraints({*key_constraint_a_, *key_constraint_b_c_});
-  mock_node_b_->set_key_constraints({*key_constraint_x_, *key_constraint_y_});
+  mock_node_a_->SetKeyConstraints({*key_constraint_a_, *key_constraint_b_c_});
+  mock_node_b_->SetKeyConstraints({*key_constraint_x_, *key_constraint_y_});
 
   EXPECT_TRUE(cross_join_node_->UniqueConstraints()->empty());
 }

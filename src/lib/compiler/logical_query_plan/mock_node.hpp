@@ -50,7 +50,7 @@ class MockNode : public EnableMakeForPlanNode<MockNode, AbstractLqpNode>, public
                           const AbstractExpression::DescriptionMode expression_mode) const override;
 
   // Pure container functionality: MockNode does not use key constraints internally.
-  void set_key_constraints(const TableKeyConstraints& key_constraints);
+  void SetKeyConstraints(const TableKeyConstraints& key_constraints);
   const TableKeyConstraints& key_constraints() const;
 
   void set_non_trivial_functional_dependencies(const std::vector<FunctionalDependency>& fds);

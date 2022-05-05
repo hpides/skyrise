@@ -36,7 +36,7 @@ class LqpUtilsTest : public ::testing::Test {
 
 TEST_F(LqpUtilsTest, VisitLqp) {
   // clang-format off
-   const auto expected_nodes = std::vector<std::shared_ptr<AbstractLqpNode>>{
+   const std::vector<std::shared_ptr<AbstractLqpNode>> expected_nodes = {
      PredicateNode::Make(GreaterThan_(a_a, 4)), UnionNode::Make(SetOperationMode::kAll),
      PredicateNode::Make(LessThan_(a_a, 4)), PredicateNode::Make(Equals_(a_a, 4)), node_a};
   // clang-format on
@@ -49,7 +49,7 @@ TEST_F(LqpUtilsTest, VisitLqp) {
 
   {
     // Visit AbstractLqpNode
-    auto actual_nodes = std::vector<std::shared_ptr<AbstractLqpNode>>{};
+    std::vector<std::shared_ptr<AbstractLqpNode>> actual_nodes;
     VisitLqp(expected_nodes[0], [&](const auto& node) {
       actual_nodes.emplace_back(node);
       return LqpVisitation::kVisitInputs;
@@ -72,7 +72,7 @@ TEST_F(LqpUtilsTest, VisitLqp) {
 
 TEST_F(LqpUtilsTest, VisitLqpUpwards) {
   // clang-format off
-   const auto expected_nodes = std::vector<std::shared_ptr<AbstractLqpNode>>{node_a,
+   const std::vector<std::shared_ptr<AbstractLqpNode>> expected_nodes = {node_a,
      PredicateNode::Make(GreaterThan_(a_a, 4)), PredicateNode::Make(LessThan_(a_a, 4)),
      UnionNode::Make(SetOperationMode::kAll), PredicateNode::Make(Equals_(a_a, 4))};
   // clang-format on
@@ -84,7 +84,7 @@ TEST_F(LqpUtilsTest, VisitLqpUpwards) {
   expected_nodes[2]->SetLeftInput(node_a);
 
   {
-    auto actual_nodes = std::vector<std::shared_ptr<AbstractLqpNode>>{};
+    std::vector<std::shared_ptr<AbstractLqpNode>> actual_nodes;
     VisitLqpUpwards(node_a, [&](const auto& node) {
       actual_nodes.emplace_back(node);
       return LqpUpwardVisitation::kVisitOutputs;

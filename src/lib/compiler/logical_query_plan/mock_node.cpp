@@ -129,7 +129,7 @@ std::string MockNode::Description(const DescriptionMode /* mode */,
   return stream.str();
 }
 
-void MockNode::set_key_constraints(const TableKeyConstraints& key_constraints) {
+void MockNode::SetKeyConstraints(const TableKeyConstraints& key_constraints) {
   table_key_constraints_ = key_constraints;
 }
 
@@ -157,7 +157,7 @@ size_t MockNode::OnShallowHash() const {
 
 std::shared_ptr<AbstractLqpNode> MockNode::OnShallowCopy(LqpNodeMapping& /* node_mapping */) const {
   const auto mock_node = MockNode::Make(column_definitions_, name);
-  mock_node->set_key_constraints(table_key_constraints_);
+  mock_node->SetKeyConstraints(table_key_constraints_);
   mock_node->set_non_trivial_functional_dependencies(functional_dependencies_);
   mock_node->SetPrunedColumnIds(pruned_column_ids_);
   return mock_node;

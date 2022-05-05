@@ -97,7 +97,7 @@ TEST_F(UnionNodeTest, FunctionalDependenciesUnionAllSimple) {
   const auto non_trivial_fd_c = FunctionalDependency({c_}, {b_});
 
   // Set FDs
-  mock_node1_->set_key_constraints({{{a_->original_column_id_}, KeyConstraintType::kUnique}});
+  mock_node1_->SetKeyConstraints({{{a_->original_column_id_}, KeyConstraintType::kUnique}});
   mock_node1_->set_non_trivial_functional_dependencies({non_trivial_fd_b, non_trivial_fd_c});
   EXPECT_EQ(mock_node1_->FunctionalDependencies().size(), 3);
   EXPECT_EQ(mock_node1_->FunctionalDependencies().at(0), non_trivial_fd_b);
