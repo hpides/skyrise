@@ -12,11 +12,11 @@
 
 namespace skyrise {
 
-LqpColumnExpression::LqpColumnExpression(const std::shared_ptr<const AbstractLqpNode>& init_original_node,
-                                         const ColumnId init_original_column_id)
+LqpColumnExpression::LqpColumnExpression(const std::shared_ptr<const AbstractLqpNode>& original_node,
+                                         const ColumnId original_column_id)
     : AbstractExpression(ExpressionType::kLqpColumn, {}),
-      original_node_(init_original_node),
-      original_column_id_(init_original_column_id) {}
+      original_node_(original_node),
+      original_column_id_(original_column_id) {}
 
 std::string LqpColumnExpression::Description(const DescriptionMode mode) const {
   // Even if the LQP is invalid, we still want to be able to print it as good as possible

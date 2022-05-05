@@ -37,7 +37,7 @@ using LqpNodeMapping = std::unordered_map<std::shared_ptr<const AbstractLqpNode>
 class AbstractLqpNode : public AbstractPlanNode<AbstractLqpNode> {
  public:
   AbstractLqpNode(const LqpNodeType node_type,
-                  const std::vector<std::shared_ptr<AbstractExpression>>& init_node_expressions = {});
+                  const std::vector<std::shared_ptr<AbstractExpression>>& node_expressions = {});
 
   LqpNodeType Type() const;
 

@@ -27,7 +27,7 @@ class JoinNode : public EnableMakeForPlanNode<JoinNode, AbstractLqpNode>, public
   JoinNode(const JoinMode join_mode, const std::shared_ptr<AbstractExpression>& join_predicate);
 
   // Constructor for multi predicated joins
-  JoinNode(const JoinMode join_mode, const std::vector<std::shared_ptr<AbstractExpression>>& init_join_predicates);
+  JoinNode(const JoinMode join_mode, const std::vector<std::shared_ptr<AbstractExpression>>& join_predicates);
 
   const std::string& Name() const override;
   using AbstractLqpNode::Description;

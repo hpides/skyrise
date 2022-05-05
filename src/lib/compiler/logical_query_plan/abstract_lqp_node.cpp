@@ -21,8 +21,8 @@ using namespace std::string_literals;  // NOLINT(google-build-using-namespace)
 namespace skyrise {
 
 AbstractLqpNode::AbstractLqpNode(LqpNodeType node_type,
-                                 const std::vector<std::shared_ptr<AbstractExpression>>& init_node_expressions)
-    : type_(node_type), node_expressions_(init_node_expressions) {}
+                                 const std::vector<std::shared_ptr<AbstractExpression>>& node_expressions)
+    : type_(node_type), node_expressions_(node_expressions) {}
 
 size_t AbstractLqpNode::Hash() const {
   size_t hash{0};

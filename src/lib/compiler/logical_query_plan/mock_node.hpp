@@ -26,7 +26,7 @@ class MockNode : public EnableMakeForPlanNode<MockNode, AbstractLqpNode>, public
  public:
   using ColumnDefinitions = std::vector<std::pair<DataType, std::string>>;
 
-  explicit MockNode(const ColumnDefinitions& column_definitions, const std::optional<std::string>& init_name = {});
+  explicit MockNode(const ColumnDefinitions& column_definitions, const std::optional<std::string>& name = {});
 
   std::shared_ptr<LqpColumnExpression> GetColumn(const std::string& column_name) const;
 
@@ -57,7 +57,7 @@ class MockNode : public EnableMakeForPlanNode<MockNode, AbstractLqpNode>, public
   // Returns the specified set of non-trivial FDs.
   std::vector<FunctionalDependency> NonTrivialFunctionalDependencies() const override;
 
-  std::optional<std::string> name;
+  std::optional<std::string> name_;
 
  protected:
   size_t OnShallowHash() const override;

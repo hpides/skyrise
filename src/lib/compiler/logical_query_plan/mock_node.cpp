@@ -16,8 +16,8 @@ using namespace std::string_literals;  // NOLINT(google-build-using-namespace)
 
 namespace skyrise {
 
-MockNode::MockNode(const ColumnDefinitions& column_definitions, const std::optional<std::string>& init_name)
-    : AbstractLqpNode(LqpNodeType::kMock), name(init_name), column_definitions_(column_definitions) {}
+MockNode::MockNode(const ColumnDefinitions& column_definitions, const std::optional<std::string>& name)
+    : AbstractLqpNode(LqpNodeType::kMock), name_(name), column_definitions_(column_definitions) {}
 
 std::shared_ptr<LqpColumnExpression> MockNode::GetColumn(const std::string& column_name) const {
   const auto& column_definitions = this->GetColumnDefinitions();
