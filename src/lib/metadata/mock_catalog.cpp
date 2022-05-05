@@ -75,6 +75,11 @@ bool MockCatalog::TableExists(const std::string& table_name) const {
 }
 
 std::shared_ptr<const TableSchema> MockCatalog::GetTableSchema(const std::string& table_name) const {
+  auto table_schema = GetNonConstTableSchema(table_name);
+  return std::const_pointer_cast<const TableSchema>(table_schema);
+}
+
+std::shared_ptr<TableSchema> MockCatalog::GetNonConstTableSchema(const std::string& table_name) const {
   auto table_name_to_table_schema_iter = table_name_to_table_schema_.find(table_name);
   Assert(table_name_to_table_schema_iter != table_name_to_table_schema_.end(),
          "Could not find TableSchema for table '" + table_name + "'.");

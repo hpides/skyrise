@@ -24,12 +24,13 @@ class MockCatalog : public AbstractCatalog {
 
   bool TableExists(const std::string& table_name) const override;
   std::shared_ptr<const TableSchema> GetTableSchema(const std::string& table_name) const override;
+  std::shared_ptr<TableSchema> GetNonConstTableSchema(const std::string& table_name) const;
 
   const std::string& TableBucketName(const std::string& table_name) const override;
   const std::vector<TablePartition>& GetTablePartitions(const std::string& table_name) const override;
 
  private:
-  std::unordered_map<std::string, std::shared_ptr<const TableSchema>> table_name_to_table_schema_;
+  std::unordered_map<std::string, std::shared_ptr<TableSchema>> table_name_to_table_schema_;
   std::unordered_map<std::string, const std::vector<TablePartition>> table_name_to_table_partitions_;
 };
 
