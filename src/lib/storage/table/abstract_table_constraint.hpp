@@ -20,6 +20,8 @@ class AbstractTableConstraint {
 
   AbstractTableConstraint(const AbstractTableConstraint&) = default;
   AbstractTableConstraint(AbstractTableConstraint&&) = default;
+  AbstractTableConstraint& operator=(const AbstractTableConstraint&) = default;
+  AbstractTableConstraint& operator=(AbstractTableConstraint&&) = default;
 
   virtual ~AbstractTableConstraint() = default;
 
@@ -36,7 +38,7 @@ class AbstractTableConstraint {
   virtual bool OnEquals(const AbstractTableConstraint& table_constraint) const = 0;
 
  private:
-  const std::unordered_set<ColumnId> columns_;
+  std::unordered_set<ColumnId> columns_;
 };
 
 }  // namespace skyrise
