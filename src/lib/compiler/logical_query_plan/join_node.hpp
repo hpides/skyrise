@@ -57,7 +57,7 @@ class JoinNode : public EnableMakeForPlanNode<JoinNode, AbstractLqpNode>, public
    */
   std::vector<FunctionalDependency> NonTrivialFunctionalDependencies() const override;
 
-  const std::vector<std::shared_ptr<AbstractExpression>>& join_predicates() const;
+  const std::vector<std::shared_ptr<AbstractExpression>>& JoinPredicates() const;
 
   JoinMode join_mode_;
 

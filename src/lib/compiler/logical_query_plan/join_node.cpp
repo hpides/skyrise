@@ -30,11 +30,10 @@ JoinNode::JoinNode(const JoinMode join_mode) : AbstractLqpNode(LqpNodeType::kJoi
 JoinNode::JoinNode(const JoinMode join_mode, const std::shared_ptr<AbstractExpression>& join_predicate)
     : JoinNode(join_mode, std::vector<std::shared_ptr<AbstractExpression>>{join_predicate}) {}
 
-JoinNode::JoinNode(const JoinMode join_mode,
-                   const std::vector<std::shared_ptr<AbstractExpression>>& join_predicates)
+JoinNode::JoinNode(const JoinMode join_mode, const std::vector<std::shared_ptr<AbstractExpression>>& join_predicates)
     : AbstractLqpNode(LqpNodeType::kJoin, join_predicates), join_mode_(join_mode) {
   Assert(join_mode_ != JoinMode::kCross, "Cross Joins take no predicate");
-  Assert(!join_predicates().empty(), "Non-Cross Joins require predicates");
+  Assert(!JoinPredicates().empty(), "Non-Cross Joins require predicates");
 }
 
 const std::string& JoinNode::Name() const {
@@ -49,7 +48,7 @@ std::string JoinNode::Description(const DescriptionMode mode,
   stream << "[" << Name() << "]" << separator;
   stream << "Mode: " << join_mode_;
 
-  for (const auto& predicate : join_predicates()) {
+  for (const auto& predicate : JoinPredicates()) {
     stream << separator;
     stream << "[" << predicate->Description(expression_mode) << "]";
   }
@@ -108,7 +107,7 @@ std::shared_ptr<LqpUniqueConstraints> JoinNode::_output_unique_constraints(
     return std::make_shared<LqpUniqueConstraints>();
   }
 
-  const auto predicates = join_predicates();
+  const auto predicates = JoinPredicates();
   if (predicates.empty() || predicates.size() > 1) {
     // No guarantees implemented yet for Cross Joins and multi-predicate joins
     return std::make_shared<LqpUniqueConstraints>();
@@ -118,7 +117,7 @@ std::shared_ptr<LqpUniqueConstraints> JoinNode::_output_unique_constraints(
                   join_mode_ == JoinMode::kRightOuter || join_mode_ == JoinMode::kFullOuter,
               "Unhandled JoinMode");
 
-  const auto join_predicate = std::dynamic_pointer_cast<BinaryPredicateExpression>(join_predicates().front());
+  const auto join_predicate = std::dynamic_pointer_cast<BinaryPredicateExpression>(JoinPredicates().front());
   if (!join_predicate || join_predicate->predicate_condition_ != PredicateCondition::kEquals) {
     // Also, no guarantees implemented yet for other join predicates than _equals() (Equi Join)
     return std::make_shared<LqpUniqueConstraints>();
@@ -241,13 +240,13 @@ bool JoinNode::IsColumnNullable(const ColumnId column_id) const {
   }
 }
 
-const std::vector<std::shared_ptr<AbstractExpression>>& JoinNode::join_predicates() const { return node_expressions_; }
+const std::vector<std::shared_ptr<AbstractExpression>>& JoinNode::JoinPredicates() const { return node_expressions_; }
 
 size_t JoinNode::OnShallowHash() const { return boost::hash_value(join_mode_); }
 
 std::shared_ptr<AbstractLqpNode> JoinNode::OnShallowCopy(LqpNodeMapping& node_mapping) const {
-  if (!join_predicates().empty()) {
-    return JoinNode::Make(join_mode_, ExpressionsCopyAndAdaptToDifferentLqp(join_predicates(), node_mapping));
+  if (!JoinPredicates().empty()) {
+    return JoinNode::Make(join_mode_, ExpressionsCopyAndAdaptToDifferentLqp(JoinPredicates(), node_mapping));
   } else {
     return JoinNode::Make(join_mode_);
   }
@@ -258,7 +257,7 @@ bool JoinNode::OnShallowEquals(const AbstractLqpNode& rhs, const LqpNodeMapping&
   if (join_mode_ != join_node.join_mode_) {
     return false;
   }
-  return ExpressionsEqualToExpressionsInDifferentLqp(join_predicates(), join_node.join_predicates(), node_mapping);
+  return ExpressionsEqualToExpressionsInDifferentLqp(JoinPredicates(), join_node.JoinPredicates(), node_mapping);
 }
 
 }  // namespace skyrise
