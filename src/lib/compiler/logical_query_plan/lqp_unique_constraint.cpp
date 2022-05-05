@@ -39,8 +39,8 @@ std::ostream& operator<<(std::ostream& stream, const LqpUniqueConstraint& unique
   std::vector<std::shared_ptr<AbstractExpression>> expressions_vector(unique_constraint.expressions.begin(),
                                                                       unique_constraint.expressions.end());
   stream << expressions_vector.at(0)->AsColumnName();
-  for (size_t expression_idx = 1; expression_idx < expressions_vector.size(); ++expression_idx) {
-    stream << ", " << expressions_vector[expression_idx]->AsColumnName();
+  for (size_t i = 1; i < expressions_vector.size(); ++i) {
+    stream << ", " << expressions_vector[i]->AsColumnName();
   }
   stream << "}";
 

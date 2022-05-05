@@ -48,7 +48,7 @@ std::string ImportOperatorProxy::Description(const DescriptionMode mode) const {
   } else {
     stream << "{" << object_keys_.size() << " objects}";
   }
-  // todo(anyone) input format ORC/CSV?
+  // TODO(anyone): input format ORC/CSV?
 
   stream << separator << "ColumnIds{" << column_ids_ << "}";
   return stream.str();

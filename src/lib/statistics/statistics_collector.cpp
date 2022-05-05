@@ -108,7 +108,7 @@ std::pair<AllTypeVariant, AllTypeVariant> StatisticsOrcFormatReader::GetMinMaxFo
     // BINARY:
     //   return GetMinMax<orc::BinaryColumnStatistics>(stats);
     // TIMESTAMP:
-    // return GetMinMax<orc::TimestampColumnStatistics>(stats);
+    // Return GetMinMax<orc::TimestampColumnStatistics>(stats);
     // DECIMAL:
     //   return GetMinMax<orc::DecimalColumnStatistics>(stats);
     // LIST:

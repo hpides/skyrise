@@ -16,7 +16,7 @@ struct PartitionedChunkWriterConfig {
   std::shared_ptr<AbstractFormatWriterFactory> format_factory;
 
   // A function that generates an object name, given the partition number. The numbers start with 0. This function will
-  // return something like "lineitem/part00000.orc" for part=0, "lineitem/part00001.orc" for part=1, etc.
+  // Return something like "lineitem/part00000.orc" for part=0, "lineitem/part00001.orc" for part=1, etc.
   std::function<std::string(size_t part)> naming_strategy;
 
   // Specifies after how many rows a new object should be created. If 0, there won't be horizontal partitioning. Note

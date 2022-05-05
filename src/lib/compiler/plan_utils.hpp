@@ -25,8 +25,8 @@ void PlanReplaceNode(const std::shared_ptr<AbstractPlanNode<NodeType>>& original
   /**
    * Tie the replacement_node with this nodes outputs.
    */
-  for (size_t output_idx = 0; output_idx < outputs.size(); ++output_idx) {
-    outputs[output_idx]->SetInput(input_sides[output_idx], std::static_pointer_cast<NodeType>(replacement_node));
+  for (size_t i = 0; i < outputs.size(); ++i) {
+    outputs[i]->SetInput(input_sides[i], std::static_pointer_cast<NodeType>(replacement_node));
   }
 
   /**
@@ -95,8 +95,8 @@ void PlanRemoveNode(const std::shared_ptr<AbstractPlanNode<NodeType>>& node,
    * Tie this node's previous outputs with this nodes previous left input
    * If LeftInput() is nullptr, still call SetInput so this node will get untied from the plan.
    */
-  for (size_t output_idx = 0; output_idx < outputs.size(); ++output_idx) {
-    outputs[output_idx]->SetInput(input_sides[output_idx], left_input);
+  for (size_t i = 0; i < outputs.size(); ++i) {
+    outputs[i]->SetInput(input_sides[i], left_input);
   }
 }
 

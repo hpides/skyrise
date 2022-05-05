@@ -109,9 +109,9 @@ bool ExpressionsEqualToExpressionsInDifferentLqp(
     return false;
   }
 
-  for (size_t expression_idx = 0; expression_idx < expressions_left.size(); ++expression_idx) {
-    const auto& expression_left = *expressions_left[expression_idx];
-    const auto& expression_right = *expressions_right[expression_idx];
+  for (size_t i = 0; i < expressions_left.size(); ++i) {
+    const auto& expression_left = *expressions_left[i];
+    const auto& expression_right = *expressions_right[i];
 
     if (!ExpressionEqualToExpressionInDifferentLqp(expression_left, expression_right, node_mapping)) {
       return false;
