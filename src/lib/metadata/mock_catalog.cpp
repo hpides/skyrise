@@ -18,7 +18,7 @@ const time_t kMockPartitionTimestamp = 0;
 namespace skyrise {
 
 void MockCatalog::AddTableSchema(const std::string& table_name,
-                                 const std::shared_ptr<const TableSchema>& table_schema) {
+                                 const std::shared_ptr<TableSchema>& table_schema) {
   bool inserted = table_name_to_table_schema_.try_emplace(table_name, table_schema).second;
   Assert(inserted, "Cannot add TableSchema for table name '" + table_name + "' because it already exists.");
 
