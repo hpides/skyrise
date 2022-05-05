@@ -286,7 +286,7 @@ TEST_F(StoredTableNodeTest, UniqueConstraintsPrunedColumns) {
 }
 
 TEST_F(StoredTableNodeTest, UniqueConstraintsEmpty) {
-  ASSERT_TRUE(mock_catalog_->GetEditableTableSchema(stored_table_node_->table_name)->KeyConstraints().empty());
+  ASSERT_TRUE(mock_catalog_->GetEditableTableSchema(stored_table_node_->table_name_)->KeyConstraints().empty());
   EXPECT_TRUE(stored_table_node_->UniqueConstraints()->empty());
 }
 
