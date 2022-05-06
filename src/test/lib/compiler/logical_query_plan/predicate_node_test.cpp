@@ -1,6 +1,5 @@
 /**
  * Taken and modified from our sister project Hyrise (https://github.com/hyrise/hyrise)
- * TODO(julianmenzler): Enable after we found a solution for load_table("..")
  */
 #include "compiler/logical_query_plan/predicate_node.hpp"
 
@@ -11,8 +10,9 @@
 #include "compiler/logical_query_plan/lqp_utils.hpp"
 #include "compiler/logical_query_plan/stored_table_node.hpp"
 #include "expression/expression_functional.hpp"
+#include "metadata/mock_catalog.hpp"
 
-// using namespace skyrise::expression_functional;  // NOLINT(google-build-using-namespace)
+using namespace skyrise::expression_functional;  // NOLINT(google-build-using-namespace)
 
 namespace skyrise {
 
