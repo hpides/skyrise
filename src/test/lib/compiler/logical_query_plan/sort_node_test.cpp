@@ -35,6 +35,7 @@ class SortNodeTest : public ::testing::Test {
         SortNode::Make(ExpressionVector_(a_i_), std::vector<SortMode>{SortMode::kAscending}, stored_table_node_);
   }
 
+  std::shared_ptr<MockCatalog> mock_catalog_;
   std::shared_ptr<StoredTableNode> stored_table_node_;
   std::shared_ptr<SortNode> sort_node_;
   std::shared_ptr<LqpColumnExpression> a_i_, a_f_, a_d_;
