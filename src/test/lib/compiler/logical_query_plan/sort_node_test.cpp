@@ -12,6 +12,7 @@
 #include "compiler/logical_query_plan/lqp_utils.hpp"
 #include "compiler/logical_query_plan/stored_table_node.hpp"
 #include "expression/expression_functional.hpp"
+#include "expression/lqp_column_expression.hpp"
 #include "metadata/mock_catalog.hpp"
 
 using namespace skyrise::expression_functional;  // NOLINT(google-build-using-namespace)
@@ -30,7 +31,8 @@ class SortNodeTest : public ::testing::Test {
     a_f_ = stored_table_node_->GetColumn("f");
     a_d_ = stored_table_node_->GetColumn("d");
 
-    sort_node_ = SortNode::Make(ExpressionVector_(a_i_), std::vector<SortMode>{SortMode::kAscending}, stored_table_node_);
+    sort_node_ =
+        SortNode::Make(ExpressionVector_(a_i_), std::vector<SortMode>{SortMode::kAscending}, stored_table_node_);
   }
 
   std::shared_ptr<StoredTableNode> stored_table_node_;
