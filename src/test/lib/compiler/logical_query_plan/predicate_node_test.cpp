@@ -22,7 +22,7 @@ class PredicateNodeTest : public ::testing::Test {
     mock_catalog_ = std::make_shared<MockCatalog>();
     mock_catalog_->AddTableSchemaFromFileHeader("table_a", "resources/test_data/tbl/int_float_double_string.tbl");
 
-    stored_table_node_ = StoredTableNode::Make("table_a");
+    stored_table_node_ = StoredTableNode::Make("table_a", mock_catalog_);
     i_ = LqpColumn_(stored_table_node_, ColumnId{0});
     f_ = LqpColumn_(stored_table_node_, ColumnId{1});
 
@@ -39,7 +39,7 @@ TEST_F(PredicateNodeTest, Description) { EXPECT_EQ(predicate_node_->Description(
 
 TEST_F(PredicateNodeTest, HashingAndEqualityCheck) {
   EXPECT_EQ(*predicate_node_, *predicate_node_);
-  const auto equal_table_node = StoredTableNode::Make("table_a");
+  const auto equal_table_node = StoredTableNode::Make("table_a", mock_catalog_);
   const auto equal_i = equal_table_node->GetColumn("i");
 
   const auto other_predicate_node_a = PredicateNode::Make(Equals_(i_, 5), stored_table_node_);
