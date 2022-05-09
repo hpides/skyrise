@@ -75,6 +75,12 @@ set(
 )
 
 set(
+    QUERY_COMPILER_SOURCES
+    compiler/optimizer/strategy/pqp_pipeline_preparation_rule.hpp
+    compiler/optimizer/strategy/pqp_pipeline_preparation_rule.cpp
+)
+
+set(
     SHARED_SOURCES
     aggregate_traits.hpp
     all_type_variant.hpp
