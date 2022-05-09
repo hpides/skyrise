@@ -75,6 +75,12 @@ set(
 )
 
 set(
+    QUERY_COMPILER_SOURCES
+    compiler/optimizer/strategy/lqp_average_rewrite_rule.cpp
+    compiler/optimizer/strategy/lqp_average_rewrite_rule.hpp
+)
+
+set(
     SHARED_SOURCES
     aggregate_traits.hpp
     all_type_variant.hpp

@@ -18,6 +18,8 @@ set(
     benchmark/lib/lambda/lambda_benchmark_result_test.cpp
     benchmark/lib/lambda/lambda_benchmark_runner_test.cpp
 
+    lib/compiler/optimizer/strategy/lqp_average_rewrite_rule_test.cpp
+        
     lib/compiler/physical_query_plan/aggregate_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/alias_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/exchange_operator_proxy_test.cpp
