@@ -39,7 +39,7 @@ TEST(LambdaBenchmarkResultTest, InvokeResultAndLogResult) {
       "Size: 3008 MB Max Memory Used: 44 MB Init Duration: 22.09 ms";
   Aws::Utils::ByteBuffer log_result_buffer(log_result_decoded.size());
 
-  for (size_t i = 0; i < log_result_decoded.size(); i++) {
+  for (size_t i = 0; i < log_result_decoded.size(); ++i) {
     log_result_buffer[i] = log_result_decoded[i];
   }
 
@@ -92,13 +92,13 @@ TEST(LambdaBenchmarkResultTest, ConcurrencyStressTest) {
 
   LambdaBenchmarkResult result(kRepetitionCount, kInvocationCount);
 
-  for (size_t i = 0; i < kRepetitionCount; i++) {
+  for (size_t i = 0; i < kRepetitionCount; ++i) {
     const auto repetition_start = std::chrono::steady_clock::now();
     EXPECT_FALSE(result.HasRepetitionFinished(i));
 
     std::vector<std::future<void>> registration_futures;
 
-    for (size_t j = 0; j < kInvocationCount; j++) {
+    for (size_t j = 0; j < kInvocationCount; ++j) {
       registration_futures.emplace_back(std::async(
           [&](const size_t repetition, const size_t invocation_id) {
             result.RegisterInvocation(repetition, invocation_id, std::to_string(invocation_id));
@@ -136,7 +136,7 @@ TEST(LambdaBenchmarkResultTest, ConcurrencyStressTest) {
     EXPECT_EQ(benchmark_repetition.GetInvokeResults().size(), kInvocationCount);
   }
 
-  for (size_t i = 0; i < 10; i++) {
+  for (size_t i = 0; i < 10; ++i) {
     EXPECT_NO_THROW(benchmark_repetitions.at(i).GetWarmUpCost());
   }
 
@@ -152,8 +152,8 @@ TEST(LambdaBenchmarkResultTest, FunctionWarmingCost) {
   static constexpr size_t kInvocationCount = 10;
   LambdaBenchmarkResult result(kRepetitionCount, kInvocationCount);
 
-  for (size_t i = 0; i < kRepetitionCount; i++) {
-    for (size_t j = 0; j < kInvocationCount; j++) {
+  for (size_t i = 0; i < kRepetitionCount; ++i) {
+    for (size_t j = 0; j < kInvocationCount; ++j) {
       result.RegisterInvocation(i, j, std::to_string(j));
       result.FinishInvocation(i, j, nullptr);
     }

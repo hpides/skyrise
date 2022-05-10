@@ -67,10 +67,10 @@ TEST_F(StreamTest, TestSmallSequentialReads) {
 TEST_F(StreamTest, TestSequentialReads) {
   auto stream = GetStreamLarge();
   EXPECT_EQ(stream.get(), 'a');
-  for (size_t i = 0; i < kTestObjectLargeBlockSize; i++) {
+  for (size_t i = 0; i < kTestObjectLargeBlockSize; ++i) {
     EXPECT_EQ(stream.get(), 'b');
   }
-  for (size_t i = 0; i < kTestObjectLargeBlockSize; i++) {
+  for (size_t i = 0; i < kTestObjectLargeBlockSize; ++i) {
     EXPECT_EQ(stream.get(), 'c');
   }
   EXPECT_EQ(stream.get(), 'd');

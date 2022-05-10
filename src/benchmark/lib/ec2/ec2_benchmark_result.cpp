@@ -65,7 +65,7 @@ bool Ec2BenchmarkResult::IsRepetitionFinalized(const size_t repetition) const {
 const std::vector<Ec2BenchmarkRepetition>& Ec2BenchmarkResult::GetRepetitions() const { return repetitions_; }
 
 bool Ec2BenchmarkResult::IsResultComplete() const {
-  for (size_t i = 0; i < repetitions_.size(); i++) {
+  for (size_t i = 0; i < repetitions_.size(); ++i) {
     if (!IsRepetitionFinalized(i)) {
       return false;
     }

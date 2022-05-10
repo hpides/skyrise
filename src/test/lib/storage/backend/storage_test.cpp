@@ -30,7 +30,7 @@ class AwsBaseStorageTest : public ::testing::Test {
       return;
     }
 
-    for (int i = 0; i < kNumTries; i++) {
+    for (int i = 0; i < kNumTries; ++i) {
       ObjectStatus status = this->storage_->GetStatus(object_identifier);
       const auto& error = status.GetError();
       const auto error_type = error.GetType();
@@ -95,7 +95,7 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteSmallObject) {
 
   EXPECT_EQ(buffer.size(), kFileSize);
 
-  for (size_t i = 0; i < buffer.size(); i++) {
+  for (size_t i = 0; i < buffer.size(); ++i) {
     EXPECT_EQ(buffer[i], kFileContent[i]);
   }
 
@@ -107,7 +107,7 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteSmallObject) {
   EXPECT_FALSE(reader->Close());
 
   EXPECT_EQ(buffer.size(), 2);
-  for (size_t i = 0; i < buffer.size(); i++) {
+  for (size_t i = 0; i < buffer.size(); ++i) {
     EXPECT_EQ(buffer[i], compare_against[i]);
   }
 

@@ -47,19 +47,23 @@ set(
     storage/formats/orc_writer.hpp
     storage/storage_types.hpp
     storage/table/abstract_segment.hpp
+    storage/table/abstract_table_constraint.cpp
+    storage/table/abstract_table_constraint.hpp
     storage/table/base_value_segment.hpp
     storage/table/chunk.cpp
     storage/table/chunk.hpp
-    storage/table/table.cpp
-    storage/table/table.hpp
-    storage/table/table_column_definition.cpp
-    storage/table/table_column_definition.hpp
-    storage/table/value_segment.cpp
-    storage/table/value_segment.hpp
     storage/table/chunk_reader.cpp
     storage/table/chunk_reader.hpp
     storage/table/chunk_writer.cpp
     storage/table/chunk_writer.hpp
+    storage/table/table.cpp
+    storage/table/table.hpp
+    storage/table/table_column_definition.cpp
+    storage/table/table_column_definition.hpp
+    storage/table/table_key_constraint.cpp
+    storage/table/table_key_constraint.hpp
+    storage/table/value_segment.cpp
+    storage/table/value_segment.hpp
 )
 
 set(
@@ -84,6 +88,10 @@ set(
 
     compiler/abstract_plan_node.hpp
     compiler/enable_make_for_plan_node.hpp
+
+    compiler/logical_query_plan/functional_dependency.cpp
+    compiler/logical_query_plan/functional_dependency.hpp
+
     compiler/physical_query_plan/abstract_operator_proxy.cpp
     compiler/physical_query_plan/abstract_operator_proxy.hpp
     compiler/physical_query_plan/aggregate_operator_proxy.cpp

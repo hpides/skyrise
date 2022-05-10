@@ -45,7 +45,7 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> NetworkBenchmark::OnRun(
 
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> results_array(results.size());
 
-  for (size_t i = 0; i < results.size(); i++) {
+  for (size_t i = 0; i < results.size(); ++i) {
     results_array[i] = GenerateResultOutput(results[i], benchmark_configs_[i].first);
   }
 
@@ -55,7 +55,7 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> NetworkBenchmark::OnRun(
 void NetworkBenchmark::Setup() {
   const size_t bucket_count = *std::max_element(bucket_counts_.cbegin(), bucket_counts_.cend());
 
-  for (size_t i = 0; i < bucket_count; i++) {
+  for (size_t i = 0; i < bucket_count; ++i) {
     helper_->CreateS3BucketIfNotExists(kBucketPrefix + std::to_string(i));
     helper_->EmptyS3Bucket(kBucketPrefix + std::to_string(i));
   }
@@ -64,7 +64,7 @@ void NetworkBenchmark::Setup() {
 void NetworkBenchmark::Teardown() {
   const size_t bucket_count = *std::max_element(bucket_counts_.cbegin(), bucket_counts_.cend());
 
-  for (size_t i = 0; i < bucket_count; i++) {
+  for (size_t i = 0; i < bucket_count; ++i) {
     helper_->EmptyAndDeleteS3Bucket(kBucketPrefix + std::to_string(i));
   }
 }
@@ -82,10 +82,10 @@ std::vector<std::shared_ptr<Aws::IOStream>> NetworkBenchmark::GeneratePayloads(
   std::vector<std::shared_ptr<Aws::IOStream>> payloads;
   payloads.reserve(parameters.invocation_count);
 
-  for (size_t i = 0; i < parameters.invocation_count; i++) {
+  for (size_t i = 0; i < parameters.invocation_count; ++i) {
     Aws::Utils::Array<Aws::String> object_keys(parameters.thread_count);
 
-    for (size_t j = 0; j < parameters.thread_count; j++) {
+    for (size_t j = 0; j < parameters.thread_count; ++j) {
       Aws::StringStream object_key;
       object_key << GenerateObjectKey(parameters.object_byte_size, parameters.invocation_count > 1 ? i : 0, j);
 

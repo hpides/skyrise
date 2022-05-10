@@ -71,7 +71,7 @@ std::map<Aws::String, Aws::XRay::Model::Trace> FunctionSegmentsAnalyzer::GetTrac
 
   std::vector<Aws::String> remaining_trace_ids(trace_ids);
 
-  for (size_t i = 0; i < kRetries; i++) {
+  for (size_t i = 0; i < kRetries; ++i) {
     Aws::XRay::Model::BatchGetTracesRequest batch_get_traces_request;
     batch_get_traces_request.WithTraceIds(remaining_trace_ids);
 

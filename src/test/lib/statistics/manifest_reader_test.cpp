@@ -15,7 +15,7 @@ class ManifestReaderTest : public ManifestTest {
   void WriteMockPartition(size_t num_fragments) {
     manifest_writer_ = std::make_shared<ManifestWriter>(storage_->OpenForWriting(kMetadataFile));
     manifest_writer_->SetTablePrefix(kTablePrefix);
-    for (size_t i = 0; i < num_fragments; i++) {
+    for (size_t i = 0; i < num_fragments; ++i) {
       manifest_writer_->WritePartition(statistics_);
     }
     manifest_writer_->Close();
@@ -78,7 +78,7 @@ TEST_F(ManifestReaderTest, MultipleReadBatchesRequired) {
   ManifestReader reader(storage_->OpenForReading(kMetadataFile));
 
   EXPECT_EQ(reader.GetNumberOfPartitions(), num_partitions);
-  for (size_t i = 0; i < num_partitions; i++) {
+  for (size_t i = 0; i < num_partitions; ++i) {
     EXPECT_TRUE(reader.HasNextPartition());
     reader.ReadNextPartition();
   }

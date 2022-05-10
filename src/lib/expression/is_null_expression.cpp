@@ -13,7 +13,7 @@ IsNullExpression::IsNullExpression(const PredicateCondition predicate_condition,
                                    std::shared_ptr<AbstractExpression> operand)
     : AbstractPredicateExpression(predicate_condition, {std::move(operand)}) {
   Assert(predicate_condition_ == PredicateCondition::kIsNull || predicate_condition_ == PredicateCondition::kIsNotNull,
-         "IsNullExpression only supports PredicateCondition::kIsNull and PredicateCondition::kIsNotNull");
+         "IsNullExpression only supports PredicateCondition::kIsNull and PredicateCondition::kIsNotNull.");
 }
 
 const std::shared_ptr<AbstractExpression>& IsNullExpression::Operand() const { return arguments_[0]; }

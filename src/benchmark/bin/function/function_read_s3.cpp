@@ -32,13 +32,13 @@ aws::lambda_runtime::invocation_response FunctionReadS3::OnHandleRequest(
 
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> ms_durations(batch_size);
 
-  for (size_t i = 0; i < batch_size; i++) {
+  for (size_t i = 0; i < batch_size; ++i) {
     std::vector<std::future<StorageError>> read_object_result_futures;
     read_object_result_futures.reserve(keys.GetLength());
 
     const auto start = std::chrono::steady_clock::now();
 
-    for (size_t j = 0; j < keys.GetLength(); j++) {
+    for (size_t j = 0; j < keys.GetLength(); ++j) {
       read_object_result_futures.emplace_back(std::async(
           [&](const size_t i) {
             std::vector<char> buffer;

@@ -88,9 +88,9 @@ std::shared_ptr<AbstractOperatorProxy> AbstractOperatorProxy::DeepCopy() const {
 
 std::shared_ptr<AbstractOperatorProxy> AbstractOperatorProxy::DeepCopy(
     std::unordered_map<const AbstractOperatorProxy*, std::shared_ptr<AbstractOperatorProxy>>& copied_proxies) const {
-  const auto copied_proxies_iter = copied_proxies.find(this);
-  if (copied_proxies_iter != copied_proxies.end()) {
-    return copied_proxies_iter->second;
+  const auto copied_proxies_iterator = copied_proxies.find(this);
+  if (copied_proxies_iterator != copied_proxies.end()) {
+    return copied_proxies_iterator->second;
   }
 
   const auto copied_left_input =

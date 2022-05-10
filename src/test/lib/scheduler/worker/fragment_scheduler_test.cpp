@@ -113,10 +113,10 @@ class SchedulerTest : public ::testing::Test {
     std::vector<std::shared_ptr<AbstractTask>> tasks;
     tasks.reserve(10);
 
-    for (size_t i = 0; i < 10; i++) {
+    for (size_t i = 0; i < 10; ++i) {
       auto task = std::make_shared<GenericTask>([&, counter]() {
         std::vector<std::shared_ptr<AbstractTask>> jobs;
-        for (size_t j = 0; j < 3; j++) {
+        for (size_t j = 0; j < 3; ++j) {
           auto job = std::make_shared<GenericTask>([&]() { (*counter)++; });
 
           scheduler->Schedule(job);

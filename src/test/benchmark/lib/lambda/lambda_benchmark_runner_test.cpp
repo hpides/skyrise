@@ -27,7 +27,7 @@ class AwsLambdaBenchmarkRunnerTest : public ::testing::Test {
       EXPECT_GT(result->GetWarmUpCost(), 0.0L);
     }
 
-    for (size_t i = 0; i < benchmark_repetitions.size(); i++) {
+    for (size_t i = 0; i < benchmark_repetitions.size(); ++i) {
       EXPECT_TRUE(result->HasRepetitionFinished(i));
 
       if (i > 0 && benchmark_config->warm_up_ == WarmUp::kDefaultOncePerRepetition) {

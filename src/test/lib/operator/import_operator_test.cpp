@@ -87,12 +87,12 @@ class ImportOperatorTest : public ::testing::Test {
       EXPECT_ANY_THROW(table->ColumnIdByName(schema[column_id].name));
     }
 
-    for (size_t counter = 0; counter < included_column_ids->size(); counter++) {
+    for (size_t counter = 0; counter < included_column_ids->size(); ++counter) {
       EXPECT_EQ(schema[(*included_column_ids)[counter]].data_type, table->ColumnDataType(counter));
       EXPECT_EQ(schema[(*included_column_ids)[counter]].nullable, table->ColumnIsNullable(counter));
     }
 
-    for (ChunkId chunk_counter = 0; chunk_counter < num_chunks; chunk_counter++) {
+    for (ChunkId chunk_counter = 0; chunk_counter < num_chunks; ++chunk_counter) {
       const auto chunk = table->GetChunk(chunk_counter);
       EXPECT_EQ(chunk->GetColumnCount(), included_column_ids->size());
     }
@@ -102,7 +102,7 @@ class ImportOperatorTest : public ::testing::Test {
                              std::vector<ColumnId>* pruned_column_ids) {
     auto iter = included_column_ids.begin();
 
-    for (ColumnId column_id = 0; column_id < schema.size(); column_id++) {
+    for (ColumnId column_id = 0; column_id < schema.size(); ++column_id) {
       if (iter != included_column_ids.end() && column_id == *iter) {
         ++iter;
       } else {

@@ -44,14 +44,14 @@ std::shared_ptr<const Table> PartitionOperator::OnExecute(
     Segments segments(column_count);
 
     // Materialize column by column from original table
-    for (ColumnCount column_id = 0; column_id < column_count; column_id++) {
+    for (ColumnCount column_id = 0; column_id < column_count; ++column_id) {
       ResolveDataType(input_table->ColumnDataType(column_id), [&](auto data_type) {
         using ColumnDataType = decltype(data_type);
 
         std::vector<std::vector<ColumnDataType>*> input_segments;
         input_segments.reserve(chunk_count);
 
-        for (size_t i = 0; i < chunk_count; i++) {
+        for (size_t i = 0; i < chunk_count; ++i) {
           const auto current_chunk = input_table->GetChunk(i);
           const auto abstract_segment = current_chunk->GetSegment(column_id);
           const auto typed_segment = std::dynamic_pointer_cast<ValueSegment<ColumnDataType>>(abstract_segment);
@@ -92,7 +92,7 @@ PartitionedPositionLists PartitionOperator::GeneratePartitionedPositionLists() c
 
       size_t row_index = 0;
 
-      for (ChunkId i = 0; i < chunk_count; i++) {
+      for (ChunkId i = 0; i < chunk_count; ++i) {
         const auto abstract_segment = input_table->GetChunk(i)->GetSegment(partition_column_id);
         const auto typed_segment = std::dynamic_pointer_cast<ValueSegment<ColumnDataType>>(abstract_segment);
         const auto& segment_values = typed_segment->Values();

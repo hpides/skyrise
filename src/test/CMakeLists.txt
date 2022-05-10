@@ -60,18 +60,12 @@ set(
 
     lib/serialization/schema_serialization_test.cpp
 
-    lib/statistics/manifest_shared.cpp
-    lib/statistics/manifest_shared.hpp
-    lib/statistics/manifest_reader_test.cpp
-    lib/statistics/manifest_writer_test.cpp
-    lib/statistics/statistics_collector_test.cpp
-
-    lib/statistics/statistics_collector_test.cpp
-    lib/statistics/manifest_shared.cpp
-    lib/statistics/manifest_shared.hpp
-    lib/statistics/manifest_reader_test.cpp
-    lib/statistics/manifest_writer_test.cpp
     lib/statistics/manifest_merger_test.cpp
+    lib/statistics/manifest_reader_test.cpp
+    lib/statistics/manifest_shared.cpp
+    lib/statistics/manifest_shared.hpp
+    lib/statistics/manifest_writer_test.cpp
+    lib/statistics/statistics_collector_test.cpp
 
     lib/storage/backend/abstract_provider.hpp
     lib/storage/backend/filesystem_provider.hpp
@@ -91,12 +85,13 @@ set(
     lib/storage/formats/orc_reader_test.cpp
     lib/storage/formats/orc_writer_test.cpp
 
-    lib/storage/table/chunk_test.cpp
-    lib/storage/table/table_column_definition_test.cpp
     lib/storage/table/chunk_reader_test.cpp
+    lib/storage/table/chunk_test.cpp
     lib/storage/table/chunk_writer_test.cpp
-    lib/storage/table/value_segment_test.cpp
+    lib/storage/table/table_column_definition_test.cpp
+    lib/storage/table/table_key_constraint_test.cpp
     lib/storage/table/table_test.cpp
+    lib/storage/table/value_segment_test.cpp
 
     lib/utils/costs/cost_calculator_test.cpp
     lib/utils/costs/pricing_test.cpp

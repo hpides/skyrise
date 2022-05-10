@@ -115,7 +115,7 @@ bool ManifestWriter::WritePartitionToStorage(const ObjectStatistics& statistics)
   current_segments_[3]->Append(statistics.last_modified);
   current_segments_[4]->Append(static_cast<int64_t>(statistics.filesize));
   current_segments_[5]->Append(static_cast<int64_t>(statistics.num_rows));
-  for (size_t i = 0; i < statistics.schema->size(); i++) {
+  for (size_t i = 0; i < statistics.schema->size(); ++i) {
     const size_t start_index = 6 + (3 * i);
     current_segments_[start_index]->Append(statistics.minmax[i].first);
     current_segments_[start_index + 1]->Append(statistics.minmax[i].second);

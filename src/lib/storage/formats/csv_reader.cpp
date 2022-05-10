@@ -90,7 +90,7 @@ bool CsvFormatReader::GuessHasHeader(const Columns& columns) {
   // special and is most likely a header.
   const size_t num_lines_look_ahead = 5;
   for (const auto& column : columns) {
-    for (size_t i = 1; i < std::min(column.size(), num_lines_look_ahead); i++) {
+    for (size_t i = 1; i < std::min(column.size(), num_lines_look_ahead); ++i) {
       if (column[i].empty() || !std::isalpha(column[i][0])) {
         return true;
       }
@@ -109,14 +109,14 @@ char CsvFormatReader::GuessDelimiter(const Lines& lines) {
     return kPossibleDelimiters[0];
   }
 
-  for (size_t i = 0; i < kPossibleDelimiters.size(); i++) {
+  for (size_t i = 0; i < kPossibleDelimiters.size(); ++i) {
     const size_t num_occurences_in_first_line = std::count(lines[0].cbegin(), lines[0].cend(), kPossibleDelimiters[i]);
 
     if (num_occurences_in_first_line == 0) {
       delimiter_probability[i] = 1;
     }
 
-    for (size_t j = 1; j < lines.size(); j++) {
+    for (size_t j = 1; j < lines.size(); ++j) {
       const size_t occurence_in_other_lines = std::count(lines[j].cbegin(), lines[j].cend(), kPossibleDelimiters[i]);
       if (num_occurences_in_first_line != occurence_in_other_lines) {
         delimiter_probability[i] = 0;
@@ -166,7 +166,7 @@ static DataType IdentifierToType(std::string_view identifier) {
 
 void CsvFormatReader::BuildColumnTypes(TableColumnDefinitions* schema) {
   if (configuration_.has_types) {
-    for (size_t i = 0; i < schema->size(); i++) {
+    for (size_t i = 0; i < schema->size(); ++i) {
       (*schema)[i].data_type = IdentifierToType(columns_[i][1]);
     }
   } else {
@@ -188,7 +188,7 @@ void CsvFormatReader::BuildColumnNames(TableColumnDefinitions* schema) {
     }
   } else {
     std::stringstream headline;
-    for (size_t i = 0; i < columns_.size(); i++) {
+    for (size_t i = 0; i < columns_.size(); ++i) {
       headline.clear();
       headline << "Column" << (i + 1);
       schema->emplace_back();
@@ -304,7 +304,7 @@ static std::shared_ptr<AbstractSegment> CreateSegment(
     const std::function<TargetSegmentType(std::string_view data)>& callback) {
   auto result = std::make_shared<ValueSegment<TargetSegmentType>>(false, column_values->size());
   auto& destination = result->Values();
-  for (size_t i = num_skip_lines; i < column_values->size(); i++) {
+  for (size_t i = num_skip_lines; i < column_values->size(); ++i) {
     destination.emplace_back(callback(column_values->at(i)));
   }
   return result;
@@ -344,7 +344,7 @@ std::unique_ptr<Chunk> CsvFormatReader::Next() {
   Segments segments;
   bool has_error = false;
   try {
-    for (size_t i = 0; i < schema_->size(); i++) {
+    for (size_t i = 0; i < schema_->size(); ++i) {
       segments.emplace_back(
           ParseSegmentForDataType(schema_->at(i).data_type, &columns_.at(i), num_ignore_lines_in_next_chunk_));
     }
