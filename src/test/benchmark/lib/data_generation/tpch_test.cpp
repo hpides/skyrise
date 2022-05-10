@@ -54,10 +54,9 @@ TEST_F(TpchDataGeneratorTest, GenerateRegionTable) {
   ASSERT_GT(status.GetSize(), 0);
 
   // Check contents of file
-  std::string content;
-  storage_->OpenForReading("region.csv")
-      ->Read(0, ObjectReader::kLastByteInFile,
-             [&content](const char* data, size_t length) { content.append(data, length); });
+  std::vector<char> content_buffer;
+  storage_->OpenForReading("region.csv")->Read(0, ObjectReader::kLastByteInFile, &content_buffer);
+  std::string content(content_buffer.data(), content_buffer.size());
 
   ASSERT_TRUE(content.find("r_regionkey,r_name,r_comment") != content.npos);
   ASSERT_TRUE(content.find("AFRICA") != content.npos);

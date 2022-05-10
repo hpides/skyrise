@@ -248,9 +248,7 @@ StorageError CsvFormatReader::FillBuffer() {
     return StorageError::Success();
   }
 
-  StorageError error =
-      source_->Read(chunk_offset_, chunk_offset_ + configuration_.read_buffer_size - 1,
-                    [this](const char* data, size_t length) { buffer_.insert(buffer_.end(), data, data + length); });
+  StorageError error = source_->Read(chunk_offset_, chunk_offset_ + configuration_.read_buffer_size - 1, &buffer_);
 
   if (error) {
     buffer_.clear();

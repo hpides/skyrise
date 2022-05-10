@@ -11,14 +11,6 @@
 
 namespace skyrise {
 
-namespace {
-
-std::function<void(const char* data, size_t n)> FillBufferLambda(std::vector<char>* buffer) {
-  return [buffer](const char* data, size_t n) { buffer->insert(buffer->end(), data, data + n); };
-}
-
-}  // namespace
-
 template <typename Provider>
 class AwsBaseStorageTest : public ::testing::Test {
  protected:
@@ -98,7 +90,7 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteSmallObject) {
   auto reader = this->storage_->OpenForReading(kFilename);
   std::vector<char> buffer;
   buffer.reserve(kFileSize);
-  EXPECT_FALSE(reader->Read(0, ObjectReader::kLastByteInFile, FillBufferLambda(&buffer)));
+  EXPECT_FALSE(reader->Read(0, ObjectReader::kLastByteInFile, &buffer));
   EXPECT_FALSE(reader->Close());
 
   EXPECT_EQ(buffer.size(), kFileSize);
@@ -111,7 +103,7 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteSmallObject) {
   buffer.clear();
   reader = this->storage_->OpenForReading(kFilename);
   auto compare_against = kFileContent.substr(1, 2);
-  EXPECT_FALSE(reader->Read(1, 2, FillBufferLambda(&buffer)));
+  EXPECT_FALSE(reader->Read(1, 2, &buffer));
   EXPECT_FALSE(reader->Close());
 
   EXPECT_EQ(buffer.size(), 2);
@@ -143,7 +135,7 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadTailDeleteSmallObject) {
   auto reader = this->storage_->OpenForReading(kFilename);
   std::vector<char> buffer;
   buffer.reserve(kFileSize);
-  EXPECT_FALSE(reader->ReadTail(1, FillBufferLambda(&buffer)));
+  EXPECT_FALSE(reader->ReadTail(1, &buffer));
 
   EXPECT_EQ(buffer.size(), 1);
   EXPECT_EQ(buffer[0], 'd');
@@ -174,16 +166,9 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteBigObject) {
   this->WaitForObjectToBecomeVisible(kFilename);
 
   // Read
-  bool error = false;
   auto reader = this->storage_->OpenForReading(kFilename);
-  EXPECT_FALSE(reader->Read(0, ObjectReader::kLastByteInFile, [&error](const char* data, size_t n) {
-    for (size_t i = 0; i < n; i++) {
-      if (data[i] != 'x') {
-        error = true;
-      }
-    }
-  }));
-  EXPECT_FALSE(error);
+  EXPECT_FALSE(reader->Read(0, ObjectReader::kLastByteInFile, &buffer));
+  EXPECT_TRUE(std::find_if(buffer.cbegin(), buffer.cend(), [](char x) { return x != 'x'; }) == buffer.end());
   EXPECT_FALSE(reader->Close());
 
   // Delete
