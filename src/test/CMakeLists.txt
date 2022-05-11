@@ -18,6 +18,9 @@ set(
     benchmark/lib/lambda/lambda_benchmark_result_test.cpp
     benchmark/lib/lambda/lambda_benchmark_runner_test.cpp
 
+    lib/compiler/optimizer/strategy/strategy_base_test.cpp
+    lib/compiler/optimizer/strategy/strategy_base_test.hpp
+
     lib/compiler/physical_query_plan/aggregate_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/alias_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/exchange_operator_proxy_test.cpp
