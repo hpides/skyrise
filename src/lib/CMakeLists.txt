@@ -74,6 +74,12 @@ set(
     statistics/statistics_collector.hpp
 )
 
+ set(
+    QUERY_COMPILER_SOURCES
+    compiler/optimizer/strategy/pqp_partial_aggregation_rule.cpp
+    compiler/optimizer/strategy/pqp_partial_aggregation_rule.hpp
+ )
+
 set(
     SHARED_SOURCES
     aggregate_traits.hpp
