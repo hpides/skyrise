@@ -19,7 +19,7 @@ DataType AbstractPredicateExpression::GetDataType() const { return DataType::kIn
 
 bool AbstractPredicateExpression::ShallowEquals(const AbstractExpression& expression) const {
   DebugAssert(dynamic_cast<const AbstractPredicateExpression*>(&expression),
-              "Different expression type should have been caught by AbstractExpression::operator==");
+              "Different expression type should have been caught by AbstractExpression::operator==.");
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
   return predicate_condition_ == static_cast<const AbstractPredicateExpression&>(expression).predicate_condition_;
 }

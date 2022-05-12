@@ -45,8 +45,8 @@ std::shared_ptr<TableSchema> TableSchema::FromTableColumnDefinitions(const Table
 
 void TableSchema::AddKeyConstraint(const TableKeyConstraint& table_key_constraint) {
   // Check validity of specified columns
-  for (const auto& column_id : table_key_constraint.Columns()) {
-    Assert(column_id < TableColumnCount(), "ColumnId out of range");
+  for (const auto& column_id : table_key_constraint.ColumnIds()) {
+    Assert(column_id < TableColumnCount(), "ColumnId out of range.");
 
     // PRIMARY KEY requires non-nullable columns
     if (table_key_constraint.KeyType() == KeyConstraintType::kPrimaryKey) {
@@ -61,7 +61,7 @@ void TableSchema::AddKeyConstraint(const TableKeyConstraint& table_key_constrain
            "Another primary key already exists for this table.");
 
     // Ensure there is only one key constraint per column set.
-    Assert(table_key_constraint.Columns() != existing_constraint.Columns(),
+    Assert(existing_constraint.ColumnIds() != table_key_constraint.ColumnIds(),
            "Another key constraint for the same column set has already been defined.");
   }
 

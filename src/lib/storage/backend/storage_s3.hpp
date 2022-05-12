@@ -23,6 +23,7 @@
 #include <aws/s3/model/UploadPartRequest.h>
 
 #include "abstract_storage.hpp"
+#include "stream.hpp"
 #include "utils/literal.hpp"
 #include "utils/string.hpp"
 
@@ -91,10 +92,8 @@ class S3ObjectReader : public ObjectReader {
   S3ObjectReader(std::shared_ptr<const Aws::S3::S3Client> client, std::string bucket, std::string object_id);
   S3ObjectReader(const S3ObjectReader&) = delete;
 
-  StorageError Read(size_t first_byte, size_t last_byte,
-                    const std::function<void(const char* data, size_t length)>& callback) override;
-  StorageError ReadTail(size_t num_last_bytes,
-                        const std::function<void(const char* data, size_t length)>& callback) override;
+  StorageError Read(size_t first_byte, size_t last_byte, std::vector<char>* buffer) override;
+  StorageError ReadTail(size_t num_last_bytes, std::vector<char>* buffer) override;
   const ObjectStatus& GetStatus() override;
   StorageError Close() override;
 
@@ -103,13 +102,13 @@ class S3ObjectReader : public ObjectReader {
   static std::string GetRangeStringForTail(size_t num_last_bytes);
   static size_t ParseContentLengthFromRange(const Aws::String& content_range);
 
-  Aws::S3::Model::GetObjectRequest CreateGetObjectRequest(
-      const std::function<void(const char* data, size_t length)>& callback, const std::string& range = "");
+  Aws::S3::Model::GetObjectRequest CreateGetObjectRequest(std::vector<char>* buffer, const std::string& range = "");
   StorageError ProcessGetObjectRequest(const Aws::S3::Model::GetObjectRequest& request);
 
   std::shared_ptr<const Aws::S3::S3Client> client_;
   const std::string bucket_;
   const std::string object_id_;
+  DelegateStreamBuffer stream_;
 };
 
 class S3Storage : public Storage {

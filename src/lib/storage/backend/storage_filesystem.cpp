@@ -124,7 +124,6 @@ std::pair<std::vector<ObjectStatus>, StorageError> FilesystemStorage::List(const
 
 FilesystemReader::FilesystemReader(const std::string& filename, size_t num_characters_hidden)
     : error_(StorageErrorType::kNoError), filename_(filename), num_characters_hidden_(num_characters_hidden) {
-  buffer_.resize(kReadBufferSize);
   in_.open(filename.c_str(), std::ios::in | std::ios::binary);
   if (!in_.is_open()) {
     error_ = StorageError(StorageErrorType::kNotFound);
@@ -149,8 +148,7 @@ StorageError FilesystemReader::Close() {
   }
   return StorageError::Success();
 }
-StorageError FilesystemReader::Read(size_t first_byte, size_t last_byte,
-                                    const std::function<void(const char* data, size_t length)>& callback) {
+StorageError FilesystemReader::Read(size_t first_byte, size_t last_byte, std::vector<char>* buffer) {
   if (error_) {
     return error_;
   }
@@ -177,22 +175,18 @@ StorageError FilesystemReader::Read(size_t first_byte, size_t last_byte,
     bytes_left = ObjectReader::kLastByteInFile;
   }
 
-  while (bytes_left > 0) {
-    in_.read(buffer_.data(), std::min(FilesystemReader::kReadBufferSize, bytes_left));
-    size_t bytes_read = in_.gcount();
+  // We cannot read more bytes than the file has.
+  const size_t file_size = GetStatus().GetSize();
+  if (first_byte + bytes_left > file_size) {
+    bytes_left = file_size - first_byte;
+  }
 
-    if (bytes_read > 0) {
-      callback(buffer_.data(), bytes_read);
-      bytes_left -= bytes_read;
-    }
+  buffer->clear();
+  buffer->resize(bytes_left);
+  in_.read(buffer->data(), bytes_left);
 
-    if (in_.eof()) {
-      break;
-    }
-
-    if (bytes_read == 0 || !in_.good()) {
-      return StorageError(StorageErrorType::kIOError);
-    }
+  if (static_cast<size_t>(in_.gcount()) != bytes_left || !in_.good()) {
+    return StorageError(StorageErrorType::kIOError);
   }
 
   return StorageError::Success();

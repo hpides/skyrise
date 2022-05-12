@@ -13,7 +13,7 @@ class ManifestMergerTest : public ManifestTest {
 
     statistics.object_identifier = file_name;
 
-    for (size_t i = 0; i < num_partitions; i++) {
+    for (size_t i = 0; i < num_partitions; ++i) {
       manifest_writer.WritePartition(statistics);
     }
 

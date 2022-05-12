@@ -37,7 +37,7 @@ void MockCatalog::AddTableSchemaFromFileHeader(const std::string& table_name, co
 
   std::string line;
   std::getline(infile, line);
-  Assert(line.find('\r') == std::string::npos, "Windows encoding is not supported, use dos2unix");
+  Assert(line.find('\r') == std::string::npos, "Windows encoding is not supported, use dos2unix.");
   std::vector<std::string> column_names = SplitStringByDelimiter(line, '|');
   std::getline(infile, line);
   std::vector<std::string> column_types = SplitStringByDelimiter(line, '|');
@@ -59,7 +59,7 @@ void MockCatalog::AddTableSchemaFromFileHeader(const std::string& table_name, co
   }
 
   TableColumnDefinitions column_definitions;
-  for (size_t i = 0; i < column_names.size(); i++) {
+  for (size_t i = 0; i < column_names.size(); ++i) {
     const auto data_type = kDataTypeToString.right.find(column_types[i]);
     Assert(data_type != kDataTypeToString.right.end(),
            std::string("Invalid data type ") + column_types[i] + " for column " + column_names[i]);
@@ -70,21 +70,21 @@ void MockCatalog::AddTableSchemaFromFileHeader(const std::string& table_name, co
 }
 
 bool MockCatalog::TableExists(const std::string& table_name) const {
-  return table_name_to_table_schema_.find(table_name) != table_name_to_table_schema_.end();
+  return table_name_to_table_schema_.find(table_name) != table_name_to_table_schema_.cend();
 }
 
 std::shared_ptr<TableSchema> MockCatalog::GetEditableTableSchema(const std::string& table_name) {
-  auto table_name_to_table_schema_iter = table_name_to_table_schema_.find(table_name);
-  Assert(table_name_to_table_schema_iter != table_name_to_table_schema_.end(),
+  auto table_name_to_table_schema_iterator = table_name_to_table_schema_.find(table_name);
+  Assert(table_name_to_table_schema_iterator != table_name_to_table_schema_.cend(),
          "Could not find TableSchema for table '" + table_name + "'.");
-  return table_name_to_table_schema_iter->second;
+  return table_name_to_table_schema_iterator->second;
 }
 
 std::shared_ptr<const TableSchema> MockCatalog::GetTableSchema(const std::string& table_name) const {
-  auto table_name_to_table_schema_iter = table_name_to_table_schema_.find(table_name);
-  Assert(table_name_to_table_schema_iter != table_name_to_table_schema_.end(),
+  auto table_name_to_table_schema_iterator = table_name_to_table_schema_.find(table_name);
+  Assert(table_name_to_table_schema_iterator != table_name_to_table_schema_.cend(),
          "Could not find TableSchema for table '" + table_name + "'.");
-  return std::const_pointer_cast<const TableSchema>(table_name_to_table_schema_iter->second);
+  return std::const_pointer_cast<const TableSchema>(table_name_to_table_schema_iterator->second);
 }
 
 const std::string& MockCatalog::TableBucketName(const std::string& /*table_name*/) const { return kMockBucketName; }

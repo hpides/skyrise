@@ -33,7 +33,7 @@ DataType ListExpression::GetDataType() const {
 
 bool ListExpression::ShallowEquals([[maybe_unused]] const AbstractExpression& expression) const {
   DebugAssert(dynamic_cast<const ListExpression*>(&expression),
-              "Different expression type should have been caught by AbstractExpression::operator==");
+              "Different expression type should have been caught by AbstractExpression::operator==.");
   return true;
 }
 

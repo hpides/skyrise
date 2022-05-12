@@ -12,31 +12,6 @@ time_t ConvertAwsDateTime(const Aws::Utils::DateTime aws_datetime) {
   return seconds.count();
 }
 
-class ProxyStreamBuffer : public std::streambuf {
- public:
-  explicit ProxyStreamBuffer(const std::function<void(const char* data, size_t n)>& callback) : callback_(callback) {}
-
- protected:
-  std::streamsize xsputn(const char_type* s, std::streamsize n) override {
-    callback_(s, n);
-    return n;
-  }
-
- private:
-  const std::function<void(const char* data, size_t n)> callback_;
-};
-
-class ProxyStream : public std::iostream {
- public:
-  explicit ProxyStream(const std::function<void(const char* data, size_t n)>& callback)
-      : std::iostream(nullptr), buffer_(std::make_unique<ProxyStreamBuffer>(callback)) {
-    rdbuf(buffer_.get());
-  }
-
- private:
-  std::unique_ptr<ProxyStreamBuffer> buffer_;
-};
-
 }  // namespace
 
 StorageErrorType TranslateS3Error(const Aws::S3::S3Errors error) {
@@ -391,12 +366,16 @@ S3ObjectReader::S3ObjectReader(std::shared_ptr<const Aws::S3::S3Client> client, 
                                std::string object_id)
     : client_(std::move(client)), bucket_(std::move(bucket)), object_id_(std::move(object_id)) {}
 
-Aws::S3::Model::GetObjectRequest S3ObjectReader::CreateGetObjectRequest(
-    const std::function<void(const char* data, size_t length)>& callback, const std::string& range) {
+Aws::S3::Model::GetObjectRequest S3ObjectReader::CreateGetObjectRequest(std::vector<char>* buffer,
+                                                                        const std::string& range) {
   Aws::S3::Model::GetObjectRequest request;
   request.SetBucket(bucket_);
   request.SetKey(object_id_);
-  request.SetResponseStreamFactory([&callback]() { return new ProxyStream(callback); });
+  request.SetResponseStreamFactory([this, buffer]() {
+    buffer->clear();
+    stream_.Reset(buffer);
+    return new std::iostream(&stream_);
+  });
   if (!range.empty()) {
     request.SetRange(range);
   }
@@ -404,21 +383,19 @@ Aws::S3::Model::GetObjectRequest S3ObjectReader::CreateGetObjectRequest(
   return request;
 }
 
-StorageError S3ObjectReader::Read(size_t first_byte, size_t last_byte,
-                                  const std::function<void(const char* data, size_t length)>& callback) {
+StorageError S3ObjectReader::Read(size_t first_byte, size_t last_byte, std::vector<char>* buffer) {
   bool read_entire_object = (first_byte == 0 && last_byte == kLastByteInFile);
   std::string range_string;
   if (!read_entire_object) {
     range_string = GetRangeString(first_byte, last_byte);
   }
 
-  return ProcessGetObjectRequest(CreateGetObjectRequest(callback, range_string));
+  return ProcessGetObjectRequest(CreateGetObjectRequest(buffer, range_string));
 }
 
-StorageError S3ObjectReader::ReadTail(size_t num_last_bytes,
-                                      const std::function<void(const char* data, size_t length)>& callback) {
+StorageError S3ObjectReader::ReadTail(size_t num_last_bytes, std::vector<char>* buffer) {
   const std::string range_string = GetRangeStringForTail(num_last_bytes);
-  return ProcessGetObjectRequest(CreateGetObjectRequest(callback, range_string));
+  return ProcessGetObjectRequest(CreateGetObjectRequest(buffer, range_string));
 }
 
 StorageError S3ObjectReader::ProcessGetObjectRequest(const Aws::S3::Model::GetObjectRequest& request) {
@@ -429,7 +406,7 @@ StorageError S3ObjectReader::ProcessGetObjectRequest(const Aws::S3::Model::GetOb
 
   // If we do not have status information about the object, we can obtain it now.
   if (status_.GetError().IsError()) {
-    Aws::S3::Model::GetObjectResult result = outcome.GetResultWithOwnership();
+    Aws::S3::Model::GetObjectResult& result = outcome.GetResult();
     const time_t last_modified = ConvertAwsDateTime(result.GetLastModified());
     const std::string& hash = result.GetETag();
 

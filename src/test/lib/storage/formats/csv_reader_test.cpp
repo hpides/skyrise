@@ -110,7 +110,7 @@ TEST_F(CsvReaderTest, LineItemExpectedChunks) {
   CsvFormatReader csv_reader(std::move(object_storage), configuration);
 
   size_t counter = 0;
-  for (counter = 0; csv_reader.HasNext(); counter++) {
+  for (counter = 0; csv_reader.HasNext(); ++counter) {
     auto next_chunk = csv_reader.Next();
   }
 

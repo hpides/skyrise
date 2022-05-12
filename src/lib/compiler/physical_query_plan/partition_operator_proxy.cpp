@@ -26,10 +26,10 @@ std::string PartitionOperatorProxy::Description(const DescriptionMode mode) cons
   stream << AbstractOperatorProxy::Description(mode) << separator;
   stream << partition_count_ << " partition(s)" << separator;
   stream << "ColumnIds{";
-  auto column_ids_iter = partition_column_ids_.cbegin();
-  while (column_ids_iter != partition_column_ids_.cend()) {
-    stream << *column_ids_iter++;
-    if (column_ids_iter != partition_column_ids_.cend()) {
+  auto column_ids_iterator = partition_column_ids_.cbegin();
+  while (column_ids_iterator != partition_column_ids_.cend()) {
+    stream << *column_ids_iterator++;
+    if (column_ids_iterator != partition_column_ids_.cend()) {
       stream << ", ";
     }
   }

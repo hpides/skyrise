@@ -7,7 +7,7 @@ ObjectStatistics StatisticsOrcFormatReader::GetAllStatistics() const {
   std::vector<size_t> null_count;
   std::vector<std::pair<AllTypeVariant, AllTypeVariant>> minmax;
 
-  for (size_t i = 0; i < num_rows; i++) {
+  for (size_t i = 0; i < num_rows; ++i) {
     null_count.push_back(GetNullCountForColumn(i));
     minmax.push_back(GetMinMaxForColumn(i));
   }
@@ -126,7 +126,7 @@ std::shared_ptr<TableColumnDefinitions> StatisticsOrcFormatReader::GetSchema() c
   auto schema = std::make_shared<TableColumnDefinitions>();
 
   const auto& type = reader_->getType();
-  for (size_t i = 0; i < type.getSubtypeCount(); i++) {
+  for (size_t i = 0; i < type.getSubtypeCount(); ++i) {
     const orc::Type* orc_type = type.getSubtype(i);
     DataType skyrise_type = OrcTypeKindToDataType(orc_type->getKind());
 

@@ -60,7 +60,7 @@ std::shared_ptr<AbstractSegment> ColumnVectorBatchToSegment(orc::ColumnVectorBat
   auto result = std::make_shared<ValueSegment<TargetSegmentType>>(false, length);
   auto& destination = result->Values();
   auto* source = specialized_batch->data.data();
-  for (size_t i = 0; i < length; i++) {
+  for (size_t i = 0; i < length; ++i) {
     destination.push_back(static_cast<TargetSegmentType>(source[i]));
   }
   return result;
@@ -76,7 +76,7 @@ std::shared_ptr<AbstractSegment> ColumnVectorBatchToSegment<orc::StringVectorBat
   auto& destination = result->Values();
   auto* source_data = specialized_batch->data.data();
   auto* source_length = specialized_batch->length.data();
-  for (size_t i = 0; i < length; i++) {
+  for (size_t i = 0; i < length; ++i) {
     destination.emplace_back(source_data[i], source_length[i]);
   }
 
@@ -92,7 +92,7 @@ std::shared_ptr<AbstractSegment> ColumnVectorBatchToSegment<orc::LongVectorBatch
   auto result = std::make_shared<ValueSegment<std::string>>(false, length);
   auto& destination = result->Values();
   auto* source_data = specialized_batch->data.data();
-  for (size_t i = 0; i < length; i++) {
+  for (size_t i = 0; i < length; ++i) {
     destination.emplace_back(OrcFormatReader::OrcTimestampToDateString(static_cast<int32_t>(source_data[i])));
   }
 
@@ -245,7 +245,7 @@ void OrcFormatReader::ExtractSchema() {
   auto schema = std::make_shared<TableColumnDefinitions>();
   const auto& type = reader_->getType();
 
-  for (size_t i = 0; i < type.getSubtypeCount(); i++) {
+  for (size_t i = 0; i < type.getSubtypeCount(); ++i) {
     const orc::Type* orc_type = type.getSubtype(i);
     DataType skyrise_type = OrcTypeKindToDataType(orc_type->getKind(), configuration_.parse_dates_as_string);
 
@@ -286,7 +286,7 @@ std::unique_ptr<Chunk> OrcFormatReader::Next() {
   const auto& type = reader_->getType();
   segments.reserve(type.getSubtypeCount());
 
-  for (size_t column_id = 0; column_id < type.getSubtypeCount(); column_id++) {
+  for (size_t column_id = 0; column_id < type.getSubtypeCount(); ++column_id) {
     segments.emplace_back(CreateSegment(struct_batch->fields[column_id], type.getSubtype(column_id)->getKind(),
                                         configuration_.parse_dates_as_string, num_rows_read_now));
   }

@@ -32,7 +32,7 @@ class TableTest : public ::testing::Test {
     segments.push_back(std::make_shared<ValueSegment<std::string>>("Hello World!"));
 
     std::vector<std::shared_ptr<Chunk>> chunks_vector;
-    for (size_t i = 0; i < n_chunks; i++) {
+    for (size_t i = 0; i < n_chunks; ++i) {
       chunks_vector.push_back(std::make_shared<Chunk>(segments));
     }
     return std::make_shared<Table>(column_definitions_, std::move(chunks_vector));
@@ -89,7 +89,7 @@ TEST_F(TableTest, RowCount) {
   auto value_segment_string = std::make_shared<ValueSegment<std::string>>();
 
   size_t expected_row_count = 10;
-  for (size_t i = 0; i < expected_row_count; i++) {
+  for (size_t i = 0; i < expected_row_count; ++i) {
     value_segment_integer->Append(1);
     value_segment_string->Append("Hello World");
   }

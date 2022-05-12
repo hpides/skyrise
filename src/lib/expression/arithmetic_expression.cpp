@@ -63,7 +63,7 @@ DataType ArithmeticExpression::GetDataType() const {
 
 bool ArithmeticExpression::ShallowEquals(const AbstractExpression& expression) const {
   DebugAssert(dynamic_cast<const ArithmeticExpression*>(&expression),
-              "Different expression type should have been caught by AbstractExpression::operator==");
+              "Different expression type should have been caught by AbstractExpression::operator==.");
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
   return arithmetic_operator_ == static_cast<const ArithmeticExpression&>(expression).arithmetic_operator_;
 }

@@ -160,7 +160,7 @@ void TPCHGenerator::Generate() {
   if (IsTableEnabled(TpchTable::kCustomer)) {
     TableBuilder builder(GetPartitionedChunkWriterFactory(), tpch_table_names.at(TpchTable::kCustomer),
                          kCustomerColumnTypes, kCustomerColumnNames);
-    for (size_t i = 0; i < customer_count; i++) {
+    for (size_t i = 0; i < customer_count; ++i) {
       auto customer = CallDbgenRowGenerator<customer_t>(i + 1, mk_cust, TpchTable::kCustomer);
       builder.AppendRow(customer.custkey, customer.name, customer.address, customer.nation_code, customer.phone,
                         ConvertMoney(customer.acctbal), customer.mktsegment, customer.comment);

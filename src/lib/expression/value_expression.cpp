@@ -30,7 +30,7 @@ DataType ValueExpression::GetDataType() const { return DataTypeFromAllTypeVarian
 
 bool ValueExpression::ShallowEquals(const AbstractExpression& expression) const {
   DebugAssert(dynamic_cast<const ValueExpression*>(&expression),
-              "Different expression type should have been caught by AbstractExpression::operator==");
+              "Different expression type should have been caught by AbstractExpression::operator==.");
   const auto& value_expression =
       static_cast<const ValueExpression&>(expression);  // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 

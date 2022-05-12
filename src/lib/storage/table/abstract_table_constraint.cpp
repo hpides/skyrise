@@ -5,10 +5,9 @@
 
 namespace skyrise {
 
-AbstractTableConstraint::AbstractTableConstraint(const std::unordered_set<ColumnId> columns)
-    : columns_(std::move(columns)) {}
+AbstractTableConstraint::AbstractTableConstraint(std::unordered_set<ColumnId> columns) : columns_(std::move(columns)) {}
 
-const std::unordered_set<ColumnId>& AbstractTableConstraint::Columns() const { return columns_; }
+const std::unordered_set<ColumnId>& AbstractTableConstraint::ColumnIds() const { return columns_; }
 
 bool AbstractTableConstraint::operator==(const AbstractTableConstraint& rhs) const {
   if (this == &rhs) {
@@ -17,7 +16,7 @@ bool AbstractTableConstraint::operator==(const AbstractTableConstraint& rhs) con
   if (typeid(*this) != typeid(rhs)) {
     return false;
   }
-  if (Columns() != rhs.Columns()) {
+  if (ColumnIds() != rhs.ColumnIds()) {
     return false;
   }
   return OnEquals(rhs);

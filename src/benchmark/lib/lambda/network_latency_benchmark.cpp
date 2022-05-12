@@ -52,7 +52,7 @@ Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
       if (invoke_result.IsSuccess()) {
         const auto ms_latencies = invoke_result.GetResponseBody().GetArray("ms_durations");
 
-        for (size_t i = 0; i < ms_latencies.GetLength(); i++) {
+        for (size_t i = 0; i < ms_latencies.GetLength(); ++i) {
           latencies.emplace_back(ms_latencies[i].AsDouble());
         }
       }
@@ -97,7 +97,7 @@ Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
 
         Aws::Utils::Array<Aws::Utils::Json::JsonValue> duration_seconds(ms_durations.GetLength());
 
-        for (size_t i = 0; i < ms_durations.GetLength(); i++) {
+        for (size_t i = 0; i < ms_durations.GetLength(); ++i) {
           duration_seconds[i] = Aws::Utils::Json::JsonValue().AsDouble(
               std::chrono::duration<double>(std::chrono::duration<double, std::milli>(ms_durations[i].AsDouble()))
                   .count());

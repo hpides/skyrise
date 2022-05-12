@@ -16,7 +16,7 @@ namespace skyrise {
  */
 class AbstractTableConstraint {
  public:
-  explicit AbstractTableConstraint(const std::unordered_set<ColumnId> columns);
+  explicit AbstractTableConstraint(std::unordered_set<ColumnId> columns);
 
   AbstractTableConstraint(const AbstractTableConstraint&) = default;
   AbstractTableConstraint(AbstractTableConstraint&&) = default;
@@ -25,7 +25,7 @@ class AbstractTableConstraint {
 
   virtual ~AbstractTableConstraint() = default;
 
-  const std::unordered_set<ColumnId>& Columns() const;
+  const std::unordered_set<ColumnId>& ColumnIds() const;
 
   bool operator==(const AbstractTableConstraint& rhs) const;
   bool operator!=(const AbstractTableConstraint& rhs) const;

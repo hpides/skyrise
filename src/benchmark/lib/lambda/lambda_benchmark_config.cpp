@@ -54,7 +54,7 @@ LambdaBenchmarkConfig::LambdaBenchmarkConfig(const Aws::String& function_zip_nam
   function_name_base << benchmark_id_ << "-" << benchmark_timestamp_ << "-" << function_zip_name;
 
   if (use_one_function_per_repetition_ == UseOneFunctionPerRepetition::kYes) {
-    for (size_t i = 0; i < repetition_count_; i++) {
+    for (size_t i = 0; i < repetition_count_; ++i) {
       function_configs_.emplace_back(
           FunctionConfig{function_location, function_name_base.str() + "-" + std::to_string(i), memory_size, is_local});
     }
@@ -64,7 +64,7 @@ LambdaBenchmarkConfig::LambdaBenchmarkConfig(const Aws::String& function_zip_nam
 
   auto empty_payload = std::make_shared<Aws::StringStream>();
 
-  for (size_t i = 0; i < repetition_count_; i++) {
+  for (size_t i = 0; i < repetition_count_; ++i) {
     std::vector<FunctionInvocationConfig> invocation_configs;
     invocation_configs.reserve(concurrent_invocation_count_);
 
@@ -72,7 +72,7 @@ LambdaBenchmarkConfig::LambdaBenchmarkConfig(const Aws::String& function_zip_nam
                                           ? function_configs_[i].function_name
                                           : function_name_base.str();
 
-    for (size_t j = 0; j < concurrent_invocation_count_; j++) {
+    for (size_t j = 0; j < concurrent_invocation_count_; ++j) {
       invocation_configs.emplace_back(FunctionInvocationConfig{
           function_name, function_name_base.str() + "-" + std::to_string(i) + "-" + std::to_string(j), empty_payload});
     }
@@ -85,8 +85,8 @@ void LambdaBenchmarkConfig::SetPayloads(const std::vector<std::shared_ptr<Aws::I
   Assert(payloads.size() == concurrent_invocation_count_,
          "The number of payloads and the concurrent invocation count must be equal.");
 
-  for (size_t i = 0; i < repetition_count_; i++) {
-    for (size_t j = 0; j < concurrent_invocation_count_; j++) {
+  for (size_t i = 0; i < repetition_count_; ++i) {
+    for (size_t j = 0; j < concurrent_invocation_count_; ++j) {
       repetition_configs_[i][j].payload = payloads[j];
     }
   }
