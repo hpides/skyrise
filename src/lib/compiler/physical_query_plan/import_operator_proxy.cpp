@@ -1,5 +1,6 @@
 #include "import_operator_proxy.hpp"
 
+#include <boost/container_hash/hash.hpp>
 #include <magic_enum.hpp>
 
 #include "operator/import_operator.hpp"
@@ -122,6 +123,26 @@ std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::OnDeepCopy(
   }
 
   return copy;
+}
+
+size_t ImportOperatorProxy::ShallowHash() const {
+  size_t hash = boost::hash_value(bucket_name_);
+  for (const auto& object_key : object_keys_) {
+    boost::hash_combine(hash, object_key);
+  }
+
+  for (const auto column_id : column_ids_) {
+    boost::hash_combine(hash, column_id);
+  }
+
+  if (import_options_) {
+    // TODO(anyone): Do we want to hash ImportOptions attribute-by-attribute?
+    boost::hash_combine(hash, import_options_);
+  }
+
+  boost::hash_combine(hash, output_objects_count_);
+
+  return hash;
 }
 
 std::shared_ptr<AbstractOperator> ImportOperatorProxy::CreateOperatorInstanceRecursively() {

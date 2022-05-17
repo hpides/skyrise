@@ -1,5 +1,7 @@
 #include "partition_operator_proxy.hpp"
 
+#include <boost/container_hash/hash.hpp>
+
 #include "operator/partition_operator.hpp"
 
 namespace {
@@ -79,6 +81,15 @@ std::shared_ptr<AbstractOperatorProxy> PartitionOperatorProxy::OnDeepCopy(
     const std::shared_ptr<AbstractOperatorProxy>& copied_left_input,
     const std::shared_ptr<AbstractOperatorProxy>& /*copied_right_input*/) const {
   return PartitionOperatorProxy::Make(partition_count_, partition_column_ids_, copied_left_input);
+}
+
+size_t PartitionOperatorProxy::ShallowHash() const {
+  size_t hash = boost::hash_value(partition_count_);
+  for (const auto partition_column_id : partition_column_ids_) {
+    boost::hash_combine(hash, partition_column_id);
+  }
+
+  return hash;
 }
 
 std::shared_ptr<AbstractOperator> PartitionOperatorProxy::CreateOperatorInstanceRecursively() {

@@ -1,5 +1,6 @@
 #include "export_operator_proxy.hpp"
 
+#include <boost/container_hash/hash.hpp>
 #include <magic_enum.hpp>
 
 #include "operator/export_operator.hpp"
@@ -76,6 +77,14 @@ std::shared_ptr<AbstractOperatorProxy> ExportOperatorProxy::OnDeepCopy(
     const std::shared_ptr<AbstractOperatorProxy>& copied_left_input,
     const std::shared_ptr<AbstractOperatorProxy>& /*copied_right_input*/) const {
   return ExportOperatorProxy::Make(bucket_name_, target_object_key_, export_format_, copied_left_input);
+}
+
+size_t ExportOperatorProxy::ShallowHash() const {
+  size_t hash = boost::hash_value(bucket_name_);
+  boost::hash_combine(hash, target_object_key_);
+  boost::hash_combine(hash, export_format_);
+
+  return hash;
 }
 
 std::shared_ptr<AbstractOperator> ExportOperatorProxy::CreateOperatorInstanceRecursively() {

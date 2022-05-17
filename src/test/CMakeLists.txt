@@ -30,6 +30,7 @@ set(
     lib/compiler/physical_query_plan/operator_proxy_test.cpp
     lib/compiler/physical_query_plan/partition_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/pqp_serialization_test.cpp
+    lib/compiler/physical_query_plan/pqp_utils_test.cpp
     lib/compiler/physical_query_plan/projection_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/sort_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/union_operator_proxy_test.cpp

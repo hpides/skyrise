@@ -51,6 +51,8 @@ std::shared_ptr<AbstractOperatorProxy> FilterOperatorProxy::OnDeepCopy(
   return FilterOperatorProxy::Make(predicate_->DeepCopy(), copied_left_input);
 }
 
+size_t FilterOperatorProxy::ShallowHash() const { return predicate_->Hash(); }
+
 std::shared_ptr<AbstractOperator> FilterOperatorProxy::CreateOperatorInstanceRecursively() {
   Assert(LeftInput(), "Missing input operator proxy.");
   Assert(predicate_, "FilterOperatorProxy has no predicate.");

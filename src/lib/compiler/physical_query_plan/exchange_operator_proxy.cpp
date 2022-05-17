@@ -3,6 +3,8 @@
 #include <sstream>
 #include <string>
 
+#include <boost/container_hash/hash.hpp>
+
 #include "types.hpp"
 
 namespace {
@@ -78,6 +80,13 @@ std::shared_ptr<AbstractOperatorProxy> ExchangeOperatorProxy::OnDeepCopy(
       Fail("Unexpected ExchangeMode.");
   }
   return exchange_proxy;
+}
+
+size_t ExchangeOperatorProxy::ShallowHash() const {
+  size_t hash = boost::hash_value(mode_);
+  boost::hash_combine(hash, output_objects_count_);
+
+  return hash;
 }
 
 std::shared_ptr<AbstractOperator> ExchangeOperatorProxy::CreateOperatorInstanceRecursively() {

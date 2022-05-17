@@ -2,9 +2,11 @@
 
 #include <sstream>
 
+#include <boost/container_hash/hash.hpp>
 #include <magic_enum.hpp>
 
 #include "operator/abstract_operator.hpp"
+#include "pqp_utils.hpp"
 #include "utils/assert.hpp"
 #include "utils/print_directed_acyclic_graph.hpp"
 
@@ -105,6 +107,22 @@ std::shared_ptr<AbstractOperatorProxy> AbstractOperatorProxy::DeepCopy(
   copied_proxies.emplace(this, copied_proxy);
 
   return copied_proxy;
+}
+
+size_t AbstractOperatorProxy::Hash() const {
+  size_t hash = 0;
+
+  VisitPqp(SharedFromBase(), [&hash](const auto& node) {
+    if (node) {
+      boost::hash_combine(hash, node->type_);
+      boost::hash_combine(hash, node->ShallowHash());
+      return PqpVisitation::kVisitInputs;
+    } else {
+      return PqpVisitation::kDoNotVisitInputs;
+    }
+  });
+
+  return hash;
 }
 
 std::shared_ptr<AbstractOperator> AbstractOperatorProxy::GetOrCreateOperatorInstance() {

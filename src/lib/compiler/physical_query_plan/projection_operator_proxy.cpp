@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+#include <boost/container_hash/hash.hpp>
+
 #include "expression/expression_serialization.hpp"
 #include "expression/expression_utils.hpp"
 #include "operator/projection_operator.hpp"
@@ -55,6 +57,15 @@ std::shared_ptr<AbstractOperatorProxy> ProjectionOperatorProxy::OnDeepCopy(
     const std::shared_ptr<AbstractOperatorProxy>& copied_left_input,
     const std::shared_ptr<AbstractOperatorProxy>& /*copied_right_input*/) const {
   return ProjectionOperatorProxy::Make(ExpressionsDeepCopy(expressions_), copied_left_input);
+}
+
+size_t ProjectionOperatorProxy::ShallowHash() const {
+  size_t hash = 0;
+  for (const auto& expression : expressions_) {
+    boost::hash_combine(hash, expression->Hash());
+  }
+
+  return hash;
 }
 
 std::shared_ptr<AbstractOperator> ProjectionOperatorProxy::CreateOperatorInstanceRecursively() {

@@ -143,6 +143,8 @@ struct SortColumnDefinition final {
   explicit SortColumnDefinition(ColumnId column_id, SortMode sort_mode = SortMode::kAscending)
       : column_id(column_id), sort_mode(sort_mode) {}
 
+  size_t Hash() const;
+
   ColumnId column_id;
   SortMode sort_mode;
 };

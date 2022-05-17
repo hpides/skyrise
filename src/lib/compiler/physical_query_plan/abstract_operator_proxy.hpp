@@ -66,6 +66,14 @@ class AbstractOperatorProxy : public AbstractPlanNode<AbstractOperatorProxy> {
       std::unordered_map<const AbstractOperatorProxy*, std::shared_ptr<AbstractOperatorProxy>>& copied_proxies) const;
 
   /**
+   * @return a hash value incorporating the data fields of the operator proxy and all of its inputs.
+   *
+   * Please note that hash conflicts are possible. This means that two PQPs can have the same hash although being
+   * structurally different.
+   */
+  size_t Hash() const;
+
+  /**
    * This function recursively creates an operator tree capable of processing actual data, if not already done.
    * @return a shared pointer to the root operator.
    * @pre The input operator proxies must be set or bound before calling this function.
@@ -89,11 +97,17 @@ class AbstractOperatorProxy : public AbstractPlanNode<AbstractOperatorProxy> {
       const std::unordered_map<std::string, std::shared_ptr<AbstractOperatorProxy>>& identity_to_operator_proxies);
 
  protected:
+  OperatorType type_;  // mutable to allow for changes during optimization
+
   virtual std::shared_ptr<AbstractOperatorProxy> OnDeepCopy(
       const std::shared_ptr<AbstractOperatorProxy>& copied_left_input,
       const std::shared_ptr<AbstractOperatorProxy>& copied_right_input) const = 0;
 
-  OperatorType type_;  // mutable to allow for changes during optimization
+  /**
+   * Override to hash data fields in derived types. We do not need to take care of the input nodes here since they are
+   * already handled by the calling methods.
+   */
+  virtual size_t ShallowHash() const = 0;
 
   /**
    * Creates and returns a tree of corresponding operators using recursion, starting from top to bottom.

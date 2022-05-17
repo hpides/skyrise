@@ -33,6 +33,7 @@ class LimitOperatorProxy : public EnableMakeForPlanNode<LimitOperatorProxy, Abst
   std::shared_ptr<AbstractOperatorProxy> OnDeepCopy(
       const std::shared_ptr<AbstractOperatorProxy>& copied_left_input,
       const std::shared_ptr<AbstractOperatorProxy>& copied_right_input) const override;
+  size_t ShallowHash() const override;
   std::shared_ptr<AbstractOperator> CreateOperatorInstanceRecursively() override;
 
  private:

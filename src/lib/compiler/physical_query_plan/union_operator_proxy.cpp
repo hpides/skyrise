@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+#include <boost/container_hash/hash.hpp>
+
 #include "magic_enum.hpp"
 #include "types.hpp"
 
@@ -71,6 +73,8 @@ std::shared_ptr<AbstractOperatorProxy> UnionOperatorProxy::OnDeepCopy(
     const std::shared_ptr<AbstractOperatorProxy>& copied_right_input) const {
   return UnionOperatorProxy::Make(mode_, copied_left_input, copied_right_input);
 }
+
+size_t UnionOperatorProxy::ShallowHash() const { return boost::hash_value(mode_); }
 
 std::shared_ptr<AbstractOperator> UnionOperatorProxy::CreateOperatorInstanceRecursively() {
   Fail("CreateOperatorInstanceRecursively() is not yet implemented.");

@@ -116,12 +116,15 @@ set(
     compiler/physical_query_plan/partition_operator_proxy.hpp
     compiler/physical_query_plan/pqp_serialization.cpp
     compiler/physical_query_plan/pqp_serialization.hpp
+    compiler/physical_query_plan/pqp_utils.cpp
+    compiler/physical_query_plan/pqp_utils.hpp
     compiler/physical_query_plan/projection_operator_proxy.cpp
     compiler/physical_query_plan/projection_operator_proxy.hpp
     compiler/physical_query_plan/sort_operator_proxy.cpp
     compiler/physical_query_plan/sort_operator_proxy.hpp
     compiler/physical_query_plan/union_operator_proxy.cpp
     compiler/physical_query_plan/union_operator_proxy.hpp
+    compiler/plan_utils.hpp
 
     expression/abstract_expression.cpp
     expression/abstract_expression.hpp
