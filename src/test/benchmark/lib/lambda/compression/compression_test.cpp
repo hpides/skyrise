@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "compression/compressor.hpp"
-#include "compression/decompressor.hpp"
+#include "lambda/compression/compressor.hpp"
+#include "lambda/compression/decompressor.hpp"
 #include "utils/literal.hpp"
 #include "utils/string.hpp"
 

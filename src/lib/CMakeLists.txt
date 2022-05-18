@@ -176,8 +176,6 @@ set(
     metadata/table_partition.hpp
     metadata/table_schema.cpp
     metadata/table_schema.hpp
-    metadata/tpch_mock_catalog.cpp
-    metadata/tpch_mock_catalog.hpp
     
     metering/request_tracker/monitor.cpp
     metering/request_tracker/monitor.hpp

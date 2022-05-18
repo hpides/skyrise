@@ -1,6 +1,6 @@
 include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib
+    ${PROJECT_SOURCE_DIR}/src/benchmark/lib
+    ${PROJECT_SOURCE_DIR}/src/test/lib
     ${PROJECT_SOURCE_DIR}/third_party/googletest/googletest/include
 )
 
@@ -9,8 +9,8 @@ set(
     TEST_SOURCES
     benchmark/lib/benchmark_integration_test.cpp
     benchmark/lib/benchmark_result_aggregate_test.cpp
-    benchmark/lib/compression/compression_test.cpp
-    benchmark/lib/data_generation/tpch_test.cpp
+        benchmark/lib/lambda/compression/compression_test.cpp
+        benchmark/lib/tpch/tpch_data_generator_test.cpp
     benchmark/lib/ec2/ec2_benchmark_config_test.cpp
     benchmark/lib/ec2/ec2_benchmark_result_test.cpp
     benchmark/lib/ec2/ec2_benchmark_runner_test.cpp
@@ -39,7 +39,7 @@ set(
     lib/expression/expression_serialization_test.cpp
 
     lib/metadata/mock_catalog_test.cpp
-    lib/metadata/tpch_mock_catalog_test.cpp
+        benchmark/lib/tpch/tpch_mock_catalog_test.cpp
 
     lib/monitoring/function_segments_test.cpp
     lib/monitoring/metrics_collector_test.cpp

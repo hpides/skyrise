@@ -1,22 +1,20 @@
 #include "tpch_mock_catalog.hpp"
 
-#include "data_generation/tpch/tpch_generator.hpp"
-#include "storage/table/table_column_definition.hpp"
-#include "table_schema.hpp"
+#include "tpch_data_generator.hpp"
 
 namespace skyrise {
 
 TpchMockCatalog::TpchMockCatalog() {
   // For each TPC-H table, create a TableSchema and add it to the mock catalog.
 
-  // Table `customer`
+  // Table customer
   auto customer_column_definitions = TpchColumnDefinitionsByTable(TpchTable::kCustomer);
   auto customer_table_schema = TableSchema::FromTableColumnDefinitions(customer_column_definitions);
   customer_table_schema->AddKeyConstraint(
       {{customer_table_schema->ColumnIdByName("c_custkey")}, KeyConstraintType::kPrimaryKey});
   AddTableSchema("customer", customer_table_schema);
 
-  // Table `lineitem`
+  // Table lineitem
   auto lineitem_column_definitions = TpchColumnDefinitionsByTable(TpchTable::kLineItem);
   auto lineitem_table_schema = TableSchema::FromTableColumnDefinitions(lineitem_column_definitions);
   const TableKeyConstraint lineitem_primary_key_constraint(
@@ -25,7 +23,7 @@ TpchMockCatalog::TpchMockCatalog() {
   lineitem_table_schema->AddKeyConstraint(lineitem_primary_key_constraint);
   AddTableSchema("lineitem", lineitem_table_schema);
 
-  // Table `nation`
+  // Table nation
   auto nation_column_definitions = TpchColumnDefinitionsByTable(TpchTable::kNation);
   auto nation_table_schema = TableSchema::FromTableColumnDefinitions(nation_column_definitions);
   const TableKeyConstraint nation_primary_key_constraint =
@@ -33,7 +31,7 @@ TpchMockCatalog::TpchMockCatalog() {
   nation_table_schema->AddKeyConstraint(nation_primary_key_constraint);
   AddTableSchema("nation", nation_table_schema);
 
-  // Table `orders`
+  // Table orders
   auto orders_column_definitions = TpchColumnDefinitionsByTable(TpchTable::kOrders);
   auto orders_table_schema = TableSchema::FromTableColumnDefinitions(orders_column_definitions);
   const TableKeyConstraint orders_primary_key_constraint =
@@ -41,7 +39,7 @@ TpchMockCatalog::TpchMockCatalog() {
   orders_table_schema->AddKeyConstraint(orders_primary_key_constraint);
   AddTableSchema("orders", orders_table_schema);
 
-  // Table `part`
+  // Table part
   auto part_column_definitions = TpchColumnDefinitionsByTable(TpchTable::kPart);
   auto part_table_schema = TableSchema::FromTableColumnDefinitions(part_column_definitions);
   const TableKeyConstraint part_table_primary_key_constraint =
@@ -49,7 +47,7 @@ TpchMockCatalog::TpchMockCatalog() {
   part_table_schema->AddKeyConstraint(part_table_primary_key_constraint);
   AddTableSchema("part", part_table_schema);
 
-  // Table `partsupp`
+  // Table partsupp
   auto partsupp_column_definitions = TpchColumnDefinitionsByTable(TpchTable::kPartSupp);
   auto partsupp_table_schema = TableSchema::FromTableColumnDefinitions(partsupp_column_definitions);
   const TableKeyConstraint partsupp_primary_key_constraint(
@@ -58,7 +56,7 @@ TpchMockCatalog::TpchMockCatalog() {
   partsupp_table_schema->AddKeyConstraint(partsupp_primary_key_constraint);
   AddTableSchema("partsupp", partsupp_table_schema);
 
-  // Table `region`
+  // Table region
   auto region_column_definitions = TpchColumnDefinitionsByTable(TpchTable::kRegion);
   auto region_table_schema = TableSchema::FromTableColumnDefinitions(region_column_definitions);
   const TableKeyConstraint region_primary_key_constraint({region_table_schema->ColumnIdByName("r_regionkey")},
@@ -66,7 +64,7 @@ TpchMockCatalog::TpchMockCatalog() {
   region_table_schema->AddKeyConstraint(region_primary_key_constraint);
   AddTableSchema("region", region_table_schema);
 
-  // Table `supplier`
+  // Table supplier
   auto supplier_column_definitions = TpchColumnDefinitionsByTable(TpchTable::kSupplier);
   auto supplier_table_schema = TableSchema::FromTableColumnDefinitions(supplier_column_definitions);
   const TableKeyConstraint supplier_primary_key_constraint({supplier_table_schema->ColumnIdByName("s_suppkey")},

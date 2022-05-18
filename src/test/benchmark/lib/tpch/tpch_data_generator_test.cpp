@@ -1,7 +1,8 @@
+#include "tpch/tpch_data_generator.hpp"
+
 #include <gtest/gtest.h>
 
-#include "data_generation/tpch/tpch_generator.hpp"
-#include "lib/storage/backend/mock_storage.hpp"
+#include "storage/backend/mock_storage.hpp"
 #include "storage/formats/csv_writer.hpp"
 #include "storage/table/chunk_writer.hpp"
 
@@ -43,7 +44,7 @@ TEST_F(TpchDataGeneratorTest, GenerateRegionTable) {
   ASSERT_TRUE(status.GetError());
 
   // Now generate table
-  TPCHGenerator generator(get_chunk_writer_, kScaleFactor);
+  TpchDataGenerator generator(get_chunk_writer_, kScaleFactor);
   generator.DisableAllTables();
   generator.EnableTable(TpchTable::kRegion);
   generator.Generate();
@@ -68,7 +69,7 @@ TEST_F(TpchDataGeneratorTest, GenerateAlmostAllTables) {
   const std::vector<std::string> tables = {"partsupp.csv", "supplier.csv", "customer.csv",
                                            "orders.csv",   "nation.csv",   "region.csv"};
 
-  TPCHGenerator generator(get_chunk_writer_, kScaleFactor);
+  TpchDataGenerator generator(get_chunk_writer_, kScaleFactor);
   generator.EnableAllTables();
   generator.DisableTable(TpchTable::kLineItem);
   generator.DisableTable(TpchTable::kPart);
@@ -88,7 +89,7 @@ TEST_F(TpchDataGeneratorTest, GenerateAllTables) {
   const std::vector<std::string> tables = {"part.csv",   "partsupp.csv", "supplier.csv", "customer.csv",
                                            "orders.csv", "nation.csv",   "region.csv",   "lineitem.csv"};
 
-  TPCHGenerator generator(get_chunk_writer_, kScaleFactor);
+  TpchDataGenerator generator(get_chunk_writer_, kScaleFactor);
   generator.EnableAllTables();
   generator.Generate();
 

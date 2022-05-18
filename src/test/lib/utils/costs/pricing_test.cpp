@@ -6,7 +6,7 @@
 #include <gtest/gtest.h>
 
 #include "client/client.hpp"
-#include "lib/testing/aws_test.hpp"
+#include "testing/aws_test.hpp"
 
 namespace skyrise {
 

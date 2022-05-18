@@ -1,8 +1,8 @@
-#include "tpch_generator.hpp"
+#include "tpch_data_generator.hpp"
 
 #include <cmath>
 
-#include "../table_builder.hpp"
+#include "table_builder.hpp"
 
 extern "C" {
 #include <dss.h>
@@ -114,20 +114,22 @@ TableColumnDefinitions TpchColumnDefinitionsByTable(TpchTable table) {
   }
 }
 
-TPCHGenerator::TPCHGenerator(PartitionedChunkWriterFactory chunk_writer_factory, float scale_factor)
+TpchDataGenerator::TpchDataGenerator(PartitionedChunkWriterFactory chunk_writer_factory, float scale_factor)
     : AbstractDataGenerator(std::move(chunk_writer_factory)), scale_factor_(scale_factor) {}
 
-void TPCHGenerator::EnableTable(TpchTable table) { tables_enabled_[table] = true; }
+void TpchDataGenerator::EnableTable(TpchTable table) { tables_enabled_[table] = true; }
 
-bool TPCHGenerator::IsTableEnabled(TpchTable table) { return tables_enabled_.find(table) != tables_enabled_.cend(); }
+bool TpchDataGenerator::IsTableEnabled(TpchTable table) {
+  return tables_enabled_.find(table) != tables_enabled_.cend();
+}
 
-void TPCHGenerator::DisableTable(TpchTable table) {
+void TpchDataGenerator::DisableTable(TpchTable table) {
   if (IsTableEnabled(table)) {
     tables_enabled_.erase(table);
   }
 }
 
-void TPCHGenerator::EnableAllTables() {
+void TpchDataGenerator::EnableAllTables() {
   EnableTable(TpchTable::kCustomer);
   EnableTable(TpchTable::kLineItem);
   EnableTable(TpchTable::kNation);
@@ -138,9 +140,9 @@ void TPCHGenerator::EnableAllTables() {
   EnableTable(TpchTable::kSupplier);
 }
 
-void TPCHGenerator::DisableAllTables() { tables_enabled_.clear(); }
+void TpchDataGenerator::DisableAllTables() { tables_enabled_.clear(); }
 
-void TPCHGenerator::Generate() {
+void TpchDataGenerator::Generate() {
   auto null_writer_factory = [](const std::string& /*name*/,
                                 const TableColumnDefinitions& /*schema*/) -> std::shared_ptr<PartitionedChunkWriter> {
     return nullptr;

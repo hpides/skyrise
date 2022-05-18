@@ -3,7 +3,7 @@
  */
 #pragma once
 
-#include "../abstract_generator.hpp"
+#include "abstract_data_generator.hpp"
 
 namespace skyrise {
 
@@ -11,9 +11,9 @@ enum class TpchTable { kPart, kPartSupp, kSupplier, kCustomer, kOrders, kLineIte
 
 TableColumnDefinitions TpchColumnDefinitionsByTable(TpchTable table);
 
-class TPCHGenerator : public AbstractDataGenerator {
+class TpchDataGenerator : public AbstractDataGenerator {
  public:
-  TPCHGenerator(PartitionedChunkWriterFactory chunk_writer_factory, float scale_factor);
+  TpchDataGenerator(PartitionedChunkWriterFactory chunk_writer_factory, float scale_factor);
   void EnableTable(TpchTable table);
   bool IsTableEnabled(TpchTable table);
   void DisableTable(TpchTable table);
