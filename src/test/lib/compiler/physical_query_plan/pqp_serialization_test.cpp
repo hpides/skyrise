@@ -19,16 +19,16 @@ using namespace skyrise::expression_functional;  // NOLINT(google-build-using-na
 
 class PqpSerializationTest : public ::testing::Test {
  protected:
-  const std::string kTargetKey = "target_key";
-  const std::string kBucketName = "test_bucket";
-  const std::vector<ObjectReference> kObjectReferences = {
-      ObjectReference(kBucketName, "a"), ObjectReference(kBucketName, "b"), ObjectReference(kBucketName, "c")};
-  const std::vector<ColumnId> kColumnIds = {ColumnId{1}, ColumnId{3}};
+  const ObjectReference kTargetObject{"test_bucket", "target_key"};
+  const std::vector<ObjectReference> kImportObjects = {ObjectReference("import_bucket", "a.orc"),
+                                                       ObjectReference("import_bucket", "b.orc"),
+                                                       ObjectReference("import_bucket", "c.orc")};
+  const std::vector<ColumnId> kImportColumnIds = {ColumnId{1}, ColumnId{3}};
 };
 
 TEST_F(PqpSerializationTest, SingleOperatorProxy) {
   const auto comment = "This is a test comment";
-  const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
+  const auto import_proxy = ImportOperatorProxy::Make(kImportObjects, kImportColumnIds);
   import_proxy->SetComment(comment);
 
   std::string serialized_proxy = SerializePqp(import_proxy);
@@ -43,10 +43,10 @@ TEST_F(PqpSerializationTest, SingleOperatorProxy) {
 }
 
 TEST_F(PqpSerializationTest, LinearOperatorChain) {
-  const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
+  const auto import_proxy = ImportOperatorProxy::Make(kImportObjects, kImportColumnIds);
   const auto filter_proxy = FilterOperatorProxy::Make(
       GreaterThanEquals_(PqpColumn_(ColumnId{0}, DataType::kLong, false, "a"), 100), import_proxy);
-  const auto export_proxy = ExportOperatorProxy::Make(kBucketName, kTargetKey, ExportFormat::kOrc, filter_proxy);
+  const auto export_proxy = ExportOperatorProxy::Make(kTargetObject, ExportFormat::kOrc, filter_proxy);
 
   std::string serialized_proxy = SerializePqp(export_proxy);
   const auto deserialized_proxy = DeserializePqp(serialized_proxy);
@@ -69,7 +69,7 @@ TEST_F(PqpSerializationTest, LinearOperatorChain) {
 }
 
 TEST_F(PqpSerializationTest, OperatorTree) {
-  const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
+  const auto import_proxy = ImportOperatorProxy::Make(kImportObjects, kImportColumnIds);
   const auto filter_proxy_1 =
       FilterOperatorProxy::Make(LessThanEquals_(PqpColumn_(ColumnId{1}, DataType::kLong, false, "a"), 0), import_proxy);
   const auto filter_proxy_2 = FilterOperatorProxy::Make(
@@ -104,10 +104,10 @@ TEST_F(PqpSerializationTest, OperatorTree) {
 
 TEST_F(PqpSerializationTest, CyclicGraph) {
   // In practise, we always have directed acyclic graphs. Therefore, this example is theoretical and solely for testing.
-  const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
+  const auto import_proxy = ImportOperatorProxy::Make(kImportObjects, kImportColumnIds);
   const auto filter_proxy = FilterOperatorProxy::Make(
       GreaterThanEquals_(PqpColumn_(ColumnId{0}, DataType::kLong, false, "a"), 100), import_proxy);
-  const auto export_proxy = ExportOperatorProxy::Make(kBucketName, kTargetKey, ExportFormat::kOrc, filter_proxy);
+  const auto export_proxy = ExportOperatorProxy::Make(kTargetObject, ExportFormat::kOrc, filter_proxy);
   import_proxy->SetLeftInput(export_proxy);
 
   const std::string serialized_proxy = SerializePqp(export_proxy);

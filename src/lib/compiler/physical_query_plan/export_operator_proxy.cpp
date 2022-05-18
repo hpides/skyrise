@@ -18,12 +18,12 @@ const std::string kPlaceholderString = "PLACEHOLDER";
 
 namespace skyrise {
 
-ExportOperatorProxy::ExportOperatorProxy(std::string bucket_name, std::string target_object_key,
-                                         ExportFormat export_format)
+ExportOperatorProxy::ExportOperatorProxy(ObjectReference target_object, ExportFormat export_format)
     : AbstractOperatorProxy(OperatorType::kExport),
-      bucket_name_(std::move(bucket_name)),
-      target_object_key_(std::move(target_object_key)),
-      export_format_(export_format) {}
+      target_object_(std::move(target_object)),
+      export_format_(export_format) {
+  Assert(target_object.etag.empty(), "Target ObjectReference should not specify an ETag attribute.");
+}
 
 const std::string& ExportOperatorProxy::Name() const { return kName; }
 
@@ -31,17 +31,21 @@ std::string ExportOperatorProxy::Description(const DescriptionMode mode) const {
   std::stringstream stream;
   const char separator = mode == DescriptionMode::kSingleLine ? ' ' : '\n';
   stream << AbstractOperatorProxy::Description(mode) << separator;
-  stream << bucket_name_ << "/";
+  stream << target_object_.bucket_name << "/";
   if (mode == DescriptionMode::kMultiLine) {
     stream << separator;
   }
-  stream << target_object_key_;
+  stream << target_object_.identifier;
   return stream.str();
 }
 
-const std::string& ExportOperatorProxy::BucketName() const { return bucket_name_; }
+void ExportOperatorProxy::SetTargetObject(ObjectReference target_object, ExportFormat export_format) {
+  Assert(target_object.etag.empty(), "Target ObjectReference should not specify an ETag attribute.");
+  target_object_ = std::move(target_object);
+  export_format_ = export_format;
+}
 
-const std::string& ExportOperatorProxy::TargetObjectKey() const { return target_object_key_; }
+const ObjectReference& ExportOperatorProxy::TargetObject() const { return target_object_; }
 
 ExportFormat ExportOperatorProxy::GetExportFormat() const { return export_format_; }
 
@@ -53,35 +57,35 @@ std::shared_ptr<AbstractOperatorProxy> ExportOperatorProxy::FromJson(const Aws::
   auto target_object_key = json.GetString(kJsonKeyTargetObjectKey);
   auto export_format = *magic_enum::enum_cast<ExportFormat>(json.GetString(kJsonKeyExportFormat));
 
-  auto export_proxy = ExportOperatorProxy::Make(bucket_name, target_object_key, export_format);
+  auto export_proxy = ExportOperatorProxy::Make(ObjectReference(bucket_name, target_object_key), export_format);
   export_proxy->SetAttributesFromJson(json);
 
   return export_proxy;
 }
 
 Aws::Utils::Json::JsonValue ExportOperatorProxy::ToJson() const {
-  Assert(bucket_name_ != kPlaceholderString && target_object_key_ != kPlaceholderString,
+  Assert(target_object_.bucket_name != kPlaceholderString && target_object_.identifier != kPlaceholderString,
          "Did not expect to serialize a dummy Export.");
 
   return AbstractOperatorProxy::ToJson()
-      .WithString(kJsonKeyBucketName, bucket_name_)
-      .WithString(kJsonKeyTargetObjectKey, target_object_key_)
+      .WithString(kJsonKeyBucketName, target_object_.bucket_name)
+      .WithString(kJsonKeyTargetObjectKey, target_object_.identifier)
       .WithString(kJsonKeyExportFormat, std::string(magic_enum::enum_name(export_format_)));
 }
 
 std::shared_ptr<AbstractOperatorProxy> ExportOperatorProxy::DummyExportOperatorProxy() {
-  return ExportOperatorProxy::Make(kPlaceholderString, kPlaceholderString, ExportFormat::kOrc);
+  return ExportOperatorProxy::Make(ObjectReference(kPlaceholderString, kPlaceholderString), ExportFormat::kOrc);
 }
 
 std::shared_ptr<AbstractOperatorProxy> ExportOperatorProxy::OnDeepCopy(
     const std::shared_ptr<AbstractOperatorProxy>& copied_left_input,
     const std::shared_ptr<AbstractOperatorProxy>& /*copied_right_input*/) const {
-  return ExportOperatorProxy::Make(bucket_name_, target_object_key_, export_format_, copied_left_input);
+  return ExportOperatorProxy::Make(target_object_, export_format_, copied_left_input);
 }
 
 size_t ExportOperatorProxy::ShallowHash() const {
-  size_t hash = boost::hash_value(bucket_name_);
-  boost::hash_combine(hash, target_object_key_);
+  size_t hash = boost::hash_value(target_object_.bucket_name);
+  boost::hash_combine(hash, target_object_.identifier);
   boost::hash_combine(hash, export_format_);
 
   return hash;
@@ -89,8 +93,8 @@ size_t ExportOperatorProxy::ShallowHash() const {
 
 std::shared_ptr<AbstractOperator> ExportOperatorProxy::CreateOperatorInstanceRecursively() {
   Assert(LeftInput(), "Missing input operator proxy.");
-  return std::make_shared<ExportOperator>(LeftInput()->GetOrCreateOperatorInstance(), bucket_name_, target_object_key_,
-                                          export_format_);
+  return std::make_shared<ExportOperator>(LeftInput()->GetOrCreateOperatorInstance(), target_object_.bucket_name,
+                                          target_object_.identifier, export_format_);
 }
 
 }  // namespace skyrise

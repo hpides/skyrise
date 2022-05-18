@@ -8,6 +8,8 @@
 #include <ostream>
 #include <vector>
 
+#include "utils/assert.hpp"
+
 namespace skyrise {
 
 class Noncopyable {
@@ -157,17 +159,19 @@ inline bool operator==(const SortColumnDefinition& lhs, const SortColumnDefiniti
  * Defines a general reference to an object stored in S3.
  */
 struct ObjectReference {
-  explicit ObjectReference(const std::string& object_bucket_name, const std::string& object_identifier,
-                           const std::string& object_etag = "")
-      : bucket_name(object_bucket_name), identifier(object_identifier), etag(object_etag){};
+  explicit ObjectReference(std::string init_bucket_name, std::string init_identifier, std::string init_etag = "")
+      : bucket_name(std::move(init_bucket_name)), identifier(std::move(init_identifier)), etag(std::move(init_etag)) {
+    Assert(!bucket_name.empty(), "ObjectReference requires a non-empty bucket name.");
+    Assert(!identifier.empty(), "ObjectReference requires a non-empty object identifier.");
+  };
 
   bool operator==(const ObjectReference& other) const {
     return bucket_name == other.bucket_name && identifier == other.identifier && etag == other.etag;
   };
 
-  const std::string bucket_name;
-  const std::string identifier;
-  const std::string etag;
+  std::string bucket_name;
+  std::string identifier;
+  std::string etag;
 };
 
 }  // namespace skyrise

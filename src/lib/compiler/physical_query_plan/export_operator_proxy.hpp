@@ -12,7 +12,7 @@ enum class ExportFormat { kCsv, kOrc, kOrcPartitioned };
 class ExportOperatorProxy : public EnableMakeForPlanNode<ExportOperatorProxy, AbstractOperatorProxy>,
                             public AbstractOperatorProxy {
  public:
-  ExportOperatorProxy(std::string bucket_name, std::string target_object_key, ExportFormat export_format);
+  ExportOperatorProxy(ObjectReference target_object, ExportFormat export_format);
 
   const std::string& Name() const override;
   std::string Description(const DescriptionMode mode) const override;
@@ -20,8 +20,8 @@ class ExportOperatorProxy : public EnableMakeForPlanNode<ExportOperatorProxy, Ab
   /**
    * Accessors
    */
-  const std::string& BucketName() const;
-  const std::string& TargetObjectKey() const;
+  void SetTargetObject(ObjectReference target_object, ExportFormat export_format);
+  const ObjectReference& TargetObject() const;
   ExportFormat GetExportFormat() const;
 
   /**
@@ -49,8 +49,7 @@ class ExportOperatorProxy : public EnableMakeForPlanNode<ExportOperatorProxy, Ab
   std::shared_ptr<AbstractOperator> CreateOperatorInstanceRecursively() override;
 
  private:
-  std::string bucket_name_;
-  std::string target_object_key_;
+  ObjectReference target_object_;
   ExportFormat export_format_;
 };
 
