@@ -24,26 +24,26 @@ class OperatorProxyTest : public ::testing::Test {
 
  protected:
   std::shared_ptr<AbstractExpression> a_, b_;
-  static inline const std::string kBucketName = "dummy_bucket";
-  static inline const std::vector<std::string> kObjectKeys = {"a.orc", "b.orc"};
+  static inline const std::vector<ObjectReference> kObjectReferences = {ObjectReference("dummy_bucket", "a.orc"),
+                                                                        ObjectReference("dummy_bucket", "b.orc")};
   static inline const std::vector<ColumnId> kColumnIds = {ColumnId{1}, ColumnId{3}};
 };
 
 TEST_F(OperatorProxyTest, DefaultIdentity) {
-  const auto import_proxy = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
+  const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
   std::stringstream expected_stream;
   expected_stream << import_proxy->Name() << import_proxy.get();
   EXPECT_EQ(import_proxy->Identity(), expected_stream.str());
 }
 
 TEST_F(OperatorProxyTest, SetIdentity) {
-  const auto import_proxy = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
+  const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
   import_proxy->SetIdentity("xyz123");
   EXPECT_EQ(import_proxy->Identity(), "xyz123");
 }
 
 TEST_F(OperatorProxyTest, PrefixIdentity) {
-  const auto import_proxy = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
+  const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
   import_proxy->SetIdentity("ImportXYZ");
   import_proxy->PrefixIdentity("my_prefix_");
 
@@ -59,7 +59,7 @@ TEST_F(OperatorProxyTest, DescriptionIncludesComment) {
 }
 
 TEST_F(OperatorProxyTest, SetLeftInput) {
-  const auto import_proxy = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
+  const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
   ASSERT_EQ(import_proxy->OutputNodeCount(), 0);
   const auto filter_proxy = FilterOperatorProxy::Make(GreaterThanEquals_(a_, b_), import_proxy);
 
@@ -69,8 +69,8 @@ TEST_F(OperatorProxyTest, SetLeftInput) {
 }
 
 TEST_F(OperatorProxyTest, SetBothInputs) {
-  const auto import_proxy_a = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
-  const auto import_proxy_b = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
+  const auto import_proxy_a = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
+  const auto import_proxy_b = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
   ASSERT_EQ(import_proxy_a->OutputNodeCount(), 0);
   ASSERT_EQ(import_proxy_b->OutputNodeCount(), 0);
 
@@ -88,33 +88,33 @@ TEST_F(OperatorProxyTest, InputObjectsCount) {
   // clang-format off
   const auto union_proxy =
   UnionOperatorProxy::Make(SetOperationMode::kAll,
-    ImportOperatorProxy::Make(kBucketName, std::vector<std::string>{"a.orc", "b.orc"}, kColumnIds),
-    ImportOperatorProxy::Make(kBucketName, std::vector<std::string>{"c.orc"}, kColumnIds));
+    ImportOperatorProxy::Make(kObjectReferences, kColumnIds),
+    ImportOperatorProxy::Make(std::vector<ObjectReference>{ObjectReference("dummy_bucket", "c.orc")}, kColumnIds));
   // clang-format on
-  EXPECT_EQ(union_proxy->InputObjectsCount(), 3);
+  EXPECT_EQ(union_proxy->InputObjectsCount(), kObjectReferences.size() + 1);
 }
 
 TEST_F(OperatorProxyTest, OutputObjectsCount) {
   // clang-format off
   const auto filter_proxy =
   FilterOperatorProxy::Make(GreaterThanEquals_(a_, b_),
-    ImportOperatorProxy::Make(kBucketName, std::vector<std::string>{"a.orc", "b.orc"}, kColumnIds));
+    ImportOperatorProxy::Make(kObjectReferences, kColumnIds));
   // clang-format on
-  EXPECT_EQ(filter_proxy->OutputObjectsCount(), 2);
+  EXPECT_EQ(filter_proxy->OutputObjectsCount(), kObjectReferences.size());
 }
 
 TEST_F(OperatorProxyTest, OutputColumnsCount) {
   // clang-format off
   const auto filter_proxy =
   FilterOperatorProxy::Make(GreaterThanEquals_(a_, b_),
-    ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{{ColumnId{0}, ColumnId{1}, ColumnId{5}}}));
+    ImportOperatorProxy::Make(kObjectReferences, std::vector<ColumnId>{{ColumnId{0}, ColumnId{1}, ColumnId{5}}}));
   // clang-format on
   EXPECT_EQ(filter_proxy->OutputColumnsCount(), 3);
 }
 
 TEST_F(OperatorProxyTest, SerializeInputsAsPlaceholders) {
-  const auto import_proxy_a = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
-  const auto import_proxy_b = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
+  const auto import_proxy_a = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
+  const auto import_proxy_b = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
   const auto union_all_proxy = UnionOperatorProxy::Make(SetOperationMode::kAll, import_proxy_a, import_proxy_b);
 
   ASSERT_NO_THROW(import_proxy_a->Identity());
@@ -130,7 +130,7 @@ TEST_F(OperatorProxyTest, SerializeInputsAsPlaceholders) {
 }
 
 TEST_F(OperatorProxyTest, DeepCopy) {
-  const auto import_proxy = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
+  const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
   import_proxy->SetIdentity("test123");
   import_proxy->SetComment("my-comment");
 
@@ -140,7 +140,7 @@ TEST_F(OperatorProxyTest, DeepCopy) {
 }
 
 TEST_F(OperatorProxyTest, DeepCopyDiamondShape) {
-  const auto import_proxy = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
+  const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
   const auto a = PqpColumn_(ColumnId{0}, DataType::kLong, false, "a");
   const auto b = PqpColumn_(ColumnId{1}, DataType::kLong, false, "b");
   // clang-format off
@@ -157,7 +157,7 @@ TEST_F(OperatorProxyTest, DeepCopyDiamondShape) {
 }
 
 TEST_F(OperatorProxyTest, StreamOperator) {
-  const auto import_proxy = ImportOperatorProxy::Make(kBucketName, kObjectKeys, kColumnIds);
+  const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
   const auto a = PqpColumn_(ColumnId{0}, DataType::kLong, false, "a");
   const auto b = PqpColumn_(ColumnId{1}, DataType::kLong, false, "b");
   // clang-format off

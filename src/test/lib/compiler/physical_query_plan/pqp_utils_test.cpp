@@ -17,11 +17,11 @@ namespace skyrise {
 class PqpUtilsTest : public ::testing::Test {
  public:
   void SetUp() override {
-    const std::string dummy_bucket = "dummy_bucket";
-    const std::vector<std::string> dummy_object_keys = {"key1", "key2"};
     const std::vector<ColumnId> dummy_column_ids = {ColumnId{2}, ColumnId{4}};
-    import_proxy_a_ = ImportOperatorProxy::Make(dummy_bucket, dummy_object_keys, dummy_column_ids);
-    import_proxy_b_ = ImportOperatorProxy::Make(dummy_bucket, dummy_object_keys, dummy_column_ids);
+    const std::vector<ObjectReference> object_references = {ObjectReference("dummy_bucket", "key1"),
+                                                            ObjectReference("dummy_bucket", "key2")};
+    import_proxy_a_ = ImportOperatorProxy::Make(object_references, dummy_column_ids);
+    import_proxy_b_ = ImportOperatorProxy::Make(object_references, dummy_column_ids);
 
     a_a_ = PqpColumn_(ColumnId{0}, DataType::kLong, false, "a_a");
     a_b_ = PqpColumn_(ColumnId{1}, DataType::kLong, false, "a_b");

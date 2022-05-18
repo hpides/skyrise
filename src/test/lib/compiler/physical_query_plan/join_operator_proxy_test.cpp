@@ -21,8 +21,9 @@ class JoinOperatorProxyTest : public ::testing::Test {
  protected:
   std::shared_ptr<JoinOperatorPredicate> primary_predicate_;
   std::vector<std::shared_ptr<JoinOperatorPredicate>> empty_secondary_predicates_;
-  static inline const std::string kBucketName = "dummy_bucket";
-  static inline const std::vector<std::string> kObjectKeys = {"key1.orc", "key2.orc", "key3.orc"};
+  static inline const std::vector<ObjectReference> kObjectReferences = {ObjectReference("dummy_bucket", "key1.orc"),
+                                                                        ObjectReference("dummy_bucket", "key2.orc"),
+                                                                        ObjectReference("dummy_bucket", "key3.orc")};
 };
 
 TEST_F(JoinOperatorProxyTest, BaseProperties) {
@@ -64,9 +65,9 @@ TEST_F(JoinOperatorProxyTest, DescriptionCross) {
 
 TEST_F(JoinOperatorProxyTest, OutputObjectsCount) {
   const std::vector<ColumnId> column_ids = {ColumnId{0}};
-  const auto import_proxy_a = ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}});
+  const auto import_proxy_a = ImportOperatorProxy::Make(kObjectReferences, std::vector<ColumnId>{ColumnId{0}});
   import_proxy_a->SetOutputObjectsCount(1);
-  const auto import_proxy_b = ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}});
+  const auto import_proxy_b = ImportOperatorProxy::Make(kObjectReferences, std::vector<ColumnId>{ColumnId{0}});
   import_proxy_b->SetOutputObjectsCount(2);
   // clang-format off
 
@@ -83,8 +84,8 @@ TEST_F(JoinOperatorProxyTest, OutputColumnsCount) {
   // clang-format off
   const auto join_proxy =
   JoinOperatorProxy::Make(JoinMode::kInner, primary_predicate_, empty_secondary_predicates_,
-    ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}}),
-    ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
+    ImportOperatorProxy::Make(kObjectReferences, std::vector<ColumnId>{ColumnId{0}}),
+    ImportOperatorProxy::Make(kObjectReferences, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
   // clang-format on
   EXPECT_EQ(join_proxy->OutputColumnsCount(), 3);
 }
@@ -119,8 +120,8 @@ TEST_F(JoinOperatorProxyTest, DeepCopy) {
   // clang-format off
   const auto join_proxy =
   JoinOperatorProxy::Make(JoinMode::kLeftOuter, primary_predicate_, secondary_predicates,
-    ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}}),
-    ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
+    ImportOperatorProxy::Make(kObjectReferences, std::vector<ColumnId>{ColumnId{0}}),
+    ImportOperatorProxy::Make(kObjectReferences, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
   // clang-format on
   const auto join_proxy_copy = std::dynamic_pointer_cast<JoinOperatorProxy>(join_proxy->DeepCopy());
@@ -139,8 +140,8 @@ TEST_F(JoinOperatorProxyTest, CreateOperatorInstance) {
   // clang-format off
   const auto join_proxy =
   JoinOperatorProxy::Make(JoinMode::kInner, primary_predicate_, empty_secondary_predicates_,
-    ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}}),
-    ImportOperatorProxy::Make(kBucketName, kObjectKeys, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
+    ImportOperatorProxy::Make(kObjectReferences, std::vector<ColumnId>{ColumnId{0}}),
+    ImportOperatorProxy::Make(kObjectReferences, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
   // clang-format on
   join_proxy->SetImplementation(OperatorType::kHashJoin);

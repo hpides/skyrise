@@ -153,4 +153,21 @@ inline bool operator==(const SortColumnDefinition& lhs, const SortColumnDefiniti
   return lhs.column_id == rhs.column_id && lhs.sort_mode == rhs.sort_mode;
 }
 
+/**
+ * Defines a general reference to an object stored in S3.
+ */
+struct ObjectReference {
+  explicit ObjectReference(const std::string& object_bucket_name, const std::string& object_identifier,
+                           const std::string& object_etag = "")
+      : bucket_name(object_bucket_name), identifier(object_identifier), etag(object_etag){};
+
+  bool operator==(const ObjectReference& other) const {
+    return bucket_name == other.bucket_name && identifier == other.identifier && etag == other.etag;
+  };
+
+  const std::string bucket_name;
+  const std::string identifier;
+  const std::string etag;
+};
+
 }  // namespace skyrise

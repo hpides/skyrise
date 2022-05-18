@@ -53,7 +53,7 @@ TEST_F(LimitOperatorProxyTest, DeepCopy) {
   // clang-format off
   const auto limit_proxy =
   LimitOperatorProxy::Make(row_count,
-    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}}));
+    ImportOperatorProxy::Make(std::vector<ObjectReference>{ObjectReference("bucket_name", "import.orc")}, std::vector<ColumnId>{ColumnId{0}}));
 
   // clang-format on
   const auto limit_proxy_copy = std::dynamic_pointer_cast<LimitOperatorProxy>(limit_proxy->DeepCopy());
@@ -70,7 +70,7 @@ TEST_F(LimitOperatorProxyTest, CreateOperatorInstance) {
   // clang-format off
   const auto limit_proxy =
   LimitOperatorProxy::Make(Value_(100),
-    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}}));
+    ImportOperatorProxy::Make(std::vector<ObjectReference>{ObjectReference("bucket_name", "import.orc")}, std::vector<ColumnId>{ColumnId{0}}));
 
   // clang-format on
   EXPECT_THROW(limit_proxy->GetOrCreateOperatorInstance(), std::logic_error);

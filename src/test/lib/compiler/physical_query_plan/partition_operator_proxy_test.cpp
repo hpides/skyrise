@@ -19,7 +19,7 @@ class PartitionOperatorProxyTest : public ::testing::Test {
  protected:
   const std::set<ColumnId> partition_column_ids_ = {ColumnId{0}, ColumnId{1}};
   static inline const size_t kPartitionCount = 10;
-  static inline const std::string kBucketName = "dummy_bucket";
+  static inline const std::vector<ObjectReference> kObjectReferences = {ObjectReference("dummy_bucket", "import.orc")};
 };
 
 TEST_F(PartitionOperatorProxyTest, BaseProperties) {
@@ -55,7 +55,7 @@ TEST_F(PartitionOperatorProxyTest, DeepCopy) {
   // clang-format off
   const auto partition_proxy =
   PartitionOperatorProxy::Make(kPartitionCount, partition_column_ids_,
-    ImportOperatorProxy::Make(kBucketName, std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}}));
+    ImportOperatorProxy::Make(kObjectReferences, std::vector<ColumnId>{ColumnId{0}}));
 
   // clang-format on
   const auto partition_proxy_copy = std::dynamic_pointer_cast<PartitionOperatorProxy>(partition_proxy->DeepCopy());
@@ -71,7 +71,7 @@ TEST_F(PartitionOperatorProxyTest, CreateOperatorInstance) {
   // clang-format off
   const auto partition_proxy =
   PartitionOperatorProxy::Make(kPartitionCount, partition_column_ids_,
-    ImportOperatorProxy::Make(kBucketName, std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}}));
+    ImportOperatorProxy::Make(kObjectReferences, std::vector<ColumnId>{ColumnId{0}}));
 
   // clang-format on
   EXPECT_NE(partition_proxy->GetOrCreateOperatorInstance(), nullptr);

@@ -2,6 +2,8 @@
 
 #include <magic_enum.hpp>
 
+#include "utils/json.hpp"
+
 namespace {
 
 const std::string kJsonKeyExpectedSchema = "expected_schema";
@@ -11,6 +13,7 @@ const std::string kJsonKeyExpectedSchemaNullable = "nullable";
 
 // OrcFormatReaderOptions
 const std::string kJsonKeyOrcFormatReaderOptions = "orc_format_reader_options";
+const std::string kJsonKeyOrcIncludeColumns = "include_columns";
 const std::string kJsonKeyOrcParseDatesAsString = "parse_dates_as_string";
 const std::string kJsonKeyOrcSelectRowRange = "select_row_range";
 const std::string kJsonKeyOrcRangeBegin = "range_begin";
@@ -31,14 +34,19 @@ const std::string kJsonKeyCsvReadBufferSize = "read_buffer_size";
 
 namespace skyrise {
 
-ImportOptions::ImportOptions(ImportFormat import_format) : import_format_(import_format) {
+ImportOptions::ImportOptions(ImportFormat object_format) : ImportOptions(object_format, std::vector<ColumnId>{}) {}
+
+ImportOptions::ImportOptions(ImportFormat object_format, const std::vector<ColumnId>& columns_to_load)
+    : import_format_(object_format) {
   // Use default reader options
   switch (import_format_) {
     case ImportFormat::kCsv: {
       reader_options_ = CsvFormatReaderOptions();
     } break;
     case ImportFormat::kOrc: {
-      reader_options_ = OrcFormatReaderOptions();
+      auto options = OrcFormatReaderOptions();
+      options.include_columns = columns_to_load;
+      reader_options_ = options;
     } break;
     default:
       Fail("Unexpected ImportFormat.");
@@ -95,6 +103,9 @@ Aws::Utils::Json::JsonValue ImportOptions::ToJson() const {
                                     Aws::Utils::Json::JsonValue()
                                         .WithInt64(kJsonKeyOrcRangeBegin, partition_range_begin)
                                         .WithInt64(kJsonKeyOrcRangeEnd, partition_range_end));
+      } else if (orc_options.include_columns.has_value()) {
+        json_orc_options.WithArray(kJsonKeyOrcIncludeColumns,
+                                   VectorToJsonArray<ColumnId>(orc_options.include_columns.value()));
       }
 
       json_output.WithObject(kJsonKeyOrcFormatReaderOptions, json_orc_options);
@@ -141,6 +152,8 @@ std::shared_ptr<const ImportOptions> ImportOptions::FromJson(const Aws::Utils::J
     if (json.KeyExists(kJsonKeyExpectedSchema)) {
       orc_options.expected_schema =
           ImportOptions::TableColumnDefinitionsFromJsonArray(json.GetArray(kJsonKeyExpectedSchema));
+    } else if (json.KeyExists(kJsonKeyOrcIncludeColumns)) {
+      orc_options.include_columns = JsonArrayToVector<ColumnId>(json.GetArray(kJsonKeyOrcIncludeColumns));
     }
 
     const auto get_range = [&](const std::string& key) -> std::optional<std::pair<size_t, size_t>> {

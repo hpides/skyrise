@@ -54,7 +54,7 @@ TEST_F(AliasOperatorProxyTest, DeepCopy) {
   // clang-format off
   const auto alias_proxy =
   AliasOperatorProxy::Make(column_ids_, aliases_,
-    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
+    ImportOperatorProxy::Make(std::vector<ObjectReference>{ObjectReference("bucket_name", "import.orc")}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
   // clang-format on
   const auto alias_proxy_copy = std::dynamic_pointer_cast<AliasOperatorProxy>(alias_proxy->DeepCopy());
@@ -70,7 +70,7 @@ TEST_F(AliasOperatorProxyTest, CreateOperatorInstance) {
   // clang-format off
   const auto alias_proxy =
   AliasOperatorProxy::Make(column_ids_, aliases_,
-    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
+    ImportOperatorProxy::Make(std::vector<ObjectReference>{ObjectReference("bucket_name", "import.orc")}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
   // clang-format on                                                         
   EXPECT_TRUE(alias_proxy->GetOrCreateOperatorInstance());

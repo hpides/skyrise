@@ -22,6 +22,8 @@ struct OrcFormatReaderOptions {
   std::optional<std::pair<size_t, size_t>> select_row_range = std::nullopt;
   std::optional<std::pair<size_t, size_t>> select_partition_range = std::nullopt;
 
+  std::optional<std::vector<ColumnId>> include_columns = std::nullopt;
+
   bool operator==(const OrcFormatReaderOptions& rhs) const {
     if (parse_dates_as_string != rhs.parse_dates_as_string) {
       return false;

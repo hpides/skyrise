@@ -60,7 +60,7 @@ TEST_F(ProjectionOperatorProxyTest, DeepCopy) {
   // clang-format off
   const auto projection_proxy =
   ProjectionOperatorProxy::Make(expressions_,
-    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
+    ImportOperatorProxy::Make(std::vector<ObjectReference>{ObjectReference("bucket_name", "import.orc")}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
   // clang-format on
   const auto projection_proxy_copy = std::dynamic_pointer_cast<ProjectionOperatorProxy>(projection_proxy->DeepCopy());
@@ -76,7 +76,7 @@ TEST_F(ProjectionOperatorProxyTest, CreateOperatorInstance) {
   // clang-format off
   const auto projection_proxy =
   ProjectionOperatorProxy::Make(expressions_, 
-    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
+    ImportOperatorProxy::Make(std::vector<ObjectReference>{ObjectReference("bucket_name", "import.orc")}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
   // clang-format on
   EXPECT_TRUE(projection_proxy->GetOrCreateOperatorInstance());

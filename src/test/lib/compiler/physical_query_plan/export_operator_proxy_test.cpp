@@ -65,7 +65,7 @@ TEST_F(ExportOperatorProxyTest, DeepCopy) {
   // clang-format off
   const auto export_proxy =
   ExportOperatorProxy::Make(kBucketName, kTargetObjectKey, ExportFormat::kCsv,
-    ImportOperatorProxy::Make(kBucketName, std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}}));
+    ImportOperatorProxy::Make(std::vector<ObjectReference>{ObjectReference(kBucketName, "import.orc")}, std::vector<ColumnId>{ColumnId{0}}));
 
   // clang-format on
   const auto export_proxy_copy = std::dynamic_pointer_cast<ExportOperatorProxy>(export_proxy->DeepCopy());
@@ -82,11 +82,11 @@ TEST_F(ExportOperatorProxyTest, CreateOperatorInstance) {
   // clang-format off
   const auto export_proxy_orc =
   ExportOperatorProxy::Make(kBucketName, kTargetObjectKey, ExportFormat::kOrc,
-    ImportOperatorProxy::Make(kBucketName, std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}}));
+    ImportOperatorProxy::Make(std::vector<ObjectReference>{ObjectReference(kBucketName, "import.orc")}, std::vector<ColumnId>{ColumnId{0}}));
 
   const auto export_proxy_csv =
   ExportOperatorProxy::Make(kBucketName, kTargetObjectKey, ExportFormat::kCsv,
-    ImportOperatorProxy::Make(kBucketName, std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}}));
+    ImportOperatorProxy::Make(std::vector<ObjectReference>{ObjectReference(kBucketName, "import.orc")}, std::vector<ColumnId>{ColumnId{0}}));
 
   // clang-format on
   EXPECT_NE(export_proxy_orc->GetOrCreateOperatorInstance(), nullptr);

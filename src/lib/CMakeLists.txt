@@ -52,8 +52,6 @@ set(
     storage/table/base_value_segment.hpp
     storage/table/chunk.cpp
     storage/table/chunk.hpp
-    storage/table/chunk_reader.cpp
-    storage/table/chunk_reader.hpp
     storage/table/chunk_writer.cpp
     storage/table/chunk_writer.hpp
     storage/table/table.cpp

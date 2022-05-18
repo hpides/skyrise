@@ -5,9 +5,9 @@
 
 #include <aws/core/utils/json/JsonSerializer.h>
 
+#include "storage/formats/abstract_chunk_reader.hpp"
 #include "storage/formats/csv_reader.hpp"
 #include "storage/formats/orc_reader.hpp"
-#include "storage/table/chunk_reader.hpp"
 
 namespace skyrise {
 
@@ -15,7 +15,8 @@ enum class ImportFormat { kCsv, kOrc };
 
 class ImportOptions {
  public:
-  ImportOptions(ImportFormat import_format);
+  ImportOptions(ImportFormat object_format);
+  ImportOptions(ImportFormat object_format, const std::vector<skyrise::ColumnId>& columns_to_load);
   ImportOptions(CsvFormatReaderOptions csv_format_reader_options);
   ImportOptions(OrcFormatReaderOptions orc_format_reader_options);
 
