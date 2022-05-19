@@ -204,6 +204,8 @@ set(
     operator/join_operator_predicate.hpp
     operator/partition_operator.cpp
     operator/partition_operator.hpp
+    operator/partitioning_function.cpp
+    operator/partitioning_function.hpp
     operator/projection_operator.cpp
     operator/projection_operator.hpp
     operator/sort_operator.cpp

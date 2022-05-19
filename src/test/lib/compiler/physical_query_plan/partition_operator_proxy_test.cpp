@@ -19,11 +19,13 @@ class PartitionOperatorProxyTest : public ::testing::Test {
  protected:
   const std::set<ColumnId> partition_column_ids_ = {ColumnId{0}, ColumnId{1}};
   static inline const size_t kPartitionCount = 10;
+  const std::shared_ptr<AbstractPartitioningFunction> partitioning_function_ =
+      std::make_shared<HashPartitioningFunction>(partition_column_ids_, kPartitionCount);
   static inline const std::vector<ObjectReference> kObjectReferences = {ObjectReference("dummy_bucket", "import.orc")};
 };
 
 TEST_F(PartitionOperatorProxyTest, BaseProperties) {
-  const auto partiton_proxy = PartitionOperatorProxy::Make(kPartitionCount, partition_column_ids_);
+  const auto partiton_proxy = PartitionOperatorProxy::Make(partitioning_function_);
   EXPECT_EQ(partiton_proxy->Type(), OperatorType::kPartition);
   EXPECT_EQ(partiton_proxy->PartitionCount(), kPartitionCount);
   EXPECT_EQ(partiton_proxy->PartitionColumnIds(), partition_column_ids_);
@@ -31,13 +33,13 @@ TEST_F(PartitionOperatorProxyTest, BaseProperties) {
 }
 
 TEST_F(PartitionOperatorProxyTest, Description) {
-  const auto partiton_proxy = PartitionOperatorProxy::Make(kPartitionCount, partition_column_ids_);
+  const auto partiton_proxy = PartitionOperatorProxy::Make(partitioning_function_);
   EXPECT_EQ(partiton_proxy->Description(DescriptionMode::kSingleLine), "[Partition] 10 partition(s) ColumnIds{0, 1}");
   EXPECT_EQ(partiton_proxy->Description(DescriptionMode::kMultiLine), "[Partition]\n10 partition(s)\nColumnIds{0, 1}");
 }
 
 TEST_F(PartitionOperatorProxyTest, SerializeAndDeserialize) {
-  const auto proxy = PartitionOperatorProxy::Make(kPartitionCount, partition_column_ids_);
+  const auto proxy = PartitionOperatorProxy::Make(partitioning_function_);
   // (1) Serialize
   const auto proxy_json = proxy->ToJson();
 
@@ -54,7 +56,7 @@ TEST_F(PartitionOperatorProxyTest, SerializeAndDeserialize) {
 TEST_F(PartitionOperatorProxyTest, DeepCopy) {
   // clang-format off
   const auto partition_proxy =
-  PartitionOperatorProxy::Make(kPartitionCount, partition_column_ids_,
+  PartitionOperatorProxy::Make(partitioning_function_,
     ImportOperatorProxy::Make(kObjectReferences, std::vector<ColumnId>{ColumnId{0}}));
 
   // clang-format on
@@ -70,7 +72,7 @@ TEST_F(PartitionOperatorProxyTest, DeepCopy) {
 TEST_F(PartitionOperatorProxyTest, CreateOperatorInstance) {
   // clang-format off
   const auto partition_proxy =
-  PartitionOperatorProxy::Make(kPartitionCount, partition_column_ids_,
+  PartitionOperatorProxy::Make(partitioning_function_,
     ImportOperatorProxy::Make(kObjectReferences, std::vector<ColumnId>{ColumnId{0}}));
 
   // clang-format on

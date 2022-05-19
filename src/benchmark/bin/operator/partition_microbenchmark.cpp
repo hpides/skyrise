@@ -4,6 +4,7 @@
 #include <benchmark/benchmark.h>
 
 #include "operator/partition_operator.hpp"
+#include "operator/partitioning_function.hpp"
 #include "operator/table_wrapper.hpp"
 #include "storage/table/chunk.hpp"
 #include "storage/table/table.hpp"
@@ -36,7 +37,8 @@ class PartitionMicrobenchmarkFixture : public benchmark::Fixture {
 
 // NOLINTNEXTLINE(readability-redundant-member-init)
 BENCHMARK_DEFINE_F(PartitionMicrobenchmarkFixture, PartitionOnOneColumn)(benchmark::State& state) {
-  auto partition_operator = std::make_shared<PartitionOperator>(table_wrapper_, state.range(1), std::set<ColumnId>{0});
+  const auto partitioning_function = std::make_shared<HashPartitioningFunction>(std::set<ColumnId>{0}, state.range(1));
+  auto partition_operator = std::make_shared<PartitionOperator>(table_wrapper_, partitioning_function);
 
   for (auto _ : state) {  // NOLINT(clang-analyzer-deadcode.DeadStores)
     partition_operator->Execute();

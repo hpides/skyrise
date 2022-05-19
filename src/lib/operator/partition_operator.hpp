@@ -2,11 +2,10 @@
 #include <vector>
 
 #include "abstract_operator.hpp"
+#include "partitioning_function.hpp"
 #include "storage/table/table.hpp"
 
 namespace skyrise {
-
-using PartitionedPositionLists = std::vector<std::vector<std::tuple<ChunkId, size_t>>>;
 
 /*
  * Returns a table containing one chunk per partition. Chunks can be empty if the respective partition is empty.
@@ -15,18 +14,16 @@ using PartitionedPositionLists = std::vector<std::vector<std::tuple<ChunkId, siz
  */
 class PartitionOperator : public AbstractOperator {
  public:
-  PartitionOperator(std::shared_ptr<AbstractOperator> input_operator, const size_t partition_count,
-                    const std::set<ColumnId>& partition_column_ids);
+  PartitionOperator(std::shared_ptr<AbstractOperator> input,
+                    std::shared_ptr<AbstractPartitioningFunction> partitioning_function);
 
   const std::string& Name() const override;
 
  private:
   std::shared_ptr<const Table> OnExecute(
-      const std::shared_ptr<OperatorExecutionContext>& operator_execution_context = nullptr) override;
-  PartitionedPositionLists GeneratePartitionedPositionLists() const;
+      const std::shared_ptr<OperatorExecutionContext>& operator_execution_context) override;
 
-  const size_t partition_count_;
-  const std::set<ColumnId> partition_column_ids_;
+  const std::shared_ptr<AbstractPartitioningFunction> partitioning_function_;
 };
 
 }  // namespace skyrise
