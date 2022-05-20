@@ -72,7 +72,7 @@ TEST_F(FunctionalDependencyTest, InflateFDs) {
   const auto fd_a_b = FunctionalDependency({a_, b_}, {c_});
   const auto fd_x = FunctionalDependency({x_}, {y_});
 
-  const auto& inflated_fds = InflateFds({fd_a, fd_a_b, fd_x, fd_x});
+  const auto& inflated_fds = InflateFunctionalDependencies({fd_a, fd_a_b, fd_x, fd_x});
   EXPECT_EQ(inflated_fds.size(), 4);
   // TODO(anyone): C++20: Replace with .contains
   EXPECT_FALSE(inflated_fds.find(fd_a) != inflated_fds.end());
@@ -88,7 +88,7 @@ TEST_F(FunctionalDependencyTest, DeflateFDs) {
   const auto fd_a_2 = FunctionalDependency({a_}, {c_});
   const auto fd_b_c = FunctionalDependency({b_, c_}, {a_});
 
-  const auto& deflated_fds = DeflateFds({fd_a_1, fd_a_2, fd_a_2, fd_b_c});
+  const auto& deflated_fds = DeflateFunctionalDependencies({fd_a_1, fd_a_2, fd_a_2, fd_b_c});
   EXPECT_EQ(deflated_fds.size(), 2);
   const auto deflated_fds_set = std::unordered_set<FunctionalDependency>(deflated_fds.cbegin(), deflated_fds.cend());
   // TODO(anyone): C++20: Replace with .contains
@@ -99,9 +99,9 @@ TEST_F(FunctionalDependencyTest, DeflateFDs) {
 TEST_F(FunctionalDependencyTest, UnionFDsEmpty) {
   const auto fd_a = FunctionalDependency({a_}, {b_, c_});
 
-  EXPECT_TRUE(UnionFds({}, {}).empty());
-  EXPECT_EQ(UnionFds({fd_a}, {}), std::vector<FunctionalDependency>{fd_a});
-  EXPECT_EQ(UnionFds({}, {fd_a}), std::vector<FunctionalDependency>{fd_a});
+  EXPECT_TRUE(UnionFunctionalDependencies({}, {}).empty());
+  EXPECT_EQ(UnionFunctionalDependencies({fd_a}, {}), std::vector<FunctionalDependency>{fd_a});
+  EXPECT_EQ(UnionFunctionalDependencies({}, {fd_a}), std::vector<FunctionalDependency>{fd_a});
 }
 
 TEST_F(FunctionalDependencyTest, UnionFDs) {
@@ -111,7 +111,7 @@ TEST_F(FunctionalDependencyTest, UnionFDs) {
   const auto fd_a_b = FunctionalDependency({a_, b_}, {c_});
   const auto fd_b = FunctionalDependency({b_}, {c_});
 
-  const auto& fds_unified = UnionFds({fd_a_1, fd_a_b, fd_b}, {fd_a_2});
+  const auto& fds_unified = UnionFunctionalDependencies({fd_a_1, fd_a_b, fd_b}, {fd_a_2});
   const auto& fds_unified_set = std::unordered_set<FunctionalDependency>(fds_unified.begin(), fds_unified.end());
 
   EXPECT_EQ(fds_unified_set.size(), 3);
@@ -125,7 +125,7 @@ TEST_F(FunctionalDependencyTest, UnionFDsRemoveDuplicates) {
   const auto fd_a = FunctionalDependency({a_}, {b_, c_});
   const auto fd_b = FunctionalDependency({b_}, {c_});
 
-  const auto& fds_unified = UnionFds({fd_a, fd_b}, {fd_b});
+  const auto& fds_unified = UnionFunctionalDependencies({fd_a, fd_b}, {fd_b});
 
   EXPECT_EQ(fds_unified.size(), 2);
   const auto fds_unified_set = std::unordered_set<FunctionalDependency>(fds_unified.cbegin(), fds_unified.cend());
@@ -137,9 +137,9 @@ TEST_F(FunctionalDependencyTest, UnionFDsRemoveDuplicates) {
 TEST_F(FunctionalDependencyTest, IntersectFDsEmpty) {
   const auto fd_x = FunctionalDependency({x_}, {y_});
 
-  EXPECT_TRUE(IntersectFds({}, {}).empty());
-  EXPECT_TRUE(IntersectFds({fd_x}, {}).empty());
-  EXPECT_TRUE(IntersectFds({}, {fd_x}).empty());
+  EXPECT_TRUE(IntersectFunctionalDependencies({}, {}).empty());
+  EXPECT_TRUE(IntersectFunctionalDependencies({fd_x}, {}).empty());
+  EXPECT_TRUE(IntersectFunctionalDependencies({}, {fd_x}).empty());
 }
 
 TEST_F(FunctionalDependencyTest, IntersectFDs) {
@@ -149,7 +149,7 @@ TEST_F(FunctionalDependencyTest, IntersectFDs) {
   const auto fd_a_b = FunctionalDependency({a_, b_}, {c_});
   const auto fd_x = FunctionalDependency({x_}, {y_});
 
-  const auto& intersected_fds = IntersectFds({fd_a, fd_a_b, fd_x}, {fd_a_b, fd_a_2});
+  const auto& intersected_fds = IntersectFunctionalDependencies({fd_a, fd_a_b, fd_x}, {fd_a_b, fd_a_2});
   EXPECT_EQ(intersected_fds.size(), 2);
   const auto intersected_fds_set =
       std::unordered_set<FunctionalDependency>(intersected_fds.begin(), intersected_fds.end());

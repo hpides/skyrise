@@ -140,6 +140,6 @@ std::vector<FunctionalDependency> FdsFromUniqueConstraints(
  * This is a helper method that removes invalid or unnecessary FDs from the given input set @param fds by looking at
  * the @param lqp node's output expressions.
  */
-void RemoveInvalidFds(const std::shared_ptr<const AbstractLqpNode>& lqp, std::vector<FunctionalDependency>& fds);
+void RemoveInvalidFunctionalDependencies(const std::shared_ptr<const AbstractLqpNode>& lqp, std::vector<FunctionalDependency>& fds);
 
 }  // namespace skyrise

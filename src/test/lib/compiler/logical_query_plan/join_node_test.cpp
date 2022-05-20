@@ -471,7 +471,7 @@ TEST_F(JoinNodeTest, FunctionalDependenciesUnify) {
    *   {a, b} => {c, x, y}
    * can be merged into one.
    */
-  const auto fds_unified = UnionFds(non_trivial_fds, trivial_fds);
+  const auto fds_unified = UnionFunctionalDependencies(non_trivial_fds, trivial_fds);
   EXPECT_EQ(fds_unified.size(), 3);
   const auto fds_unified_set = std::unordered_set<FunctionalDependency>(fds_unified.begin(), fds_unified.end());
   // TODO(julianmenzler) C++20: Replace with .contains

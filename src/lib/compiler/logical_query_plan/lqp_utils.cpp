@@ -222,7 +222,7 @@ std::vector<FunctionalDependency> FdsFromUniqueConstraints(
   return fds;
 }
 
-void RemoveInvalidFds(const std::shared_ptr<const AbstractLqpNode>& lqp, std::vector<FunctionalDependency>& fds) {
+void RemoveInvalidFunctionalDependencies(const std::shared_ptr<const AbstractLqpNode>& lqp, std::vector<FunctionalDependency>& fds) {
   if (fds.empty()) {
     return;
   }

@@ -165,7 +165,7 @@ std::vector<FunctionalDependency> AggregateNode::NonTrivialFunctionalDependencie
 
   // In AggregateNode, some expressions get wrapped inside of AggregateExpressions. Therefore, we have to discard
   // all FDs whose expressions are no longer part of the node's output expressions.
-  RemoveInvalidFds(SharedFromBase(), non_trivial_fds);
+  RemoveInvalidFunctionalDependencies(SharedFromBase(), non_trivial_fds);
 
   return non_trivial_fds;
 }
