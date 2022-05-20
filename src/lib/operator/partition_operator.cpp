@@ -17,11 +17,10 @@ const std::string kName = "Partition";
 
 namespace skyrise {
 
-PartitionOperator::PartitionOperator(std::shared_ptr<AbstractOperator> input_operator, const size_t partition_count,
-                                     const std::set<ColumnId>& partition_column_ids)
-    : AbstractOperator(OperatorType::kPartition, std::move(input_operator), nullptr),
-      partition_count_(partition_count),
-      partition_column_ids_(partition_column_ids) {}
+PartitionOperator::PartitionOperator(std::shared_ptr<AbstractOperator> input,
+                                     std::shared_ptr<AbstractPartitioningFunction> partitioning_function)
+    : AbstractOperator(OperatorType::kPartition, std::move(input), nullptr),
+      partitioning_function_(std::move(partitioning_function)) {}
 
 const std::string& PartitionOperator::Name() const { return kName; }
 
@@ -34,11 +33,11 @@ std::shared_ptr<const Table> PartitionOperator::OnExecute(
   const ChunkOffset chunk_count = input_table->ChunkCount();
   const ColumnCount column_count = input_table->GetColumnCount();
 
-  const PartitionedPositionLists position_lists = GeneratePartitionedPositionLists();
+  const PartitionedPositionLists position_lists = partitioning_function_->Partition(input_table);
 
   // Materialize partitions in a new table with one chunk per partition
   std::vector<std::shared_ptr<Chunk>> output_chunks;
-  output_chunks.reserve(partition_count_);
+  output_chunks.reserve(position_lists.size());
 
   for (const auto& position_list : position_lists) {
     Segments segments(column_count);
@@ -74,54 +73,6 @@ std::shared_ptr<const Table> PartitionOperator::OnExecute(
   }
 
   return std::make_shared<Table>(LeftInputTable()->ColumnDefinitions(), std::move(output_chunks));
-}
-
-PartitionedPositionLists PartitionOperator::GeneratePartitionedPositionLists() const {
-  const auto input_table = LeftInputTable();
-  const ChunkId chunk_count = input_table->ChunkCount();
-  // NOLINT(hicpp-signed-bitwise)
-  // Build hash vector
-  std::vector<size_t> hashes(input_table->RowCount());
-
-  for (const auto& partition_column_id : partition_column_ids_) {
-    Assert(partition_column_id < input_table->GetColumnCount(), "Column to partition is out of range.");
-    Assert(!input_table->ColumnDefinitions()[partition_column_id].nullable, "Nullable columns are not supported.");
-
-    ResolveDataType(input_table->ColumnDataType(partition_column_id), [&](auto data_type) {
-      using ColumnDataType = decltype(data_type);
-
-      size_t row_index = 0;
-
-      for (ChunkId i = 0; i < chunk_count; ++i) {
-        const auto abstract_segment = input_table->GetChunk(i)->GetSegment(partition_column_id);
-        const auto typed_segment = std::dynamic_pointer_cast<ValueSegment<ColumnDataType>>(abstract_segment);
-        const auto& segment_values = typed_segment->Values();
-
-        for (const auto& segment_value : segment_values) {
-          boost::hash_combine(hashes[row_index++], segment_value);
-        }
-      }
-    });
-  }
-
-  // Transform hashes into one position list per partition
-  PartitionedPositionLists position_lists(partition_count_);
-  ChunkId chunk_index = 0;
-  // The row index that is related to the current chunk
-  size_t relative_row_index = 0;
-
-  for (const auto& hash : hashes) {
-    position_lists[hash % partition_count_].emplace_back(chunk_index, relative_row_index);
-
-    if (relative_row_index == input_table->GetChunk(chunk_index)->Size() - 1) {
-      relative_row_index = 0;
-      chunk_index++;
-    } else {
-      relative_row_index++;
-    }
-  }
-
-  return position_lists;
 }
 
 }  // namespace skyrise

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "abstract_operator.hpp"
-#include "compiler/physical_query_plan/export_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/export_operator_proxy.hpp"
 #include "storage/backend/abstract_storage.hpp"
 #include "storage/formats/abstract_chunk_writer.hpp"
 

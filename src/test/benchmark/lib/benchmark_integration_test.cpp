@@ -16,7 +16,7 @@
 #include "lambda/network_latency_benchmark.hpp"
 #include "lambda/network_throughput_benchmark.hpp"
 #include "lambda/network_throughput_parallel_benchmark.hpp"
-#include "lib/testing/aws_test.hpp"
+#include "testing/aws_test.hpp"
 #include "utils/costs/cost_calculator.hpp"
 
 namespace skyrise {

@@ -30,7 +30,7 @@ namespace skyrise {
  *        dummy_table_node));
  *
  *    auto pqp =
- *    JoinOperatorProxy::Make(JoinMode::kInner, Equals_(a_a_, b_x_), secondary_predicates,
+ *    JoinOperatorProxy::Make(JoinMode::kInner, JoinOperatorPredicate_(Equals_(a_a_, b_x_)), secondary_predicates,
  *      UnionOperatorProxy::Make(SetOperationMode::kAll,
  *        FilterOperatorProxy::Make(GreaterThan_(a_a_, 700),
  *          import_proxy_a_),

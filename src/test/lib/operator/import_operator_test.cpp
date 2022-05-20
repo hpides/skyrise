@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include "scheduler/worker/fragment_scheduler.hpp"
 #include "storage/backend/mock_storage.hpp"
 #include "storage/backend/testdata_storage.hpp"
 #include "storage/formats/csv_reader.hpp"
@@ -52,7 +53,7 @@ class ImportOperatorTest : public ::testing::Test {
     types_schema_->emplace_back("a_float", DataType::kFloat, false);
     types_schema_->emplace_back("a_double", DataType::kDouble, false);
     types_schema_->emplace_back("a_string", DataType::kString, false);
-
+    scheduler_ = std::make_shared<FragmentScheduler>();
     operator_execution_context_ = std::make_shared<OperatorExecutionContext>(
         nullptr,
         [this](const std::string& storage_name) -> std::shared_ptr<Storage> {
@@ -63,7 +64,7 @@ class ImportOperatorTest : public ::testing::Test {
           }
           Fail("Storage type is unknown in this context: " + storage_name);
         },
-        nullptr);
+        [this]() { return scheduler_; });
   }
 
   static void TestImportOperator(ImportOperator* import_operator, const TableColumnDefinitions& schema,
@@ -113,7 +114,13 @@ class ImportOperatorTest : public ::testing::Test {
 
   void SetupMockedImportOperator(std::vector<std::string>&& object_keys, std::vector<ColumnId>&& included_column_ids) {
     auto format_factory = std::make_shared<FormatReaderFactory<MockChunkReader>>(mock_formatter_configuration_);
-    ImportOperator import_operator("MockStorage", object_keys, included_column_ids, format_factory);
+    std::vector<ObjectReference> object_references;
+    object_references.reserve(object_keys.size());
+    for (const std::string& object_key : object_keys) {
+      object_references.emplace_back("MockStorage", object_key, "");
+    }
+
+    ImportOperator import_operator(object_references, included_column_ids, format_factory);
 
     const size_t num_chunks = kNumChunksMockFormatter * object_keys.size();
     const size_t row_count = kSizeSegments * num_chunks;
@@ -139,6 +146,7 @@ class ImportOperatorTest : public ::testing::Test {
   MockChunkReaderConfiguration mock_formatter_configuration_;
   std::shared_ptr<MockStorage> mock_storage_;
   std::shared_ptr<TableColumnDefinitions> mock_schema_;
+  std::shared_ptr<FragmentScheduler> scheduler_;
 };
 
 TEST_F(ImportOperatorTest, PrunedImport) {
@@ -154,9 +162,9 @@ TEST_F(ImportOperatorTest, LargeIncludedColumnIdsList) {
 
   auto format_factory = std::make_shared<FormatReaderFactory<MockChunkReader>>(formatter_configuration);
 
-  const std::vector<std::string> object_keys = {"a"};
+  const std::vector<ObjectReference> object_references = {ObjectReference{"MockStorage", "a", ""}};
   const std::vector<ColumnId> included_column_ids = {ColumnId(0), ColumnId(1), ColumnId(2), ColumnId(3)};
-  ImportOperator import_operator("MockStorage", object_keys, included_column_ids, format_factory);
+  ImportOperator import_operator(object_references, included_column_ids, format_factory);
 
   EXPECT_ANY_THROW(import_operator.Execute(operator_execution_context_));
 }
@@ -168,8 +176,8 @@ TEST_F(ImportOperatorTest, EmptyIncludedColumnIdsList) {
 
   auto format_factory = std::make_shared<FormatReaderFactory<MockChunkReader>>(formatter_configuration);
 
-  const std::vector<std::string> object_keys = {"a"};
-  ImportOperator import_operator("MockStorage", object_keys, {}, format_factory);
+  const std::vector<ObjectReference> object_references = {ObjectReference{"MockStorage", "a", ""}};
+  ImportOperator import_operator(object_references, {}, format_factory);
 
   EXPECT_ANY_THROW(import_operator.Execute(operator_execution_context_));
 }
@@ -192,11 +200,11 @@ TEST_F(ImportOperatorTest, ImportEmptyChunks) {
 
   auto format_factory = std::make_shared<FormatReaderFactory<MockChunkReader>>(formatter_configuration);
 
-  const std::vector<std::string> object_keys = {"a"};
+  const std::vector<ObjectReference> object_references = {ObjectReference{"MockStorage", "a", ""}};
   std::vector<ColumnId> included_column_ids = {ColumnId(0)};
-  ImportOperator import_operator("MockStorage", object_keys, included_column_ids, format_factory);
+  ImportOperator import_operator(object_references, included_column_ids, format_factory);
 
-  const size_t num_chunks = formatter_configuration.num_chunks * object_keys.size();
+  const size_t num_chunks = formatter_configuration.num_chunks * object_references.size();
   const size_t row_count = 0;
   TestImportOperator(&import_operator, *schema, num_chunks, row_count, &included_column_ids,
                      operator_execution_context_);
@@ -205,9 +213,9 @@ TEST_F(ImportOperatorTest, ImportEmptyChunks) {
 TEST_F(ImportOperatorTest, ImportCsv) {
   auto csv_factory = std::make_shared<FormatReaderFactory<CsvFormatReader>>(csv_options_);
 
-  const std::vector<std::string> object_keys = {kCsvTypesPath.data()};
+  const std::vector<ObjectReference> object_references = {ObjectReference{"TestStorage", kCsvTypesPath.data(), ""}};
   std::vector<ColumnId> included_column_ids = {ColumnId(0), ColumnId(1), ColumnId(3), ColumnId(4)};
-  ImportOperator import_operator("TestStorage", object_keys, included_column_ids, csv_factory);
+  ImportOperator import_operator(object_references, included_column_ids, csv_factory);
 
   TestImportOperator(&import_operator, *types_schema_, 1, 1, &included_column_ids, operator_execution_context_);
 }
@@ -215,9 +223,9 @@ TEST_F(ImportOperatorTest, ImportCsv) {
 TEST_F(ImportOperatorTest, ImportOrc) {
   auto orc_factory = std::make_shared<FormatReaderFactory<OrcFormatReader>>(orc_options_);
 
-  const std::vector<std::string> object_keys = {kOrcTypesPath.data()};
+  const std::vector<ObjectReference> object_references = {ObjectReference{"TestStorage", kOrcTypesPath.data(), ""}};
   std::vector<ColumnId> included_column_ids = {ColumnId(0), ColumnId(1), ColumnId(2), ColumnId(3), ColumnId(4)};
-  ImportOperator import_operator("TestStorage", object_keys, included_column_ids, orc_factory);
+  ImportOperator import_operator(object_references, included_column_ids, orc_factory);
 
   TestImportOperator(&import_operator, *types_schema_, 1, 1, &included_column_ids, operator_execution_context_);
 }
@@ -233,11 +241,55 @@ TEST_F(ImportOperatorTest, ImportPartitionedOrc) {
 
   auto orc_factory = std::make_shared<FormatReaderFactory<OrcFormatReader>>(orc_options);
 
-  const std::vector<std::string> object_keys = {kOrcPartitionedPath.data()};
+  const std::vector<ObjectReference> object_references = {
+      ObjectReference{"TestStorage", kOrcPartitionedPath.data(), ""}};
   std::vector<ColumnId> included_column_ids = {ColumnId(0), ColumnId(1)};
-  ImportOperator import_operator("TestStorage", object_keys, included_column_ids, orc_factory);
+  ImportOperator import_operator(object_references, included_column_ids, orc_factory);
 
   TestImportOperator(&import_operator, *schema, 1, 20, &included_column_ids, operator_execution_context_);
+}
+
+TEST_F(ImportOperatorTest, MultipleBuckets) {
+  auto format_factory = std::make_shared<FormatReaderFactory<MockChunkReader>>(mock_formatter_configuration_);
+  const std::vector<ObjectReference> object_references{
+      ObjectReference{"MockStorage", "a", ""},
+      ObjectReference{"MockStorage", "b", ""},
+      ObjectReference{"TestStorage", "a", ""},
+  };
+
+  std::vector<ColumnId> included_column_ids = {ColumnId(0), ColumnId(1)};
+
+  ImportOperator import_operator(object_references, included_column_ids, format_factory);
+
+  const size_t num_chunks = kNumChunksMockFormatter * object_references.size();
+  const size_t row_count = kSizeSegments * num_chunks;
+  TestImportOperator(&import_operator, *mock_schema_, num_chunks, row_count, &included_column_ids,
+                     operator_execution_context_);
+}
+
+TEST_F(ImportOperatorTest, EtagMissmatch) {
+  auto format_factory = std::make_shared<FormatReaderFactory<MockChunkReader>>(mock_formatter_configuration_);
+  std::vector<ObjectReference> object_references{
+      ObjectReference{"MockStorage", "a", ""},
+      ObjectReference{"MockStorage", "b", "etag"},
+  };
+
+  std::vector<ColumnId> included_column_ids = {ColumnId(0), ColumnId(1)};
+
+  ImportOperator import_operator(object_references, included_column_ids, format_factory);
+
+  EXPECT_ANY_THROW(import_operator.Execute(operator_execution_context_));
+}
+
+TEST_F(ImportOperatorTest, OrcProjectionPushdown) {
+  std::vector<ColumnId> included_column_ids = {ColumnId(0), ColumnId(2), ColumnId(3)};
+  orc_options_.include_columns = std::vector<ColumnId>{0, 2, 3};
+  auto orc_factory = std::make_shared<FormatReaderFactory<OrcFormatReader>>(orc_options_);
+
+  const std::vector<ObjectReference> object_references = {ObjectReference{"TestStorage", kOrcTypesPath.data(), ""}};
+  ImportOperator import_operator(object_references, included_column_ids, orc_factory);
+
+  TestImportOperator(&import_operator, *types_schema_, 1, 1, &included_column_ids, operator_execution_context_);
 }
 
 }  // namespace skyrise
