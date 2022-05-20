@@ -18,12 +18,12 @@ size_t kMaximumInputObjectsCount = 30; // ToDo(anyone) Remove, and use the Query
 
 }  // namespace
 
-const std::string& PqpCombinePartialResultsRule::Name() const {
-  static const std::string rule_name = "PqpCombinePartialResultsRule";
+const std::string& PqpCombineResultsRule::Name() const {
+  static const std::string rule_name = "PqpCombineResultsRule";
   return rule_name;
 }
 
-void PqpCombinePartialResultsRule::ApplyTo(const std::shared_ptr<AbstractOperatorProxy>& pqp_root) const {
+void PqpCombineResultsRule::ApplyTo(const std::shared_ptr<AbstractOperatorProxy>& pqp_root) const {
   auto leaf_proxies = PqpFindLeaves(pqp_root);
 
   // Reduce partial aggregates in additional aggregation stages, if necessary.
@@ -39,7 +39,7 @@ void PqpCombinePartialResultsRule::ApplyTo(const std::shared_ptr<AbstractOperato
   }
 }
 
-bool PqpCombinePartialResultsRule::CombineAggregates(
+bool PqpCombineResultsRule::CombineAggregates(
     const std::shared_ptr<AggregateOperatorProxy>& pipeline_breaking_aggregate_proxy) {
   Assert(pipeline_breaking_aggregate_proxy->IsPipelineBreaker(), "Expected final aggregation node.");
 

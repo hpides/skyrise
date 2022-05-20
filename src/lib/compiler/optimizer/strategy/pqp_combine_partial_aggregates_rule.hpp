@@ -6,7 +6,7 @@
 
 namespace skyrise {
 
-class PqpCombinePartialResultsRule : public AbstractRule {
+class PqpCombineResultsRule : public AbstractRule {
  public:
   const std::string& Name() const override;
 
