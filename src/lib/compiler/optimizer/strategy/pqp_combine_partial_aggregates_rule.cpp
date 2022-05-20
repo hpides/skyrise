@@ -31,7 +31,7 @@ void PqpCombinePartialResultsRule::ApplyTo(const std::shared_ptr<AbstractOperato
     VisitPqpUpwards(leaf_proxy, [&](const auto& operator_proxy) {
       if (operator_proxy->IsPipelineBreaker() && operator_proxy->Type() == OperatorType::kAggregate) {
         auto pipeline_breaking_aggregate_proxy = std::static_pointer_cast<AggregateOperatorProxy>(operator_proxy);
-        [[maybe_unused]] bool success = CombinePartialAggregates(pipeline_breaking_aggregate_proxy);
+        [[maybe_unused]] bool success = CombineAggregates(pipeline_breaking_aggregate_proxy);
       }
 
       return PqpUpwardVisitation::kVisitOutputs;
@@ -39,7 +39,7 @@ void PqpCombinePartialResultsRule::ApplyTo(const std::shared_ptr<AbstractOperato
   }
 }
 
-bool PqpCombinePartialResultsRule::CombinePartialAggregates(
+bool PqpCombinePartialResultsRule::CombineAggregates(
     const std::shared_ptr<AggregateOperatorProxy>& pipeline_breaking_aggregate_proxy) {
   Assert(pipeline_breaking_aggregate_proxy->IsPipelineBreaker(), "Expected final aggregation node.");
 
