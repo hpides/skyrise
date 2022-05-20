@@ -1,4 +1,4 @@
-#include "compiler/physical_query_plan/partition_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/partition_operator_proxy.hpp"
 
 #include <set>
 #include <string>
@@ -6,7 +6,7 @@
 
 #include <gtest/gtest.h>
 
-#include "compiler/physical_query_plan/import_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/import_operator_proxy.hpp"
 #include "operator/partition_operator.hpp"
 #include "types.hpp"
 

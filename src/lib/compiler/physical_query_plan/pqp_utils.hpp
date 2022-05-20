@@ -5,8 +5,8 @@
 #include <string>
 #include <unordered_set>
 
-#include "abstract_operator_proxy.hpp"
 #include "compiler/abstract_plan_node.hpp"
+#include "operator_proxy/abstract_operator_proxy.hpp"
 #include "types.hpp"
 
 namespace skyrise {

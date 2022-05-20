@@ -1,11 +1,11 @@
-#include "compiler/physical_query_plan/join_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/join_operator_proxy.hpp"
 
 #include <string>
 #include <vector>
 
 #include <gtest/gtest.h>
 
-#include "compiler/physical_query_plan/import_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/import_operator_proxy.hpp"
 #include "operator/join_operator_predicate.hpp"
 #include "types.hpp"
 

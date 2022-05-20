@@ -5,8 +5,8 @@
 #include <boost/container_hash/hash.hpp>
 #include <magic_enum.hpp>
 
+#include "compiler/physical_query_plan/pqp_utils.hpp"
 #include "operator/abstract_operator.hpp"
-#include "pqp_utils.hpp"
 #include "utils/assert.hpp"
 #include "utils/print_directed_acyclic_graph.hpp"
 

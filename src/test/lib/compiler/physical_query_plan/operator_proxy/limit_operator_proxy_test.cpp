@@ -1,11 +1,11 @@
-#include "compiler/physical_query_plan/limit_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/limit_operator_proxy.hpp"
 
 #include <string>
 #include <vector>
 
 #include <gtest/gtest.h>
 
-#include "compiler/physical_query_plan/import_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/import_operator_proxy.hpp"
 #include "expression/expression_functional.hpp"
 #include "types.hpp"
 

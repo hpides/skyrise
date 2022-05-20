@@ -1,11 +1,11 @@
-#include "compiler/physical_query_plan/aggregate_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/aggregate_operator_proxy.hpp"
 
 #include <string>
 #include <vector>
 
 #include <gtest/gtest.h>
 
-#include "compiler/physical_query_plan/import_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/import_operator_proxy.hpp"
 #include "expression/aggregate_expression.hpp"
 #include "expression/expression_functional.hpp"
 #include "expression/expression_utils.hpp"

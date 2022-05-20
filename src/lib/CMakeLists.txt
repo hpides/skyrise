@@ -90,38 +90,39 @@ set(
     compiler/logical_query_plan/functional_dependency.cpp
     compiler/logical_query_plan/functional_dependency.hpp
 
-    compiler/physical_query_plan/abstract_operator_proxy.cpp
-    compiler/physical_query_plan/abstract_operator_proxy.hpp
-    compiler/physical_query_plan/aggregate_operator_proxy.cpp
-    compiler/physical_query_plan/aggregate_operator_proxy.hpp
-    compiler/physical_query_plan/alias_operator_proxy.cpp
-    compiler/physical_query_plan/alias_operator_proxy.hpp
-    compiler/physical_query_plan/exchange_operator_proxy.cpp
-    compiler/physical_query_plan/exchange_operator_proxy.hpp
-    compiler/physical_query_plan/export_operator_proxy.cpp
-    compiler/physical_query_plan/export_operator_proxy.hpp
-    compiler/physical_query_plan/filter_operator_proxy.cpp
-    compiler/physical_query_plan/filter_operator_proxy.hpp
-    compiler/physical_query_plan/import_operator_proxy.cpp
-    compiler/physical_query_plan/import_operator_proxy.hpp
-    compiler/physical_query_plan/import_options.cpp
-    compiler/physical_query_plan/import_options.hpp
-    compiler/physical_query_plan/join_operator_proxy.cpp
-    compiler/physical_query_plan/join_operator_proxy.hpp
-    compiler/physical_query_plan/limit_operator_proxy.cpp
-    compiler/physical_query_plan/limit_operator_proxy.hpp
-    compiler/physical_query_plan/partition_operator_proxy.cpp
-    compiler/physical_query_plan/partition_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/abstract_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/abstract_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/aggregate_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/aggregate_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/alias_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/alias_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/exchange_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/exchange_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/export_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/export_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/filter_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/filter_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/import_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/import_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/import_options.cpp
+    compiler/physical_query_plan/operator_proxy/import_options.hpp
+    compiler/physical_query_plan/operator_proxy/join_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/join_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/limit_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/limit_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/partition_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/partition_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/projection_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/projection_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/sort_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/sort_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/union_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/union_operator_proxy.hpp
     compiler/physical_query_plan/pqp_serialization.cpp
     compiler/physical_query_plan/pqp_serialization.hpp
     compiler/physical_query_plan/pqp_utils.cpp
     compiler/physical_query_plan/pqp_utils.hpp
-    compiler/physical_query_plan/projection_operator_proxy.cpp
-    compiler/physical_query_plan/projection_operator_proxy.hpp
-    compiler/physical_query_plan/sort_operator_proxy.cpp
-    compiler/physical_query_plan/sort_operator_proxy.hpp
-    compiler/physical_query_plan/union_operator_proxy.cpp
-    compiler/physical_query_plan/union_operator_proxy.hpp
+
     compiler/plan_utils.hpp
 
     expression/abstract_expression.cpp

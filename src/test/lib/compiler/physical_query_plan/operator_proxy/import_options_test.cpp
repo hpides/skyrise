@@ -1,4 +1,4 @@
-#include "compiler/physical_query_plan/import_options.hpp"
+#include "compiler/physical_query_plan/operator_proxy/import_options.hpp"
 
 #include <string>
 #include <vector>
