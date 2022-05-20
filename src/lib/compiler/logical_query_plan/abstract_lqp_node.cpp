@@ -170,7 +170,7 @@ std::vector<FunctionalDependency> AbstractLqpNode::FunctionalDependencies() cons
     return non_trivial_fds;
   }
 
-  auto trivial_fds = FdsFromUniqueConstraints(SharedFromBase(), unique_constraints);
+  auto trivial_fds = FunctionalDependenciesFromUniqueConstraints(SharedFromBase(), unique_constraints);
 
   // (3) Merge and return FDs
   return UnionFunctionalDependencies(non_trivial_fds, trivial_fds);

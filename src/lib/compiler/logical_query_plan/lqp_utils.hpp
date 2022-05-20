@@ -133,13 +133,14 @@ bool ContainsMatchingUniqueConstraint(const std::shared_ptr<LqpUniqueConstraints
  * @return A set of FDs, derived from the given @param unique_constraints and based on the output expressions of the
  *         given @param lqp node.
  */
-std::vector<FunctionalDependency> FdsFromUniqueConstraints(
+std::vector<FunctionalDependency> FunctionalDependenciesFromUniqueConstraints(
     const std::shared_ptr<const AbstractLqpNode>& lqp, const std::shared_ptr<LqpUniqueConstraints>& unique_constraints);
 
 /**
  * This is a helper method that removes invalid or unnecessary FDs from the given input set @param fds by looking at
  * the @param lqp node's output expressions.
  */
-void RemoveInvalidFunctionalDependencies(const std::shared_ptr<const AbstractLqpNode>& lqp, std::vector<FunctionalDependency>& fds);
+void RemoveInvalidFunctionalDependencies(const std::shared_ptr<const AbstractLqpNode>& lqp,
+                                         std::vector<FunctionalDependency>& fds);
 
 }  // namespace skyrise

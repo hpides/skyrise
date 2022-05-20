@@ -168,7 +168,7 @@ bool ContainsMatchingUniqueConstraint(const std::shared_ptr<LqpUniqueConstraints
   return false;
 }
 
-std::vector<FunctionalDependency> FdsFromUniqueConstraints(
+std::vector<FunctionalDependency> FunctionalDependenciesFromUniqueConstraints(
     const std::shared_ptr<const AbstractLqpNode>& lqp,
     const std::shared_ptr<LqpUniqueConstraints>& unique_constraints) {
   Assert(!unique_constraints->empty(), "Did not expect empty vector of unique constraints");
@@ -222,7 +222,8 @@ std::vector<FunctionalDependency> FdsFromUniqueConstraints(
   return fds;
 }
 
-void RemoveInvalidFunctionalDependencies(const std::shared_ptr<const AbstractLqpNode>& lqp, std::vector<FunctionalDependency>& fds) {
+void RemoveInvalidFunctionalDependencies(const std::shared_ptr<const AbstractLqpNode>& lqp,
+                                         std::vector<FunctionalDependency>& fds) {
   if (fds.empty()) {
     return;
   }
