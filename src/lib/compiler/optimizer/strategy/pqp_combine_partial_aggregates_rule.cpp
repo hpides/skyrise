@@ -4,7 +4,6 @@
 #include <set>
 #include <unordered_set>
 
-#include "compiler/physical_query_plan/aggregate_operator_proxy.hpp"
 #include "compiler/physical_query_plan/exchange_operator_proxy.hpp"
 #include "compiler/physical_query_plan/pqp_utils.hpp"
 #include "compiler/plan_utils.hpp"
@@ -14,23 +13,25 @@
 namespace skyrise {
 
 namespace {
-size_t kMaximumInputObjectsCount = 30;
+
+size_t kMaximumInputObjectsCount = 30; // ToDo(anyone) Remove, and use the QueryContext instead.
+
 }  // namespace
 
-const std::string& PqpCombinePartialAggregatesRule::Name() const {
-  static const std::string rule_name = "PqpCombinePartialAggregatesRule";
+const std::string& PqpCombinePartialResultsRule::Name() const {
+  static const std::string rule_name = "PqpCombinePartialResultsRule";
   return rule_name;
 }
 
-void PqpCombinePartialAggregatesRule::ApplyTo(const std::shared_ptr<AbstractOperatorProxy>& pqp_root) const {
+void PqpCombinePartialResultsRule::ApplyTo(const std::shared_ptr<AbstractOperatorProxy>& pqp_root) const {
   auto leaf_proxies = PqpFindLeaves(pqp_root);
+
+  // Reduce partial aggregates in additional aggregation stages, if necessary.
   for (const auto& leaf_proxy : leaf_proxies) {
     VisitPqpUpwards(leaf_proxy, [&](const auto& operator_proxy) {
-      if (!operator_proxy->IsPipelineBreaker()) {
-        return PqpUpwardVisitation::kVisitOutputs;
-      }
-      if (operator_proxy->Type() == OperatorType::kAggregate) {
-        [[maybe_unused]] bool success = CreateStagedAggregation(operator_proxy);
+      if (operator_proxy->IsPipelineBreaker() && operator_proxy->Type() == OperatorType::kAggregate) {
+        auto pipeline_breaking_aggregate_proxy = std::static_pointer_cast<AggregateOperatorProxy>(operator_proxy);
+        [[maybe_unused]] bool success = CombinePartialAggregates(pipeline_breaking_aggregate_proxy);
       }
 
       return PqpUpwardVisitation::kVisitOutputs;
@@ -38,18 +39,16 @@ void PqpCombinePartialAggregatesRule::ApplyTo(const std::shared_ptr<AbstractOper
   }
 }
 
-bool PqpCombinePartialAggregatesRule::CreateStagedAggregation(
-    const std::shared_ptr<AbstractOperatorProxy>& operator_proxy) {
-  Assert(operator_proxy->Type() == OperatorType::kAggregate && operator_proxy->IsPipelineBreaker(),
-         "Expected final aggregation node.");
-  auto aggregate_proxy = std::static_pointer_cast<AggregateOperatorProxy>(operator_proxy);
+bool PqpCombinePartialResultsRule::CombinePartialAggregates(
+    const std::shared_ptr<AggregateOperatorProxy>& pipeline_breaking_aggregate_proxy) {
+  Assert(pipeline_breaking_aggregate_proxy->IsPipelineBreaker(), "Expected final aggregation node.");
 
   /**
    * (1) Check whether partial merge is required.
    */
-  std::shared_ptr<AbstractOperatorProxy> current_operator_proxy = aggregate_proxy;
-  if (aggregate_proxy->LeftInput()->Type() == OperatorType::kExchange) {
-    current_operator_proxy = aggregate_proxy->LeftInput();
+  std::shared_ptr<AbstractOperatorProxy> current_operator_proxy = pipeline_breaking_aggregate_proxy;
+  if (pipeline_breaking_aggregate_proxy->LeftInput()->Type() == OperatorType::kExchange) {
+    current_operator_proxy = pipeline_breaking_aggregate_proxy->LeftInput();
     Assert(std::static_pointer_cast<ExchangeOperatorProxy>(current_operator_proxy)->GetExchangeMode() ==
                ExchangeMode::kFullMerge,
            "Expected ExchangeMode::kFullMerge.");
