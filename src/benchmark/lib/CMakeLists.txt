@@ -58,6 +58,8 @@ set(
     lambda/network_throughput_benchmark.hpp
     lambda/network_throughput_parallel_benchmark.cpp
     lambda/network_throughput_parallel_benchmark.hpp
+    synthetic_table_generator.cpp
+    synthetic_table_generator.hpp
     tpch/tpch_data_generator.hpp
     tpch/tpch_data_generator.cpp
     tpch/tpch_mock_catalog.cpp
