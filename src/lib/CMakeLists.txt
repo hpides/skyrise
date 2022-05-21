@@ -161,6 +161,10 @@ set(
     compiler/physical_query_plan/operator_proxy/sort_operator_proxy.hpp
     compiler/physical_query_plan/operator_proxy/union_operator_proxy.cpp
     compiler/physical_query_plan/operator_proxy/union_operator_proxy.hpp
+    compiler/physical_query_plan/pipeline_fragment_template.cpp
+    compiler/physical_query_plan/pipeline_fragment_template.hpp
+    compiler/physical_query_plan/pqp_pipeline.cpp
+    compiler/physical_query_plan/pqp_pipeline.hpp
     compiler/physical_query_plan/pqp_serialization.cpp
     compiler/physical_query_plan/pqp_serialization.hpp
     compiler/physical_query_plan/pqp_utils.cpp

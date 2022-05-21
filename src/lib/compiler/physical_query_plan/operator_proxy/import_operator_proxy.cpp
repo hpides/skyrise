@@ -34,6 +34,10 @@ ImportOperatorProxy::ImportOperatorProxy(const std::vector<ObjectReference>& obj
 
 const std::string& ImportOperatorProxy::Name() const { return kName; }
 
+void ImportOperatorProxy::SetObjectReferences(std::vector<ObjectReference> object_references) {
+  object_references_ = std::move(object_references);
+}
+
 const std::vector<ObjectReference>& ImportOperatorProxy::ObjectReferences() const { return object_references_; }
 
 std::string ImportOperatorProxy::Description(const DescriptionMode mode) const {
