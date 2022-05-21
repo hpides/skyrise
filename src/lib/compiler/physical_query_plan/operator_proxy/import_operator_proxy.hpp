@@ -21,6 +21,7 @@ class ImportOperatorProxy : public EnableMakeForPlanNode<ImportOperatorProxy, Ab
   /**
    * Accessors
    */
+  void SetObjectReferences(std::vector<ObjectReference> object_references);
   const std::vector<ObjectReference>& ObjectReferences() const;
   const std::vector<ColumnId>& ColumnIds() const;
 
@@ -51,7 +52,7 @@ class ImportOperatorProxy : public EnableMakeForPlanNode<ImportOperatorProxy, Ab
 
  private:
   const std::vector<ColumnId> column_ids_;
-  const std::vector<ObjectReference> object_references_;
+  std::vector<ObjectReference> object_references_;
   std::shared_ptr<const ImportOptions> import_options_;
   size_t output_objects_count_ = std::numeric_limits<size_t>::max();
 };

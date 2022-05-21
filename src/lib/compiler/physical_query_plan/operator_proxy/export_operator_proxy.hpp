@@ -37,9 +37,11 @@ class ExportOperatorProxy : public EnableMakeForPlanNode<ExportOperatorProxy, Ab
 
   /**
    * Convenience construction function used by PipelineFragmentTemplate.
-   * @return an ExportOperatorProxy without proper values for bucket name etc.
+   * @return an ExportOperatorProxy without proper values for bucket name etc. If @param input_proxy is provided, sets
+   *         it is set as an input of the export proxy.
    */
-  static std::shared_ptr<AbstractOperatorProxy> DummyExportOperatorProxy();
+  static std::shared_ptr<AbstractOperatorProxy> Dummy(
+      const std::shared_ptr<AbstractOperatorProxy>& input_proxy = nullptr);
 
  protected:
   std::shared_ptr<AbstractOperatorProxy> OnDeepCopy(

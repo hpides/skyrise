@@ -163,11 +163,11 @@ struct ObjectReference {
       : bucket_name(std::move(init_bucket_name)), identifier(std::move(init_identifier)), etag(std::move(init_etag)) {
     Assert(!bucket_name.empty(), "ObjectReference requires a non-empty bucket name.");
     Assert(!identifier.empty(), "ObjectReference requires a non-empty object identifier.");
-  };
+  }
 
   bool operator==(const ObjectReference& other) const {
     return bucket_name == other.bucket_name && identifier == other.identifier && etag == other.etag;
-  };
+  }
 
   std::string bucket_name;
   std::string identifier;

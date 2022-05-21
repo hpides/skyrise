@@ -51,12 +51,19 @@ TEST_F(ExportOperatorProxyTest, SerializeAndDeserialize) {
   EXPECT_EQ(export_json, deserialized_proxy_json);
 }
 
-TEST_F(ExportOperatorProxyTest, DummyExportOperatorProxy) {
-  std::shared_ptr<AbstractOperatorProxy> proxy = ExportOperatorProxy::DummyExportOperatorProxy();
-  const auto export_proxy = std::dynamic_pointer_cast<ExportOperatorProxy>(proxy);
-  EXPECT_EQ(export_proxy->TargetObject().bucket_name, "PLACEHOLDER");
-  EXPECT_EQ(export_proxy->TargetObject().identifier, "PLACEHOLDER");
+TEST_F(ExportOperatorProxyTest, Dummy) {
+  const auto export_proxy = std::static_pointer_cast<ExportOperatorProxy>(ExportOperatorProxy::Dummy());
+  EXPECT_EQ(export_proxy->TargetObject().bucket_name, "Placeholder");
+  EXPECT_EQ(export_proxy->TargetObject().identifier, "Placeholder");
   EXPECT_EQ(export_proxy->GetExportFormat(), ExportFormat::kOrc);
+
+  // Optionally, an input proxy can be set
+  // clang-format off
+  const auto pqp =
+  ExportOperatorProxy::Dummy(
+    ImportOperatorProxy::Make(std::vector<ObjectReference>{kImportObject}, std::vector<ColumnId>{ColumnId{0}}));
+  // clang-format on
+  EXPECT_TRUE(pqp->LeftInput() && pqp->LeftInput()->Type() == OperatorType::kImport);
 }
 
 TEST_F(ExportOperatorProxyTest, DeepCopy) {

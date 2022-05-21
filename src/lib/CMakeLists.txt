@@ -118,6 +118,10 @@ set(
     compiler/physical_query_plan/operator_proxy/sort_operator_proxy.hpp
     compiler/physical_query_plan/operator_proxy/union_operator_proxy.cpp
     compiler/physical_query_plan/operator_proxy/union_operator_proxy.hpp
+    compiler/physical_query_plan/pipeline_fragment_template.cpp
+    compiler/physical_query_plan/pipeline_fragment_template.hpp
+    compiler/physical_query_plan/pqp_pipeline.cpp
+    compiler/physical_query_plan/pqp_pipeline.hpp
     compiler/physical_query_plan/pqp_serialization.cpp
     compiler/physical_query_plan/pqp_serialization.hpp
     compiler/physical_query_plan/pqp_utils.cpp
@@ -175,7 +179,7 @@ set(
     metadata/table_partition.hpp
     metadata/table_schema.cpp
     metadata/table_schema.hpp
-    
+
     metering/request_tracker/monitor.cpp
     metering/request_tracker/monitor.hpp
     metering/request_tracker/request_tracker.cpp

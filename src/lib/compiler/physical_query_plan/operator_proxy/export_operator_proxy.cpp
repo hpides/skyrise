@@ -12,7 +12,7 @@ const std::string kJsonKeyBucketName = "bucket_name";
 const std::string kJsonKeyExportFormat = "export_format";
 const std::string kJsonKeyTargetObjectKey = "target_object_key";
 const std::string kName = "Export";
-const std::string kPlaceholderString = "PLACEHOLDER";
+const std::string kPlaceholderString = "Placeholder";
 
 }  // namespace
 
@@ -73,8 +73,14 @@ Aws::Utils::Json::JsonValue ExportOperatorProxy::ToJson() const {
       .WithString(kJsonKeyExportFormat, std::string(magic_enum::enum_name(export_format_)));
 }
 
-std::shared_ptr<AbstractOperatorProxy> ExportOperatorProxy::DummyExportOperatorProxy() {
-  return ExportOperatorProxy::Make(ObjectReference(kPlaceholderString, kPlaceholderString), ExportFormat::kOrc);
+std::shared_ptr<AbstractOperatorProxy> ExportOperatorProxy::Dummy(
+    const std::shared_ptr<AbstractOperatorProxy>& input_proxy) {
+  auto export_proxy =
+      ExportOperatorProxy::Make(ObjectReference(kPlaceholderString, kPlaceholderString), ExportFormat::kOrc);
+  if (input_proxy) {
+    export_proxy->SetLeftInput(input_proxy);
+  }
+  return export_proxy;
 }
 
 std::shared_ptr<AbstractOperatorProxy> ExportOperatorProxy::OnDeepCopy(
