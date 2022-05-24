@@ -3,8 +3,8 @@
 #include <memory>
 #include <string>
 
-#include "abstract_operator_proxy.hpp"
 #include "compiler/query_context.hpp"
+#include "operator_proxy/abstract_operator_proxy.hpp"
 #include "pqp_pipeline.hpp"
 #include "types.hpp"
 

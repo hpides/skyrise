@@ -12,10 +12,10 @@
 namespace {
 using namespace skyrise;  // NOLINT(google-build-using-namespace)
 
-std::vector<std::vector<FragmentImportDefinition>> GetPipelineImportDefinitions(
+std::vector<std::vector<PipelineFragmentDefinition>> GetPipelineFragmentDefinitions(
     const std::shared_ptr<ImportOperatorProxy>& import_proxy, size_t max_fragment_count) {
-  // Ideally, an FragmentImportDefinition contains a single object key. However, if the number of object keys exceeds
-  // @param max_fragment_count, object keys must be scattered across the maximum number of FragmentImportDefinitions.
+  // Ideally, an PipelineFragmentDefinition contains a single object key. However, if the number of object keys exceeds
+  // @param max_fragment_count, object keys must be scattered across the maximum number of PipelineFragmentDefinitions.
   size_t chunk_size = 1;
   if (import_proxy->ObjectKeys().size() > max_fragment_count) {
     const double res = static_cast<double>(import_proxy->ObjectKeys().size()) / max_fragment_count;
@@ -25,10 +25,10 @@ std::vector<std::vector<FragmentImportDefinition>> GetPipelineImportDefinitions(
   auto pipeline_object_keys_by_fragment = SplitVectorIntoChunks(import_proxy->ObjectKeys(), chunk_size);
 
   // Create import definition for each fragment
-  std::vector<std::vector<FragmentImportDefinition>> pipeline_import_definitions;
+  std::vector<std::vector<PipelineFragmentDefinition>> pipeline_import_definitions;
   pipeline_import_definitions.reserve(pipeline_object_keys_by_fragment.size());
   for (auto& fragment_object_keys : pipeline_object_keys_by_fragment) {
-    std::vector<FragmentImportDefinition> fragment_import_definitions;
+    std::vector<PipelineFragmentDefinition> fragment_import_definitions;
     fragment_import_definitions.emplace_back(import_proxy->Identity(), import_proxy->BucketName(),
                                              std::move(fragment_object_keys));
     pipeline_import_definitions.emplace_back(fragment_import_definitions);
@@ -188,8 +188,8 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutNextPipelineFragment(  // TOD
 
   // Level of intra-operator parallelism
   size_t worker_count = std::min(current_pipeline_fragment->InputObjectsCount(), query_context_->MaxWorkerCount());
-  std::vector<std::vector<FragmentImportDefinition>> current_pipeline_import_definitions =
-      GetPipelineImportDefinitions(primary_import_proxy, worker_count);
+  std::vector<std::vector<PipelineFragmentDefinition>> current_pipeline_import_definitions =
+      GetPipelineFragmentDefinitions(primary_import_proxy, worker_count);
 
   // Secondary imports from joins or union operations
   for (const auto& secondary_import_proxy : secondary_import_proxies) {
@@ -197,16 +197,12 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutNextPipelineFragment(  // TOD
     //               mapping input objects to one another.
     //               For now, we use an implementation that can be used for broadcast joins:
     // Each pipeline fragment should contain the given import_proxy with all object keys
-    const FragmentImportDefinition import_definition(
+    const PipelineFragmentDefinition import_definition(
         secondary_import_proxy->Identity(), secondary_import_proxy->BucketName(), secondary_import_proxy->ObjectKeys());
     for (auto& fragment_import_definitions : current_pipeline_import_definitions) {
       fragment_import_definitions.emplace_back(import_definition);
     }
-    // After deriving the import definitions, we should generalize the ImportOperatorProxy objects with placeholders
-    // since they will be used in PipelineFragmentTemplate.
-    secondary_import_proxy->ConvertToTemplate();
   }
-  primary_import_proxy->ConvertToTemplate();
 
   /**
    * (4) GENERATE PIPELINE EXPORT KEYS
@@ -222,9 +218,6 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutNextPipelineFragment(  // TOD
     pipeline_export_key_prefix_stream << current_pipeline_identity;
     pipeline_export_key_suffix = query_context_->TargetFileExtension();
     current_pipeline_export_format = query_context_->TargetFormat();
-    // Reset attribute values to template defaults for being used in PipelineFragmentTemplate later.
-    const auto export_proxy = std::static_pointer_cast<ExportOperatorProxy>(current_pipeline_fragment);
-    export_proxy->ConvertToTemplate();
   } else {
     // Intermediate result export
     pipeline_export_key_prefix_stream << query_context_->IntermediateResultsKeyPrefix();
@@ -260,9 +253,9 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutNextPipelineFragment(  // TOD
     next_pipeline_import_proxy->SetLeftInput(nullptr);
 
     // Replace ExchangeOperatorProxy with ExportOperatorProxy placeholder
-    auto export_proxy = ExportOperatorProxy::DummyExportOperatorProxy();
+    auto export_proxy = ExportOperatorProxy::Dummy();
     export_proxy->PrefixIdentity(query_context_->QueryIdentity());
-    PlanReplaceNode<AbstractOperatorProxy>(current_pipeline_fragment, export_proxy);
+    ReplacePlanNode<AbstractOperatorProxy>(current_pipeline_fragment, export_proxy);
     current_pipeline_fragment = export_proxy;
     Assert(current_pipeline_fragment->OutputNodeCount() == 0, "Pipeline fragment should be cut off.");
   } else {
