@@ -122,6 +122,8 @@ set(
     compiler/physical_query_plan/pipeline_fragment_template.hpp
     compiler/physical_query_plan/pqp_pipeline.cpp
     compiler/physical_query_plan/pqp_pipeline.hpp
+    compiler/physical_query_plan/pqp_pipeline_slicer.cpp
+    compiler/physical_query_plan/pqp_pipeline_slicer.hpp
     compiler/physical_query_plan/pqp_serialization.cpp
     compiler/physical_query_plan/pqp_serialization.hpp
     compiler/physical_query_plan/pqp_utils.cpp
