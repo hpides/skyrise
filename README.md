@@ -22,7 +22,7 @@ ninja all
 ```
 
 ## Team
-Maintainers: [Thomas Bodner](https://hpi.de/plattner/people/phd-students/thomas-bodner.html), [David Justen]([https://github.com/d-justen](https://hpi.de/plattner/people/phd-students/david-justen.html))
+Maintainers: [Thomas Bodner](https://hpi.de/plattner/people/phd-students/thomas-bodner.html), [David Justen](https://hpi.de/plattner/people/phd-students/david-justen.html)
 
 Contributors: [Lars Jonas Bollmeier](https://github.com/BollmeierHPI), [Tobias Maltenberger](https://github.com/maltenbergert), [Julian Menzler](https://github.com/julianmenzler), [Timon Millich](https://github.com/tmillich), [Theo Radig](https://github.com/TheoRadig), [Niklas Riekenbrauck](https://github.com/nikriek), [Daniel Ritter](https://github.com/dritter-sap), [Benedikt Schenkel](https://github.com/Scretch9), [Pascal Schulze](https://github.com/pscls), [Jan Siebert](https://github.com/JanSiebert), [Ben Wegener](https://github.com/bweengener)
 
