@@ -22,9 +22,9 @@ ninja all
 ```
 
 ## Team
-Lead: [Thomas Bodner](https://hpi.de/plattner/people/phd-students/thomas-bodner.html)
+Maintainers: [Thomas Bodner](https://hpi.de/plattner/people/phd-students/thomas-bodner.html), [David Justen]([https://github.com/d-justen](https://hpi.de/plattner/people/phd-students/david-justen.html))
 
-Contributors: [Lars Jonas Bollmeier](https://github.com/BollmeierHPI), [David Justen](https://github.com/d-justen), [Tobias Maltenberger](https://github.com/maltenbergert), [Julian Menzler](https://github.com/julianmenzler), [Timon Millich](https://github.com/tmillich), [Theo Radig](https://github.com/TheoRadig), [Daniel Ritter](https://github.com/dritter-sap), [Pascal Schulze](https://github.com/pscls), [Jan Siebert](https://github.com/JanSiebert)
+Contributors: [Lars Jonas Bollmeier](https://github.com/BollmeierHPI), [Tobias Maltenberger](https://github.com/maltenbergert), [Julian Menzler](https://github.com/julianmenzler), [Timon Millich](https://github.com/tmillich), [Theo Radig](https://github.com/TheoRadig), [Niklas Riekenbrauck](https://github.com/nikriek), [Daniel Ritter](https://github.com/dritter-sap), [Benedikt Schenkel](https://github.com/Scretch9), [Pascal Schulze](https://github.com/pscls), [Jan Siebert](https://github.com/JanSiebert), [Ben Wegener](https://github.com/bweengener)
 
 Alumni: [Fabian Engel](https://github.com/engelfa), [Jakob Köhler](https://github.com/jkhlr), [Jan Mensch](https://github.com/CAJan93), [Tobias Pietz](https://github.com/Tobias314), [Yannik Schröder](https://github.com/Yanikovic)
 
