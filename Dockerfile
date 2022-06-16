@@ -1,15 +1,15 @@
 # Tool versions
-ARG AWS_SDK_VERSION=1.9.241
+ARG AWS_SDK_VERSION=1.9.278
 ARG BOOST_VERSION=1.79.0
-ARG CCACHE_VERSION=4.6
+ARG CCACHE_VERSION=4.6.1
 ARG CMAKE_MAJOR_MINOR=3.23
-ARG CMAKE_PATCH=1
-ARG CPPCHECK_VERSION=2.7
-ARG CPPLINT_COMMIT=629edc1
+ARG CMAKE_PATCH=2
+ARG CPPCHECK_VERSION=2.8
+ARG CPPLINT_COMMIT=a5197ab
 ARG GCC_VERSION=7.5.0
 ARG GCC_SUFFIX=75
 ARG HEAPTRACK_VERSION=1.3.0
-ARG LLVM_CLANG_VERSION=14.0.0
+ARG LLVM_CLANG_VERSION=14.0.5
 ARG ORC_VERSION=1.7.4
 ARG VALGRIND_VERSION=3.19.0
 
@@ -22,7 +22,7 @@ ARG CPPCHECK_DIR=/opt/build/cppcheck-${CPPCHECK_VERSION}
 ARG CPPLINT_DIR=/opt/build/cpplint-${CPPLINT_COMMIT}
 ARG GCC_DIR=/opt/build/gcc-${GCC_VERSION}
 ARG HEAPTRACK_DIR=/opt/run/heaptrack-${HEAPTRACK_VERSION}
-ARG LLVM_CLANG_DIR=/opt/build/llvm-${LLVM_CLANG_VERSION}
+ARG LLVM_CLANG_DIR=/opt/build/llvm-clang-${LLVM_CLANG_VERSION}
 ARG ORC_DIR=/opt/build/orc-${ORC_VERSION}
 ARG VALGRIND_DIR=/opt/run/valgrind-${VALGRIND_VERSION}
 
@@ -58,6 +58,7 @@ RUN yum update -y && \
     yum clean all && \
     rm -rf /var/cache/yum
 
+
 # CMake
 FROM base-install AS base-cmake
 ARG CMAKE_MAJOR_MINOR
@@ -71,6 +72,34 @@ RUN wget -nv https://cmake.org/files/v${CMAKE_MAJOR_MINOR}/cmake-${CMAKE_MAJOR_M
         do \
             ln -s $file /usr/bin/$(basename $file); \
         done
+
+
+# Cpplint
+FROM base-install AS base-cpplint
+ARG CPPLINT_COMMIT
+ARG CPPLINT_DIR
+
+WORKDIR ${CPPLINT_DIR}/bin
+RUN wget -nv  https://raw.githubusercontent.com/google/styleguide/${CPPLINT_COMMIT}/cpplint/cpplint.py && \
+    chmod +x cpplint.py
+
+
+# GCC
+FROM base-install AS base-gcc
+ARG GCC_VERSION
+ARG GCC_SUFFIX
+ARG GCC_DIR
+
+WORKDIR ${GCC_DIR}/src
+RUN wget -nv https://mirrors.kernel.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz -O - \
+        | tar -xz --strip-components=1 && \
+    ./contrib/download_prerequisites && \
+    mkdir build && \
+    cd build && \
+    ../configure --enable-languages=c,c++ --disable-multilib --prefix=${GCC_DIR} --program-suffix=${GCC_SUFFIX} && \
+    make -j$(nproc) && \
+    make install-strip && \
+    rm -rf ${GCC_DIR}/src
 
 
 # Ccache
@@ -109,34 +138,6 @@ RUN wget -nv https://github.com/danmar/cppcheck/archive/${CPPCHECK_VERSION}.tar.
     make -j$(nproc) && \
     make install && \
     rm -rf ${CPPCHECK_DIR}/src
-
-
-# Cpplint
-FROM base-install AS base-cpplint
-ARG CPPLINT_COMMIT
-ARG CPPLINT_DIR
-
-WORKDIR ${CPPLINT_DIR}/bin
-RUN wget -nv  https://raw.githubusercontent.com/google/styleguide/${CPPLINT_COMMIT}/cpplint/cpplint.py && \
-    chmod +x cpplint.py
-
-
-# GCC
-FROM base-install AS base-gcc
-ARG GCC_VERSION
-ARG GCC_SUFFIX
-ARG GCC_DIR
-
-WORKDIR ${GCC_DIR}/src
-RUN wget -nv https://mirrors.kernel.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz -O - \
-        | tar -xz --strip-components=1 && \
-    ./contrib/download_prerequisites && \
-    mkdir build && \
-    cd build && \
-    ../configure --enable-languages=c,c++ --disable-multilib --prefix=${GCC_DIR} --program-suffix=${GCC_SUFFIX} && \
-    make -j$(nproc) && \
-    make install-strip && \
-    rm -rf ${GCC_DIR}/src
 
 
 # Heaptrack
@@ -181,6 +182,21 @@ RUN wget -nv https://github.com/llvm/llvm-project/releases/download/llvmorg-${LL
         done
 ENV CC=clang \
     CXX=clang++
+
+
+# Valgrind
+FROM base-install AS base-valgrind
+ARG VALGRIND_VERSION
+ARG VALGRIND_DIR
+
+WORKDIR ${VALGRIND_DIR}/src
+RUN wget -nv https://sourceware.org/pub/valgrind/valgrind-${VALGRIND_VERSION}.tar.bz2 -O - \
+    | tar -xj --strip-components=1 && \
+    ./autogen.sh  && \
+    ./configure --prefix=${VALGRIND_DIR} && \
+    make -j$(nproc) && \
+    make install && \
+    rm -rf ${VALGRIND_DIR}/src
 
 
 # AWS SDK
@@ -229,21 +245,6 @@ RUN git clone --branch boost-${BOOST_VERSION} --depth 1 --recurse-submodules --s
     rm -rf ${BOOST_DIR}/src
 
 
-# Valgrind
-FROM base-install AS base-valgrind
-ARG VALGRIND_VERSION
-ARG VALGRIND_DIR
-
-WORKDIR ${VALGRIND_DIR}/src
-RUN wget -nv https://sourceware.org/pub/valgrind/valgrind-${VALGRIND_VERSION}.tar.bz2 -O - \
-    | tar -xj --strip-components=1 && \
-    ./autogen.sh  && \
-    ./configure --prefix=${VALGRIND_DIR} && \
-    make -j$(nproc) && \
-    make install && \
-    rm -rf ${VALGRIND_DIR}/src
-
-
 # Base stage combining all tools
 FROM amazon/aws-sam-cli-build-image-provided.al2 AS base
 ARG AWS_SDK_DIR
@@ -278,8 +279,18 @@ ARG GCC_DIR
     # Update packages
 RUN yum update -y && \
     # Install packages
-    yum install -y \
+    # Arrow Parquet dependency
+    yum install -y amazon-linux-extras && \
+    amazon-linux-extras install -y epel && \
+    yum install -y https://apache.jfrog.io/artifactory/arrow/amazon-linux/2/apache-arrow-release-latest.rpm && \
+    yum install -y --enablerepo=epel arrow-devel && \
+    yum install -y --enablerepo=epel arrow-glib-devel && \
+    yum install -y --enablerepo=epel arrow-dataset-devel && \
+    yum install -y --enablerepo=epel arrow-dataset-glib-devel && \
+    yum install -y --enablerepo=epel parquet-devel && \
+    yum install -y --enablerepo=epel parquet-glib-devel && \
     # AWS SDK dependency
+    yum install -y \
     libcurl-devel \
     libuuid-devel \
     openssl-devel \
@@ -339,7 +350,8 @@ ARG AWS_SDK_DIR
 RUN apt-get update && \
     apt-get install -y \
     lsb-release \
-    sudo
+    sudo \
+    wget
 
 # Install packages
 COPY script/install_toolchain.sh install_toolchain.sh
@@ -354,7 +366,7 @@ RUN git clone --branch ${AWS_SDK_VERSION} --depth 1 --recurse-submodules --shall
     cd src/build && \
     cmake .. \
             -DCMAKE_BUILD_TYPE=Release \
--DCMAKE_CXX_FLAGS="-Wno-error=deprecated-declarations" \
+            -DCMAKE_CXX_FLAGS="-Wno-error=deprecated-declarations" \
             -DBUILD_ONLY="dynamodb;ec2;glue;iam;lambda;logs;monitoring;pricing;s3;sqs;ssm;xray" \
             -DBUILD_SHARED_LIBS=OFF \
             -DCPP_STANDARD=17 \
