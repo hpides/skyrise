@@ -77,6 +77,22 @@ set(
 )
 
 set(
+    QUERY_COMPILER_SOURCES
+    compiler/sql/create_sql_parser_error_message.cpp
+    compiler/sql/create_sql_parser_error_message.hpp
+    compiler/sql/parameter_id_allocator.cpp
+    compiler/sql/parameter_id_allocator.hpp
+    compiler/sql/sql_identifier.cpp
+    compiler/sql/sql_identifier.hpp
+    compiler/sql/sql_identifier_resolver.cpp
+    compiler/sql/sql_identifier_resolver.hpp
+    compiler/sql/sql_identifier_resolver_proxy.cpp
+    compiler/sql/sql_identifier_resolver_proxy.hpp
+    compiler/sql/sql_translator.cpp
+    compiler/sql/sql_translator.hpp
+)
+
+set(
     SHARED_SOURCES
     aggregate_traits.hpp
     all_type_variant.hpp
@@ -310,6 +326,7 @@ set(
     aws-cpp-sdk-pricing
     aws-cpp-sdk-xray
     skyriseShared
+    sqlparser
 )
 
 add_library(skyriseCoordinator STATIC ${COORDINATOR_SOURCES})
