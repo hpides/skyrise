@@ -77,6 +77,12 @@ set(
 )
 
 set(
+    QUERY_COMPILER_SOURCES
+    compiler/logical_query_plan/lqp_translator.cpp
+    compiler/logical_query_plan/lqp_translator.hpp
+)
+
+set(
     SHARED_SOURCES
     aggregate_traits.hpp
     all_type_variant.hpp
