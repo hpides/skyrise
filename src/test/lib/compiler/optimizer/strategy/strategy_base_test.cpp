@@ -10,8 +10,8 @@
 #include "compiler/logical_query_plan/abstract_lqp_node.hpp"
 #include "compiler/logical_query_plan/logical_plan_root_node.hpp"
 #include "compiler/optimizer/abstract_rule.hpp"
-#include "compiler/physical_query_plan/abstract_operator_proxy.hpp"
-#include "compiler/physical_query_plan/export_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/abstract_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/export_operator_proxy.hpp"
 
 namespace {
 using namespace skyrise;  // NOLINT(google-build-using-namespace)
