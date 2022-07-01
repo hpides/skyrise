@@ -59,7 +59,7 @@ void OrcFormatWriter::ProcessChunk(std::shared_ptr<const Chunk> chunk) {
 
   auto* struct_vector = dynamic_cast<orc::StructVectorBatch*>(batch_.get());
   struct_vector->numElements = chunk->Size();
-  for (size_t i = 0; i < chunk->GetColumnCount(); i++) {
+  for (size_t i = 0; i < chunk->GetColumnCount(); ++i) {
     CopySegmentToOrcColumn(chunk->GetSegment(i), struct_vector->fields[i]);
   }
 
@@ -126,7 +126,7 @@ void OrcFormatWriter::GenericCopySegmentToOrcColumn(SegmentType* segment, Vector
   auto& segment_values = segment->Values();
 
   batch->hasNulls = segment->IsNullable();
-  for (size_t i = 0; i < segment->Size(); i++) {
+  for (size_t i = 0; i < segment->Size(); ++i) {
     batch->data[i] = segment_values[i];
     if (segment->IsNullable()) {
       batch->notNull[i] = segment->NullValues()[i] ? 0 : 1;
@@ -151,7 +151,7 @@ void OrcFormatWriter::GenericCopySegmentToOrcColumn(ValueSegment<std::string>* s
 
   size_t bytes_copied = 0;
   batch->hasNulls = segment->IsNullable();
-  for (size_t i = 0; i < segment->Size(); i++) {
+  for (size_t i = 0; i < segment->Size(); ++i) {
     std::memcpy(&batch->blob.data()[bytes_copied], segment_values[i].c_str(), segment_values[i].size());
     batch->data[i] = &batch->blob.data()[bytes_copied];
     batch->length[i] = segment_values[i].size();

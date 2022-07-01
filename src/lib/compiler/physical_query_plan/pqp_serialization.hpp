@@ -2,7 +2,7 @@
 
 #include <aws/core/utils/json/JsonSerializer.h>
 
-#include "abstract_operator_proxy.hpp"
+#include "operator_proxy/abstract_operator_proxy.hpp"
 
 namespace skyrise {
 

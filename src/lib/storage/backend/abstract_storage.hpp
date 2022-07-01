@@ -59,20 +59,17 @@ class ObjectReader {
   static constexpr size_t kLastByteInFile = std::numeric_limits<size_t>::max();
   virtual ~ObjectReader() = default;
   /**
-   * Read reads at most `last_byte - first_byte + 1` bytes from an object (inclusive both byte indices). The callback
-   * might be invoked multiple times with `length` guaranteed to be > 0. The function returns after all available bytes
-   * have been read or an error occured. The callback does not have to outlive the call. This function is not
-   * thread-safe.
+   * Read reads at most `last_byte - first_byte + 1` bytes from an object (inclusive both byte indices). The data is
+   * written to buffer, which is cleared before writing the first byte. For performance reasons the caller should
+   * allocate enough memory to hold the response (e.g. using reserve). This function is not thread-safe.
    */
-  virtual StorageError Read(size_t first_byte, size_t last_byte,
-                            const std::function<void(const char* data, size_t length)>& callback) = 0;
+  virtual StorageError Read(size_t first_byte, size_t last_byte, std::vector<char>* buffer) = 0;
   /**
    * Reads `num_last_bytes` from the end of the object. If the object is smaller than the requested number of bytes,
    * this function reads the whole object. Some storage backends provide optimizations that do not need to receive the
    * size of an objects for this call.
    */
-  virtual StorageError ReadTail(size_t num_last_bytes,
-                                const std::function<void(const char* data, size_t length)>& callback);
+  virtual StorageError ReadTail(size_t num_last_bytes, std::vector<char>* buffer);
   virtual const ObjectStatus& GetStatus() = 0;
   virtual StorageError Close() = 0;
 

@@ -16,7 +16,7 @@
 #include "lambda/lambda_benchmark.hpp"
 #include "lambda/lambda_benchmark_config.hpp"
 #include "lambda/lambda_benchmark_result.hpp"
-#include "lib/testing/aws_test.hpp"
+#include "testing/aws_test.hpp"
 
 namespace skyrise {
 

@@ -147,7 +147,7 @@ std::shared_ptr<AbstractBenchmarkResult> LambdaBenchmarkRunner::OnRunConfig() {
   // BENCHMARK STARTS
   const auto benchmark_start = std::chrono::steady_clock::now();
 
-  for (size_t i = 0; i < typed_config_->repetition_count_; i++) {
+  for (size_t i = 0; i < typed_config_->repetition_count_; ++i) {
     if (typed_config_->use_one_function_per_repetition_ == UseOneFunctionPerRepetition::kYes || i == 0) {
       const size_t function_concurrency = [&]() {
         if (typed_config_->warm_up_strategy_ &&
@@ -172,7 +172,7 @@ std::shared_ptr<AbstractBenchmarkResult> LambdaBenchmarkRunner::OnRunConfig() {
 
     AWS_LOGSTREAM_INFO(kTag.c_str(), "Repetition " << i << " started.");
 
-    for (size_t j = 0; j < invoke_requests_[i].size(); j++) {
+    for (size_t j = 0; j < invoke_requests_[i].size(); ++j) {
       benchmark_result_->RegisterInvocation(i, j, invoke_requests_[i][j].first);
 
       lambda_client_->InvokeAsync(
@@ -247,13 +247,13 @@ void LambdaBenchmarkRunner::CreateInvokeRequests() {
                                    ? Aws::Lambda::Model::InvocationType::Event
                                    : Aws::Lambda::Model::InvocationType::RequestResponse;
 
-  for (size_t i = 0; i < typed_config_->repetition_count_; i++) {
+  for (size_t i = 0; i < typed_config_->repetition_count_; ++i) {
     std::vector<std::pair<Aws::String, Aws::Lambda::Model::InvokeRequest>> requests;
     requests.reserve(typed_config_->concurrent_invocation_count_);
 
     const auto& repetition_config = typed_config_->repetition_configs_[i];
 
-    for (size_t j = 0; j < repetition_config.size(); j++) {
+    for (size_t j = 0; j < repetition_config.size(); ++j) {
       const auto& function_invocation_config = repetition_config[j];
       const Aws::String invoke_id = std::to_string(i) + "-" + function_invocation_config.invoke_id;
 

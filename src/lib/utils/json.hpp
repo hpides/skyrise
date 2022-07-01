@@ -12,7 +12,7 @@ namespace skyrise {
 template <typename T>
 Aws::Utils::Array<Aws::Utils::Json::JsonValue> VectorToJsonArray(const std::vector<T>& vector) {
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> result(vector.size());
-  for (size_t i = 0; i < vector.size(); i++) {
+  for (size_t i = 0; i < vector.size(); ++i) {
     Aws::Utils::Json::JsonValue value;
 
     if constexpr (std::is_same<T, std::string>::value) {
@@ -32,7 +32,7 @@ template <typename T>
 std::vector<T> JsonArrayToVector(const Aws::Utils::Array<Aws::Utils::Json::JsonView>& array) {
   std::vector<T> result;
   result.reserve(array.GetLength());
-  for (size_t i = 0; i < array.GetLength(); i++) {
+  for (size_t i = 0; i < array.GetLength(); ++i) {
     if constexpr (std::is_same<T, std::string>::value) {
       result.emplace_back(array[i].AsString());
     } else if constexpr (std::is_integral<T>::value) {

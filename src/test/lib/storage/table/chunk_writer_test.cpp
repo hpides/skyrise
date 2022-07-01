@@ -67,12 +67,12 @@ TEST_F(PartitionedChunkWriterTest, WriteTable) {
   writer.Initialize(schema_);
 
   auto producer = [&]() {
-    for (size_t i = 0; i < kNumChunksPerTask; i++) {
+    for (size_t i = 0; i < kNumChunksPerTask; ++i) {
       writer.ProcessChunk(chunk_);
     }
   };
 
-  for (size_t i = 0; i < kNumSequentialTasks; i++) {
+  for (size_t i = 0; i < kNumSequentialTasks; ++i) {
     producer();
   }
 
@@ -80,7 +80,7 @@ TEST_F(PartitionedChunkWriterTest, WriteTable) {
 
   ASSERT_FALSE(writer.HasError());
   int chunks_found = 0;
-  for (size_t last_id = 0;; last_id++) {
+  for (size_t last_id = 0;; ++last_id) {
     ObjectStatus status = storage->GetStatus(config_.naming_strategy(last_id));
     if (status.GetError()) {
       break;
@@ -104,12 +104,12 @@ TEST_F(PartitionedChunkWriterTest, WriteTableErrorCase) {
   writer.Initialize(schema_);
 
   auto producer = [&]() {
-    for (size_t i = 0; i < kNumChunksPerTask; i++) {
+    for (size_t i = 0; i < kNumChunksPerTask; ++i) {
       writer.ProcessChunk(chunk_);
     }
   };
 
-  for (size_t i = 0; i < kNumSequentialTasks; i++) {
+  for (size_t i = 0; i < kNumSequentialTasks; ++i) {
     producer();
   }
 

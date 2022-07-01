@@ -2,7 +2,8 @@
 
 #include "abstract_operator.hpp"
 #include "storage/backend/abstract_storage.hpp"
-#include "storage/table/chunk_reader.hpp"
+#include "storage/formats/abstract_chunk_reader.hpp"
+#include "types.hpp"
 
 namespace skyrise {
 
@@ -14,21 +15,24 @@ namespace skyrise {
  */
 class ImportOperator : public AbstractOperator {
  public:
-  ImportOperator(std::string bucket_name, const std::vector<std::string>& source_object_keys,
-                 const std::vector<ColumnId>& column_ids, const std::shared_ptr<AbstractChunkReaderFactory>& factory);
+  ImportOperator(const std::vector<ObjectReference>& object_references, const std::vector<ColumnId>& column_ids,
+                 const std::shared_ptr<AbstractChunkReaderFactory>& factory);
 
   const std::string& Name() const override;
 
  protected:
   std::shared_ptr<const Table> OnExecute(
-      const std::shared_ptr<OperatorExecutionContext>& operator_execution_context = nullptr) override;
-  std::shared_ptr<const TableColumnDefinitions> ExtractSchema();
+      const std::shared_ptr<OperatorExecutionContext>& operator_execution_context) override;
+  std::shared_ptr<const TableColumnDefinitions> ExtractSchema(
+      const std::shared_ptr<const skyrise::TableColumnDefinitions>& reader_schema);
+
+  std::shared_ptr<Chunk> GetNextChunk(const std::unique_ptr<AbstractChunkReader>& reader);
 
  private:
-  const std::string bucket_name_;
-  const std::vector<std::string> source_object_keys_;
+  std::shared_ptr<const TableColumnDefinitions> ExtractSchema();
+
+  const std::vector<ObjectReference> object_references_;
   std::vector<ColumnId> column_ids_;
   const std::shared_ptr<AbstractChunkReaderFactory> factory_;
-  ChunkReader reader_;
 };
 }  // namespace skyrise

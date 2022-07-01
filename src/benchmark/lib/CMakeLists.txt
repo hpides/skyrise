@@ -4,20 +4,11 @@ set(
     abstract_benchmark_result.hpp
     abstract_benchmark_runner.hpp
     abstract_benchmark.hpp
+    abstract_data_generator.hpp
     benchmark_helper.cpp
     benchmark_helper.hpp
     benchmark_result_aggregate.cpp
     benchmark_result_aggregate.hpp
-    compression/compressor.cpp
-    compression/compressor.hpp
-    compression/decompressor.cpp
-    compression/decompressor.hpp
-    compression/processor.cpp
-    compression/processor.hpp
-    data_generation/abstract_generator.hpp
-    data_generation/table_builder.hpp
-    data_generation/tpch/tpch_generator.hpp
-    data_generation/tpch/tpch_generator.cpp
     ec2/ec2_benchmark_config.cpp
     ec2/ec2_benchmark_config.hpp
     ec2/ec2_benchmark_result.cpp
@@ -26,6 +17,12 @@ set(
     ec2/ec2_benchmark_runner.hpp
     ec2/ec2_invocation_benchmark.cpp
     ec2/ec2_invocation_benchmark.hpp
+    lambda/compression/compressor.cpp
+    lambda/compression/compressor.hpp
+    lambda/compression/decompressor.cpp
+    lambda/compression/decompressor.hpp
+    lambda/compression/processor.cpp
+    lambda/compression/processor.hpp
     lambda/function_colocation_benchmark.cpp
     lambda/function_colocation_benchmark.hpp
     lambda/function_invocation_config.hpp
@@ -61,6 +58,13 @@ set(
     lambda/network_throughput_benchmark.hpp
     lambda/network_throughput_parallel_benchmark.cpp
     lambda/network_throughput_parallel_benchmark.hpp
+    synthetic_table_generator.cpp
+    synthetic_table_generator.hpp
+    tpch/tpch_data_generator.hpp
+    tpch/tpch_data_generator.cpp
+    tpch/tpch_mock_catalog.cpp
+    tpch/tpch_mock_catalog.hpp
+    table_builder.hpp
 )
 
 set(

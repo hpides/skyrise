@@ -21,7 +21,7 @@ aws::lambda_runtime::invocation_response FunctionManifestMerger::OnHandleRequest
 
   std::vector<std::string> objects;
   objects.reserve(object_array.GetLength());
-  for (size_t i = 0; i < object_array.GetLength(); i++) {
+  for (size_t i = 0; i < object_array.GetLength(); ++i) {
     objects.emplace_back(object_array.GetItem(i).AsString());
   }
 

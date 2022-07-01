@@ -14,7 +14,7 @@ Ec2BenchmarkConfig::Ec2BenchmarkConfig(const Ec2InstanceType instance_type, cons
   std::stringstream instance_name_base;
   instance_name_base << benchmark_timestamp_ << "-" << benchmark_id_ << "-";
 
-  for (size_t i = 0; i < repetition_count_; i++) {
+  for (size_t i = 0; i < repetition_count_; ++i) {
     instance_names_.push_back(instance_name_base.str() + std::to_string(i));
   }
 }

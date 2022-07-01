@@ -113,7 +113,7 @@ Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateResultOu
 
         Aws::Utils::Array<Aws::Utils::Json::JsonValue> duration_seconds(ms_durations.GetLength());
 
-        for (size_t i = 0; i < ms_durations.GetLength(); i++) {
+        for (size_t i = 0; i < ms_durations.GetLength(); ++i) {
           duration_seconds[i] = Aws::Utils::Json::JsonValue().AsDouble(
               std::chrono::duration<double>(std::chrono::duration<double, std::milli>(ms_durations[i].AsDouble()))
                   .count());

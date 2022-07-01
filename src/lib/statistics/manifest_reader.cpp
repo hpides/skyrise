@@ -58,14 +58,14 @@ void ManifestReader::ReconstructStatisticsFromChunk(std::unique_ptr<Chunk> chunk
   // fixed type (long). This is not possible with MinMax since these statistics depends on the type of column (long,
   // string, ...) they relates to.
   std::vector<ValueSegment<int64_t>*> null_value_counts;
-  for (size_t i = 0; i < GetOriginalSchema()->size(); i++) {
+  for (size_t i = 0; i < GetOriginalSchema()->size(); ++i) {
     // The null value statistic is the third one (index 2) for each column of the original schema after min and max.
     const size_t null_value_index = 6 + (3 * i) + 2;
     null_value_counts.push_back(dynamic_cast<ValueSegment<int64_t>*>(chunk->GetSegment(null_value_index).get()));
   }
 
   // Create new object statistics and fill with non-dynamic statistics.
-  for (size_t row_index = 0; row_index < chunk->Size(); row_index++) {
+  for (size_t row_index = 0; row_index < chunk->Size(); ++row_index) {
     ObjectStatistics statistics;
     statistics.object_identifier = identifier_column->get(row_index);
     statistics.format = format_column->get(row_index);
@@ -76,7 +76,7 @@ void ManifestReader::ReconstructStatisticsFromChunk(std::unique_ptr<Chunk> chunk
     statistics.null_count.reserve(schema_->size());
     statistics.schema = GetOriginalSchema();
 
-    for (size_t schema_index = 0; schema_index < statistics.schema->size(); schema_index++) {
+    for (size_t schema_index = 0; schema_index < statistics.schema->size(); ++schema_index) {
       const size_t start_index = 6 + (3 * schema_index);
       statistics.null_count.push_back(null_value_counts[schema_index]->get(row_index));
 

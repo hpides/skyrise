@@ -37,10 +37,10 @@ void FragmentScheduler::WaitForTasks(const std::vector<std::shared_ptr<AbstractT
   }
 }
 void FragmentScheduler::Schedule(const std::shared_ptr<AbstractTask>& task) {
-  if (task->IsScheduled()) {
+  if (!task->TryTransitionToScheduled()) {
     return;
   }
-  task->SetScheduled();
+
   ++num_scheduled_tasks_;
 
   if (task->IsReady()) {
@@ -54,8 +54,12 @@ void FragmentScheduler::Schedule(const std::shared_ptr<AbstractTask>& task) {
 }
 
 void FragmentScheduler::Submit(const std::shared_ptr<AbstractTask>& task) {
-  DebugAssert(task->IsScheduled(), "Task which are submitted need to be schedules first.");
+  DebugAssert(task->IsScheduled(), "Task which are submitted need to be scheduled first.");
   DebugAssert(task->IsReady(), "Task which are submitted need to be ready first.");
+
+  if (!task->TryTransitionToEnqueued()) {
+    return;
+  }
 
   executor_.Submit([this, task]() {
     task->Execute();

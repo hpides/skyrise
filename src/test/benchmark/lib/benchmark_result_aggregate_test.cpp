@@ -21,7 +21,7 @@ TEST_F(BenchmarkResultAggregateTest, CalculateAggregates) {
   const BenchmarkResultAggregate aggregates(values);
 
   double variance = 0;
-  for (size_t i = 0; i < kValueCount; i++) {
+  for (size_t i = 0; i < kValueCount; ++i) {
     variance += std::pow(i - average, 2);
   }
 

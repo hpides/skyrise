@@ -8,6 +8,8 @@
 #include <ostream>
 #include <vector>
 
+#include "utils/assert.hpp"
+
 namespace skyrise {
 
 class Noncopyable {
@@ -143,6 +145,8 @@ struct SortColumnDefinition final {
   explicit SortColumnDefinition(ColumnId column_id, SortMode sort_mode = SortMode::kAscending)
       : column_id(column_id), sort_mode(sort_mode) {}
 
+  size_t Hash() const;
+
   ColumnId column_id;
   SortMode sort_mode;
 };
@@ -150,5 +154,24 @@ struct SortColumnDefinition final {
 inline bool operator==(const SortColumnDefinition& lhs, const SortColumnDefinition& rhs) {
   return lhs.column_id == rhs.column_id && lhs.sort_mode == rhs.sort_mode;
 }
+
+/**
+ * Defines a general reference to an object stored in S3.
+ */
+struct ObjectReference {
+  explicit ObjectReference(std::string init_bucket_name, std::string init_identifier, std::string init_etag = "")
+      : bucket_name(std::move(init_bucket_name)), identifier(std::move(init_identifier)), etag(std::move(init_etag)) {
+    Assert(!bucket_name.empty(), "ObjectReference requires a non-empty bucket name.");
+    Assert(!identifier.empty(), "ObjectReference requires a non-empty object identifier.");
+  }
+
+  bool operator==(const ObjectReference& other) const {
+    return bucket_name == other.bucket_name && identifier == other.identifier && etag == other.etag;
+  }
+
+  std::string bucket_name;
+  std::string identifier;
+  std::string etag;
+};
 
 }  // namespace skyrise

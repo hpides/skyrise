@@ -1,4 +1,4 @@
-#include "lib/testing/check_table_equal.hpp"
+#include "testing/check_table_equal.hpp"
 
 #include <gtest/gtest.h>
 

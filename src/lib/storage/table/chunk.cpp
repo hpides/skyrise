@@ -16,7 +16,7 @@ void Chunk::ReplaceSegment(size_t column_id, const std::shared_ptr<AbstractSegme
 void Chunk::Append(const std::vector<AllTypeVariant>& values) {
   auto segment_it = segments_.cbegin();
   auto value_it = values.cbegin();
-  for (; segment_it != segments_.cend(); segment_it++, value_it++) {
+  for (; segment_it != segments_.cend(); ++segment_it, ++value_it) {
     const auto& base_value_segment = std::dynamic_pointer_cast<BaseValueSegment>(*segment_it);
     base_value_segment->Append(*value_it);
   }

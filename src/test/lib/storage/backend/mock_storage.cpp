@@ -5,8 +5,7 @@ namespace skyrise {
 MockReader::MockReader(std::shared_ptr<std::string> data, std::string identifier)
     : data_(std::move(data)), identifier_(std::move(identifier)) {}
 
-StorageError MockReader::Read(size_t first_byte, size_t last_byte,
-                              const std::function<void(const char* data, size_t length)>& callback) {
+StorageError MockReader::Read(size_t first_byte, size_t last_byte, std::vector<char>* buffer) {
   num_reads_++;
 
   if (!data_) {
@@ -21,8 +20,7 @@ StorageError MockReader::Read(size_t first_byte, size_t last_byte,
     last_byte = data_->size() - 1;
   }
 
-  const size_t data_length = last_byte - first_byte + 1;
-  callback(&data_->c_str()[first_byte], data_length);
+  buffer->insert(buffer->end(), &data_->c_str()[first_byte], &data_->c_str()[last_byte + 1]);
 
   return StorageError::Success();
 }

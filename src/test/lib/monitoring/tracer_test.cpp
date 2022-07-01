@@ -15,9 +15,9 @@
 
 #include "client/client.hpp"
 #include "function/function_utils.hpp"
-#include "lib/testing/aws_test.hpp"
 #include "monitoring/function_segments.hpp"
 #include "monitoring_test_utils.hpp"
+#include "testing/aws_test.hpp"
 #include "utils/assert.hpp"
 
 namespace skyrise {

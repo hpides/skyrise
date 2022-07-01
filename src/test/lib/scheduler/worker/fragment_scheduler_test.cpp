@@ -36,7 +36,7 @@ class MockOperator : public AbstractOperator {
   bool was_executed_ = false;
 };
 
-class SchedulerTest : public ::testing::Test {
+class FragmentSchedulerTest : public ::testing::Test {
  protected:
   static void StressLinearDependencies(std::atomic_uint32_t* counter,
                                        const std::shared_ptr<FragmentScheduler>& scheduler) {
@@ -113,10 +113,10 @@ class SchedulerTest : public ::testing::Test {
     std::vector<std::shared_ptr<AbstractTask>> tasks;
     tasks.reserve(10);
 
-    for (size_t i = 0; i < 10; i++) {
+    for (size_t i = 0; i < 10; ++i) {
       auto task = std::make_shared<GenericTask>([&, counter]() {
         std::vector<std::shared_ptr<AbstractTask>> jobs;
-        for (size_t j = 0; j < 3; j++) {
+        for (size_t j = 0; j < 3; ++j) {
           auto job = std::make_shared<GenericTask>([&]() { (*counter)++; });
 
           scheduler->Schedule(job);
@@ -134,7 +134,7 @@ class SchedulerTest : public ::testing::Test {
 /**
  * Schedule some tasks with subtasks, make sure all of them finish
  */
-TEST_F(SchedulerTest, BasicTest) {
+TEST_F(FragmentSchedulerTest, BasicTest) {
   auto scheduler = std::make_shared<FragmentScheduler>();
 
   std::atomic_uint32_t counter = 0;
@@ -145,7 +145,7 @@ TEST_F(SchedulerTest, BasicTest) {
   ASSERT_EQ(counter, 30u);
 }
 
-TEST_F(SchedulerTest, LinearDependenciesWithScheduler) {
+TEST_F(FragmentSchedulerTest, LinearDependenciesWithScheduler) {
   auto scheduler = std::make_shared<FragmentScheduler>();
 
   std::atomic_uint32_t counter = 0;
@@ -157,7 +157,7 @@ TEST_F(SchedulerTest, LinearDependenciesWithScheduler) {
   ASSERT_EQ(counter, 3);
 }
 
-TEST_F(SchedulerTest, MultipleDependenciesWithScheduler) {
+TEST_F(FragmentSchedulerTest, MultipleDependenciesWithScheduler) {
   auto scheduler = std::make_shared<FragmentScheduler>();
 
   std::atomic_uint32_t counter = 0;
@@ -169,7 +169,7 @@ TEST_F(SchedulerTest, MultipleDependenciesWithScheduler) {
   ASSERT_EQ(counter, 4);
 }
 
-TEST_F(SchedulerTest, DiamondDependenciesWithScheduler) {
+TEST_F(FragmentSchedulerTest, DiamondDependenciesWithScheduler) {
   auto scheduler = std::make_shared<FragmentScheduler>();
 
   std::atomic_uint32_t counter = 0;
@@ -181,7 +181,7 @@ TEST_F(SchedulerTest, DiamondDependenciesWithScheduler) {
   ASSERT_EQ(counter, 7);
 }
 
-TEST_F(SchedulerTest, MultipleOperators) {
+TEST_F(FragmentSchedulerTest, MultipleOperators) {
   auto op1 = std::make_shared<MockOperator>(OperatorType::kImport);
   auto op2 = std::make_shared<MockOperator>(OperatorType::kFilter, op1);
   auto op3 = std::make_shared<MockOperator>(OperatorType::kFilter, op1);
@@ -201,7 +201,7 @@ TEST_F(SchedulerTest, MultipleOperators) {
   EXPECT_TRUE(root_operator->WasExecuted());
 }
 
-TEST_F(SchedulerTest, SingleWorkerGuaranteeProgress) {
+TEST_F(FragmentSchedulerTest, SingleWorkerGuaranteeProgress) {
   auto scheduler = std::make_shared<FragmentScheduler>(1);
 
   auto task_done = false;
@@ -217,7 +217,7 @@ TEST_F(SchedulerTest, SingleWorkerGuaranteeProgress) {
   EXPECT_TRUE(task_done);
 }
 
-TEST_F(SchedulerTest, WaitForTasks) {
+TEST_F(FragmentSchedulerTest, WaitForTasks) {
   bool task_1_is_finished = false;
   auto task_1 = std::make_shared<GenericTask>([&task_1_is_finished]() { task_1_is_finished = true; });
 

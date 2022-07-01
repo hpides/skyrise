@@ -1,9 +1,8 @@
-#include "storage/table/chunk_reader.hpp"
-
 #include <gtest/gtest.h>
 
 #include "storage/backend/mock_storage.hpp"
 #include "storage/backend/testdata_storage.hpp"
+#include "storage/formats/abstract_chunk_reader.hpp"
 #include "storage/formats/csv_reader.hpp"
 #include "storage/formats/mock_chunk_reader.hpp"
 #include "storage/formats/orc_reader.hpp"
@@ -80,241 +79,110 @@ TEST_F(ChunkReaderTest, GetFormatReaderFactoryWithDefaultConfiguration) {
 }
 
 TEST_F(ChunkReaderTest, ChunkErrorTest) {
-  ChunkReader reader;
-
   auto format_factory = std::make_shared<FormatReaderFactory<MockChunkReader>>(mock_formatter_configuration_error_);
-  reader.AddObjects(format_factory, mock_storage_, {"file1"});
+  const std::unique_ptr<skyrise::AbstractChunkReader> reader =
+      format_factory->Get(mock_storage_->OpenForReading("file1"));
 
   size_t counter_chunk = 0;
-  for (; reader.HasNext(); ++counter_chunk) {
-    auto chunk = reader.Next();
+  for (; reader->HasNext(); ++counter_chunk) {
+    auto chunk = reader->Next();
   }
-  EXPECT_TRUE(reader.HasError());
+  EXPECT_TRUE(reader->HasError());
   EXPECT_EQ(counter_chunk, kNumChunksUntilErrorMockFormatter);
 }
 
 TEST_F(ChunkReaderTest, InitializationErrorTest) {
-  ChunkReader reader;
-
   auto format_factory =
       std::make_shared<FormatReaderFactory<MockChunkReader>>(mock_formatter_configuration_initialization_error_);
-  reader.AddObjects(format_factory, mock_storage_, {"file1"});
+  const std::unique_ptr<skyrise::AbstractChunkReader> reader =
+      format_factory->Get(mock_storage_->OpenForReading("file1"));
 
   size_t counter_chunk = 0;
-  for (; reader.HasNext(); ++counter_chunk) {
-    auto chunk = reader.Next();
+  for (; reader->HasNext(); ++counter_chunk) {
+    auto chunk = reader->Next();
   }
-  EXPECT_TRUE(reader.HasError());
+  EXPECT_TRUE(reader->HasError());
   EXPECT_EQ(counter_chunk, 0);
 }
 
-TEST_F(ChunkReaderTest, FormatterTypeTest) {
-  ChunkReader reader;
-
+TEST_F(ChunkReaderTest, OrcFormatterTest) {
   auto test_data = std::make_shared<TestdataStorage>();
-  auto orc_factory = std::make_shared<FormatReaderFactory<OrcFormatReader>>(orc_options_);
-  reader.AddObjects(orc_factory, test_data, {"orc/with_types.orc"});
+  auto factory = std::make_shared<FormatReaderFactory<OrcFormatReader>>(orc_options_);
+  const std::unique_ptr<skyrise::AbstractChunkReader> reader =
+      factory->Get(test_data->OpenForReading("orc/with_types.orc"));
 
-  auto csv_factory = std::make_shared<FormatReaderFactory<CsvFormatReader>>(csv_options_);
-  reader.AddObjects(csv_factory, test_data, {"csv/with_types.csv"});
-
-  EXPECT_FALSE(reader.HasError());
-  EXPECT_TRUE(reader.HasNext());
+  EXPECT_FALSE(reader->HasError());
+  EXPECT_TRUE(reader->HasNext());
 
   size_t chunk_counter = 0;
-  while (reader.HasNext()) {
-    auto chunk = reader.Next();
+  while (reader->HasNext()) {
+    auto chunk = reader->Next();
     if (chunk != nullptr) {
-      chunk_counter++;
+      ++chunk_counter;
     }
   }
 
-  ASSERT_FALSE(reader.HasError());
-  ASSERT_EQ(chunk_counter, 2);
+  ASSERT_FALSE(reader->HasError());
+  ASSERT_EQ(chunk_counter, 1);
 }
 
-TEST_F(ChunkReaderTest, EmptyObjectListTest) {
-  ChunkReader reader;
+TEST_F(ChunkReaderTest, CsvFormatterTest) {
+  auto test_data = std::make_shared<TestdataStorage>();
+  auto factory = std::make_shared<FormatReaderFactory<CsvFormatReader>>(csv_options_);
+  const std::unique_ptr<skyrise::AbstractChunkReader> reader =
+      factory->Get(test_data->OpenForReading("csv/with_types.csv"));
 
-  auto format_factory = std::make_shared<FormatReaderFactory<MockChunkReader>>(mock_formatter_configuration_);
-  reader.AddObjects(format_factory, mock_storage_, {});
+  EXPECT_FALSE(reader->HasError());
+  EXPECT_TRUE(reader->HasNext());
 
-  ASSERT_FALSE(reader.HasError());
-  ASSERT_FALSE(reader.HasNext());
-  ASSERT_EQ(reader.Next(), nullptr);
+  size_t chunk_counter = 0;
+  while (reader->HasNext()) {
+    auto chunk = reader->Next();
+    if (chunk != nullptr) {
+      ++chunk_counter;
+    }
+  }
+
+  ASSERT_FALSE(reader->HasError());
+  ASSERT_EQ(chunk_counter, 1);
 }
 
 TEST_F(ChunkReaderTest, DiscoverSchemaTest) {
-  ChunkReader reader;
-
   auto format_factory = std::make_shared<FormatReaderFactory<MockChunkReader>>(mock_formatter_configuration_);
-  reader.AddObjects(format_factory, mock_storage_, {"test1"});
+  const std::unique_ptr<skyrise::AbstractChunkReader> reader =
+      format_factory->Get(mock_storage_->OpenForReading("file1"));
 
-  EXPECT_FALSE(reader.HasError());
-  EXPECT_TRUE(reader.HasNext());
+  EXPECT_FALSE(reader->HasError());
+  EXPECT_TRUE(reader->HasNext());
 
-  auto schema = reader.GetSchema();
+  auto schema = reader->GetSchema();
   ASSERT_EQ(schema->size(), 2);
 
-  while (reader.HasNext()) {
-    reader.Next();
+  while (reader->HasNext()) {
+    reader->Next();
   }
 
-  EXPECT_FALSE(reader.HasError());
-}
-
-TEST_F(ChunkReaderTest, DiscoverSchemaDataTypeErrorTest) {
-  ChunkReader reader;
-
-  auto format_factory = std::make_shared<FormatReaderFactory<MockChunkReader>>(mock_formatter_configuration_);
-  reader.AddObjects(format_factory, mock_storage_, {"test1"});
-
-  auto schema = std::make_shared<TableColumnDefinitions>();
-  schema->emplace_back("mock_schema", DataType::kString, false);
-  schema->emplace_back("mock_schema_two", DataType::kLong, false);
-
-  MockChunkReaderConfiguration mock_configuration = mock_formatter_configuration_;
-  mock_configuration.schema = schema;
-
-  auto format_factory_two = std::make_shared<FormatReaderFactory<MockChunkReader>>(mock_configuration);
-  reader.AddObjects(format_factory_two, mock_storage_, {"test2"});
-
-  EXPECT_FALSE(reader.HasError());
-  EXPECT_TRUE(reader.HasNext());
-
-  while (reader.HasNext()) {
-    reader.Next();
-  }
-
-  EXPECT_TRUE(reader.HasError());
-}
-
-TEST_F(ChunkReaderTest, DiscoverSchemaNullableErrorTest) {
-  ChunkReader reader;
-
-  auto format_factory = std::make_shared<FormatReaderFactory<MockChunkReader>>(mock_formatter_configuration_);
-  reader.AddObjects(format_factory, mock_storage_, {"test1"});
-
-  auto schema = std::make_shared<TableColumnDefinitions>();
-  schema->emplace_back("mock_schema", DataType::kString, false);
-  schema->emplace_back("mock_schema_two", DataType::kString, true);
-
-  MockChunkReaderConfiguration mock_configuration = mock_formatter_configuration_;
-  mock_configuration.schema = schema;
-
-  auto format_factory_two = std::make_shared<FormatReaderFactory<MockChunkReader>>(mock_configuration);
-  reader.AddObjects(format_factory_two, mock_storage_, {"test2"});
-
-  EXPECT_FALSE(reader.HasError());
-  EXPECT_TRUE(reader.HasNext());
-
-  while (reader.HasNext()) {
-    reader.Next();
-  }
-
-  EXPECT_TRUE(reader.HasError());
-}
-
-TEST_F(ChunkReaderTest, DiscoverSchemaSizeErrorTest) {
-  ChunkReader reader;
-
-  auto format_factory = std::make_shared<FormatReaderFactory<MockChunkReader>>(mock_formatter_configuration_);
-  reader.AddObjects(format_factory, mock_storage_, {"test1"});
-
-  auto schema = std::make_shared<TableColumnDefinitions>();
-  schema->emplace_back("mock_schema", DataType::kString, false);
-
-  MockChunkReaderConfiguration mock_configuration = mock_formatter_configuration_;
-  mock_configuration.schema = schema;
-
-  auto format_factory_two = std::make_shared<FormatReaderFactory<MockChunkReader>>(mock_configuration);
-  reader.AddObjects(format_factory_two, mock_storage_, {"test2"});
-
-  EXPECT_FALSE(reader.HasError());
-  EXPECT_TRUE(reader.HasNext());
-
-  while (reader.HasNext()) {
-    reader.Next();
-  }
-
-  EXPECT_TRUE(reader.HasError());
-}
-
-TEST_F(ChunkReaderTest, DiscoverSchemaNameErrorTest) {
-  ChunkReader reader;
-
-  auto format_factory = std::make_shared<FormatReaderFactory<MockChunkReader>>(mock_formatter_configuration_);
-  reader.AddObjects(format_factory, mock_storage_, {"test1"});
-
-  auto schema = std::make_shared<TableColumnDefinitions>();
-  schema->emplace_back("mock_schema", DataType::kString, false);
-  schema->emplace_back("mock_schema_two_wrong", DataType::kFloat, false);
-
-  MockChunkReaderConfiguration mock_configuration = mock_formatter_configuration_;
-  mock_configuration.schema = schema;
-
-  auto format_factory_two = std::make_shared<FormatReaderFactory<MockChunkReader>>(mock_configuration);
-  reader.AddObjects(format_factory_two, mock_storage_, {"test2"});
-
-  EXPECT_FALSE(reader.HasError());
-  EXPECT_TRUE(reader.HasNext());
-
-  while (reader.HasNext()) {
-    reader.Next();
-  }
-
-  EXPECT_TRUE(reader.HasError());
-}
-
-TEST_F(ChunkReaderTest, EmptyReaderTest) {
-  ChunkReader reader;
-
-  auto format_factory = std::make_shared<FormatReaderFactory<MockChunkReader>>(mock_formatter_configuration_);
-  reader.AddObjects(format_factory, mock_storage_, {"test1"});
-
-  auto schema = std::make_shared<TableColumnDefinitions>();
-  schema->emplace_back("mock_schema", DataType::kString, false);
-
-  MockChunkReaderConfiguration mock_configuration = mock_formatter_configuration_;
-  mock_configuration.num_chunks = 0;
-
-  auto format_factory_two = std::make_shared<FormatReaderFactory<MockChunkReader>>(mock_configuration);
-  reader.AddObjects(format_factory_two, mock_storage_, {"test2"});
-
-  EXPECT_FALSE(reader.HasError());
-  EXPECT_TRUE(reader.HasNext());
-
-  size_t chunk_counter = 0;
-  while (reader.HasNext()) {
-    auto chunk = reader.Next();
-    if (chunk != nullptr) {
-      chunk_counter++;
-    }
-  }
-
-  EXPECT_EQ(chunk_counter, kNumChunksMockFormatter);
-  EXPECT_FALSE(reader.HasError());
+  EXPECT_FALSE(reader->HasError());
 }
 
 TEST_F(ChunkReaderTest, DefaultConfigurationTest) {
-  ChunkReader reader;
-
   auto format_factory = std::make_shared<FormatReaderFactory<MockChunkReader>>();
-  reader.AddObjects(format_factory, mock_storage_, {"test1"});
+  const std::unique_ptr<skyrise::AbstractChunkReader> reader =
+      format_factory->Get(mock_storage_->OpenForReading("test1"));
 
-  EXPECT_FALSE(reader.HasError());
-  EXPECT_TRUE(reader.HasNext());
+  EXPECT_FALSE(reader->HasError());
+  EXPECT_TRUE(reader->HasNext());
 
   size_t chunk_counter = 0;
-  while (reader.HasNext()) {
-    auto chunk = reader.Next();
+  while (reader->HasNext()) {
+    auto chunk = reader->Next();
     if (chunk != nullptr) {
-      chunk_counter++;
+      ++chunk_counter;
     }
   }
 
   EXPECT_EQ(chunk_counter, kNumChunksMockFormatter);
-  EXPECT_FALSE(reader.HasError());
+  EXPECT_FALSE(reader->HasError());
 }
 
 }  // namespace skyrise

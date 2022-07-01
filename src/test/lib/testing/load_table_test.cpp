@@ -1,4 +1,4 @@
-#include "lib/testing/load_table.hpp"
+#include "testing/load_table.hpp"
 
 #include <gtest/gtest.h>
 

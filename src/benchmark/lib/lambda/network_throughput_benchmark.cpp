@@ -59,7 +59,7 @@ Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
       if (invoke_result.IsSuccess()) {
         const auto ms_durations = invoke_result.GetResponseBody().GetArray("ms_durations");
 
-        for (size_t i = 0; i < ms_durations.GetLength(); i++) {
+        for (size_t i = 0; i < ms_durations.GetLength(); ++i) {
           const double seconds_duration =
               std::chrono::duration<double>(std::chrono::duration<double, std::milli>(ms_durations[i].AsDouble()))
                   .count();
@@ -108,7 +108,7 @@ Aws::Utils::Json::JsonValue NetworkThroughputBenchmark::GenerateResultOutput(
 
         Aws::Utils::Array<Aws::Utils::Json::JsonValue> duration_seconds(ms_durations.GetLength());
 
-        for (size_t i = 0; i < ms_durations.GetLength(); i++) {
+        for (size_t i = 0; i < ms_durations.GetLength(); ++i) {
           duration_seconds[i] = Aws::Utils::Json::JsonValue().AsDouble(
               std::chrono::duration<double>(std::chrono::duration<double, std::milli>(ms_durations[i].AsDouble()))
                   .count());

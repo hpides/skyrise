@@ -43,7 +43,7 @@ const std::vector<std::shared_ptr<AbstractTask>>& AbstractTask::Predecessors() c
 const std::vector<std::shared_ptr<AbstractTask>>& AbstractTask::Successors() const { return successors_; }
 
 void AbstractTask::SetDoneCallback(std::function<void()> done_callback) {
-  DebugAssert(!IsScheduled(), "Possible race: Do not set callback after the Task was scheduled");
+  DebugAssert(!IsScheduled(), "Possible race: Do not set callback after the Task was scheduled.");
 
   done_callback_ = std::move(done_callback);
 }
@@ -99,12 +99,18 @@ bool AbstractTask::TryTransitionTo(TaskState new_state) {
       }
       Assert(state_ == TaskState::kCreated, "Illegal state transition to TaskState::kScheduled.");
       break;
+    case TaskState::kEnqueued:
+      if (state_ >= TaskState::kEnqueued) {
+        return false;
+      }
+      Assert(state_ == TaskState::kScheduled, "Illegal state transition to TaskState::kEnqueued.");
+      break;
     case TaskState::kStarted:
-      Assert(state_ == TaskState::kScheduled,
-             "Illegal state transition to TaskState::kStarted: Task should have been scheduled before being executed.");
+      Assert(state_ == TaskState::kEnqueued,
+             "Illegal state transition to TaskState::kStarted: Task should have been enqueued before being executed.");
       break;
     case TaskState::kDone:
-      Assert(state_ == TaskState::kStarted, "Illegal state transition to TaskState::kDone");
+      Assert(state_ == TaskState::kStarted, "Illegal state transition to TaskState::kDone.");
       break;
     default:
       Fail("Unexpected target state in AbstractTask.");
@@ -113,7 +119,16 @@ bool AbstractTask::TryTransitionTo(TaskState new_state) {
   state_.exchange(new_state);
   return true;
 }
+/**
+ * Try to change the state of the task to TaskState::kScheduled.
+ * @return false if the task is already scheduled, true otherwise.
+ */
+bool AbstractTask::TryTransitionToScheduled() { return TryTransitionTo(TaskState::kScheduled); }
 
-bool AbstractTask::SetScheduled() { return TryTransitionTo(TaskState::kScheduled); }
+/**
+ * Try to change the state of the task to TaskState::kEnqueued.
+ * @return false if the task is already submitted, true otherwise.
+ */
+bool AbstractTask::TryTransitionToEnqueued() { return TryTransitionTo(TaskState::kEnqueued); }
 
 }  // namespace skyrise

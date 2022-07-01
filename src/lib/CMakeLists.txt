@@ -47,19 +47,21 @@ set(
     storage/formats/orc_writer.hpp
     storage/storage_types.hpp
     storage/table/abstract_segment.hpp
+    storage/table/abstract_table_constraint.cpp
+    storage/table/abstract_table_constraint.hpp
     storage/table/base_value_segment.hpp
     storage/table/chunk.cpp
     storage/table/chunk.hpp
+    storage/table/chunk_writer.cpp
+    storage/table/chunk_writer.hpp
     storage/table/table.cpp
     storage/table/table.hpp
     storage/table/table_column_definition.cpp
     storage/table/table_column_definition.hpp
+    storage/table/table_key_constraint.cpp
+    storage/table/table_key_constraint.hpp
     storage/table/value_segment.cpp
     storage/table/value_segment.hpp
-    storage/table/chunk_reader.cpp
-    storage/table/chunk_reader.hpp
-    storage/table/chunk_writer.cpp
-    storage/table/chunk_writer.hpp
 )
 
 set(
@@ -84,36 +86,48 @@ set(
 
     compiler/abstract_plan_node.hpp
     compiler/enable_make_for_plan_node.hpp
-    compiler/physical_query_plan/abstract_operator_proxy.cpp
-    compiler/physical_query_plan/abstract_operator_proxy.hpp
-    compiler/physical_query_plan/aggregate_operator_proxy.cpp
-    compiler/physical_query_plan/aggregate_operator_proxy.hpp
-    compiler/physical_query_plan/alias_operator_proxy.cpp
-    compiler/physical_query_plan/alias_operator_proxy.hpp
-    compiler/physical_query_plan/exchange_operator_proxy.cpp
-    compiler/physical_query_plan/exchange_operator_proxy.hpp
-    compiler/physical_query_plan/export_operator_proxy.cpp
-    compiler/physical_query_plan/export_operator_proxy.hpp
-    compiler/physical_query_plan/filter_operator_proxy.cpp
-    compiler/physical_query_plan/filter_operator_proxy.hpp
-    compiler/physical_query_plan/import_operator_proxy.cpp
-    compiler/physical_query_plan/import_operator_proxy.hpp
-    compiler/physical_query_plan/import_options.cpp
-    compiler/physical_query_plan/import_options.hpp
-    compiler/physical_query_plan/join_operator_proxy.cpp
-    compiler/physical_query_plan/join_operator_proxy.hpp
-    compiler/physical_query_plan/limit_operator_proxy.cpp
-    compiler/physical_query_plan/limit_operator_proxy.hpp
-    compiler/physical_query_plan/partition_operator_proxy.cpp
-    compiler/physical_query_plan/partition_operator_proxy.hpp
+
+    compiler/logical_query_plan/functional_dependency.cpp
+    compiler/logical_query_plan/functional_dependency.hpp
+
+    compiler/physical_query_plan/operator_proxy/abstract_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/abstract_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/aggregate_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/aggregate_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/alias_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/alias_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/exchange_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/exchange_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/export_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/export_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/filter_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/filter_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/import_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/import_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/import_options.cpp
+    compiler/physical_query_plan/operator_proxy/import_options.hpp
+    compiler/physical_query_plan/operator_proxy/join_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/join_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/limit_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/limit_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/partition_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/partition_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/projection_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/projection_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/sort_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/sort_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/union_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/union_operator_proxy.hpp
+    compiler/physical_query_plan/pipeline_fragment_template.cpp
+    compiler/physical_query_plan/pipeline_fragment_template.hpp
+    compiler/physical_query_plan/pqp_pipeline.cpp
+    compiler/physical_query_plan/pqp_pipeline.hpp
     compiler/physical_query_plan/pqp_serialization.cpp
     compiler/physical_query_plan/pqp_serialization.hpp
-    compiler/physical_query_plan/projection_operator_proxy.cpp
-    compiler/physical_query_plan/projection_operator_proxy.hpp
-    compiler/physical_query_plan/sort_operator_proxy.cpp
-    compiler/physical_query_plan/sort_operator_proxy.hpp
-    compiler/physical_query_plan/union_operator_proxy.cpp
-    compiler/physical_query_plan/union_operator_proxy.hpp
+    compiler/physical_query_plan/pqp_utils.cpp
+    compiler/physical_query_plan/pqp_utils.hpp
+
+    compiler/plan_utils.hpp
 
     expression/abstract_expression.cpp
     expression/abstract_expression.hpp
@@ -165,9 +179,7 @@ set(
     metadata/table_partition.hpp
     metadata/table_schema.cpp
     metadata/table_schema.hpp
-    metadata/tpch_mock_catalog.cpp
-    metadata/tpch_mock_catalog.hpp
-    
+
     metering/request_tracker/monitor.cpp
     metering/request_tracker/monitor.hpp
     metering/request_tracker/request_tracker.cpp
@@ -197,6 +209,8 @@ set(
     operator/join_operator_predicate.hpp
     operator/partition_operator.cpp
     operator/partition_operator.hpp
+    operator/partitioning_function.cpp
+    operator/partitioning_function.hpp
     operator/projection_operator.cpp
     operator/projection_operator.hpp
     operator/sort_operator.cpp
