@@ -10,6 +10,15 @@
 
 namespace skyrise {
 
+namespace {
+
+const std::vector<ObjectReference> kObjectReferences = {ObjectReference{"dummy_bucket", "key1.orc", "etag1"},
+                                                        ObjectReference{"dummy_bucket", "key2.orc", "etag1"},
+                                                        ObjectReference{"dummy_bucket", "key3.orc", "etag3"}};
+const std::vector<ColumnId> kColumnIds = {ColumnId{0}, ColumnId{1}, ColumnId{3}};
+
+}  // namespace
+
 TEST(ExchangeOperatorProxyTest, BaseProperties) {
   const auto exchange_proxy = ExchangeOperatorProxy::Make();
   EXPECT_EQ(exchange_proxy->Type(), OperatorType::kExchange);
@@ -32,26 +41,65 @@ TEST(ExchangeOperatorProxyTest, DescriptionPartialMerge) {
 
 TEST(ExchangeOperatorProxyTest, SetExchangeMode) {
   const auto exchange_proxy = ExchangeOperatorProxy::Make();
+  // Partial Merge
   exchange_proxy->SetToPartialMerge(100);
   EXPECT_EQ(exchange_proxy->GetExchangeMode(), ExchangeMode::kPartialMerge);
+  // Full Merge
   exchange_proxy->SetToFullMerge();
   EXPECT_EQ(exchange_proxy->GetExchangeMode(), ExchangeMode::kFullMerge);
-
-  const std::shared_ptr<const AbstractPartitioningFunction> partitioning_function_ =
+  // Fully Meshed Exchange
+  const std::shared_ptr<const AbstractPartitioningFunction> partitioning_function =
       std::make_shared<const HashPartitioningFunction>(std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}, 50);
-  EXPECT_THROW(exchange_proxy->SetToFullyMeshedExchange(partitioning_function_), std::logic_error);
-  EXPECT_THROW(exchange_proxy->SetToFullyMeshedExchange(partitioning_function_, 10), std::logic_error);
+  exchange_proxy->SetToFullyMeshedExchange(partitioning_function);
+  EXPECT_EQ(exchange_proxy->GetExchangeMode(), ExchangeMode::kFullyMeshedExchange);
 }
 
-TEST(ExchangeOperatorProxyTest, OutputObjectsCountFullMerge) {
-  const auto exchange_proxy = ExchangeOperatorProxy::Make();
-  EXPECT_EQ(exchange_proxy->OutputObjectsCount(), 1);
+TEST(ExchangeOperatorProxyTest, OutputObjectsCount) {
+  const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
+  import_proxy->SetOutputObjectsCount(100);
+  {
+    // Full Merge
+    const auto exchange_proxy = ExchangeOperatorProxy::Make();
+    EXPECT_EQ(exchange_proxy->OutputObjectsCount(), 1);
+  }
+  {
+    // Partial Merge
+    const auto exchange_proxy = ExchangeOperatorProxy::Make();
+    exchange_proxy->SetToPartialMerge(50);
+    EXPECT_EQ(exchange_proxy->OutputObjectsCount(), 50);
+  }
+  {
+    // Fully Meshed Exchange
+    const auto exchange_proxy = ExchangeOperatorProxy::Make(import_proxy);
+    const std::shared_ptr<const AbstractPartitioningFunction> partitioning_function =
+        std::make_shared<const HashPartitioningFunction>(std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}, 50);
+    exchange_proxy->SetToFullyMeshedExchange(partitioning_function);
+    EXPECT_EQ(exchange_proxy->OutputObjectsCount(), import_proxy->OutputObjectsCount());
+    exchange_proxy->SetToFullyMeshedExchange(partitioning_function, 5);
+    EXPECT_EQ(exchange_proxy->OutputObjectsCount(), 5);
+  }
 }
 
-TEST(ExchangeOperatorProxyTest, OutputObjectsCountPartialMerge) {
-  const auto exchange_proxy = ExchangeOperatorProxy::Make();
-  exchange_proxy->SetToPartialMerge(50);
-  EXPECT_EQ(exchange_proxy->OutputObjectsCount(), 50);
+TEST(ExchangeOperatorProxyTest, OutputPartitionsCount) {
+  {
+    // Full Merge
+    const auto exchange_proxy = ExchangeOperatorProxy::Make();
+    EXPECT_EQ(exchange_proxy->OutputPartitonsCount(), 1);
+  }
+  {
+    // Partial Merge
+    const auto exchange_proxy = ExchangeOperatorProxy::Make();
+    exchange_proxy->SetToPartialMerge(50);
+    EXPECT_EQ(exchange_proxy->OutputPartitonsCount(), 1);
+  }
+  {
+    // Fully Meshed Exchange
+    const auto exchange_proxy = ExchangeOperatorProxy::Make(import_proxy);
+    const std::shared_ptr<const AbstractPartitioningFunction> partitioning_function =
+        std::make_shared<const HashPartitioningFunction>(std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}, 50);
+    exchange_proxy->SetToFullyMeshedExchange(partitioning_function);
+    EXPECT_EQ(exchange_proxy->OutputPartitonsCount(), 50);
+  }
 }
 
 TEST(ExchangeOperatorProxyTest, DeepCopy) {

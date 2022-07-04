@@ -84,23 +84,40 @@ TEST_F(OperatorProxyTest, SetBothInputs) {
   EXPECT_EQ(import_proxy_b->OutputNodeCount(), 1);
 }
 
-TEST_F(OperatorProxyTest, InputObjectsCount) {
-  // clang-format off
-  const auto union_proxy =
-  UnionOperatorProxy::Make(SetOperationMode::kAll,
-    ImportOperatorProxy::Make(kObjectReferences, kColumnIds),
-    ImportOperatorProxy::Make(std::vector<ObjectReference>{ObjectReference("dummy_bucket", "c.orc")}, kColumnIds));
-  // clang-format on
-  EXPECT_EQ(union_proxy->InputObjectsCount(), kObjectReferences.size() + 1);
+TEST_F(OperatorProxyTest, ObjectsCount) {
+  {
+    // Single input
+    // clang-format off
+    const auto filter_proxy =
+      FilterOperatorProxy::Make(GreaterThanEquals_(a_, b_),
+        ImportOperatorProxy::Make(kObjectReferences, kColumnIds));
+    // clang-format on
+    EXPECT_EQ(filter_proxy->InputObjectsCount(), kObjectReferences.size());
+    EXPECT_EQ(filter_proxy->OutputObjectsCount(), kObjectReferences.size());
+  }
+  {
+    // Two inputs
+    // clang-format off
+    const auto union_proxy =
+    UnionOperatorProxy::Make(SetOperationMode::kAll,
+      ImportOperatorProxy::Make(kObjectReferences, kColumnIds),
+      ImportOperatorProxy::Make(std::vector<ObjectReference>{ObjectReference("dummy_bucket", "c.orc")}, kColumnIds));
+    // clang-format on
+    EXPECT_EQ(union_proxy->InputObjectsCount(), kObjectReferences.size() + 1);
+  }
 }
 
-TEST_F(OperatorProxyTest, OutputObjectsCount) {
+TEST_F(OperatorProxyTest, PartitionsCount) {
+  const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
+  import_proxy->SetOutputPartitionsCount(10);
   // clang-format off
   const auto filter_proxy =
   FilterOperatorProxy::Make(GreaterThanEquals_(a_, b_),
-    ImportOperatorProxy::Make(kObjectReferences, kColumnIds));
+    import_proxy);
   // clang-format on
-  EXPECT_EQ(filter_proxy->OutputObjectsCount(), kObjectReferences.size());
+
+  EXPECT_EQ(filter_proxy->InputPartitionsCount(), import_proxy->OutputPartitionsCount());
+  EXPECT_EQ(filter_proxy->OutputPartitionsCount(), import_proxy->OutputPartitionsCount());
 }
 
 TEST_F(OperatorProxyTest, OutputColumnsCount) {

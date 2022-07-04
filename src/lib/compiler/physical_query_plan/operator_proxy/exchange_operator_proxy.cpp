@@ -37,6 +37,8 @@ std::string ExchangeOperatorProxy::Description(const DescriptionMode mode) const
 
 ExchangeMode ExchangeOperatorProxy::GetExchangeMode() const { return mode_; }
 
+std::shared_ptr<const AbstractPartitioningFunction> PartitioningFunction() const { return partitioning_function_; }
+
 void ExchangeOperatorProxy::SetToFullMerge() {
   output_objects_count_ = 1;
   mode_ = ExchangeMode::kFullMerge;
@@ -48,7 +50,6 @@ void ExchangeOperatorProxy::SetToPartialMerge(size_t output_objects_count) {
   mode_ = ExchangeMode::kPartialMerge;
 }
 
-// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 void ExchangeOperatorProxy::SetToFullyMeshedExchange(
     std::shared_ptr<const AbstractPartitioningFunction> partitioning_function) {
   Assert(partitioning_function, "No partitioning function was provided.");

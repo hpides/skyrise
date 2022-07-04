@@ -75,6 +75,13 @@ TEST_F(ImportOperatorProxyTest, OutputObjectsCount) {
   EXPECT_THROW(import_proxy->SetOutputObjectsCount(0), std::logic_error);
 }
 
+TEST_F(ImportOperatorProxyTest, OutputPartitionsCount) {
+  const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
+  EXPECT_EQ(import_proxy->OutputPartitionsCount(), 1);
+  import_proxy->SetOutputPartitionsCount(100);
+  EXPECT_EQ(import_proxy->OutputPartitionsCount(), 100);
+}
+
 TEST_F(ImportOperatorProxyTest, SetImportOptions) {
   const auto proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
   ASSERT_EQ(proxy->GetImportOptions(), nullptr);

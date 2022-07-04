@@ -21,6 +21,7 @@ class ExchangeOperatorProxy : public EnableMakeForPlanNode<ExchangeOperatorProxy
    * Accessors
    */
   ExchangeMode GetExchangeMode() const;
+  std::shared_ptr<const AbstractPartitioningFunction> PartitioningFunction() const;
   void SetToFullMerge();
   void SetToPartialMerge(size_t output_objects_count);
   void SetToFullyMeshedExchange(std::shared_ptr<const AbstractPartitioningFunction> partitioning_function);
