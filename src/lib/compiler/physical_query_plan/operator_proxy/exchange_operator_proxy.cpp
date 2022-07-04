@@ -49,18 +49,21 @@ void ExchangeOperatorProxy::SetToPartialMerge(size_t output_objects_count) {
 }
 
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-void ExchangeOperatorProxy::SetToFullyMeshedExchange(std::shared_ptr<const AbstractPartitioningFunction> partitioning_function) {
+void ExchangeOperatorProxy::SetToFullyMeshedExchange(
+    std::shared_ptr<const AbstractPartitioningFunction> partitioning_function) {
+  Assert(partitioning_function, "No partitioning function was provided.");
+  partitioning_function_ = partitioning_function;
   output_objects_count_ = kAdoptInputObjectsCount;
-  // TODO(anyone): Currently, only FullMerge and PartialMerge are implemented, which cover staged aggregations.
-  //               For joins, we need to specify fully meshed data exchanges.
-  Fail("The fully meshed data exchange is not implemented yet.");
+  mode_ = ExchangeMode::kFullyMeshedExchange;
 }
 
-void ExchangeOperatorProxy::SetToFullyMeshedExchange(std::shared_ptr<const AbstractPartitioningFunction> partitioning_function,
-                                size_t output_objects_count) {
-  Assert(output_objects_count > 0, "Invalid output objects count!");
+void ExchangeOperatorProxy::SetToFullyMeshedExchange(
+    std::shared_ptr<const AbstractPartitioningFunction> partitioning_function, size_t output_objects_count) {
+  Assert(partitioning_function, "No partitioning function was provided.");
+  partitioning_function_ = partitioning_function;
+  Assert(output_objects_count > 0, "Invalid output objects count.");
   output_objects_count_ = output_objects_count;
-  Fail("The fully meshed data exchange is not implemented yet.");
+  mode_ = ExchangeMode::kFullyMeshedExchange;
 }
 
 bool ExchangeOperatorProxy::IsPipelineBreaker() const {

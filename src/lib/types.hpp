@@ -112,7 +112,7 @@ PredicateCondition ConditionsToBetween(const PredicateCondition lower, const Pre
 enum class AggregateFunction { kAny, kAvg, kCount, kCountDistinct, kMax, kMin, kStandardDeviationSample, kSum };
 std::ostream& operator<<(std::ostream& stream, const AggregateFunction aggregate_function);
 
-enum class ExchangeMode { kFullMerge, kPartialMerge };
+enum class ExchangeMode { kFullMerge, kPartialMerge, kFullyMeshedExchange };
 std::ostream& operator<<(std::ostream& stream, ExchangeMode exchange_mode);
 
 /**
