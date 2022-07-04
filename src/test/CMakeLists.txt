@@ -34,6 +34,7 @@ set(
     lib/compiler/physical_query_plan/operator_proxy/sort_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/operator_proxy/union_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/pipeline_fragment_template_test.cpp
+    lib/compiler/physical_query_plan/pqp_pipeline_slicer_test.cpp
     lib/compiler/physical_query_plan/pqp_pipeline_test.cpp
     lib/compiler/physical_query_plan/pqp_serialization_test.cpp
     lib/compiler/physical_query_plan/pqp_utils_test.cpp
