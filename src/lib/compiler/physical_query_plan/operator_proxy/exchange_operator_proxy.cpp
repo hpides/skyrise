@@ -37,7 +37,9 @@ std::string ExchangeOperatorProxy::Description(const DescriptionMode mode) const
 
 ExchangeMode ExchangeOperatorProxy::GetExchangeMode() const { return mode_; }
 
-std::shared_ptr<const AbstractPartitioningFunction> PartitioningFunction() const { return partitioning_function_; }
+std::shared_ptr<const AbstractPartitioningFunction> ExchangeOperatorProxy::PartitioningFunction() const {
+  return partitioning_function_;
+}
 
 void ExchangeOperatorProxy::SetToFullMerge() {
   output_objects_count_ = 1;
@@ -102,6 +104,8 @@ std::shared_ptr<AbstractOperatorProxy> ExchangeOperatorProxy::OnDeepCopy(
     case ExchangeMode::kPartialMerge:
       exchange_proxy->SetToPartialMerge(output_objects_count_);
       break;
+    // TODO(JM): Implement!
+    // case ExchangeMode::kFullMeshedExchange:
     default:
       Fail("Unexpected ExchangeMode.");
   }
@@ -111,6 +115,10 @@ std::shared_ptr<AbstractOperatorProxy> ExchangeOperatorProxy::OnDeepCopy(
 size_t ExchangeOperatorProxy::ShallowHash() const {
   size_t hash = boost::hash_value(mode_);
   boost::hash_combine(hash, output_objects_count_);
+  if (partitioning_function_) {
+    // TODO(JM): Implement and call Hash()
+    // boost::hash_combine(hash, partitioning_function_->Hash());
+  }
 
   return hash;
 }

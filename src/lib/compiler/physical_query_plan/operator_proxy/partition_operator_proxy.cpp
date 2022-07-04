@@ -77,6 +77,7 @@ std::shared_ptr<AbstractOperatorProxy> PartitionOperatorProxy::OnDeepCopy(
 }
 
 size_t PartitionOperatorProxy::ShallowHash() const {
+  // TODO(JM) Outsource to AbstractPartitioningFunction
   size_t hash = boost::hash_value(partitioning_function_->PartitionCount());
   for (const auto partition_column_id : partitioning_function_->PartitionColumnIds()) {
     boost::hash_combine(hash, partition_column_id);
