@@ -84,13 +84,13 @@ TEST(ExchangeOperatorProxyTest, OutputPartitionsCount) {
   {
     // Full Merge
     const auto exchange_proxy = ExchangeOperatorProxy::Make();
-    EXPECT_EQ(exchange_proxy->OutputPartitonsCount(), 1);
+    EXPECT_EQ(exchange_proxy->OutputPartitionsCount(), 1);
   }
   {
     // Partial Merge
     const auto exchange_proxy = ExchangeOperatorProxy::Make();
     exchange_proxy->SetToPartialMerge(50);
-    EXPECT_EQ(exchange_proxy->OutputPartitonsCount(), 1);
+    EXPECT_EQ(exchange_proxy->OutputPartitionsCount(), 1);
   }
   {
     // Fully Meshed Exchange
@@ -98,7 +98,7 @@ TEST(ExchangeOperatorProxyTest, OutputPartitionsCount) {
     const std::shared_ptr<const AbstractPartitioningFunction> partitioning_function =
         std::make_shared<const HashPartitioningFunction>(std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}, 50);
     exchange_proxy->SetToFullyMeshedExchange(partitioning_function);
-    EXPECT_EQ(exchange_proxy->OutputPartitonsCount(), 50);
+    EXPECT_EQ(exchange_proxy->OutputPartitionsCount(), 50);
   }
 }
 
