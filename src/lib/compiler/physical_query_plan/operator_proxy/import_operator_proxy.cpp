@@ -84,6 +84,13 @@ void ImportOperatorProxy::SetOutputObjectsCount(size_t output_objects_count) {
   output_objects_count_ = output_objects_count;
 }
 
+size_t ImportOperatorProxy::OutputPartitionsCount() const { return output_partitions_count_; }
+
+void ImportOperatorProxy::SetOutputPartitionsCount(size_t output_partitions_count) {
+  Assert(output_partitions_count > 0, "Invalid count of output partitions.");
+  output_partitions_count_ = output_partitions_count;
+}
+
 size_t ImportOperatorProxy::OutputColumnsCount() const { return column_ids_.size(); }
 
 Aws::Utils::Json::JsonValue ImportOperatorProxy::ToJson() const {

@@ -52,6 +52,8 @@ const std::set<ColumnId>& PartitionOperatorProxy::PartitionColumnIds() const {
 
 bool PartitionOperatorProxy::IsPipelineBreaker() const { return false; }
 
+size_t PartitionOperatorProxy::OutputPartitionsCount() const { return PartitionCount(); }
+
 Aws::Utils::Json::JsonValue PartitionOperatorProxy::ToJson() const {
   return AbstractOperatorProxy::ToJson().WithObject("partitioning_function", partitioning_function_->ToJson());
 }

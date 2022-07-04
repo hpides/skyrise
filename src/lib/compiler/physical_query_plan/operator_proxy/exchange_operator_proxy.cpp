@@ -80,6 +80,13 @@ size_t ExchangeOperatorProxy::OutputObjectsCount() const {
   return output_objects_count_;
 }
 
+size_t ExchangeOperatorProxy::OutputPartitionsCount() const {
+  if (mode_ = ExchangeMode::kFullyMeshedExchange) {
+    return partitioning_function_->PartitionCount();
+  }
+  return 1;
+}
+
 Aws::Utils::Json::JsonValue ExchangeOperatorProxy::ToJson() const {
   Fail(Name() + " does not support (de)serialization.");
 }

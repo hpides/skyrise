@@ -78,6 +78,17 @@ size_t AbstractOperatorProxy::OutputObjectsCount() const {
   return LeftInput()->OutputObjectsCount();
 }
 
+size_t AbstractOperatorProxy::InputPartitionsCount() const {
+  size_t partition_count = LeftInput()->OutputPartitionsCount();
+  if (RightInput()) {
+    Assert(partition_count == RightInput()->OutputPartitionsCount(),
+           "Expected both inputs to provide the same number of partitions.");
+  }
+  return partition_count;
+}
+
+size_t AbstractOperatorProxy::OutputPartitionsCount() const { return InputPartitionsCount(); }
+
 size_t AbstractOperatorProxy::OutputColumnsCount() const {
   DebugAssert(!RightInput(), "Did not expect right input.");
   return LeftInput()->OutputColumnsCount();

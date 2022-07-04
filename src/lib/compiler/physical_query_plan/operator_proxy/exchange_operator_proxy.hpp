@@ -32,6 +32,7 @@ class ExchangeOperatorProxy : public EnableMakeForPlanNode<ExchangeOperatorProxy
    */
   bool IsPipelineBreaker() const override;
   size_t OutputObjectsCount() const override;
+  size_t OutputPartitionsCount() const override;
 
   // Fails, because it is unsupported.
   Aws::Utils::Json::JsonValue ToJson() const override;

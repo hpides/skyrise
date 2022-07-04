@@ -48,6 +48,8 @@ class AbstractOperatorProxy : public AbstractPlanNode<AbstractOperatorProxy> {
    */
   size_t InputObjectsCount() const;
   virtual size_t OutputObjectsCount() const;
+  size_t InputPartitionsCount() const;
+  virtual size_t OutputPartitionsCount() const;
   virtual size_t OutputColumnsCount() const;
   virtual bool IsPipelineBreaker() const = 0;
 

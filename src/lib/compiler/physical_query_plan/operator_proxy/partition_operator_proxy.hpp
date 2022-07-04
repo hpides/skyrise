@@ -27,6 +27,7 @@ class PartitionOperatorProxy : public EnableMakeForPlanNode<PartitionOperatorPro
    * Optimization-relevant attributes
    */
   bool IsPipelineBreaker() const override;
+  size_t OutputPartitionsCount() const override;
 
   /**
    * Serialization / Deserialization
