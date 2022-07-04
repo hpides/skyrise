@@ -86,6 +86,8 @@ set(
 
     compiler/abstract_plan_node.hpp
     compiler/enable_make_for_plan_node.hpp
+    compiler/query_context.cpp
+    compiler/query_context.hpp
 
     compiler/logical_query_plan/functional_dependency.cpp
     compiler/logical_query_plan/functional_dependency.hpp
