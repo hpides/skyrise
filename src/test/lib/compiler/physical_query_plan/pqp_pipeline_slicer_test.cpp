@@ -14,15 +14,11 @@ using namespace skyrise::expression_functional;  // NOLINT(google-build-using-na
 
 class PqpPipelineSlicerTest : public ::testing::Test {
  public:
-  void SetUp() override {
-    return;
-  }
+  void SetUp() override { return; }
 
  protected:
 };
 
-TEST_F(PqpPipelineSlicerTest, Test) {
-  return;
-}
+TEST_F(PqpPipelineSlicerTest, Test) { return; }
 
 }  // namespace skyrise

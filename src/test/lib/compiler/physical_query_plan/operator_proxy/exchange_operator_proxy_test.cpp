@@ -94,7 +94,7 @@ TEST(ExchangeOperatorProxyTest, OutputPartitionsCount) {
   }
   {
     // Fully Meshed Exchange
-    const auto exchange_proxy = ExchangeOperatorProxy::Make(import_proxy);
+    const auto exchange_proxy = ExchangeOperatorProxy::Make();
     const std::shared_ptr<const AbstractPartitioningFunction> partitioning_function =
         std::make_shared<const HashPartitioningFunction>(std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}, 50);
     exchange_proxy->SetToFullyMeshedExchange(partitioning_function);

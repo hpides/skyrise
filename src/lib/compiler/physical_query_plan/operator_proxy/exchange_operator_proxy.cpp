@@ -84,7 +84,7 @@ size_t ExchangeOperatorProxy::OutputObjectsCount() const {
 }
 
 size_t ExchangeOperatorProxy::OutputPartitionsCount() const {
-  if (mode_ = ExchangeMode::kFullyMeshedExchange) {
+  if (mode_ == ExchangeMode::kFullyMeshedExchange) {
     return partitioning_function_->PartitionCount();
   }
   return 1;
