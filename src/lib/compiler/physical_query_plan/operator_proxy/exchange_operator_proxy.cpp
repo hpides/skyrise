@@ -10,6 +10,7 @@
 namespace {
 
 const std::string kName = "DataExchange";
+const size_t kAdoptInputObjectsCount = 0;
 
 }  // namespace
 
@@ -48,9 +49,17 @@ void ExchangeOperatorProxy::SetToPartialMerge(size_t output_objects_count) {
 }
 
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-void ExchangeOperatorProxy::SetToFullyMeshedExchange() {
+void ExchangeOperatorProxy::SetToFullyMeshedExchange(std::shared_ptr<const AbstractPartitioningFunction> partitioning_function) {
+  output_objects_count_ = kAdoptInputObjectsCount;
   // TODO(anyone): Currently, only FullMerge and PartialMerge are implemented, which cover staged aggregations.
   //               For joins, we need to specify fully meshed data exchanges.
+  Fail("The fully meshed data exchange is not implemented yet.");
+}
+
+void ExchangeOperatorProxy::SetToFullyMeshedExchange(std::shared_ptr<const AbstractPartitioningFunction> partitioning_function,
+                                size_t output_objects_count) {
+  Assert(output_objects_count > 0, "Invalid output objects count!");
+  output_objects_count_ = output_objects_count;
   Fail("The fully meshed data exchange is not implemented yet.");
 }
 
@@ -60,7 +69,13 @@ bool ExchangeOperatorProxy::IsPipelineBreaker() const {
   return false;
 }
 
-size_t ExchangeOperatorProxy::OutputObjectsCount() const { return output_objects_count_; }
+size_t ExchangeOperatorProxy::OutputObjectsCount() const {
+  if (output_objects_count_ == kAdoptInputObjectsCount) {
+    Assert(LeftInput(), "Cannot return count of output-objects because left input is missing.");
+    return LeftInput()->OutputObjectsCount();
+  }
+  return output_objects_count_;
+}
 
 Aws::Utils::Json::JsonValue ExchangeOperatorProxy::ToJson() const {
   Fail(Name() + " does not support (de)serialization.");

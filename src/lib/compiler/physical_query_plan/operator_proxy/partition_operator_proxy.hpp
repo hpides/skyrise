@@ -11,6 +11,7 @@ namespace skyrise {
 class PartitionOperatorProxy : public EnableMakeForPlanNode<PartitionOperatorProxy, AbstractOperatorProxy>,
                                public AbstractOperatorProxy {
  public:
+  // TODO(JM): change to std::shared_ptr<const AbstractPartitioningFunction>
   PartitionOperatorProxy(std::shared_ptr<AbstractPartitioningFunction> partitioning_function);
 
   const std::string& Name() const override;

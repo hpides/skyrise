@@ -4,6 +4,7 @@
 #include <string>
 
 #include "abstract_operator_proxy.hpp"
+#include "operator/partitioning_function.hpp"
 #include "types.hpp"
 
 namespace skyrise {
@@ -22,7 +23,9 @@ class ExchangeOperatorProxy : public EnableMakeForPlanNode<ExchangeOperatorProxy
   ExchangeMode GetExchangeMode() const;
   void SetToFullMerge();
   void SetToPartialMerge(size_t output_objects_count);
-  void SetToFullyMeshedExchange();
+  void SetToFullyMeshedExchange(std::shared_ptr<const AbstractPartitioningFunction> partitioning_function);
+  void SetToFullyMeshedExchange(std::shared_ptr<const AbstractPartitioningFunction> partitioning_function,
+                                size_t output_objects_count);
 
   /**
    * Optimization-relevant attributes
@@ -43,6 +46,7 @@ class ExchangeOperatorProxy : public EnableMakeForPlanNode<ExchangeOperatorProxy
  private:
   ExchangeMode mode_;
   size_t output_objects_count_;
+  std::shared_ptr<const AbstractPartitioningFunction> partitioning_function_;
 };
 
 }  // namespace skyrise

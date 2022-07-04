@@ -36,7 +36,11 @@ TEST(ExchangeOperatorProxyTest, SetExchangeMode) {
   EXPECT_EQ(exchange_proxy->GetExchangeMode(), ExchangeMode::kPartialMerge);
   exchange_proxy->SetToFullMerge();
   EXPECT_EQ(exchange_proxy->GetExchangeMode(), ExchangeMode::kFullMerge);
-  EXPECT_THROW(exchange_proxy->SetToFullyMeshedExchange(), std::logic_error);
+
+  const std::shared_ptr<const AbstractPartitioningFunction> partitioning_function_ =
+      std::make_shared<const HashPartitioningFunction>(std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}, 50);
+  EXPECT_THROW(exchange_proxy->SetToFullyMeshedExchange(partitioning_function_), std::logic_error);
+  EXPECT_THROW(exchange_proxy->SetToFullyMeshedExchange(partitioning_function_, 10), std::logic_error);
 }
 
 TEST(ExchangeOperatorProxyTest, OutputObjectsCountFullMerge) {
