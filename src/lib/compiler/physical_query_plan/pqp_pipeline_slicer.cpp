@@ -17,24 +17,24 @@ std::vector<std::vector<PipelineFragmentDefinition>> GetPipelineFragmentDefiniti
   // Ideally, an PipelineFragmentDefinition contains a single object key. However, if the number of object keys exceeds
   // @param max_fragment_count, object keys must be scattered across the maximum number of PipelineFragmentDefinitions.
   size_t chunk_size = 1;
-  if (import_proxy->ObjectKeys().size() > max_fragment_count) {
-    const double res = static_cast<double>(import_proxy->ObjectKeys().size()) / max_fragment_count;
+  if (import_proxy->ObjectReferences().size() > max_fragment_count) {
+    const double res = static_cast<double>(import_proxy->ObjectReferences().size()) / max_fragment_count;
     const double ceiled = ceil(res);
     chunk_size = size_t(ceiled);
   }
-  auto pipeline_object_keys_by_fragment = SplitVectorIntoChunks(import_proxy->ObjectKeys(), chunk_size);
+  auto pipeline_object_keys_by_fragment = SplitVectorIntoChunks(import_proxy->ObjectReferences(), chunk_size);
 
   // Create import definition for each fragment
-  std::vector<std::vector<PipelineFragmentDefinition>> pipeline_import_definitions;
-  pipeline_import_definitions.reserve(pipeline_object_keys_by_fragment.size());
+  std::vector<std::vector<PipelineFragmentDefinition>> pipeline_fragment_definitions;
+  pipeline_fragment_definitions.reserve(pipeline_object_keys_by_fragment.size());
   for (auto& fragment_object_keys : pipeline_object_keys_by_fragment) {
     std::vector<PipelineFragmentDefinition> fragment_import_definitions;
     fragment_import_definitions.emplace_back(import_proxy->Identity(), import_proxy->BucketName(),
                                              std::move(fragment_object_keys));
-    pipeline_import_definitions.emplace_back(fragment_import_definitions);
+    pipeline_fragment_definitions.emplace_back(fragment_import_definitions);
   }
-  Assert(pipeline_import_definitions.size() <= max_fragment_count, "Expected lower number of import definitions.");
-  return pipeline_import_definitions;
+  Assert(pipeline_fragment_definitions.size() <= max_fragment_count, "Expected lower number of import definitions.");
+  return pipeline_fragment_definitions;
 }
 
 std::vector<std::string> GetPipelineExportKeys(const std::string& key_prefix, const std::string& key_suffix,
@@ -188,7 +188,7 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutNextPipelineFragment(  // TOD
 
   // Level of intra-operator parallelism
   size_t worker_count = std::min(current_pipeline_fragment->InputObjectsCount(), query_context_->MaxWorkerCount());
-  std::vector<std::vector<PipelineFragmentDefinition>> current_pipeline_import_definitions =
+  std::vector<std::vector<PipelineFragmentDefinition>> current_pipeline_fragment_definitions =
       GetPipelineFragmentDefinitions(primary_import_proxy, worker_count);
 
   // Secondary imports from joins or union operations
@@ -199,7 +199,7 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutNextPipelineFragment(  // TOD
     // Each pipeline fragment should contain the given import_proxy with all object keys
     const PipelineFragmentDefinition import_definition(
         secondary_import_proxy->Identity(), secondary_import_proxy->BucketName(), secondary_import_proxy->ObjectKeys());
-    for (auto& fragment_import_definitions : current_pipeline_import_definitions) {
+    for (auto& fragment_import_definitions : current_pipeline_fragment_definitions) {
       fragment_import_definitions.emplace_back(import_definition);
     }
   }
@@ -227,7 +227,7 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutNextPipelineFragment(  // TOD
 
   // Generate an export key for each fragment instance
   std::vector<std::string> current_pipeline_export_keys = GetPipelineExportKeys(
-      pipeline_export_key_prefix_stream.str(), pipeline_export_key_suffix, current_pipeline_import_definitions.size());
+      pipeline_export_key_prefix_stream.str(), pipeline_export_key_suffix, current_pipeline_fragment_definitions.size());
 
   /**
    * (5) CUT OFF PIPELINE PLAN
@@ -272,9 +272,9 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutNextPipelineFragment(  // TOD
     pipeline->SetAsPredecessorOf(current_pipeline);
   }
   // Define fragments
-  for (size_t i = 0; i < current_pipeline_import_definitions.size(); ++i) {
+  for (size_t i = 0; i < current_pipeline_fragment_definitions.size(); ++i) {
     auto fragment_definition =
-        PipelineFragmentDefinition(current_pipeline_import_definitions.at(i), query_context_->TargetBucketName(),
+        PipelineFragmentDefinition(current_pipeline_fragment_definitions.at(i), query_context_->TargetBucketName(),
                                    current_pipeline_export_keys.at(i), current_pipeline_export_format);
     current_pipeline->DefineFragment(std::move(fragment_definition));
   }
