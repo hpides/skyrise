@@ -99,21 +99,23 @@ void PqpPartialAggregationRule::InsertPartialAggregation(std::shared_ptr<Aggrega
 
   for (size_t i = 0; i < aggregate_count; ++i) {
     auto aggregate_expression = std::static_pointer_cast<AggregateExpression>(aggregates[i]);
-    const auto& argument_expression = aggregate_expression->Argument();
-    Assert(argument_expression->type_ == ExpressionType::kPqpColumn,
+    Assert(aggregate_expression->Argument()->type_ == ExpressionType::kPqpColumn,
            "Expected aggregate argument to have ExpressionType::kPqpColumn");
-    const auto pqp_column = std::static_pointer_cast<PqpColumnExpression>(argument_expression);
+    const auto argument = std::static_pointer_cast<PqpColumnExpression>(aggregate_expression->Argument());
+
+    // Update aggregate argument to match the output of the pre-aggregation.
+    //  - Group-By columns are moved to the front indices.
+    //  - Column data types might change in the course of the pre-aggregation.
+    //    For example, a DataType::kFloat column becomes a DataType::kDouble column after a SUM aggregation.
+    const ColumnId updated_column_id = i + groupby_column_ids_count;
+    const DataType updated_data_type = aggregate_expression->GetDataType();
+    const auto updated_argument = PqpColumn_(updated_column_id, updated_data_type, argument->is_nullable_, argument->column_name_);
 
     // Replace COUNT with SUM
     auto aggregate_function = aggregate_expression->aggregate_function_;
     if (aggregate_function == AggregateFunction::kCount) {
       aggregate_function = AggregateFunction::kSum;
     }
-
-    // Update PqpColumnExpression argument to match the output indices of the pre-aggregation.
-    const ColumnId updated_column_id = i + groupby_column_ids_count;
-    const auto updated_argument =
-        PqpColumn_(updated_column_id, pqp_column->data_type_, pqp_column->is_nullable_, pqp_column->column_name_);
 
     // Replace AggregateExpression
     aggregates[i] = std::make_shared<AggregateExpression>(aggregate_function, updated_argument);

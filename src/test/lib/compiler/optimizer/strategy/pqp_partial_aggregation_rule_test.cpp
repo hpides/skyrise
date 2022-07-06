@@ -30,12 +30,12 @@ class PqpPartialAggregationRuleTest : public StrategyBaseTest {
     a_ = PqpColumn_(ColumnId{0}, DataType::kLong, false, "a");
     b_ = PqpColumn_(ColumnId{1}, DataType::kLong, false, "b");
     c_ = PqpColumn_(ColumnId{2}, DataType::kLong, false, "c");
-    d_ = PqpColumn_(ColumnId{3}, DataType::kLong, false, "d");
+    d_ = PqpColumn_(ColumnId{3}, DataType::kFloat, false, "d");
   }
 
   static void VerifyAggregate(const std::shared_ptr<AbstractExpression>& expression,
                               const AggregateFunction expected_function, const ColumnId expected_column_id,
-                              const std::string& expected_column_name) {
+                              const DataType expected_data_type, const std::string& expected_column_name) {
     ASSERT_EQ(expression->type_, ExpressionType::kAggregate);
     const auto aggregate_expression = std::static_pointer_cast<AggregateExpression>(expression);
 
@@ -44,6 +44,7 @@ class PqpPartialAggregationRuleTest : public StrategyBaseTest {
     const auto argument_pqp_expression =
         std::static_pointer_cast<PqpColumnExpression>(aggregate_expression->Argument());
     EXPECT_EQ(argument_pqp_expression->column_id_, expected_column_id);
+    EXPECT_EQ(argument_pqp_expression->data_type_, expected_data_type);
     EXPECT_EQ(argument_pqp_expression->column_name_, expected_column_name);
   }
 
@@ -78,8 +79,8 @@ TEST_F(PqpPartialAggregationRuleTest, PartialAggregation) {
     EXPECT_EQ(pre_aggregate_proxy->GroupByColumnIds(), groupby_column_ids);
     EXPECT_TRUE(ExpressionsEqual(pre_aggregate_proxy->Aggregates(), aggregates));
 
-    VerifyAggregate(pre_aggregate_proxy->Aggregates().at(0), AggregateFunction::kSum, ColumnId{3}, "d");
-    VerifyAggregate(pre_aggregate_proxy->Aggregates().at(1), AggregateFunction::kMin, ColumnId{0}, "a");
+    VerifyAggregate(pre_aggregate_proxy->Aggregates().at(0), AggregateFunction::kSum, ColumnId{3}, DataType::kFloat, "d");
+    VerifyAggregate(pre_aggregate_proxy->Aggregates().at(1), AggregateFunction::kMin, ColumnId{0}, a_->data_type_, "a");
   }
   {
     auto aggregate_proxy = std::static_pointer_cast<AggregateOperatorProxy>(pqp);
@@ -89,8 +90,9 @@ TEST_F(PqpPartialAggregationRuleTest, PartialAggregation) {
     EXPECT_EQ(aggregate_proxy->GroupByColumnIds(), std::vector<ColumnId>({ColumnId{0}, ColumnId{1}}));
     EXPECT_FALSE(ExpressionsEqual(aggregate_proxy->Aggregates(), aggregates));
 
-    VerifyAggregate(aggregate_proxy->Aggregates().at(0), AggregateFunction::kSum, ColumnId{2}, "d");
-    VerifyAggregate(aggregate_proxy->Aggregates().at(1), AggregateFunction::kMin, ColumnId{3}, "a");
+    // After SUM aggregations, DataType::kFloat input columns become DataType::kDouble aggregates, c.f. AggregateTraits.
+    VerifyAggregate(aggregate_proxy->Aggregates().at(0), AggregateFunction::kSum, ColumnId{2}, DataType::kDouble ,"d");
+    VerifyAggregate(aggregate_proxy->Aggregates().at(1), AggregateFunction::kMin, ColumnId{3}, a_->data_type_ ,"a");
   }
 }
 
@@ -115,18 +117,18 @@ TEST_F(PqpPartialAggregationRuleTest, PartialAggregationCounts) {
     EXPECT_TRUE(ExpressionsEqual(pre_aggregate_proxy->Aggregates(), aggregates));
 
     VerifyAggregate(pre_aggregate_proxy->Aggregates().at(0), AggregateFunction::kCount, ColumnId{kInvalidColumnId},
-                    "*");
-    VerifyAggregate(pre_aggregate_proxy->Aggregates().at(1), AggregateFunction::kMin, ColumnId{0}, "a");
-    VerifyAggregate(pre_aggregate_proxy->Aggregates().at(2), AggregateFunction::kCount, ColumnId{1}, "b");
+                    DataType::kLong, "*");
+    VerifyAggregate(pre_aggregate_proxy->Aggregates().at(1), AggregateFunction::kMin, ColumnId{0}, a_->data_type_,"a");
+    VerifyAggregate(pre_aggregate_proxy->Aggregates().at(2), AggregateFunction::kCount, ColumnId{1}, b_->data_type_ ,"b");
   }
   {
     auto aggregate_proxy = std::static_pointer_cast<AggregateOperatorProxy>(pqp);
     EXPECT_EQ(aggregate_proxy->GroupByColumnIds(), std::vector<ColumnId>({ColumnId{0}, ColumnId{1}}));
     EXPECT_FALSE(ExpressionsEqual(aggregate_proxy->Aggregates(), aggregates));
 
-    VerifyAggregate(aggregate_proxy->Aggregates().at(0), AggregateFunction::kSum, ColumnId{2}, "*");
-    VerifyAggregate(aggregate_proxy->Aggregates().at(1), AggregateFunction::kMin, ColumnId{3}, "a");
-    VerifyAggregate(aggregate_proxy->Aggregates().at(2), AggregateFunction::kSum, ColumnId{4}, "b");
+    VerifyAggregate(aggregate_proxy->Aggregates().at(0), AggregateFunction::kSum, ColumnId{2}, DataType::kLong, "*");
+    VerifyAggregate(aggregate_proxy->Aggregates().at(1), AggregateFunction::kMin, ColumnId{3}, a_->data_type_ ,"a");
+    VerifyAggregate(aggregate_proxy->Aggregates().at(2), AggregateFunction::kSum, ColumnId{4}, b_->data_type_,"b");
   }
 }
 
