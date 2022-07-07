@@ -22,6 +22,17 @@ class LambdaBenchmarkOutput {
   LambdaBenchmarkOutput& WithDoubleMetric(const Aws::String& name, double value);
   LambdaBenchmarkOutput& WithStringMetric(const Aws::String& name, const Aws::String& value);
 
+  LambdaBenchmarkOutput& WithBoolRepetitionMetric(
+      std::function<std::tuple<Aws::String, bool>(const LambdaBenchmarkRepetition&)> functor);
+  LambdaBenchmarkOutput& WithInt64RepetitionMetric(
+      std::function<std::tuple<Aws::String, long long>(const LambdaBenchmarkRepetition&)> functor);
+  LambdaBenchmarkOutput& WithDoubleRepetitionMetric(
+      std::function<std::tuple<Aws::String, double>(const LambdaBenchmarkRepetition&)> functor);
+  LambdaBenchmarkOutput& WithStringRepetitionMetric(
+      std::function<std::tuple<Aws::String, Aws::String>(const LambdaBenchmarkRepetition&)> functor);
+  LambdaBenchmarkOutput& WithObjectRepetitionMetric(
+      std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const LambdaBenchmarkRepetition&)> functor);
+
   LambdaBenchmarkOutput& WithBoolInvocationMetric(
       std::function<std::tuple<Aws::String, bool>(const LambdaInvokeResult&)> functor);
   LambdaBenchmarkOutput& WithInt64InvocationMetric(
@@ -49,6 +60,16 @@ class LambdaBenchmarkOutput {
       string_invocation_functors_;
   std::vector<std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const LambdaInvokeResult&)>>
       object_invocation_functors_;
+
+  std::vector<std::function<std::tuple<Aws::String, bool>(const LambdaBenchmarkRepetition&)>> bool_repetition_functors_;
+  std::vector<std::function<std::tuple<Aws::String, long long>(const LambdaBenchmarkRepetition&)>>
+      int64_repetition_functors_;
+  std::vector<std::function<std::tuple<Aws::String, double>(const LambdaBenchmarkRepetition&)>>
+      double_repetition_functors_;
+  std::vector<std::function<std::tuple<Aws::String, Aws::String>(const LambdaBenchmarkRepetition&)>>
+      string_repetition_functors_;
+  std::vector<std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const LambdaBenchmarkRepetition&)>>
+      object_repetition_functors_;
 };
 
 }  // namespace skyrise

@@ -59,6 +59,21 @@ TEST_F(AwsBenchmarkOutputTest, Build) {
           .WithDoubleMetric("double_metric", 2.0)
           .WithInt64Metric("int64_metric", 2)
           .WithStringMetric("string_metric", "No")
+          .WithBoolRepetitionMetric([](const LambdaBenchmarkRepetition& r) {
+            return std::make_tuple("bool_repetition_metric", static_cast<bool>(r.IsComplete()));
+          })
+          .WithDoubleRepetitionMetric([](const LambdaBenchmarkRepetition& r) {
+            return std::make_tuple("double_repetition_metric", static_cast<double>(r.IsComplete()));
+          })
+          .WithInt64RepetitionMetric([](const LambdaBenchmarkRepetition& r) {
+            return std::make_tuple("int64_repetition_metric", static_cast<long long>(r.IsComplete()));
+          })
+          .WithStringRepetitionMetric([](const LambdaBenchmarkRepetition& r) {
+            return std::make_tuple("string_repetition_metric", r.IsComplete() ? "Yes" : "No");
+          })
+          .WithObjectRepetitionMetric([](const LambdaBenchmarkRepetition& r) {
+            return std::make_tuple("object_repetition_metric", Aws::Utils::Json::JsonValue().AsBool(r.IsComplete()));
+          })
           .WithBoolInvocationMetric([](const LambdaInvokeResult& b) {
             return std::make_tuple("bool_invocation_metric", static_cast<bool>(b.IsSuccess()));
           })
@@ -98,11 +113,15 @@ TEST_F(AwsBenchmarkOutputTest, Build) {
 
   EXPECT_TRUE(json_view.ValueExists("repetitions"));
   const auto repetitions = json_view.GetArray("repetitions");
-  EXPECT_EQ(repetitions.GetLength(), 1);
-
   EXPECT_TRUE(repetitions[0].ValueExists("repetition"));
   EXPECT_TRUE(repetitions[0].ValueExists("duration_ms"));
   EXPECT_TRUE(repetitions[0].ValueExists("invocations"));
+  EXPECT_TRUE(repetitions[0].ValueExists("bool_repetition_metric"));
+  EXPECT_TRUE(repetitions[0].ValueExists("double_repetition_metric"));
+  EXPECT_TRUE(repetitions[0].ValueExists("int64_repetition_metric"));
+  EXPECT_TRUE(repetitions[0].ValueExists("string_repetition_metric"));
+  EXPECT_TRUE(repetitions[0].ValueExists("object_repetition_metric"));
+  EXPECT_EQ(repetitions.GetLength(), 1);
 
   const auto invocations = repetitions[0].GetArray("invocations");
   EXPECT_EQ(invocations.GetLength(), 3);
