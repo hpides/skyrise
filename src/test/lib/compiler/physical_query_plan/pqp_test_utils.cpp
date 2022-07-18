@@ -1,5 +1,7 @@
 #include "pqp_test_utils.hpp"
 
+#include "constants.hpp"
+
 namespace skyrise {
 
 std::shared_ptr<ImportOperatorProxy> CreateMockObjectReferences(const std::string& key_prefix, size_t count) {
@@ -7,7 +9,7 @@ std::shared_ptr<ImportOperatorProxy> CreateMockObjectReferences(const std::strin
   object_references.reserve(count);
 
   for (size_t i = 0; i < count; ++i) {
-    const std::string key = key_prefix + std::to_string(i);
+    const std::string key = key_prefix + std::to_string(i) + kOrcExtension;
     object_references.emplace_back("mock_bucket", key, "mock_etag");
   }
 

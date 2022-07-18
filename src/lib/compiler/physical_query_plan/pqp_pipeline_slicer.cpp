@@ -226,8 +226,9 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutNextPipelineFragment(  // TOD
   }
 
   // Generate an export key for each fragment instance
-  std::vector<std::string> current_pipeline_export_keys = GetPipelineExportKeys(
-      pipeline_export_key_prefix_stream.str(), pipeline_export_key_suffix, current_pipeline_fragment_definitions.size());
+  std::vector<std::string> current_pipeline_export_keys =
+      GetPipelineExportKeys(pipeline_export_key_prefix_stream.str(), pipeline_export_key_suffix,
+                            current_pipeline_fragment_definitions.size());
 
   /**
    * (5) CUT OFF PIPELINE PLAN
