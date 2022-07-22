@@ -247,6 +247,8 @@ set(
     utils/profiling/function_host_information.cpp
     utils/profiling/function_host_information.hpp
     utils/random.hpp
+    utils/self_name.cpp
+    utils/self_name.hpp
     utils/string.cpp
     utils/string.hpp
     utils/time.cpp
