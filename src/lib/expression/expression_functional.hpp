@@ -129,6 +129,8 @@ std::shared_ptr<CastExpression> Cast_(const Argument& argument, const DataType d
   return std::make_shared<CastExpression>(ToExpression(argument), data_type);
 }
 
+std::shared_ptr<AggregateExpression> CountStarPqp_();
+
 template <typename... Args>
 std::vector<std::shared_ptr<AbstractExpression>> ExpressionVector_(Args&&... args) {
   return std::vector<std::shared_ptr<AbstractExpression>>({ToExpression(args)...});
