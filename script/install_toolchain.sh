@@ -7,15 +7,10 @@ if [[ "$unamestr" == 'Linux' ]]; then
         echo "Installing toolchain..."
         if apt-get update >/dev/null; then
             if [[ "$(lsb_release -sr)" == "22.04" ]]; then
-                # arrow requires an apt source
-                wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
-                apt-get install -y ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
-                apt-get update
                 # tzdata requires preconfigured, noninteractive installation
                 echo "tzdata tzdata/Areas select Europe" | debconf-set-selections
                 echo "tzdata tzdata/Zones/Europe select Berlin" | debconf-set-selections
                 DEBIAN_FRONTEND=noninteractive apt-get install -y \
-                ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb \
                 binutils-dev \
                 ca-certificates \
                 ccache \
@@ -29,14 +24,8 @@ if [[ "$unamestr" == 'Linux' ]]; then
                 gcc-11 \
                 gdb \
                 git \
-                libarrow-dev \
-                libarrow-glib-dev \
-                libarrow-dataset-dev \
-                libarrow-dataset-glib-dev \
                 libboost-all-dev \
                 libcurl4-openssl-dev \
-                libparquet-dev \
-                libparquet-glib-dev \
                 libssl-dev \
                 make \
                 ninja-build \
