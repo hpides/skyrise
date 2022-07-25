@@ -25,4 +25,13 @@ std::shared_ptr<PqpColumnExpression> TpchPqpColumn(const std::string column_name
 std::shared_ptr<ImportOperatorProxy> TpchImportProxy(const std::vector<std::string> column_names,
                                                                 const std::vector<ObjectReference> object_references);
 
+/**
+ * TODO
+ * @param lineitem_mock_objects_count
+ * @param combiner_stages_worker_count
+ * @return
+ */
+std::shared_ptr<ExportOperatorProxy> CreateTpchQ1Pqp(size_t lineitem_mock_objects_count,
+                                                     std::vector<size_t> combiner_stages_worker_count);
+
 }  // namespace skyrise
