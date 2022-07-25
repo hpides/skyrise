@@ -77,19 +77,19 @@ set(
 )
 
 set(
-    SHARED_SOURCES
-    aggregate_traits.hpp
-    all_type_variant.hpp
-    all_type_variant.cpp
-    constant_mappings.cpp
-    constant_mappings.hpp
+    COORDINATOR_COMPILER_SOURCES
+
+    compiler/compilation_context.cpp
+    compiler/compilation_context.hpp
+    compiler/logical_query_plan/functional_dependency.cpp
+    compiler/logical_query_plan/functional_dependency.hpp
+)
+
+set(
+    SHARED_COMPILER_SOURCES
 
     compiler/abstract_plan_node.hpp
     compiler/enable_make_for_plan_node.hpp
-
-    compiler/logical_query_plan/functional_dependency.cpp
-    compiler/logical_query_plan/functional_dependency.hpp
-
     compiler/physical_query_plan/operator_proxy/abstract_operator_proxy.cpp
     compiler/physical_query_plan/operator_proxy/abstract_operator_proxy.hpp
     compiler/physical_query_plan/operator_proxy/aggregate_operator_proxy.cpp
@@ -126,8 +126,17 @@ set(
     compiler/physical_query_plan/pqp_serialization.hpp
     compiler/physical_query_plan/pqp_utils.cpp
     compiler/physical_query_plan/pqp_utils.hpp
-
     compiler/plan_utils.hpp
+)
+
+set(
+    SHARED_SOURCES
+    aggregate_traits.hpp
+    all_type_variant.cpp
+    all_type_variant.hpp
+    constant_mappings.cpp
+    constant_mappings.hpp
+    constants.hpp
 
     expression/abstract_expression.cpp
     expression/abstract_expression.hpp
@@ -257,6 +266,7 @@ set(
     utils/vector.hpp
 
     ${SERIALIZATION_SOURCES}
+    ${SHARED_COMPILER_SOURCES}
     ${STATISTICS_SOURCES}
     ${STORAGE_SOURCES}
 )
@@ -301,6 +311,7 @@ set(
     utils/costs/cost_calculator.hpp
     utils/costs/pricing.cpp
     utils/costs/pricing.hpp
+    ${COORDINATOR_COMPILER_SOURCES}
 )
 
 set(
