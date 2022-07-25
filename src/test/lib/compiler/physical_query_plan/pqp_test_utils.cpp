@@ -149,12 +149,12 @@ std::shared_ptr<ImportOperatorProxy> TpchImportProxy(const std::vector<std::stri
       current_plan =
       ExchangeOperatorProxy::Make(
         AggregateOperatorProxy::Make(std::vector<ColumnId>{ColumnID{0}, ColumnID{1}}, // Combiner Stage: Group By l_returnflag, l_linestatus & use SUM(*) instead of COUNT(*)
-                                     std::vector<std::shared_ptr<AbstractExpression>>{Sum_(PqpColumnFrom(ColumnID{2}, l_quantity)),
-                                                                                      Sum_(PqpColumnFrom(ColumnID{3}, l_extendedprice)),
-                                                                                      Sum_(PqpColumnFrom(ColumnID{4}, l_extendedprice_l_discount)),
-                                                                                      Sum_(PqpColumnFrom(ColumnID{5}, l_extendedprice_l_discount_l_tax)),
+                                     std::vector<std::shared_ptr<AbstractExpression>>{Sum_(PqpColumnFrom(ColumnID{2}, Sum_(l_quantity))),
+                                                                                      Sum_(PqpColumnFrom(ColumnID{3}, Sum_(l_extendedprice))),
+                                                                                      Sum_(PqpColumnFrom(ColumnID{4}, Sum(l_extendedprice_l_discount))),
+                                                                                      Sum_(PqpColumnFrom(ColumnID{5}, Sum(l_extendedprice_l_discount_l_tax))),
                                                                                       Sum_(PqpColumnFrom(ColumnID{6}, CountStarPqp_())),
-                                                                                      Sum_(PqpColumnFrom(ColumnID{7}, l_discount))},
+                                                                                      Sum_(PqpColumnFrom(ColumnID{7}, Sum(l_discount)))},
           current_plan));
     }
 
