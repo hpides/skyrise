@@ -13,8 +13,8 @@ namespace {
  * @return
  */
 std::shared_ptr<PqpColumnExpression> PqpColumnFrom(ColumnID column_id, std::shared_ptr<AbstractExpression> expression) {
-    // We assume nullable=false because there is no easy way to derive this information from the input expression.
-    return PqpColumn_(column_id, expression->GetDataType(), false, expression->AsColumnName());
+  // We assume nullable=false because there is no easy way to derive this information from the input expression.
+  return PqpColumn_(column_id, expression->GetDataType(), false, expression->AsColumnName());
 }
 
 /**
@@ -89,7 +89,7 @@ std::shared_ptr<PqpColumnExpression> TpchPqpColumn(const std::string tpch_column
 }
 
 std::shared_ptr<ImportOperatorProxy> TpchImportProxy(const std::vector<std::string> column_names,
-                                                                const std::vector<ObjectReference> object_references) {
+                                                     const std::vector<ObjectReference> object_references) {
   Assert(!column_names.empty(), "At least one column name must be provided for a TpchTable ImportOperatorProxy.");
   const TpchTable tpch_table = ResolveTpchTable(column_names[0]);
 
@@ -115,15 +115,16 @@ std::shared_ptr<ImportOperatorProxy> TpchImportProxy(const std::vector<std::stri
   return import_proxy;
 }
 
-  std::shared_ptr<ExportOperatorProxy> CreateTpchQ1Pqp(size_t lineitem_mock_objects_count, std::vector<size_t> combiner_stages_worker_count) {
-    // (1) Define pipeline 1 or pre-aggregation stage for TPC-H Q1
-    const auto l_shipdate = TpchPqpColumn("l_shipdate");
-    const auto l_quantity = TpchPqpColumn("l_quantity");
-    const auto l_extendedprice = TpchPqpColumn("l_extendedprice");
-    const auto l_discount = TpchPqpColumn("l_discount");
-    const auto l_returnflag = TpchPqpColumn("l_returnflag");
-    const auto l_linestatus = TpchPqpColumn("l_linestatus");
-    // clang-format off
+std::shared_ptr<ExportOperatorProxy> CreateTpchQ1Pqp(size_t lineitem_mock_objects_count,
+                                                     std::vector<size_t> combiner_stages_worker_count) {
+  // (1) Define pipeline 1 or pre-aggregation stage for TPC-H Q1
+  const auto l_shipdate = TpchPqpColumn("l_shipdate");
+  const auto l_quantity = TpchPqpColumn("l_quantity");
+  const auto l_extendedprice = TpchPqpColumn("l_extendedprice");
+  const auto l_discount = TpchPqpColumn("l_discount");
+  const auto l_returnflag = TpchPqpColumn("l_returnflag");
+  const auto l_linestatus = TpchPqpColumn("l_linestatus");
+  // clang-format off
     const auto l_extendedprice_l_discount = Mul_(l_extendedprice, Sub_(1, l_discount));                               // <=>  l_extendedprice * (1 - l_discount)
     const auto l_extendedprice_l_discount_l_tax = Mul_(l_extendedprice_l_discount, Add_(1, TpchPqpColumn("l_tax")));  // <=> (l_extendedprice * (1 - l_discount)) * (1 + l_tax),
 
@@ -188,9 +189,9 @@ std::shared_ptr<ImportOperatorProxy> TpchImportProxy(const std::vector<std::stri
                                                           Div_(Cast_(sum_l_discount, DataType::kDouble), sum_count_star),         // Calculate AVG(l_discount)
                                                           sum_count_star),
             current_plan))));
-    // clang-format on
+  // clang-format on
 
-    return q1_pqp;
-  }
+  return q1_pqp;
+}
 
 }  // namespace skyrise

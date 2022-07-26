@@ -23,7 +23,7 @@ std::shared_ptr<PqpColumnExpression> TpchPqpColumn(const std::string column_name
  * @returns an ImportOperatorProxy with the according TpchTable import column ids and given @param object_references.
  */
 std::shared_ptr<ImportOperatorProxy> TpchImportProxy(const std::vector<std::string> column_names,
-                                                                const std::vector<ObjectReference> object_references);
+                                                     const std::vector<ObjectReference> object_references);
 
 /**
  * TODO
