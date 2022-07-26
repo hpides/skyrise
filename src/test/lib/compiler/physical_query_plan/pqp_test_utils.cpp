@@ -117,17 +117,17 @@ std::shared_ptr<ImportOperatorProxy> TpchImportProxy(const std::vector<std::stri
 
   std::shared_ptr<ExportOperatorProxy> CreateTpchQ1Pqp(size_t lineitem_mock_objects_count, std::vector<size_t> combiner_stages_worker_count) {
     // (1) Define pipeline 1 or pre-aggregation stage for TPC-H Q1
-    // clang-format off
     const auto l_shipdate = TpchPqpColumn("l_shipdate");
     const auto l_quantity = TpchPqpColumn("l_quantity");
     const auto l_extendedprice = TpchPqpColumn("l_extendedprice");
     const auto l_discount = TpchPqpColumn("l_discount");
     const auto l_returnflag = TpchPqpColumn("l_returnflag");
     const auto l_linestatus = TpchPqpColumn("l_linestatus");
+    // clang-format off
     const auto l_extendedprice_l_discount = Mul_(l_extendedprice, Sub_(1, l_discount));                               // <=>  l_extendedprice * (1 - l_discount)
     const auto l_extendedprice_l_discount_l_tax = Mul_(l_extendedprice_l_discount, Add_(1, TpchPqpColumn("l_tax")));  // <=> (l_extendedprice * (1 - l_discount)) * (1 + l_tax),
 
-    const auto q1_subplan_pre_aggregation =
+    const auto q1_pre_aggregation_subplan =
     AggregateOperatorProxy::Make(std::vector<ColumnId>{ColumnID{5}, ColumnID{6}}, // Group By l_returnflag, l_linestatus
                                  std::vector<std::shared_ptr<AbstractExpression>>{Sum_(PqpColumnFrom(ColumnID{0}, l_quantity)),
                                                                                   Sum_(PqpColumnFrom(ColumnID{1}, l_extendedprice)),
@@ -140,34 +140,39 @@ std::shared_ptr<ImportOperatorProxy> TpchImportProxy(const std::vector<std::stri
           TpchImportProxy(std::vector<std::string>{"l_quantity", "l_extendedprice", "l_discount", "l_tax", "l_returnflag", "l_linestatus", "l_shipdate"},
                           CreateMockObjectReferences("lineitem_", lineitem_mock_objects_count)))));
 
-
     // (2) Define combiner stages for TPC-H Q1
-    const auto current_plan = ExchangeOperatorProxy::Make(q1_subplan_pre_aggregation);
+    const auto get_q1_combine_aggregates_proxy = [&]() {
+      return AggregateOperatorProxy::Make(std::vector<ColumnId>{ColumnID{0}, ColumnID{1}}, // Combiner Stage: Group By l_returnflag, l_linestatus & use SUM(*) instead of COUNT(*)
+                                          std::vector<std::shared_ptr<AbstractExpression>>{Sum_(PqpColumnFrom(ColumnID{2}, Sum_(l_quantity))),
+                                                                                           Sum_(PqpColumnFrom(ColumnID{3}, Sum_(l_extendedprice))),
+                                                                                           Sum_(PqpColumnFrom(ColumnID{4}, Sum_(l_extendedprice_l_discount))),
+                                                                                           Sum_(PqpColumnFrom(ColumnID{5}, Sum_(l_extendedprice_l_discount_l_tax))),
+                                                                                           Sum_(PqpColumnFrom(ColumnID{6}, Sum_(CountStarPqp_()))),
+                                                                                           Sum_(PqpColumnFrom(ColumnID{7}, Sum_(l_discount)))});
+    };
+    // clang-format off
+
+    const auto current_plan = q1_pre_aggregation_subplan;
     for (size_t i = 0; i < combiner_stages_worker_count.size(); ++i) {
       Assert(combiner_stages_worker_count[i] > 1, "The worker count for combiner stages must be greater than one.");
-      current_plan->SetToPartialMerge(combiner_stages_worker_count[i]);
-      current_plan =
-      ExchangeOperatorProxy::Make(
-        AggregateOperatorProxy::Make(std::vector<ColumnId>{ColumnID{0}, ColumnID{1}}, // Combiner Stage: Group By l_returnflag, l_linestatus & use SUM(*) instead of COUNT(*)
-                                     std::vector<std::shared_ptr<AbstractExpression>>{Sum_(PqpColumnFrom(ColumnID{2}, Sum_(l_quantity))),
-                                                                                      Sum_(PqpColumnFrom(ColumnID{3}, Sum_(l_extendedprice))),
-                                                                                      Sum_(PqpColumnFrom(ColumnID{4}, Sum(l_extendedprice_l_discount))),
-                                                                                      Sum_(PqpColumnFrom(ColumnID{5}, Sum(l_extendedprice_l_discount_l_tax))),
-                                                                                      Sum_(PqpColumnFrom(ColumnID{6}, CountStarPqp_())),
-                                                                                      Sum_(PqpColumnFrom(ColumnID{7}, Sum(l_discount)))},
-          current_plan));
+      const auto exchange_proxy = ExchangeOperatorProxy::Make(current_plan);
+      exchange_proxy->SetToPartialMerge(combiner_stages_worker_count[i]);
+      current_plan = get_q1_combine_aggregates_proxy();
+      current_plan->SetLeftInput(exchange_proxy);
     }
 
-
-
     // (3) Define final stage for TPC-H Q1
-    current_plan->SetToFullMerge();
+    const auto exchange_proxy = ExchangeOperatorProxy::Make(current_plan);
+    exchange_proxy->SetToFullMerge();
+    current_plan = get_q1_combine_aggregates_proxy();
+    current_plan->SetLeftInput(exchange_proxy);
 
     const auto sum_l_quantity = PqpColumnFrom(ColumnID{2}, Sum_(l_quantity));
     const auto sum_l_extended_price = PqpColumnFrom(ColumnID{3}, Sum_(l_extendedprice));
     const auto sum_count_star = PqpColumnFrom(ColumnID{6}, Sum_(CountStarPqp_()));
     const auto sum_l_discount = PqpColumnFrom(ColumnID{7}, Sum_(l_discount));
 
+    // clang-format off
     const auto q1_pqp =
     ExportOperatorProxy::Dummy(
       AliasOperatorProxy::Make(std::vector<ColumnID{}, std::vector<std::string>{},
@@ -182,14 +187,7 @@ std::shared_ptr<ImportOperatorProxy> TpchImportProxy(const std::vector<std::stri
                                                           Div_(Cast_(sum_l_extended_price, DataType::kDouble), sum_count_star),   // Calculate AVG(l_extended_price)
                                                           Div_(Cast_(sum_l_discount, DataType::kDouble), sum_count_star),         // Calculate AVG(l_discount)
                                                           sum_count_star),
-            AggregateOperatorProxy::Make(std::vector<ColumnId>{ColumnID{0}, ColumnID{1}},                                         // Final Stage: Group By l_returnflag, l_linestatus
-                                   std::vector<std::shared_ptr<AbstractExpression>>{Sum_(PqpColumnFrom(ColumnID{2}, l_quantity)),
-                                                                                    Sum_(PqpColumnFrom(ColumnID{3}, l_extendedprice)),
-                                                                                    Sum_(PqpColumnFrom(ColumnID{4}, l_extendedprice_l_discount)),
-                                                                                    Sum_(PqpColumnFrom(ColumnID{5}, l_extendedprice_l_discount_l_tax)),
-                                                                                    Sum_(PqpColumnFrom(ColumnID{6}, CountStarPqp_())),
-                                                                                    Sum_(PqpColumnFrom(ColumnID{7}, l_discount))},
-              current_plan));
+            current_plan))));
     // clang-format on
 
     return q1_pqp;
