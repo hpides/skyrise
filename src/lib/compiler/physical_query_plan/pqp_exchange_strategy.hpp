@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 
+#include "compilation_context.hpp"
 #include "operator_proxy/abstract_operator_proxy.hpp"
 #include "operator_proxy/import_operator_proxy.hpp"
 #include "pipeline_fragment_template.hpp"

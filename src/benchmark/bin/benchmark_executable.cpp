@@ -41,7 +41,7 @@ cxxopts::ParseResult& BenchmarkExecutable::GetParseResult(
   }
 
   if (cli_parse_result_.count("output") == 0) {
-    throw cxxopts::option_required_exception("OUTPUT");
+    throw cxxopts::exceptions::requested_option_not_present("OUTPUT");
   }
 
   if (cli_parse_result_.count("metering") > 0) {

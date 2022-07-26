@@ -76,6 +76,36 @@ LambdaBenchmarkOutput& LambdaBenchmarkOutput::WithObjectInvocationMetric(
   return *this;
 }
 
+LambdaBenchmarkOutput& LambdaBenchmarkOutput::WithBoolRepetitionMetric(
+    std::function<std::tuple<Aws::String, bool>(const LambdaBenchmarkRepetition&)> functor) {
+  bool_repetition_functors_.push_back(std::move(functor));
+  return *this;
+}
+
+LambdaBenchmarkOutput& LambdaBenchmarkOutput::WithInt64RepetitionMetric(
+    std::function<std::tuple<Aws::String, long long>(const LambdaBenchmarkRepetition&)> functor) {
+  int64_repetition_functors_.push_back(std::move(functor));
+  return *this;
+}
+
+LambdaBenchmarkOutput& LambdaBenchmarkOutput::WithDoubleRepetitionMetric(
+    std::function<std::tuple<Aws::String, double>(const LambdaBenchmarkRepetition&)> functor) {
+  double_repetition_functors_.push_back(std::move(functor));
+  return *this;
+}
+
+LambdaBenchmarkOutput& LambdaBenchmarkOutput::WithStringRepetitionMetric(
+    std::function<std::tuple<Aws::String, Aws::String>(const LambdaBenchmarkRepetition&)> functor) {
+  string_repetition_functors_.push_back(std::move(functor));
+  return *this;
+}
+
+LambdaBenchmarkOutput& LambdaBenchmarkOutput::WithObjectRepetitionMetric(
+    std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const LambdaBenchmarkRepetition&)> functor) {
+  object_repetition_functors_.push_back(std::move(functor));
+  return *this;
+}
+
 Aws::Utils::Json::JsonValue LambdaBenchmarkOutput::Build() const {
   auto benchmark_output = Aws::Utils::Json::JsonValue()
                               .WithString("name", benchmark_name_)
@@ -87,11 +117,36 @@ Aws::Utils::Json::JsonValue LambdaBenchmarkOutput::Build() const {
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> repetitions(benchmark_repetitions.size());
 
   for (size_t i = 0; i < benchmark_repetitions.size(); ++i) {
-    auto repetition_value =
-        Aws::Utils::Json::JsonValue()
-            .WithInteger("repetition", i)
-            .WithDouble("duration_ms", benchmark_repetitions[i].GetDurationMs())
-            .WithDouble("warmup_cost_usd", static_cast<double>(benchmark_repetitions[i].GetWarmUpCost()));
+    const auto& repetition = benchmark_repetitions[i];
+    auto repetition_value = Aws::Utils::Json::JsonValue()
+                                .WithInteger("repetition", i)
+                                .WithDouble("duration_ms", repetition.GetDurationMs())
+                                .WithDouble("warmup_cost_usd", static_cast<double>(repetition.GetWarmUpCost()));
+
+    for (const auto& bool_functor : bool_repetition_functors_) {
+      const auto& [name, value] = bool_functor(repetition);
+      repetition_value.WithBool(name, value);
+    }
+
+    for (const auto& int64_functor : int64_repetition_functors_) {
+      const auto& [name, value] = int64_functor(repetition);
+      repetition_value.WithInt64(name, value);
+    }
+
+    for (const auto& double_functor : double_repetition_functors_) {
+      const auto& [name, value] = double_functor(repetition);
+      repetition_value.WithDouble(name, value);
+    }
+
+    for (const auto& string_functor : string_repetition_functors_) {
+      const auto& [name, value] = string_functor(repetition);
+      repetition_value.WithString(name, value);
+    }
+
+    for (const auto& object_functor : object_repetition_functors_) {
+      const auto& [name, value] = object_functor(repetition);
+      repetition_value.WithObject(name, value);
+    }
 
     Aws::Utils::Array<Aws::Utils::Json::JsonValue> invocations(benchmark_repetitions[i].GetInvokeResults().size());
 

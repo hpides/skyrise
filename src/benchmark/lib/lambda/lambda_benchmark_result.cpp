@@ -1,6 +1,7 @@
 #include "lambda_benchmark_result.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <numeric>
 
 #include "utils/assert.hpp"
@@ -130,6 +131,10 @@ void LambdaBenchmarkRepetition::ValidateInvokeResults(const Aws::Utils::Json::Js
 const std::vector<LambdaInvokeResult>& LambdaBenchmarkRepetition::GetInvokeResults() const { return invoke_results_; }
 
 long double LambdaBenchmarkRepetition::GetWarmUpCost() const { return warm_up_cost_; }
+
+double LambdaBenchmarkRepetition::GetDurationSeconds() const {
+  return std::chrono::duration<double>(std::chrono::duration<double, std::milli>(GetDurationMs())).count();
+}
 
 double LambdaBenchmarkRepetition::GetDurationMs() const {
   Assert(IsComplete(), "LambdaBenchmarkRepetition must be completed before a duration is available.");

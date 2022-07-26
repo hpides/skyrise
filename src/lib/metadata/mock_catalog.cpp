@@ -3,6 +3,7 @@
 #include <fstream>
 
 #include "constant_mappings.hpp"
+#include "constants.hpp"
 #include "storage/table/table_column_definition.hpp"
 #include "table_schema.hpp"
 #include "utils/string.hpp"
@@ -25,7 +26,7 @@ void MockCatalog::AddTableSchema(const std::string& table_name, const std::share
   std::vector<TablePartition> table_partitions;
   table_partitions.reserve(kMockPartitionCount);
   for (size_t i = 1; i <= kMockPartitionCount; ++i) {
-    const std::string object_key = table_name + "_object0" + std::to_string(i) + ".orc";
+    const std::string object_key = table_name + "_object0" + std::to_string(i) + std::string(kOrcExtension);
     table_partitions.emplace_back(object_key, kMockPartitionEtag, kMockPartitionSize, kMockPartitionTimestamp);
   }
   table_name_to_table_partitions_.emplace(table_name, std::move(table_partitions));
