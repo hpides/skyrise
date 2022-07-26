@@ -18,7 +18,7 @@ struct PipelineFragmentDefinition final {
 
   bool operator==(const PipelineFragmentDefinition& rhs) const;
 
-  std::unordered_map<std::string, std::vector<ObjectReference>> identity_to_objects;
+  std::unordered_map<std::string, std::vector<ObjectReference>> identity_to_object_references;
   ObjectReference target_object;
   ExportFormat target_format;
 };
