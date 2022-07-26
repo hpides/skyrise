@@ -156,6 +156,11 @@ inline bool operator==(const SortColumnDefinition& lhs, const SortColumnDefiniti
 }
 
 /**
+ * Defines the file formats supported by the ExportOperator.
+ */
+enum class ExportFormat { kCsv, kOrc, kOrcPartitioned };
+
+/**
  * Defines a general reference to an object stored in S3.
  */
 struct ObjectReference {

@@ -1,11 +1,11 @@
 #include "testdata_storage.hpp"
 
-#include <linux/limits.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include "utils/assert.hpp"
+#include "utils/self_name.hpp"
 
 namespace skyrise {
 
@@ -21,13 +21,9 @@ bool DirectoryExists(const std::string& path) {
 }
 
 std::string FindTestdataDirectory() {
-  std::array<char, PATH_MAX + 1> full_path{0};
-  int exe_path_length = readlink("/proc/self/exe", full_path.data(), PATH_MAX);
-  Assert(exe_path_length >= 1, "readlink() returned an error.");
-
   // Look in every parent directory. Given /path/to/executable we will look into /path/to/resources, /path/resources and
   // /resources.
-  std::string full_path_string(full_path.data());
+  std::string full_path_string = GetAbsolutePathOfSelf();
   size_t offset = full_path_string.find_last_of('/');
   while (offset != std::string::npos) {
     full_path_string = full_path_string.substr(0, offset + 1);  // Keep trailing '/'.

@@ -4,10 +4,9 @@
 #include <string>
 
 #include "abstract_operator_proxy.hpp"
+#include "types.hpp"
 
 namespace skyrise {
-
-enum class ExportFormat { kCsv, kOrc, kOrcPartitioned };
 
 class ExportOperatorProxy : public EnableMakeForPlanNode<ExportOperatorProxy, AbstractOperatorProxy>,
                             public AbstractOperatorProxy {

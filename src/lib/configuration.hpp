@@ -1,5 +1,6 @@
 #pragma once
 
+#include "types.hpp"
 #include "utils/literal.hpp"
 
 namespace skyrise {
@@ -36,8 +37,32 @@ inline constexpr size_t kLambdaFunctionStatePollingIntervalMilliseconds = 100;
 inline constexpr size_t kLambdaFunctionTimeoutSeconds = 300;
 
 /**
+ * The AWS Lambda service has a burst concurrency quota which limits the number of function instances serving requests
+ * at a given time. The cumulative function concurrency in a region can reach an initial level of between 500 and 3000,
+ * which varies per Region (cf. https://docs.aws.amazon.com/lambda/latest/dg/invocation-scaling.html)
+ */
+inline constexpr size_t kLambdaFunctionConcurrencyLimit = 3000;
+
+/**
  * The maximum size for files to be read from the local filesystem.
  */
 inline constexpr size_t kMaxFileSize = 2_GB;
+
+/**
+ * The default bucket name and prefix for storing query results.
+ */
+inline constexpr std::string_view kExportBucketName = "skyrise";
+inline constexpr std::string_view kExportRootPrefix = "result/";
+
+/**
+ * The default export format for storing query results.
+ */
+inline constexpr ExportFormat kFinalResultsExportFormat = ExportFormat::kCsv;
+inline constexpr ExportFormat kIntermediateResultsExportFormat = ExportFormat::kOrc;
+
+/**
+ * Defines the maximum number of workers for the execution of a PqpPipeline.
+ */
+inline constexpr size_t kMaxWorkerCountPerPipeline = kLambdaFunctionConcurrencyLimit;
 
 }  // namespace skyrise

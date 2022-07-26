@@ -12,22 +12,12 @@
 #include "configuration.hpp"
 #include "utils/assert.hpp"
 #include "utils/filesystem.hpp"
+#include "utils/self_name.hpp"
 
 namespace skyrise {
 
 std::string GetProjectDirectoryPath() {
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
-  std::array<char, PATH_MAX> executable_path_buffer;
-  const auto path_name_length =
-      readlink("/proc/self/exe", executable_path_buffer.data(), sizeof(executable_path_buffer) - 1);
-
-  if (path_name_length == -1) {
-    Fail("Unable to read project directory path.");
-  }
-
-  executable_path_buffer[path_name_length] = '\0';
-
-  const std::string path_name(executable_path_buffer.data());
+  const std::string path_name = GetAbsolutePathOfSelf();
 
   // Return the absolute project directory path by removing the path to the executable.
   return path_name.substr(0, path_name.rfind("bin"));

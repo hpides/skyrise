@@ -19,6 +19,7 @@ set(
     benchmark/lib/synthetic_table_generator_test.cpp
     benchmark/lib/tpch/tpch_data_generator_test.cpp
 
+    lib/compiler/compilation_context_test.cpp
     lib/compiler/logical_query_plan/aggregate_node_test.cpp
     lib/compiler/logical_query_plan/alias_node_test.cpp
     lib/compiler/logical_query_plan/constraint_test_utils.hpp
@@ -35,7 +36,6 @@ set(
     lib/compiler/logical_query_plan/sort_node_test.cpp
     lib/compiler/logical_query_plan/stored_table_node_test.cpp
     lib/compiler/logical_query_plan/union_node_test.cpp
-
     lib/compiler/physical_query_plan/operator_proxy/aggregate_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/operator_proxy/alias_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/operator_proxy/exchange_operator_proxy_test.cpp

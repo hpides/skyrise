@@ -12,10 +12,10 @@
 
 namespace {
 
-inline const std::string kJsonKeyComment = "comment";
-inline const std::string kJsonKeyLeftInputOperatorIdentity = "left_input_operator_identity";
-inline const std::string kJsonKeyOperatorIdentity = "operator_identity";
-inline const std::string kJsonKeyRightInputOperatorIdentity = "right_input_operator_identity";
+constexpr std::string_view kJsonKeyComment = "comment";
+constexpr std::string_view kJsonKeyLeftInputOperatorIdentity = "left_input_operator_identity";
+constexpr std::string_view kJsonKeyOperatorIdentity = "operator_identity";
+constexpr std::string_view kJsonKeyRightInputOperatorIdentity = "right_input_operator_identity";
 
 }  // namespace
 
@@ -135,20 +135,20 @@ std::shared_ptr<AbstractOperator> AbstractOperatorProxy::GetOrCreateOperatorInst
 
 Aws::Utils::Json::JsonValue AbstractOperatorProxy::ToJson() const {
   Aws::Utils::Json::JsonValue result;
-  result.WithString(kJsonKeyOperatorType, std::string(magic_enum::enum_name(type_)))
-      .WithString(kJsonKeyOperatorIdentity, Identity());
+  result.WithString(std::string{kJsonKeyOperatorType}, std::string(magic_enum::enum_name(type_)))
+      .WithString(std::string{kJsonKeyOperatorIdentity}, Identity());
 
   // Serialize inputs with operator identity strings.
   if (LeftInput()) {
-    result.WithString(kJsonKeyLeftInputOperatorIdentity, LeftInput()->Identity());
+    result.WithString(std::string{kJsonKeyLeftInputOperatorIdentity}, LeftInput()->Identity());
   }
 
   if (RightInput()) {
-    result.WithString(kJsonKeyRightInputOperatorIdentity, RightInput()->Identity());
+    result.WithString(std::string{kJsonKeyRightInputOperatorIdentity}, RightInput()->Identity());
   }
 
   if (!comment_.empty()) {
-    result.WithString(kJsonKeyComment, comment_);
+    result.WithString(std::string{kJsonKeyComment}, comment_);
   }
 
   return result;
@@ -181,19 +181,19 @@ void AbstractOperatorProxy::BindInputs(
 }
 
 void AbstractOperatorProxy::SetAttributesFromJson(const Aws::Utils::Json::JsonView& json) {
-  Assert(json.KeyExists(kJsonKeyOperatorIdentity), "Expected operator proxy identity in JSON.");
-  identity_ = json.GetString(kJsonKeyOperatorIdentity);
+  Assert(json.KeyExists(std::string{kJsonKeyOperatorIdentity}), "Expected operator proxy identity in JSON.");
+  identity_ = json.GetString(std::string{kJsonKeyOperatorIdentity});
 
-  if (json.KeyExists(kJsonKeyLeftInputOperatorIdentity)) {
-    left_input_identity_ = json.GetString(kJsonKeyLeftInputOperatorIdentity);
+  if (json.KeyExists(std::string{kJsonKeyLeftInputOperatorIdentity})) {
+    left_input_identity_ = json.GetString(std::string{kJsonKeyLeftInputOperatorIdentity});
   }
 
-  if (json.KeyExists(kJsonKeyRightInputOperatorIdentity)) {
-    right_input_identity_ = json.GetString(kJsonKeyRightInputOperatorIdentity);
+  if (json.KeyExists(std::string{kJsonKeyRightInputOperatorIdentity})) {
+    right_input_identity_ = json.GetString(std::string{kJsonKeyRightInputOperatorIdentity});
   }
 
-  if (json.KeyExists(kJsonKeyComment)) {
-    comment_ = json.GetString(kJsonKeyComment);
+  if (json.KeyExists(std::string{kJsonKeyComment})) {
+    comment_ = json.GetString(std::string{kJsonKeyComment});
   }
 }
 
