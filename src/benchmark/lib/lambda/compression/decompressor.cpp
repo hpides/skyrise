@@ -52,27 +52,28 @@ bool Decompressor::Process() {
 bool NoneDecompressor::Process() {
   uncompressed_stream_ = std::make_unique<OrcSeekableInputStreamImplementation>(
       orc::createDecompressor(orc::CompressionKind_NONE, std::make_unique<PullingInputStream>(input_), kBufferCapacity,
-                              *orc::getDefaultPool()));
+                              *orc::getDefaultPool(), orc::getDefaultReaderMetrics()));
   return Decompressor::Process();
 }
 
 bool ZlibDecompressor::Process() {
   uncompressed_stream_ = std::make_unique<OrcSeekableInputStreamImplementation>(
       orc::createDecompressor(orc::CompressionKind_ZLIB, std::make_unique<PullingInputStream>(input_), kBufferCapacity,
-                              *orc::getDefaultPool()));
+                              *orc::getDefaultPool(), orc::getDefaultReaderMetrics()));
   return Decompressor::Process();
 }
 
 bool ZstdDecompressor::Process() {
   uncompressed_stream_ = std::make_unique<OrcSeekableInputStreamImplementation>(
       orc::createDecompressor(orc::CompressionKind_ZSTD, std::make_unique<PullingInputStream>(input_), kBufferCapacity,
-                              *orc::getDefaultPool()));
+                              *orc::getDefaultPool(), orc::getDefaultReaderMetrics()));
   return Decompressor::Process();
 }
 
 bool Lz4Decompressor::Process() {
-  uncompressed_stream_ = std::make_unique<OrcSeekableInputStreamImplementation>(orc::createDecompressor(
-      orc::CompressionKind_LZ4, std::make_unique<PullingInputStream>(input_), kBufferCapacity, *orc::getDefaultPool()));
+  uncompressed_stream_ = std::make_unique<OrcSeekableInputStreamImplementation>(
+      orc::createDecompressor(orc::CompressionKind_LZ4, std::make_unique<PullingInputStream>(input_), kBufferCapacity,
+                              *orc::getDefaultPool(), orc::getDefaultReaderMetrics()));
   return Decompressor::Process();
 }
 
