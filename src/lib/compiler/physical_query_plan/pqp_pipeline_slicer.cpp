@@ -9,58 +9,6 @@
 #include "utils/assert.hpp"
 #include "utils/vector.hpp"
 
-namespace {
-using namespace skyrise;  // NOLINT(google-build-using-namespace)
-
-std::vector<std::vector<PipelineFragmentDefinition>> GetPipelineFragmentDefinitions(
-    const std::shared_ptr<ImportOperatorProxy>& import_proxy, size_t max_fragment_count) {
-  // Ideally, an PipelineFragmentDefinition contains a single object key. However, if the number of object keys exceeds
-  // @param max_fragment_count, object keys must be scattered across the maximum number of PipelineFragmentDefinitions.
-  size_t chunk_size = 1;
-  if (import_proxy->ObjectReferences().size() > max_fragment_count) {
-    const double res = static_cast<double>(import_proxy->ObjectReferences().size()) / max_fragment_count;
-    const double ceiled = ceil(res);
-    chunk_size = size_t(ceiled);
-  }
-  auto pipeline_object_keys_by_fragment = SplitVectorIntoChunks(import_proxy->ObjectReferences(), chunk_size);
-
-  // Create import definition for each fragment
-  std::vector<std::vector<PipelineFragmentDefinition>> pipeline_fragment_definitions;
-  pipeline_fragment_definitions.reserve(pipeline_object_keys_by_fragment.size());
-  for (auto& fragment_object_keys : pipeline_object_keys_by_fragment) {
-    std::vector<PipelineFragmentDefinition> fragment_import_definitions;
-    fragment_import_definitions.emplace_back(import_proxy->Identity(), import_proxy->BucketName(),
-                                             std::move(fragment_object_keys));
-    pipeline_fragment_definitions.emplace_back(fragment_import_definitions);
-  }
-  Assert(pipeline_fragment_definitions.size() <= max_fragment_count, "Expected lower number of import definitions.");
-  return pipeline_fragment_definitions;
-}
-
-std::vector<std::string> GetPipelineExportKeys(const std::string& key_prefix, const std::string& key_suffix,
-                                               size_t fragment_instance_count) {
-  std::vector<std::string> export_keys;
-  export_keys.reserve(fragment_instance_count);
-
-  if (fragment_instance_count == 1) {
-    export_keys.emplace_back(key_prefix + "_result" + key_suffix);
-    return export_keys;
-  }
-
-  for (size_t i = 1; i <= fragment_instance_count; ++i) {
-    std::stringstream target_key;
-    target_key << key_prefix;
-    target_key << "_result";
-    target_key << std::setfill('0') << std::setw(2) << i;
-    target_key << key_suffix;
-    export_keys.emplace_back(target_key.str());
-  }
-
-  return export_keys;
-}
-
-}  // namespace
-
 namespace skyrise {
 
 PqpPipelineSlicer::PqpPipelineSlicer(std::shared_ptr<AbstractOperatorProxy> pqp,
@@ -94,7 +42,7 @@ const std::vector<std::shared_ptr<PqpPipeline>>& PqpPipelineSlicer::GetPipelines
         continue;
       }
 
-      std::shared_ptr<PqpPipeline> pipeline = CutNextPipelineFragment(import_proxy, consumed_imports);
+      std::shared_ptr<PqpPipeline> pipeline = CutOffNextPipeline(import_proxy, consumed_imports);
       if (pipeline) {
         pipelines_.emplace_back(std::move(pipeline));
       }
@@ -104,7 +52,7 @@ const std::vector<std::shared_ptr<PqpPipeline>>& PqpPipelineSlicer::GetPipelines
   return pipelines_;
 }
 
-std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutNextPipelineFragment(  // TODO(julianmenzler): CutOffNextPipeline
+std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutOffNextPipeline(
     const std::shared_ptr<ImportOperatorProxy>& primary_import_proxy,
     std::vector<std::shared_ptr<ImportOperatorProxy>>& consumed_imports) {
   consumed_imports.push_back(primary_import_proxy);
@@ -122,34 +70,33 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutNextPipelineFragment(  // TOD
   }
 
   /**
-   * (2) DETERMINE PIPELINE FRAGMENT BORDERS
-   *      - The next pipeline fragment starts with @param primary_import_proxy.
-   *      - Determine the end by going up the PQP tree. Find an operator proxy that either completes or terminates the
-   *        pipeline fragment.
+   * (2) DETERMINE PIPELINE PLAN BORDERS
+   *      - The next pipeline plan starts with @param primary_import_proxy.
+   *      - Determine the end by going up the PQP. Find an operator proxy that either completes or terminates the 
+   *        pipeline plan.
    *      - Track pipeline predecessors, in case of ImportOperatorProxy inputs.
    */
-  std::shared_ptr<AbstractOperatorProxy> current_pipeline_fragment = primary_import_proxy;
+  std::shared_ptr<AbstractOperatorProxy> current_pipeline_plan = primary_import_proxy;
   VisitPqpUpwards(primary_import_proxy, [&](const auto& operator_proxy) {
     Assert(operator_proxy->OutputNodeCount() < 2, "Operator proxy should have more than 1 output.");
 
     if (operator_proxy->Type() == OperatorType::kExchange || operator_proxy->Type() == OperatorType::kExport) {
-      // DataExchange or Export operations complete pipeline fragments. Therefore, the upwards visitation can be
-      // cancelled.
-      current_pipeline_fragment = operator_proxy;
+      // Since Exchange and Export operator proxies terminate pipeline plans, we cancel the upwards traversal.
+      current_pipeline_plan = operator_proxy;
       return PqpUpwardVisitation::kDoNotVisitOutputs;
     }
 
     if (operator_proxy->InputNodeCount() == 2) {
       // Check whether all inputs are resolved.
       for (const auto& input_proxy : operator_proxy->Inputs()) {
-        if (input_proxy == current_pipeline_fragment) {
-          // Continue because input is going to be resolved as part of the current pipeline fragment.
+        if (input_proxy == current_pipeline_plan) {
+          // Continue because input is going to be resolved as part of the current pipeline plan.
           continue;
         }
 
         if (input_proxy->Type() != OperatorType::kImport) {
-          // current_pipeline_fragment terminates because input_proxy must be resolved first (by another pipeline).
-          current_pipeline_fragment = nullptr;
+          // current_pipeline_plan terminates because input_proxy must be resolved first (by another pipeline).
+          current_pipeline_plan = nullptr;
           return PqpUpwardVisitation::kDoNotVisitOutputs;
         }
 
@@ -168,17 +115,17 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutNextPipelineFragment(  // TOD
     return PqpUpwardVisitation::kVisitOutputs;
   });
 
-  if (!current_pipeline_fragment) {
+  if (!current_pipeline_plan) {
     // Early Out:
-    //  It was not possible to complete the pipeline fragment. Therefore, there is no result to return.
+    //  It was not possible to complete the pipeline plan. Therefore, there is no result to return.
     return nullptr;
   }
 
-  // Determine pipeline fragment type
+  // Determine pipeline plan type
   bool last_pipeline = false;
-  if (current_pipeline_fragment->OutputNodeCount() == 0) {
-    Assert(current_pipeline_fragment == pqp_, "Expected root of PQP.");
-    Assert(current_pipeline_fragment->Type() == OperatorType::kExport, "PQP root should have OperatorType::kExport.");
+  if (current_pipeline_plan->OutputNodeCount() == 0) {
+    Assert(current_pipeline_plan == pqp_, "Expected root of PQP.");
+    Assert(current_pipeline_plan->Type() == OperatorType::kExport, "PQP root should have OperatorType::kExport.");
     last_pipeline = true;
   }
 
@@ -187,8 +134,8 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutNextPipelineFragment(  // TOD
    */
 
   // Level of intra-operator parallelism
-  size_t worker_count = std::min(current_pipeline_fragment->InputObjectsCount(), query_context_->MaxWorkerCount());
-  std::vector<std::vector<PipelineFragmentDefinition>> current_pipeline_fragment_definitions =
+  size_t worker_count = std::min(current_pipeline_plan->InputObjectsCount(), query_context_->MaxWorkerCount());
+  std::vector<std::vector<PipelineFragmentDefinition>> current_pipeline_plan_definitions =
       GetPipelineFragmentDefinitions(primary_import_proxy, worker_count);
 
   // Secondary imports from joins or union operations
@@ -199,7 +146,7 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutNextPipelineFragment(  // TOD
     // Each pipeline fragment should contain the given import_proxy with all object keys
     const PipelineFragmentDefinition import_definition(
         secondary_import_proxy->Identity(), secondary_import_proxy->BucketName(), secondary_import_proxy->ObjectKeys());
-    for (auto& fragment_import_definitions : current_pipeline_fragment_definitions) {
+    for (auto& fragment_import_definitions : current_pipeline_plan_definitions) {
       fragment_import_definitions.emplace_back(import_definition);
     }
   }
@@ -228,17 +175,17 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutNextPipelineFragment(  // TOD
   // Generate an export key for each fragment instance
   std::vector<std::string> current_pipeline_export_keys =
       GetPipelineExportKeys(pipeline_export_key_prefix_stream.str(), pipeline_export_key_suffix,
-                            current_pipeline_fragment_definitions.size());
+                            current_pipeline_plan_definitions.size());
 
   /**
    * (5) CUT OFF PIPELINE PLAN
    */
   if (!last_pipeline) {
-    Assert(current_pipeline_fragment->Type() == OperatorType::kExchange,
-           "Current pipeline fragment root should have OperatorType::kExchange");
+    Assert(current_pipeline_plan->Type() == OperatorType::kExchange,
+           "Current pipeline plan root should have OperatorType::kExchange");
 
     // Create ImportOperatorProxy above ExchangeOperatorProxy
-    auto next_pipeline_import_column_ids = std::vector<ColumnId>(current_pipeline_fragment->OutputColumnsCount());
+    auto next_pipeline_import_column_ids = std::vector<ColumnId>(current_pipeline_plan->OutputColumnsCount());
     std::iota(next_pipeline_import_column_ids.begin(), next_pipeline_import_column_ids.end(), ColumnId{0});
     auto next_pipeline_import_proxy = ImportOperatorProxy::Make(
         query_context_->TargetBucketName(), current_pipeline_export_keys, next_pipeline_import_column_ids);
@@ -247,35 +194,35 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutNextPipelineFragment(  // TOD
     // pipelines.
     next_pipeline_import_proxy->SetComment(current_pipeline_identity);
     // Pass the output object count from the ExchangeOperatorProxy to the next pipeline
-    next_pipeline_import_proxy->SetOutputObjectsCount(current_pipeline_fragment->OutputObjectsCount());
-    PlanInsertNodeAbove<AbstractOperatorProxy>(current_pipeline_fragment, next_pipeline_import_proxy);
+    next_pipeline_import_proxy->SetOutputObjectsCount(current_pipeline_plan->OutputObjectsCount());
+    PlanInsertNodeAbove<AbstractOperatorProxy>(current_pipeline_plan, next_pipeline_import_proxy);
 
-    // Cut off current_pipeline_fragment from PQP
+    // Cut off current_pipeline_plan from PQP
     next_pipeline_import_proxy->SetLeftInput(nullptr);
 
     // Replace ExchangeOperatorProxy with ExportOperatorProxy placeholder
     auto export_proxy = ExportOperatorProxy::Dummy();
     export_proxy->PrefixIdentity(query_context_->QueryIdentity());
-    ReplacePlanNode<AbstractOperatorProxy>(current_pipeline_fragment, export_proxy);
-    current_pipeline_fragment = export_proxy;
-    Assert(current_pipeline_fragment->OutputNodeCount() == 0, "Pipeline fragment should be cut off.");
+    ReplacePlanNode<AbstractOperatorProxy>(current_pipeline_plan, export_proxy);
+    current_pipeline_plan = export_proxy;
+    Assert(current_pipeline_plan->OutputNodeCount() == 0, "Pipeline plan should be cut off.");
   } else {
-    // This pipeline is the last fragment of the PQP.
+    // current_pipeline_plan represents the last pipeline of the PQP.
     pqp_ = nullptr;
   }
 
   /**
    * (6) CREATE PIPELINE
    */
-  auto current_pipeline = std::make_shared<PqpPipeline>(current_pipeline_fragment);
+  auto current_pipeline = std::make_shared<PqpPipeline>(current_pipeline_plan);
   current_pipeline->SetIdentity(current_pipeline_identity);
   for (const auto& pipeline : current_pipeline_predecessors) {
     pipeline->SetAsPredecessorOf(current_pipeline);
   }
   // Define fragments
-  for (size_t i = 0; i < current_pipeline_fragment_definitions.size(); ++i) {
+  for (size_t i = 0; i < current_pipeline_plan_definitions.size(); ++i) {
     auto fragment_definition =
-        PipelineFragmentDefinition(current_pipeline_fragment_definitions.at(i), query_context_->TargetBucketName(),
+        PipelineFragmentDefinition(current_pipeline_plan_definitions.at(i), query_context_->TargetBucketName(),
                                    current_pipeline_export_keys.at(i), current_pipeline_export_format);
     current_pipeline->DefineFragment(std::move(fragment_definition));
   }
