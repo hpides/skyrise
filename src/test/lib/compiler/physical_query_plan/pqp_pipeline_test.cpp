@@ -120,4 +120,79 @@ TEST_F(PqpPipelineTest, PredecessorSuccessorManagement) {
   EXPECT_TRUE(p_3->Successors().empty());
 }
 
+TEST_F(PqpPipelineTest, ResultCacheHashWithoutPredecessors) {
+  const auto p_1 = std::make_shared<PqpPipeline>("p_1", pipeline_plan_);
+  const auto p_2 = std::make_shared<PqpPipeline>("p_2", pipeline_plan_);
+  const auto p_3 = std::make_shared<PqpPipeline>("p_3", ExportOperatorProxy::Dummy(pipeline_plan_));
+  const size_t p_1_hash = p_1->ResultCacheHash();
+  const size_t p_2_hash = p_2->ResultCacheHash();
+  const size_t p_3_hash = p_3->ResultCacheHash();
+  EXPECT_NE(p_1_hash, 0);
+  EXPECT_NE(p_3_hash, 0);
+  EXPECT_EQ(p_1_hash, p_2_hash);
+  EXPECT_NE(p_1_hash, p_3_hash);
+}
+
+TEST_F(PqpPipelineTest, ResultCacheHashWithPredecessors) {
+  const auto p_1 = std::make_shared<PqpPipeline>("p_1", pipeline_plan_);
+  const auto p_2 = std::make_shared<PqpPipeline>("p_2", pipeline_plan_);
+  const size_t p_2_hash_without_predecessor = p_2->ResultCacheHash();
+  p_1->SetAsPredecessorOf(p_2);
+  const size_t p_1_hash = p_1->ResultCacheHash();
+  const size_t p_2_hash = p_2->ResultCacheHash();
+  EXPECT_NE(p_2_hash, p_2_hash_without_predecessor);
+  EXPECT_NE(p_1_hash, 0);
+  EXPECT_NE(p_1_hash, p_2_hash);
+
+  // Set p_2 synthetic.
+  p_2->SetSynthetic(true);
+  EXPECT_EQ(p_2->ResultCacheHash(), p_2_hash);
+  const size_t p_2_hash_synthetic = p_2->ResultCacheHash(true);
+  EXPECT_EQ(p_1_hash, p_2_hash_synthetic);
+  EXPECT_NE(p_2_hash, p_2_hash_synthetic);
+
+  auto p_3 = std::make_shared<PqpPipeline>("p_3", ExportOperatorProxy::Dummy(pipeline_plan_));
+  p_2->SetAsPredecessorOf(p_3);
+  const size_t p_3_hash = p_3->ResultCacheHash();
+  const size_t p_3_hash_synthetic = p_3->ResultCacheHash(true);
+  EXPECT_NE(p_3_hash, p_3_hash_synthetic);
+  EXPECT_NE(p_1_hash, p_3_hash);
+  EXPECT_NE(p_1_hash, p_3_hash_synthetic);
+  EXPECT_NE(p_2_hash, p_3_hash);
+  EXPECT_NE(p_2_hash, p_3_hash_synthetic);
+
+  p_3->SetSynthetic(true);
+  EXPECT_EQ(p_1_hash, p_3->ResultCacheHash(true));
+
+  auto p_4 = std::make_shared<PqpPipeline>("p_4", ExportOperatorProxy::Dummy(pipeline_plan_));
+  p_3->SetAsPredecessorOf(p_4);
+  EXPECT_EQ(p_3_hash_synthetic, p_4->ResultCacheHash(true));
+}
+
+TEST_F(PqpPipelineTest, ResultCacheHashIgnoresPredecessorOrder) {
+  auto p_1 = std::make_shared<PqpPipeline>("p_1", ExportOperatorProxy::Dummy(pipeline_plan_));
+  auto p_2 = std::make_shared<PqpPipeline>("p_2", pipeline_plan_);
+  auto p_3 = std::make_shared<PqpPipeline>("p_3", pipeline_plan_);
+  const auto p_3_hash_without_predecessors = p_3->ResultCacheHash();
+  p_1->SetAsPredecessorOf(p_3);
+  const auto p_3_hash_with_one_predecessors = p_3->ResultCacheHash();
+  p_2->SetAsPredecessorOf(p_3);
+  const auto p_3_hash_with_two_predecessors = p_3->ResultCacheHash();
+  EXPECT_NE(p_3_hash_with_one_predecessors, p_3_hash_without_predecessors);
+  EXPECT_NE(p_3_hash_with_one_predecessors, p_3_hash_with_two_predecessors);
+
+  const size_t hash_a = p_3->ResultCacheHash();
+
+  // In PqpPipeline, the pointers to predecessor pipelines are stored in a vector.
+  // The ResultCacheHash must be independent of the vector's elements order.
+  p_1 = std::make_shared<PqpPipeline>("p_1", ExportOperatorProxy::Dummy(pipeline_plan_));
+  p_2 = std::make_shared<PqpPipeline>("p_2", pipeline_plan_);
+  p_3 = std::make_shared<PqpPipeline>("p_3", pipeline_plan_);
+  p_2->SetAsPredecessorOf(p_3);
+  p_1->SetAsPredecessorOf(p_3);
+  const size_t hash_b = p_3->ResultCacheHash();
+
+  EXPECT_EQ(hash_a, hash_b);
+}
+
 }  // namespace skyrise
