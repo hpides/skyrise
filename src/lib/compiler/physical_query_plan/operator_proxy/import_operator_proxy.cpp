@@ -24,9 +24,9 @@ const std::string kJsonKeyObjectEtag = "etag";
 
 namespace skyrise {
 
-ImportOperatorProxy::ImportOperatorProxy(const std::vector<ObjectReference>& object_references,
-                                         const std::vector<ColumnId>& column_ids)
-    : AbstractOperatorProxy(OperatorType::kImport), column_ids_(column_ids), object_references_(object_references) {
+ImportOperatorProxy::ImportOperatorProxy(std::vector<ObjectReference> object_references,
+                                         std::vector<ColumnId> column_ids)
+    : AbstractOperatorProxy(OperatorType::kImport), column_ids_(std::move(column_ids)), object_references_(std::move(object_references)) {
   Assert(!column_ids_.empty(), "Import must involve at least one ColumnId.");
 }
 

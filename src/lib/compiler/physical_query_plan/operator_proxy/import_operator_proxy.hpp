@@ -13,7 +13,7 @@ namespace skyrise {
 class ImportOperatorProxy : public EnableMakeForPlanNode<ImportOperatorProxy, AbstractOperatorProxy>,
                             public AbstractOperatorProxy {
  public:
-  ImportOperatorProxy(const std::vector<ObjectReference>& object_references, const std::vector<ColumnId>& column_ids);
+  ImportOperatorProxy(std::vector<ObjectReference> object_references, std::vector<ColumnId> column_ids);
 
   const std::string& Name() const override;
   std::string Description(const DescriptionMode mode) const override;

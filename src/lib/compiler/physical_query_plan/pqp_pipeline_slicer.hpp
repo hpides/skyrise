@@ -12,7 +12,7 @@ namespace skyrise {
 
 class PqpPipelineSlicer : public Noncopyable {
  public:
-  PqpPipelineSlicer(std::shared_ptr<AbstractOperatorProxy> pqp, std::shared_ptr<QueryContext> query_context);
+  PqpPipelineSlicer(std::shared_ptr<AbstractOperatorProxy> pqp, std::shared_ptr<CompilationContext> query_context);
 
   const std::vector<std::shared_ptr<PqpPipeline>>& GetPipelines();
 
@@ -29,7 +29,7 @@ class PqpPipelineSlicer : public Noncopyable {
 
  private:
   std::shared_ptr<AbstractOperatorProxy> pqp_;
-  std::shared_ptr<QueryContext> query_context_;
+  std::shared_ptr<CompilationContext> compilation_context_;
   std::vector<std::shared_ptr<PqpPipeline>> pipelines_;
 };
 

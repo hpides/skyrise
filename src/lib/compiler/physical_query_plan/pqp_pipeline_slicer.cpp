@@ -12,8 +12,8 @@
 namespace skyrise {
 
 PqpPipelineSlicer::PqpPipelineSlicer(std::shared_ptr<AbstractOperatorProxy> pqp,
-                                     std::shared_ptr<QueryContext> query_context)
-    : pqp_(std::move(pqp)), query_context_(std::move(query_context)) {
+                                     std::shared_ptr<CompilationContext> query_context)
+    : pqp_(std::move(pqp)), compilation_context_(std::move(query_context)) {
   Assert(pqp_.use_count() == 1, "PqpPipelineSlicer should have exclusive ownership of the given PQP.");
 
   // Validate input PQP
@@ -30,19 +30,19 @@ const std::vector<std::shared_ptr<PqpPipeline>>& PqpPipelineSlicer::GetPipelines
 
   while (pqp_) {
     pqp_leaves = PqpFindLeaves(pqp_);
-    std::vector<std::shared_ptr<ImportOperatorProxy>> consumed_imports;  // TODO(julianmenzler): Rename?
+    std::vector<std::shared_ptr<ImportOperatorProxy>> consumed_import_proxies;
     // For each PQP leaf, cut off next pipeline, if possible.
     for (const auto& pqp_leaf : pqp_leaves) {
       Assert(pqp_leaf->Type() == OperatorType::kImport, "Leaf operator proxy should have OperatorType::kImport.");
       Assert(pqp_leaf->InputNodeCount() == 0, "Leaf operator proxy should have no inputs.");
       const auto import_proxy = std::static_pointer_cast<ImportOperatorProxy>(pqp_leaf);
 
-      if (std::find(consumed_imports.cbegin(), consumed_imports.cend(), import_proxy) != consumed_imports.end()) {
+      if (std::find(consumed_import_proxies.cbegin(), consumed_import_proxies.cend(), import_proxy) != consumed_import_proxies.end()) {
         // Import is already part of another pipeline.
         continue;
       }
 
-      std::shared_ptr<PqpPipeline> pipeline = CutOffNextPipeline(import_proxy, consumed_imports);
+      std::shared_ptr<PqpPipeline> pipeline = CutOffNextPipeline(import_proxy, consumed_import_proxies);
       if (pipeline) {
         pipelines_.emplace_back(std::move(pipeline));
       }
@@ -54,12 +54,15 @@ const std::vector<std::shared_ptr<PqpPipeline>>& PqpPipelineSlicer::GetPipelines
 
 std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutOffNextPipeline(
     const std::shared_ptr<ImportOperatorProxy>& primary_import_proxy,
-    std::vector<std::shared_ptr<ImportOperatorProxy>>& consumed_imports) {
-  consumed_imports.push_back(primary_import_proxy);
-  std::vector<std::shared_ptr<ImportOperatorProxy>> secondary_import_proxies;
+    std::vector<std::shared_ptr<ImportOperatorProxy>>& consumed_import_proxies) {
+  std::vector<std::shared_ptr<ImportOperatorProxy>> current_pipeline_import_proxies;
+  current_pipeline_import_proxies.push_back(primary_import_proxy);
+  consumed_import_proxies.push_back(primary_import_proxy);
 
   /**
    * (1) CHECK FOR PIPELINE PREDECESSOR
+   *      - The provided @param primary_import_proxy might be the result of a previous pipeline. In this case, track the
+   *        according pipeline dependency.
    */
   std::vector<std::shared_ptr<PqpPipeline>> current_pipeline_predecessors;
   {
@@ -71,10 +74,10 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutOffNextPipeline(
 
   /**
    * (2) DETERMINE PIPELINE PLAN BORDERS
-   *      - The next pipeline plan starts with @param primary_import_proxy.
+   *      - The pipeline plan starts with @param primary_import_proxy.
    *      - Determine the end by going up the PQP. Find an operator proxy that either completes or terminates the 
    *        pipeline plan.
-   *      - Track pipeline predecessors, in case of ImportOperatorProxy inputs.
+   *      - Track pipeline predecessors, in case there are secondary import proxies in the pipeline plan.
    */
   std::shared_ptr<AbstractOperatorProxy> current_pipeline_plan = primary_import_proxy;
   VisitPqpUpwards(primary_import_proxy, [&](const auto& operator_proxy) {
@@ -100,46 +103,84 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutOffNextPipeline(
           return PqpUpwardVisitation::kDoNotVisitOutputs;
         }
 
-        // Secondary imports from join or union operations
+        // Add input as a secondary import proxy of the current pipeline plan
         const auto secondary_import_proxy = std::static_pointer_cast<ImportOperatorProxy>(input_proxy);
-        consumed_imports.push_back(secondary_import_proxy);
-        // The import can be the result of another pipeline.
+        current_pipeline_import_proxies.push_back(secondary_import_proxy);
+        consumed_import_proxies.push_back(secondary_import_proxy);
+        // Check if the secondary import proxy results from another pipeline, and add a pipeline dependency accordingly.
         auto pipeline_predecessor = FindPipelinePredecessor(secondary_import_proxy);
         if (pipeline_predecessor) {
           current_pipeline_predecessors.emplace_back(pipeline_predecessor);
         }
-        secondary_import_proxies.emplace_back(secondary_import_proxy);
       }
     }
 
     return PqpUpwardVisitation::kVisitOutputs;
   });
 
+  // Abort, if no pipeline plan can be created from @param primary_import_proxy as of now.
   if (!current_pipeline_plan) {
-    // Early Out:
-    //  It was not possible to complete the pipeline plan. Therefore, there is no result to return.
     return nullptr;
   }
 
-  // Determine pipeline plan type
-  bool last_pipeline = false;
-  if (current_pipeline_plan->OutputNodeCount() == 0) {
-    Assert(current_pipeline_plan == pqp_, "Expected root of PQP.");
-    Assert(current_pipeline_plan->Type() == OperatorType::kExport, "PQP root should have OperatorType::kExport.");
-    last_pipeline = true;
-  }
+  /**
+   * (3) CUT OFF PIPELINE PLAN AND GENERATE FRAGMENT DEFINITIONS
+   */
+   const size_t current_pipeline_id = compilation_context_->NextPipelineId();
+   std::vector<PipelineFragmentDefinition> current_pipeline_fragment_definitions;
+
+   // Check if we have reached the PQP's final pipeline plan.
+   if (current_pipeline_plan == pqp_) {
+     Assert(pqp_->OutputNodeCount() == 0, "PQP root should not have any outputs.");
+     pqp_ = nullptr;
+     // Generate final pipeline's fragment definitions
+     // TODO
+   } else {
+     // Apply the specified Exchange strategy
+     Assert(current_pipeline_plan->Type() == OperatorType::kExchange, "Expected ExchangeOperatorProxy.");
+     const auto exchange_proxy = std::static_pointer_cast<ExchangeOperatorProxy>(current_pipeline_plan);
+     const auto exchange_result = exchange_proxy->Strategy()->ComputeExchangeResult(
+         current_pipeline_id, compilation_context_, current_pipeline_import_proxies);
+     current_pipeline_fragment_definitions = std::move(exchange_result.pipeline_fragment_definitions);
+
+     // Adjust the pipeline plan to incorporate partitioning, if necessary.
+     if (exchange_result.pipeline_partition_proxy) {
+       InsertPlanNodeBelow<AbstractOperatorProxy>(current_pipeline_plan, PlanInputSide::kLeft, 
+                                                  *exchange_result.pipeline_partition_proxy);
+     }
+
+     // Create import proxy from exchange results
+     auto import_column_ids = std::vector<ColumnId>(current_pipeline_plan->OutputColumnsCount());
+     std::iota(import_column_ids.begin(), import_column_ids.end(), ColumnId{0});
+     const auto import_proxy = ImportOperatorProxy::Make(std::move(exchange_result.target_objects), import_column_ids);
+     // TODO Consider: import_proxy->PrefixIdentity(compilation_context_->QueryIdentity());
+     import_proxy->SetOutputObjectsCount(exchange_result.target_worker_count);
+     import_proxy->SetOutputPartitionsCount(exchange_result.target_partition_count);
+     // TODO: Set current pipeline's identity as a comment, so that this pipeline can be resolved as a predecessor later.
+     import_proxy->SetComment(current_pipeline_identity);
+
+     // Cut off the pipeline plan by substituting the exchange proxy with import and export proxies.
+     InsertPlanNodeAbove<AbstractOperatorProxy>(current_pipeline_plan, import_proxy);
+     import_proxy->SetLeftInput(nullptr);
+     Assert(current_pipeline_plan->OutputNodeCount() == 0,
+            "Pipeline plan should no longer have outputs since it was cut off.");
+     auto export_proxy = ExportOperatorProxy::Dummy();
+     export_proxy->PrefixIdentity(compilation_context_->QueryIdentity());
+     ReplacePlanNode<AbstractOperatorProxy>(current_pipeline_plan, export_proxy);
+     current_pipeline_plan = export_proxy;
+   }
 
   /**
    * (3) GENERATE PIPELINE IMPORT DEFINITIONS
-   */
+   *
 
   // Level of intra-operator parallelism
-  size_t worker_count = std::min(current_pipeline_plan->InputObjectsCount(), query_context_->MaxWorkerCount());
+  size_t worker_count = std::min(current_pipeline_plan->InputObjectsCount(), compilation_context_->MaxWorkerCount());
   std::vector<std::vector<PipelineFragmentDefinition>> current_pipeline_plan_definitions =
       GetPipelineFragmentDefinitions(primary_import_proxy, worker_count);
 
   // Secondary imports from joins or union operations
-  for (const auto& secondary_import_proxy : secondary_import_proxies) {
+  for (const auto& secondary_import_proxy : current_pipeline_import_proxies) {
     // ToDo(anyone): Currently, Skyrise has no join or union implementation. Therefore, we have no rule for
     //               mapping input objects to one another.
     //               For now, we use an implementation that can be used for broadcast joins:
@@ -153,21 +194,21 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutOffNextPipeline(
 
   /**
    * (4) GENERATE PIPELINE EXPORT KEYS
-   */
-  std::string current_pipeline_identity = query_context_->GeneratePipelineIdentity();
+   *
+  std::string current_pipeline_identity = compilation_context_->GeneratePipelineIdentity();
 
   auto current_pipeline_export_format = ExportFormat::kOrc;
   std::stringstream pipeline_export_key_prefix_stream;
   std::string pipeline_export_key_suffix;
-  if (last_pipeline) {
+  if (is_final_pipeline) {
     // Final result export
-    pipeline_export_key_prefix_stream << query_context_->FinalResultsKeyPrefix();
+    pipeline_export_key_prefix_stream << compilation_context_->FinalResultsKeyPrefix();
     pipeline_export_key_prefix_stream << current_pipeline_identity;
-    pipeline_export_key_suffix = query_context_->TargetFileExtension();
-    current_pipeline_export_format = query_context_->TargetFormat();
+    pipeline_export_key_suffix = compilation_context_->TargetFileExtension();
+    current_pipeline_export_format = compilation_context_->TargetFormat();
   } else {
     // Intermediate result export
-    pipeline_export_key_prefix_stream << query_context_->IntermediateResultsKeyPrefix();
+    pipeline_export_key_prefix_stream << compilation_context_->IntermediateResultsKeyPrefix();
     pipeline_export_key_prefix_stream << current_pipeline_identity;
     pipeline_export_key_suffix = ".orc";
   }
@@ -176,57 +217,23 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutOffNextPipeline(
   std::vector<std::string> current_pipeline_export_keys =
       GetPipelineExportKeys(pipeline_export_key_prefix_stream.str(), pipeline_export_key_suffix,
                             current_pipeline_plan_definitions.size());
-
-  /**
-   * (5) CUT OFF PIPELINE PLAN
-   */
-  if (!last_pipeline) {
-    Assert(current_pipeline_plan->Type() == OperatorType::kExchange,
-           "Current pipeline plan root should have OperatorType::kExchange");
-
-    // Create ImportOperatorProxy above ExchangeOperatorProxy
-    auto next_pipeline_import_column_ids = std::vector<ColumnId>(current_pipeline_plan->OutputColumnsCount());
-    std::iota(next_pipeline_import_column_ids.begin(), next_pipeline_import_column_ids.end(), ColumnId{0});
-    auto next_pipeline_import_proxy = ImportOperatorProxy::Make(
-        query_context_->TargetBucketName(), current_pipeline_export_keys, next_pipeline_import_column_ids);
-    next_pipeline_import_proxy->PrefixIdentity(query_context_->QueryIdentity());
-    // Set current pipeline's identity as a comment, so that it can be resolved as a predecessor by succeeding
-    // pipelines.
-    next_pipeline_import_proxy->SetComment(current_pipeline_identity);
-    // Pass the output object count from the ExchangeOperatorProxy to the next pipeline
-    next_pipeline_import_proxy->SetOutputObjectsCount(current_pipeline_plan->OutputObjectsCount());
-    PlanInsertNodeAbove<AbstractOperatorProxy>(current_pipeline_plan, next_pipeline_import_proxy);
-
-    // Cut off current_pipeline_plan from PQP
-    next_pipeline_import_proxy->SetLeftInput(nullptr);
-
-    // Replace ExchangeOperatorProxy with ExportOperatorProxy placeholder
-    auto export_proxy = ExportOperatorProxy::Dummy();
-    export_proxy->PrefixIdentity(query_context_->QueryIdentity());
-    ReplacePlanNode<AbstractOperatorProxy>(current_pipeline_plan, export_proxy);
-    current_pipeline_plan = export_proxy;
-    Assert(current_pipeline_plan->OutputNodeCount() == 0, "Pipeline plan should be cut off.");
-  } else {
-    // current_pipeline_plan represents the last pipeline of the PQP.
-    pqp_ = nullptr;
-  }
+  */
 
   /**
    * (6) CREATE PIPELINE
    */
-  auto current_pipeline = std::make_shared<PqpPipeline>(current_pipeline_plan);
-  current_pipeline->SetIdentity(current_pipeline_identity);
+  auto current_pipeline = std::make_shared<PqpPipeline>(current_pipeline_identity, current_pipeline_plan);
   for (const auto& pipeline : current_pipeline_predecessors) {
     pipeline->SetAsPredecessorOf(current_pipeline);
   }
   // Define fragments
   for (size_t i = 0; i < current_pipeline_plan_definitions.size(); ++i) {
     auto fragment_definition =
-        PipelineFragmentDefinition(current_pipeline_plan_definitions.at(i), query_context_->TargetBucketName(),
+        PipelineFragmentDefinition(current_pipeline_plan_definitions.at(i), compilation_context_->TargetBucketName(),
                                    current_pipeline_export_keys.at(i), current_pipeline_export_format);
     current_pipeline->DefineFragment(std::move(fragment_definition));
   }
-  Assert(current_pipeline->FragmentCount() < query_context_->MaxWorkerCount(), "Pipeline fragment count is too high.");
+  Assert(current_pipeline->FragmentCount() < compilation_context_->MaxWorkerCount(), "Pipeline fragment count is too high.");
 
   return current_pipeline;
 }
