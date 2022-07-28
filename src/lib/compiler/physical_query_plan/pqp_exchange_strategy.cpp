@@ -1,5 +1,7 @@
 #include "pqp_exchange_strategy.hpp"
 
+#include <boost/container_hash/hash.hpp>
+
 namespace {
 using namespace skyrise;  // NOLINT(google-build-using-namespace)
 
@@ -55,33 +57,38 @@ using namespace skyrise;  // NOLINT(google-build-using-namespace)
 
 namespace skyrise {
 
-AbstractExchangeStrategy::AbstractExchangeStrategy(const ExchangeStrategyType type, const size_t output_objects_count)
+AbstractExchangeStrategy::AbstractExchangeStrategy(const ExchangeStrategyType type)
     : type_(type) {}
 
-const ExchangeStrategyType AbstractExchangeStrategy::GetExchangeStrategyType() const { return type_; }
+const ExchangeStrategyType AbstractExchangeStrategy::Type() const { return type_; }
 
-MergeExchangeStrategy::MergeExchangeStrategy(size_t output_objects_count)
-    : AbstractExchangeStrategy(output_objects_count == 1 ? ExchangeStrategyType::kFullMerge
-                                                         : ExchangeStrategyType::kPartialMerge),
-      output_objects_count_(output_objects_count) {
-  Assert(output_objects_count_ > 0, "Zero is an illegal count of output objects.");
+size_t AbstractExchangeStrategy::Hash() {
+  size_t hash = boost::hash_value(type_);
+  boost::hash_combine(hash, ShallowHash());
+  return hash;
 }
 
-size_t MergeExchangeStrategy::OutputObjectsCount(size_t /* input_objects_count */) const {
-  return output_objects_count_;
+CombineObjectsExchangeStrategy::CombineObjectsExchangeStrategy(size_t target_object_count)
+    : AbstractExchangeStrategy(ExchangeStrategyType::kCombineObjects),
+      target_object_count_(target_object_count) {
+  Assert(target_object_count_ > 0, "Cannot combine to zero objects.");
 }
 
-size_t MergeExchangeStrategy::OutputPartitionsCount() const { return 1; }
+size_t CombineObjectsExchangeStrategy::TargetObjectCount(size_t /* input_object_count */) const {
+  return target_object_count_;
+}
 
-ExchangeResult MergeExchangeStrategy::ComputeExchangeResult(
-    const size_t pipeline_id, const std::shared_ptr<CompilationContext>& compilation_context,
+size_t CombineObjectsExchangeStrategy::TargetPartitionCount() const { return 1; }
+
+ExchangeResult CombineObjectsExchangeStrategy::ComputeExchangeResult(
+    const std::shared_ptr<CompilationContext>& compilation_context,
     const std::vector<std::shared_ptr<ImportOperatorProxy>>& import_proxies) {
 
   /**
    * TODOs
-   * 1) Use Interface in ExchangeProxy
+   * 1) Use Interface in ExchangeProxy -> Done.
    * 2) Use Interface in Pipeline Slicer
-   * 2) Build ExchangeStrategy tests
+   * 2) Build ExchangeStrategyType tests
    * 3) Implement this function
    */
 

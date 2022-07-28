@@ -4,6 +4,7 @@
 #include <string>
 
 #include "abstract_operator_proxy.hpp"
+#include "compiler/physical_query_plan/pqp_exchange_strategy.hpp"
 #include "operator/partitioning_function.hpp"
 #include "types.hpp"
 
@@ -12,7 +13,7 @@ namespace skyrise {
 class ExchangeOperatorProxy : public EnableMakeForPlanNode<ExchangeOperatorProxy, AbstractOperatorProxy>,
                               public AbstractOperatorProxy {
  public:
-  ExchangeOperatorProxy();
+  ExchangeOperatorProxy(AbstractExchangeStrategy strategy);
 
   const std::string& Name() const override;
   std::string Description(const DescriptionMode mode) const override;
@@ -20,13 +21,8 @@ class ExchangeOperatorProxy : public EnableMakeForPlanNode<ExchangeOperatorProxy
   /**
    * Accessors
    */
-  ExchangeMode GetExchangeMode() const;
-  std::shared_ptr<const AbstractPartitioningFunction> PartitioningFunction() const;
-  void SetToFullMerge();
-  void SetToPartialMerge(size_t output_objects_count);
-  void SetToFullyMeshedExchange(std::shared_ptr<const AbstractPartitioningFunction> partitioning_function);
-  void SetToFullyMeshedExchange(std::shared_ptr<const AbstractPartitioningFunction> partitioning_function,
-                                size_t output_objects_count);
+  const AbstractExchangeStrategy& Strategy() const;
+  void SetStrategy(AbstractExchangeStrategy strategy);
 
   /**
    * Optimization-relevant attributes
@@ -46,9 +42,7 @@ class ExchangeOperatorProxy : public EnableMakeForPlanNode<ExchangeOperatorProxy
   std::shared_ptr<AbstractOperator> CreateOperatorInstanceRecursively() override;
 
  private:
-  ExchangeMode mode_;
-  size_t output_objects_count_;
-  std::shared_ptr<const AbstractPartitioningFunction> partitioning_function_;
+  ExchangeStrategy strategy_;
 };
 
 }  // namespace skyrise

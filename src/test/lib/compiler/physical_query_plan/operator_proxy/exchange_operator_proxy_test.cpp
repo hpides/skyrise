@@ -22,7 +22,7 @@ const std::vector<ColumnId> kColumnIds = {ColumnId{0}, ColumnId{1}, ColumnId{3}}
 TEST(ExchangeOperatorProxyTest, BaseProperties) {
   const auto exchange_proxy = ExchangeOperatorProxy::Make();
   EXPECT_EQ(exchange_proxy->Type(), OperatorType::kExchange);
-  EXPECT_EQ(exchange_proxy->GetExchangeMode(), ExchangeMode::kFullMerge);
+  EXPECT_EQ(exchange_proxy->Type(), ExchangeStrategyType::kFullMerge);
   EXPECT_FALSE(exchange_proxy->IsPipelineBreaker());
 }
 
@@ -39,19 +39,19 @@ TEST(ExchangeOperatorProxyTest, DescriptionPartialMerge) {
   EXPECT_EQ(exchange_proxy->Description(DescriptionMode::kMultiLine), "[DataExchange]\nPartial Merge\n50 objects");
 }
 
-TEST(ExchangeOperatorProxyTest, SetExchangeMode) {
+TEST(ExchangeOperatorProxyTest, SetExchangeStrategyType) {
   const auto exchange_proxy = ExchangeOperatorProxy::Make();
   // Partial Merge
   exchange_proxy->SetToPartialMerge(100);
-  EXPECT_EQ(exchange_proxy->GetExchangeMode(), ExchangeMode::kPartialMerge);
+  EXPECT_EQ(exchange_proxy->Type(), ExchangeStrategyType::kCombineObjects);
   // Full Merge
   exchange_proxy->SetToFullMerge();
-  EXPECT_EQ(exchange_proxy->GetExchangeMode(), ExchangeMode::kFullMerge);
+  EXPECT_EQ(exchange_proxy->Type(), ExchangeStrategyType::kFullMerge);
   // Fully Meshed Exchange
   const std::shared_ptr<const AbstractPartitioningFunction> partitioning_function =
       std::make_shared<const HashPartitioningFunction>(std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}, 50);
   exchange_proxy->SetToFullyMeshedExchange(partitioning_function);
-  EXPECT_EQ(exchange_proxy->GetExchangeMode(), ExchangeMode::kFullyMeshedExchange);
+  EXPECT_EQ(exchange_proxy->Type(), ExchangeStrategyType::kShuffle);
 }
 
 TEST(ExchangeOperatorProxyTest, OutputObjectsCount) {
@@ -112,7 +112,7 @@ TEST(ExchangeOperatorProxyTest, DeepCopy) {
   // clang-format on
   exchange_proxy->SetToPartialMerge(50);
   const auto exchange_proxy_copy = std::dynamic_pointer_cast<ExchangeOperatorProxy>(exchange_proxy->DeepCopy());
-  EXPECT_EQ(exchange_proxy_copy->GetExchangeMode(), exchange_proxy->GetExchangeMode());
+  EXPECT_EQ(exchange_proxy_copy->Type(), exchange_proxy->Type());
   EXPECT_EQ(exchange_proxy_copy->OutputObjectsCount(), 50);
   EXPECT_EQ(exchange_proxy_copy->InputNodeCount(), 1);
   // Without input
