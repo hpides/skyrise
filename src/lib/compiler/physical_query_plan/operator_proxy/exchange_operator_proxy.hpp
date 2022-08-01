@@ -42,7 +42,7 @@ class ExchangeOperatorProxy : public EnableMakeForPlanNode<ExchangeOperatorProxy
   std::shared_ptr<AbstractOperator> CreateOperatorInstanceRecursively() override;
 
  private:
-  ExchangeStrategy strategy_;
+  ExchangeStrategyType strategy_;
 };
 
 }  // namespace skyrise

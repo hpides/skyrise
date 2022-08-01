@@ -60,7 +60,7 @@ namespace skyrise {
 AbstractExchangeStrategy::AbstractExchangeStrategy(const ExchangeStrategyType type)
     : type_(type) {}
 
-const ExchangeStrategyType AbstractExchangeStrategy::Type() const { return type_; }
+ExchangeStrategyType AbstractExchangeStrategy::Type() const { return type_; }
 
 size_t AbstractExchangeStrategy::Hash() {
   size_t hash = boost::hash_value(type_);

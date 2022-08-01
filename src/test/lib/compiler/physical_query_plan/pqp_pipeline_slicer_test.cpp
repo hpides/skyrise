@@ -23,8 +23,8 @@ class PqpPipelineSlicerTest : public ::testing::Test {
   // void SetUp() override { }
 
   //  std::shared_ptr<ExportOperatorProxy> CreateQ1Pqp(const std::vector<std::string>& import_keys) {
-  //    std::vector<ColumnID> column_ids = { ColumnID{4}, ColumnID{5}, ColumnID{6}, ColumnID{7}, ColumnID{8},
-  //    ColumnID{9}, ColumnID{10} };
+  //    std::vector<ColumnId> column_ids = { ColumnId{4}, ColumnId{5}, ColumnId{6}, ColumnId{7}, ColumnId{8},
+  //    ColumnId{9}, ColumnId{10} };
   //      // clang-format off
   //      const auto q1_pqp =
   //      ExportOperatorProxy::Dummy(

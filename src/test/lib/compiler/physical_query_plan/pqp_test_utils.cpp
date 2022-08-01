@@ -12,7 +12,7 @@ namespace {
  * @param expression
  * @return
  */
-std::shared_ptr<PqpColumnExpression> PqpColumnFrom(ColumnID column_id, std::shared_ptr<AbstractExpression> expression) {
+std::shared_ptr<PqpColumnExpression> PqpColumnFrom(ColumnId column_id, std::shared_ptr<AbstractExpression> expression) {
   // We assume nullable=false because there is no easy way to derive this information from the input expression.
   return PqpColumn_(column_id, expression->GetDataType(), false, expression->AsColumnName());
 }
@@ -20,10 +20,10 @@ std::shared_ptr<PqpColumnExpression> PqpColumnFrom(ColumnID column_id, std::shar
 /**
  * @return the according TpchTable, based on the prefix of @param tpch_column_name.
  */
-std::unordered_map<std::string, ColumnID> ColumnIdsByColumnNames(const TableColumnDefinitions column_definitions) {
-  std::unordered_map<std::string, ColumnID> column_id_by_column_name;
+std::unordered_map<std::string, ColumnId> ColumnIdsByColumnNames(const TableColumnDefinitions column_definitions) {
+  std::unordered_map<std::string, ColumnId> column_id_by_column_name;
   column_id_by_column_name.reserve(column_definitions.size());
-  for (ColumnID i = 0; i < column_definitions.size(); ++i) {
+  for (ColumnId i = 0; i < column_definitions.size(); ++i) {
     column_id_by_column_name.emplace(column_definitions[i].name, i);
   }
   return column_id_by_column_name;
@@ -69,17 +69,17 @@ std::shared_ptr<ImportOperatorProxy> CreateMockObjectReferences(const std::strin
 std::shared_ptr<PqpColumnExpression> TpchPqpColumn(const std::string tpch_column_name) {
   const TpchTable tpch_table = ResolveTpchTable(column_name);
 
-  // Resolve ColumnID
-  ColumnID column_id = kInvalidColumnID;
+  // Resolve ColumnId
+  ColumnId column_id = kInvalidColumnId;
   const TableColumnDefinitions column_definitions = TpchColumnDefinitionsByTable(tpch_table);
-  for (ColumnID i = 0; i < column_definitions.size(); ++i) {
+  for (ColumnId i = 0; i < column_definitions.size(); ++i) {
     if (column_definitions[i].name != tpch_column_name) {
       continue;
     }
     column_id = i;
     break;
   }
-  if (column_id == kInvalidColumnID) {
+  if (column_id == kInvalidColumnId) {
     Fail("Could not resolve Tpch PQP column definition.");
   }
 
@@ -96,13 +96,13 @@ std::shared_ptr<ImportOperatorProxy> TpchImportProxy(const std::vector<std::stri
   const TableColumnDefinitions column_definitions = TpchColumnDefinitionsByTable(tpch_table);
   const auto column_id_by_column_name = ColumnIdsByColumnNames(column_definitions);
 
-  // Resolve import ColumnIDs.
-  std::vector<ColumnID> import_column_ids;
+  // Resolve import ColumnIds.
+  std::vector<ColumnId> import_column_ids;
   for (const std::string& column_name : column_names) {
     const auto column_id_by_column_name_iter = column_id_by_column_name.find(column_name);
     Assert(column_id_by_column_name_iter != column_id_by_column_name.cend(),
-           "Could not resolve ColumnID for column '" + column_name + "'");
-    ColumnID import_column_id = *column_id_by_column_name_iter;
+           "Could not resolve ColumnId for column '" + column_name + "'");
+    ColumnId import_column_id = *column_id_by_column_name_iter;
     Assert(import_column_ids.empty() || import_column_ids.back() < import_column_id,
            "Expected TPC-H table column name order as defined by tpch_data_generator.cpp");
     import_column_ids.push_back(column_id);
@@ -129,13 +129,13 @@ std::shared_ptr<ExportOperatorProxy> CreateTpchQ1Pqp(size_t lineitem_mock_object
     const auto l_extendedprice_l_discount_l_tax = Mul_(l_extendedprice_l_discount, Add_(1, TpchPqpColumn("l_tax")));  // <=> (l_extendedprice * (1 - l_discount)) * (1 + l_tax),
 
     const auto q1_pre_aggregation_subplan =
-    AggregateOperatorProxy::Make(std::vector<ColumnId>{ColumnID{5}, ColumnID{6}}, // Group By l_returnflag, l_linestatus
-                                 std::vector<std::shared_ptr<AbstractExpression>>{Sum_(PqpColumnFrom(ColumnID{0}, l_quantity)),
-                                                                                  Sum_(PqpColumnFrom(ColumnID{1}, l_extendedprice)),
-                                                                                  Sum_(PqpColumnFrom(ColumnID{2}, l_extendedprice_l_discount)),
-                                                                                  Sum_(PqpColumnFrom(ColumnID{3}, l_extendedprice_l_discount_l_tax)),
+    AggregateOperatorProxy::Make(std::vector<ColumnId>{ColumnId{5}, ColumnId{6}}, // Group By l_returnflag, l_linestatus
+                                 std::vector<std::shared_ptr<AbstractExpression>>{Sum_(PqpColumnFrom(ColumnId{0}, l_quantity)),
+                                                                                  Sum_(PqpColumnFrom(ColumnId{1}, l_extendedprice)),
+                                                                                  Sum_(PqpColumnFrom(ColumnId{2}, l_extendedprice_l_discount)),
+                                                                                  Sum_(PqpColumnFrom(ColumnId{3}, l_extendedprice_l_discount_l_tax)),
                                                                                   CountStarPqp_(),
-                                                                                  Sum_(PqpColumnFrom(ColumnID{4}, l_discount))},
+                                                                                  Sum_(PqpColumnFrom(ColumnId{4}, l_discount))},
       ProjectionOperatorProxy::Make(ExpressionVector_(l_quantity, l_extendedprice, l_extendedprice_l_discount, l_extendedprice_l_discount_l_tax, l_discount, l_returnflag, l_linestatus),
         FilterOperatorProxy::Make(LessThan_(l_shipdate, "1998-09-02"),
           TpchImportProxy(std::vector<std::string>{"l_quantity", "l_extendedprice", "l_discount", "l_tax", "l_returnflag", "l_linestatus", "l_shipdate"},
@@ -143,47 +143,51 @@ std::shared_ptr<ExportOperatorProxy> CreateTpchQ1Pqp(size_t lineitem_mock_object
 
     // (2) Define combiner stages for TPC-H Q1
     const auto get_q1_combine_aggregates_proxy = [&]() {
-      return AggregateOperatorProxy::Make(std::vector<ColumnId>{ColumnID{0}, ColumnID{1}}, // Combiner Stage: Group By l_returnflag, l_linestatus & use SUM(*) instead of COUNT(*)
-                                          std::vector<std::shared_ptr<AbstractExpression>>{Sum_(PqpColumnFrom(ColumnID{2}, Sum_(l_quantity))),
-                                                                                           Sum_(PqpColumnFrom(ColumnID{3}, Sum_(l_extendedprice))),
-                                                                                           Sum_(PqpColumnFrom(ColumnID{4}, Sum_(l_extendedprice_l_discount))),
-                                                                                           Sum_(PqpColumnFrom(ColumnID{5}, Sum_(l_extendedprice_l_discount_l_tax))),
-                                                                                           Sum_(PqpColumnFrom(ColumnID{6}, Sum_(CountStarPqp_()))),
-                                                                                           Sum_(PqpColumnFrom(ColumnID{7}, Sum_(l_discount)))});
+      return AggregateOperatorProxy::Make(std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}, // Combiner Stage: Group By l_returnflag, l_linestatus & use SUM(*) instead of COUNT(*)
+                                          std::vector<std::shared_ptr<AbstractExpression>>{Sum_(PqpColumnFrom(ColumnId{2}, Sum_(l_quantity))),
+                                                                                           Sum_(PqpColumnFrom(ColumnId{3}, Sum_(l_extendedprice))),
+                                                                                           Sum_(PqpColumnFrom(ColumnId{4}, Sum_(l_extendedprice_l_discount))),
+                                                                                           Sum_(PqpColumnFrom(ColumnId{5}, Sum_(l_extendedprice_l_discount_l_tax))),
+                                                                                           Sum_(PqpColumnFrom(ColumnId{6}, Sum_(CountStarPqp_()))),
+                                                                                           Sum_(PqpColumnFrom(ColumnId{7}, Sum_(l_discount)))});
     };
     // clang-format off
 
     const auto current_plan = q1_pre_aggregation_subplan;
     for (size_t i = 0; i < combiner_stages_worker_count.size(); ++i) {
       Assert(combiner_stages_worker_count[i] > 1, "The worker count for combiner stages must be greater than one.");
-      const auto exchange_proxy = ExchangeOperatorProxy::Make(current_plan);
-      exchange_proxy->SetToPartialMerge(combiner_stages_worker_count[i]);
+      // clang-format off
+      const auto exchange_proxy =
+      ExchangeOperatorProxy::Make(CombineObjectsExchangeStrategy(combiner_stages_worker_count[i]),
+        current_plan);
       current_plan = get_q1_combine_aggregates_proxy();
       current_plan->SetLeftInput(exchange_proxy);
     }
 
     // (3) Define final stage for TPC-H Q1
-    const auto exchange_proxy = ExchangeOperatorProxy::Make(current_plan);
-    exchange_proxy->SetToFullMerge();
+    const auto exchange_proxy =
+    ExchangeOperatorProxy::Make(CombineObjectsExchangeStrategy(1),
+      current_plan);
+    // clang-format on
     current_plan = get_q1_combine_aggregates_proxy();
     current_plan->SetLeftInput(exchange_proxy);
 
-    const auto sum_l_quantity = PqpColumnFrom(ColumnID{2}, Sum_(l_quantity));
-    const auto sum_l_extended_price = PqpColumnFrom(ColumnID{3}, Sum_(l_extendedprice));
-    const auto sum_count_star = PqpColumnFrom(ColumnID{6}, Sum_(CountStarPqp_()));
-    const auto sum_l_discount = PqpColumnFrom(ColumnID{7}, Sum_(l_discount));
+    const auto sum_l_quantity = PqpColumnFrom(ColumnId{2}, Sum_(l_quantity));
+    const auto sum_l_extended_price = PqpColumnFrom(ColumnId{3}, Sum_(l_extendedprice));
+    const auto sum_count_star = PqpColumnFrom(ColumnId{6}, Sum_(CountStarPqp_()));
+    const auto sum_l_discount = PqpColumnFrom(ColumnId{7}, Sum_(l_discount));
 
     // clang-format off
     const auto q1_pqp =
     ExportOperatorProxy::Dummy(
-      AliasOperatorProxy::Make(std::vector<ColumnID{}, std::vector<std::string>{},
+      AliasOperatorProxy::Make(std::vector<ColumnId{}, std::vector<std::string>{},
         SortOperatorProxy::Make(sort_definitions,
-          ProjectionOperatorProxy::Make(ExpressionVector_(PqpColumnFrom(ColumnID{0}, l_returnflag),
-                                                          PqpColumnFrom(ColumnID{1}, l_linestatus),
+          ProjectionOperatorProxy::Make(ExpressionVector_(PqpColumnFrom(ColumnId{0}, l_returnflag),
+                                                          PqpColumnFrom(ColumnId{1}, l_linestatus),
                                                           sum_l_quantity,
                                                           sum_l_extended_price,
-                                                          PqpColumnFrom(ColumnID{4}, Sum_(l_extendedprice_l_discount)),
-                                                          PqpColumnFrom(ColumnID{5}, Sum_(l_extendedprice_l_discount_l_tax)),
+                                                          PqpColumnFrom(ColumnId{4}, Sum_(l_extendedprice_l_discount)),
+                                                          PqpColumnFrom(ColumnId{5}, Sum_(l_extendedprice_l_discount_l_tax)),
                                                           Div_(Cast_(sum_l_quantity, DataType::kDouble), sum_count_star),         // Calculate AVG(l_quantity)
                                                           Div_(Cast_(sum_l_extended_price, DataType::kDouble), sum_count_star),   // Calculate AVG(l_extended_price)
                                                           Div_(Cast_(sum_l_discount, DataType::kDouble), sum_count_star),         // Calculate AVG(l_discount)

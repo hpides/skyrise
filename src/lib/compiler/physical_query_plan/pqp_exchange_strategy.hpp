@@ -19,7 +19,7 @@ struct ExchangeResult {
       std::vector<ObjectReference> init_target_objects,
       const size_t init_target_partition_count,
       const size_t init_target_worker_count,
-      std::optional<std::shared_ptr<PartitionOperatorProxy>> init_pipeline_partition_proxy = std::nullopt_t)
+      std::optional<std::shared_ptr<PartitionOperatorProxy>> init_pipeline_partition_proxy = std::nullopt)
       : pipeline_fragment_definitions(init_pipeline_fragment_definitions), target_objects(init_target_objects),
         target_partition_count(init_target_partition_count), target_worker_count(init_target_worker_count),
         pipeline_partition_proxy(init_pipeline_partition_proxy) {}
@@ -46,7 +46,7 @@ class AbstractExchangeStrategy {
  public:
   explicit AbstractExchangeStrategy(const ExchangeStrategyType type);
 
-  const ExchangeStrategyType Type() const;
+  ExchangeStrategyType Type() const;
 
   size_t Hash();
 
@@ -71,7 +71,7 @@ class CombineObjectsExchangeStrategy : public AbstractExchangeStrategy {
   size_t TargetPartitionCount() const override;
 
   ExchangeResult ComputeExchangeResult(
-      const std::shared_ptr<CompilationContext>& compilation_context,
+      const size_t pipeline_id, const std::shared_ptr<CompilationContext>& compilation_context,
       const std::vector<std::shared_ptr<ImportOperatorProxy>>& import_proxies) const override;
 
  protected:

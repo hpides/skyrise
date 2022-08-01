@@ -16,7 +16,7 @@ const std::string kName = "Exchange";
 namespace skyrise {
 
 ExchangeOperatorProxy::ExchangeOperatorProxy(AbstractExchangeStrategy strategy)
-    : AbstractOperatorProxy(OperatorType::kExchange), strategy_(std::move(strategy)) {}
+    : AbstractOperatorProxy(OperatorType::kExchange), strategy_(strategy) {}
 
 const std::string& ExchangeOperatorProxy::Name() const { return kName; }
 
@@ -25,8 +25,8 @@ std::string ExchangeOperatorProxy::Description(const DescriptionMode mode) const
   const char separator = mode == DescriptionMode::kSingleLine ? ' ' : '\n';
   stream << AbstractOperatorProxy::Description(mode) << separator;
   stream << strategy_.Type() << separator;
-  stream << "Target: " << strategy_.TargetObjectCount(InputObjectsCount()) << " object(s),";
-  stream << separator << strategy_.TargetPartitionCount() << " partition(s)"
+  stream << "Target: " << OutputObjectsCount() << " object(s),";
+  stream << separator << OutputPartitionsCount() << " partition(s)";
   return stream.str();
 }
 
