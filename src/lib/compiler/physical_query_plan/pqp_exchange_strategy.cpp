@@ -96,9 +96,12 @@ ExchangeResult ComputeExchangeResult(
    * 3) Implement this function
    */
 
-  std::shared_ptr<ImportOperatorProxy> next_pipeline_import_proxy;
   std::vector<PipelineFragmentDefinition> fragment_definitions;
-  return ExchangeResult(next_pipeline_import_proxy, fragment_definitions);
+  std::vector<ObjectReference> target_objects;
+  const size_t partition_count = 1;
+  const size_t target_worker_count = target_object_count_;
+
+  return ExchangeResult(fragment_definitions, target_objects, partition_count, target_worker_count);
 }
 
 size_t CombineObjectsExchangeStrategy::ShallowHash() const {

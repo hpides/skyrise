@@ -12,7 +12,7 @@ namespace skyrise {
 /**
  * @return @param count ObjectReferences for testing purposes from @param key_prefix.
  */
-std::shared_ptr<ImportOperatorProxy> CreateMockObjectReferences(const std::string& key_prefix, size_t count);
+std::vector<ObjectReference> CreateMockObjectReferences(const std::string& key_prefix, size_t count);
 
 /**
  * @return a TpchTable PqpColumnExpression for the given @param column_name.

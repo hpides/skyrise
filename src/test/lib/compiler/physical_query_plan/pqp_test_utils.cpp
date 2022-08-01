@@ -1,6 +1,8 @@
 #include "pqp_test_utils.hpp"
 
+#include "compiler/physical_query_plan/operator_proxy/alias_operator_proxy.hpp"
 #include "compiler/physical_query_plan/operator_proxy/aggregate_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/exchange_operator_proxy.hpp"
 #include "compiler/physical_query_plan/operator_proxy/filter_operator_proxy.hpp"
 #include "compiler/physical_query_plan/operator_proxy/projection_operator_proxy.hpp"
 #include "constants.hpp"
@@ -61,7 +63,7 @@ TpchTable ResolveTpchTable(const std::string& tpch_column_name) {
 
 }  // namespace
 
-std::shared_ptr<ImportOperatorProxy> CreateMockObjectReferences(const std::string& key_prefix, size_t count) {
+std::vector<ObjectReference> CreateMockObjectReferences(const std::string& key_prefix, size_t count) {
   std::vector<ObjectReference> object_references;
   object_references.reserve(count);
 
