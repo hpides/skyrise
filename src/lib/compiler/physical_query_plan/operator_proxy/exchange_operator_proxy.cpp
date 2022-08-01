@@ -49,7 +49,7 @@ size_t ExchangeOperatorProxy::OutputObjectsCount() const {
 }
 
 size_t ExchangeOperatorProxy::OutputPartitionsCount() const {
-  strategy_->TargetPartitionCount();
+  return strategy_->TargetPartitionCount();
 }
 
 Aws::Utils::Json::JsonValue ExchangeOperatorProxy::ToJson() const {
@@ -59,7 +59,7 @@ Aws::Utils::Json::JsonValue ExchangeOperatorProxy::ToJson() const {
 std::shared_ptr<AbstractOperatorProxy> ExchangeOperatorProxy::OnDeepCopy(
     const std::shared_ptr<AbstractOperatorProxy>& copied_left_input,
     const std::shared_ptr<AbstractOperatorProxy>& /*copied_right_input*/) const {
-  return ExchangeOperatorProxy::Make(strategy_, copied_left_input);
+  return ExchangeOperatorProxy::Make(strategy_->DeepCopy(), copied_left_input);
 }
 
 size_t ExchangeOperatorProxy::ShallowHash() const {
