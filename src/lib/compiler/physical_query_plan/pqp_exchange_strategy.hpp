@@ -57,7 +57,7 @@ class AbstractExchangeStrategy {
  protected:
   const ExchangeStrategyType type_;
 
-  virtual size_t ShallowHash() = 0;
+  virtual size_t ShallowHash() const = 0;
 };
 
 class CombineObjectsExchangeStrategy : public AbstractExchangeStrategy {
@@ -75,6 +75,8 @@ class CombineObjectsExchangeStrategy : public AbstractExchangeStrategy {
 
  protected:
   size_t target_object_count_;
+
+   size_t ShallowHash() const override;
 };
 
 }  // namespace skyrise

@@ -1,10 +1,10 @@
 #include "pqp_test_utils.hpp"
 
 #include "compiler/physical_query_plan/operator_proxy/aggregate_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/filter_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/projection_operator_proxy.hpp"
 #include "constants.hpp"
 #include "expression/expression_functional.hpp"
-#include "filter_operator_proxy.hpp"
-#include "projection_operator_proxy.hpp"
 #include "tpch/tpch_data_generator.hpp"
 
 namespace skyrise {

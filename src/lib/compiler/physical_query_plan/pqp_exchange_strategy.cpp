@@ -84,9 +84,9 @@ size_t CombineObjectsExchangeStrategy::TargetObjectCount(size_t /* input_object_
 
 size_t CombineObjectsExchangeStrategy::TargetPartitionCount() const { return 1; }
 
-ExchangeResult CombineObjectsExchangeStrategy::ComputeExchangeResult(
-    const std::shared_ptr<CompilationContext>& compilation_context,
-    const std::vector<std::shared_ptr<ImportOperatorProxy>>& import_proxies) {
+ExchangeResult ComputeExchangeResult(
+      const size_t /*pipeline_id*/, const std::shared_ptr<CompilationContext>& /*compilation_context*/,
+      const std::vector<std::shared_ptr<ImportOperatorProxy>>& /*import_proxies*/) const  {
 
   /**
    * TODOs
@@ -99,6 +99,10 @@ ExchangeResult CombineObjectsExchangeStrategy::ComputeExchangeResult(
   std::shared_ptr<ImportOperatorProxy> next_pipeline_import_proxy;
   std::vector<PipelineFragmentDefinition> fragment_definitions;
   return ExchangeResult(next_pipeline_import_proxy, fragment_definitions);
+}
+
+size_t CombineObjectsExchangeStrategy::ShallowHash() const {
+  return boost::hash_value(target_object_count_);
 }
 
 }  // namespace skyrise
