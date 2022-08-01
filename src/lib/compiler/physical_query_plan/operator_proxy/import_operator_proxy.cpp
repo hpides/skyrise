@@ -190,9 +190,9 @@ std::shared_ptr<AbstractOperator> ImportOperatorProxy::CreateOperatorInstanceRec
     };
 
     ImportFormat import_format = ImportFormat::kCsv;
-    if (specifies_format(std::string{kOrcExtension})) {
+    if (specifies_format(std::string(kOrcExtension))) {
       import_format = ImportFormat::kOrc;
-    } else if (specifies_format(std::string{kCsvExtension})) {
+    } else if (specifies_format(std::string(kCsvExtension))) {
       import_format = ImportFormat::kCsv;
     } else {
       Fail("Expected object key to have either a .csv or .orc file extension.");

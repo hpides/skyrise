@@ -1,8 +1,15 @@
 #include "pqp_test_utils.hpp"
 
+#include "benchmark/lib/tpch/tpch_data_generator.hpp"
 #include "constants.hpp"
+#include "aggregate_operator_proxy.hpp"
+#include "filter_operator_proxy.hpp"
+#include "projection_operator_proxy.hpp"
+#include "expression/expression_functional.hpp"
 
 namespace skyrise {
+
+using namespace skyrise::expression_functional;  // NOLINT(google-build-using-namespace)
 
 namespace {
 
@@ -55,11 +62,11 @@ TpchTable ResolveTpchTable(const std::string& tpch_column_name) {
 }  // namespace
 
 std::shared_ptr<ImportOperatorProxy> CreateMockObjectReferences(const std::string& key_prefix, size_t count) {
-  std::vector<ObjectReference>& object_references;
+  std::vector<ObjectReference> object_references;
   object_references.reserve(count);
 
   for (size_t i = 0; i < count; ++i) {
-    const std::string key = key_prefix + std::to_string(i) + kOrcExtension;
+    const std::string key = key_prefix + std::to_string(i) + std::string(kOrcExtension);
     object_references.emplace_back("mock_bucket", key, "mock_etag");
   }
 
@@ -102,7 +109,7 @@ std::shared_ptr<ImportOperatorProxy> TpchImportProxy(const std::vector<std::stri
     const auto column_id_by_column_name_iter = column_id_by_column_name.find(column_name);
     Assert(column_id_by_column_name_iter != column_id_by_column_name.cend(),
            "Could not resolve ColumnId for column '" + column_name + "'");
-    ColumnId import_column_id = *column_id_by_column_name_iter;
+    ColumnId import_column_id = column_id_by_column_name_iter->second;
     Assert(import_column_ids.empty() || import_column_ids.back() < import_column_id,
            "Expected TPC-H table column name order as defined by tpch_data_generator.cpp");
     import_column_ids.push_back(import_column_id);
