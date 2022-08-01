@@ -6,7 +6,6 @@
 
 #include <gtest/gtest.h>
 
-#include "benchmark/lib/tpch/tpch_data_generator.hpp"
 #include "compiler/physical_query_plan/operator_proxy/export_operator_proxy.hpp"
 #include "compiler/physical_query_plan/operator_proxy/filter_operator_proxy.hpp"
 #include "compiler/physical_query_plan/operator_proxy/import_operator_proxy.hpp"
