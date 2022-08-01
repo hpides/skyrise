@@ -10,6 +10,11 @@ set(
     compiler/compilation_context.hpp
     compiler/logical_query_plan/functional_dependency.cpp
     compiler/logical_query_plan/functional_dependency.hpp
+    compiler/physical_query_plan/exchange/abstract_exchange_strategy.cpp
+    compiler/physical_query_plan/exchange/abstract_exchange_strategy.hpp
+    compiler/physical_query_plan/exchange/combine_objects_exchange_strategy.cpp
+    compiler/physical_query_plan/exchange/combine_objects_exchange_strategy.hpp
+    compiler/physical_query_plan/exchange/exchange_result.hpp
     compiler/physical_query_plan/pqp_exchange_strategy.cpp
     compiler/physical_query_plan/pqp_exchange_strategy.hpp
     compiler/physical_query_plan/pqp_pipeline_slicer.cpp
