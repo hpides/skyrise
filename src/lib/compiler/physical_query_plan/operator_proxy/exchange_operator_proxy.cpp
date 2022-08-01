@@ -31,7 +31,7 @@ std::string ExchangeOperatorProxy::Description(const DescriptionMode mode) const
 }
 
 const AbstractExchangeStrategy& ExchangeOperatorProxy::Strategy() const {
-  return strategy_;
+  return *strategy_;
 }
 
 void ExchangeOperatorProxy::SetStrategy(std::unique_ptr<AbstractExchangeStrategy> strategy) {

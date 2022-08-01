@@ -1,11 +1,11 @@
 #include "pqp_test_utils.hpp"
 
-#include "benchmark/lib/tpch/tpch_data_generator.hpp"
-#include "constants.hpp"
 #include "aggregate_operator_proxy.hpp"
+#include "constants.hpp"
+#include "expression/expression_functional.hpp"
 #include "filter_operator_proxy.hpp"
 #include "projection_operator_proxy.hpp"
-#include "expression/expression_functional.hpp"
+#include "tpch/tpch_data_generator.hpp"
 
 namespace skyrise {
 
