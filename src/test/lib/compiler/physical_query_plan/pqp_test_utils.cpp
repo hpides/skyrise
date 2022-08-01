@@ -1,6 +1,6 @@
 #include "pqp_test_utils.hpp"
 
-#include "src/benchmark/lib/tpch/tpch_data_generator.hpp"
+#include "benchmark/lib/tpch/tpch_data_generator.hpp"
 #include "constants.hpp"
 #include "aggregate_operator_proxy.hpp"
 #include "filter_operator_proxy.hpp"

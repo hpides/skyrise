@@ -18,6 +18,7 @@ set(
     benchmark/lib/lambda/lambda_benchmark_runner_test.cpp
     benchmark/lib/synthetic_table_generator_test.cpp
     benchmark/lib/tpch/tpch_data_generator_test.cpp
+    benchmark/lib/tpch/tpch_mock_catalog_test.cpp
 
     lib/compiler/compilation_context_test.cpp
 
@@ -47,7 +48,6 @@ set(
     lib/expression/expression_serialization_test.cpp
 
     lib/metadata/mock_catalog_test.cpp
-    benchmark/lib/tpch/tpch_mock_catalog_test.cpp
 
     lib/monitoring/function_segments_test.cpp
     lib/monitoring/metrics_collector_test.cpp
