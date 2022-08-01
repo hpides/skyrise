@@ -4,6 +4,9 @@
 #include <iomanip>
 #include <numeric>
 
+#include "compiler/physical_query_plan/operator_proxy/import_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/export_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/exchange_operator_proxy.hpp"
 #include "compiler/plan_utils.hpp"
 #include "pqp_utils.hpp"
 #include "utils/assert.hpp"
@@ -42,7 +45,7 @@ const std::vector<std::shared_ptr<PqpPipeline>>& PqpPipelineSlicer::GetPipelines
         continue;
       }
 
-      std::shared_ptr<PqpPipeline> pipeline = CutOffNextPipeline(import_proxy, consumed_import_proxies);
+      std::shared_ptr<PqpPipeline> pipeline = TryCutOffNextPipeline(import_proxy, consumed_import_proxies);
       if (pipeline) {
         pipelines_.emplace_back(std::move(pipeline));
       }
@@ -52,7 +55,7 @@ const std::vector<std::shared_ptr<PqpPipeline>>& PqpPipelineSlicer::GetPipelines
   return pipelines_;
 }
 
-std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutOffNextPipeline(
+std::shared_ptr<PqpPipeline> PqpPipelineSlicer::TryCutOffNextPipeline(
     const std::shared_ptr<ImportOperatorProxy>& primary_import_proxy,
     std::vector<std::shared_ptr<ImportOperatorProxy>>& consumed_import_proxies) {
   std::vector<std::shared_ptr<ImportOperatorProxy>> current_pipeline_import_proxies;
@@ -139,7 +142,7 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutOffNextPipeline(
      // Apply the specified Exchange strategy
      Assert(current_pipeline_plan->Type() == OperatorType::kExchange, "Expected ExchangeOperatorProxy.");
      const auto exchange_proxy = std::static_pointer_cast<ExchangeOperatorProxy>(current_pipeline_plan);
-     const auto exchange_result = exchange_proxy->Strategy()->ComputeExchangeResult(
+     const auto exchange_result = exchange_proxy->Strategy().ComputeExchangeResult(
          current_pipeline_id, compilation_context_, current_pipeline_import_proxies);
      current_pipeline_fragment_definitions = std::move(exchange_result.pipeline_fragment_definitions);
 
@@ -176,7 +179,7 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutOffNextPipeline(
 
   // Level of intra-operator parallelism
   size_t worker_count = std::min(current_pipeline_plan->InputObjectsCount(), compilation_context_->MaxWorkerCount());
-  std::vector<std::vector<PipelineFragmentDefinition>> current_pipeline_plan_definitions =
+  std::vector<std::vector<PipelineFragmentDefinition>> current_pipeline_fragment_definitions =
       GetPipelineFragmentDefinitions(primary_import_proxy, worker_count);
 
   // Secondary imports from joins or union operations
@@ -187,7 +190,7 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutOffNextPipeline(
     // Each pipeline fragment should contain the given import_proxy with all object keys
     const PipelineFragmentDefinition import_definition(
         secondary_import_proxy->Identity(), secondary_import_proxy->BucketName(), secondary_import_proxy->ObjectKeys());
-    for (auto& fragment_import_definitions : current_pipeline_plan_definitions) {
+    for (auto& fragment_import_definitions : current_pipeline_fragment_definitions) {
       fragment_import_definitions.emplace_back(import_definition);
     }
   }
@@ -216,27 +219,19 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::CutOffNextPipeline(
   // Generate an export key for each fragment instance
   std::vector<std::string> current_pipeline_export_keys =
       GetPipelineExportKeys(pipeline_export_key_prefix_stream.str(), pipeline_export_key_suffix,
-                            current_pipeline_plan_definitions.size());
+                            current_pipeline_fragment_definitions.size());
   */
 
   /**
    * (6) CREATE PIPELINE
    */
+  std::string current_pipeline_identity = compilation_context_->QueryIdentity() + "_" + std::to_string(current_pipeline_id);
   auto current_pipeline = std::make_shared<PqpPipeline>(current_pipeline_identity, current_pipeline_plan);
   for (const auto& pipeline : current_pipeline_predecessors) {
     pipeline->SetAsPredecessorOf(current_pipeline);
   }
   // Define fragments
-  for (size_t i = 0; i < current_pipeline_plan_definitions.size(); ++i) {
-    auto fragment_definition =
-        PipelineFragmentDefinition(current_pipeline_plan_definitions.at(i), compilation_context_->TargetBucketName(),
-                                   current_pipeline_export_keys.at(i), current_pipeline_export_format);
-    current_pipeline->DefineFragment(std::move(fragment_definition));
-  }
-  Assert(current_pipeline->FragmentCount() < compilation_context_->MaxWorkerCount(), "Pipeline fragment count is too high.");
 
-  return current_pipeline;
-}
 
 std::shared_ptr<PqpPipeline> PqpPipelineSlicer::FindPipelinePredecessor(
     std::shared_ptr<ImportOperatorProxy> import_proxy) const {

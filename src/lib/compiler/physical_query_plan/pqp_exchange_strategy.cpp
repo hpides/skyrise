@@ -84,7 +84,7 @@ size_t CombineObjectsExchangeStrategy::TargetObjectCount(size_t /* input_object_
 
 size_t CombineObjectsExchangeStrategy::TargetPartitionCount() const { return 1; }
 
-ExchangeResult ComputeExchangeResult(
+ExchangeResult CombineObjectsExchangeStrategy::ComputeExchangeResult(
       const size_t /*pipeline_id*/, const std::shared_ptr<CompilationContext>& /*compilation_context*/,
       const std::vector<std::shared_ptr<ImportOperatorProxy>>& /*import_proxies*/) const  {
 

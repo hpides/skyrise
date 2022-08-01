@@ -17,7 +17,7 @@ class PqpPipelineSlicer : public Noncopyable {
   const std::vector<std::shared_ptr<PqpPipeline>>& GetPipelines();
 
  protected:
-  std::shared_ptr<PqpPipeline> CutNextPipelineFragment(  // TODO(Julian): change to TryCutOfNextPipeline
+  std::shared_ptr<PqpPipeline> TryCutOffNextPipeline(
       const std::shared_ptr<ImportOperatorProxy>& primary_import_proxy,
       std::vector<std::shared_ptr<ImportOperatorProxy>>& consumed_imports);
 

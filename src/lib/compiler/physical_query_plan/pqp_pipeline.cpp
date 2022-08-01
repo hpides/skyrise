@@ -33,6 +33,10 @@ void PqpPipeline::AddFragmentDefinition(PipelineFragmentDefinition fragment_defi
   fragment_definitions_.emplace_back(std::move(fragment_definition));
 }
 
+void PqpPipeline::SetFragmentDefinitions(std::vector<PipelineFragmentDefinition> fragment_definitions) {
+  fragment_definitions_ = std::move(fragment_definitions);
+}
+
 const std::vector<PipelineFragmentDefinition>& PqpPipeline::FragmentDefinitions() const {
   return fragment_definitions_;
 }

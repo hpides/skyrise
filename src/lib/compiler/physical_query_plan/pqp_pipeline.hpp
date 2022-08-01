@@ -21,6 +21,7 @@ class PqpPipeline : public std::enable_shared_from_this<PqpPipeline>, public Non
   const std::shared_ptr<PipelineFragmentTemplate>& FragmentTemplate() const;
 
   void AddFragmentDefinition(PipelineFragmentDefinition fragment_definition);
+  void SetFragmentDefinitions(std::vector<PipelineFragmentDefinition> fragment_definitions);
   const std::vector<PipelineFragmentDefinition>& FragmentDefinitions() const;
 
   // Relationship Management
