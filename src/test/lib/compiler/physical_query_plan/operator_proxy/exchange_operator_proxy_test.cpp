@@ -21,7 +21,7 @@ namespace {
 
 TEST(ExchangeOperatorProxyTest, BaseProperties) {
   EXPECT_EQ(exchange_proxy->Type(), OperatorType::kExchange);
-  const auto exchange_proxy = ExchangeOperatorProxy::Make(CombineObjectsExchangeStrategy(1));
+  const auto exchange_proxy = ExchangeOperatorProxy::Make(std::make_unique<CombineObjectsExchangeStrategy>(1));
   EXPECT_EQ(exchange_proxy->Type(), ExchangeStrategyType::kCombineObjects);
   EXPECT_FALSE(exchange_proxy->IsPipelineBreaker());
 
@@ -33,7 +33,7 @@ TEST(ExchangeOperatorProxyTest, BaseProperties) {
 }
 
 TEST(ExchangeOperatorProxyTest, Description) {
-  const auto exchange_proxy = ExchangeOperatorProxy::Make(CombineObjectsExchangeStrategy(50));
+  const auto exchange_proxy = ExchangeOperatorProxy::Make(std::make_unique<CombineObjectsExchangeStrategy>(50));
   EXPECT_EQ(exchange_proxy->Description(DescriptionMode::kSingleLine), "[Exchange] Combine Objects Target: 50 object(s), 1 partition(s)");
   EXPECT_EQ(exchange_proxy->Description(DescriptionMode::kMultiLine), "[Exchange]\nCombine Objects\nTarget: 50 object(s),\n1 partition(s)");
 

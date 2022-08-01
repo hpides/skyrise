@@ -165,7 +165,7 @@ std::shared_ptr<ExportOperatorProxy> CreateTpchQ1Pqp(size_t lineitem_mock_object
       Assert(combiner_stages_worker_count[i] > 1, "The worker count for combiner stages must be greater than one.");
       // clang-format off
       const auto exchange_proxy =
-      ExchangeOperatorProxy::Make(CombineObjectsExchangeStrategy(combiner_stages_worker_count[i]),
+      ExchangeOperatorProxy::Make(std::make_unique<CombineObjectsExchangeStrategy>(combiner_stages_worker_count[i]),
         current_plan);
       current_plan = get_q1_combine_aggregates_proxy();
       current_plan->SetLeftInput(exchange_proxy);
@@ -173,7 +173,7 @@ std::shared_ptr<ExportOperatorProxy> CreateTpchQ1Pqp(size_t lineitem_mock_object
 
     // (3) Define final stage for TPC-H Q1
     const auto exchange_proxy =
-    ExchangeOperatorProxy::Make(CombineObjectsExchangeStrategy(1),
+    ExchangeOperatorProxy::Make(std::make_unique<CombineObjectsExchangeStrategy>(1),
       current_plan);
     // clang-format on
     current_plan = get_q1_combine_aggregates_proxy();

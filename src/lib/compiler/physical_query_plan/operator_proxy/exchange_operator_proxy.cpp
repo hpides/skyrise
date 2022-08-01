@@ -15,8 +15,8 @@ const std::string kName = "Exchange";
 
 namespace skyrise {
 
-ExchangeOperatorProxy::ExchangeOperatorProxy(AbstractExchangeStrategy strategy)
-    : AbstractOperatorProxy(OperatorType::kExchange), strategy_(strategy) {}
+ExchangeOperatorProxy::ExchangeOperatorProxy(std::unique_ptr<AbstractExchangeStrategy> strategy)
+    : AbstractOperatorProxy(OperatorType::kExchange), strategy_(std::move(strategy)) {}
 
 const std::string& ExchangeOperatorProxy::Name() const { return kName; }
 
@@ -24,7 +24,7 @@ std::string ExchangeOperatorProxy::Description(const DescriptionMode mode) const
   std::stringstream stream;
   const char separator = mode == DescriptionMode::kSingleLine ? ' ' : '\n';
   stream << AbstractOperatorProxy::Description(mode) << separator;
-  stream << strategy_.Type() << separator;
+  stream << strategy_->Type() << separator;
   stream << "Target: " << OutputObjectsCount() << " object(s),";
   stream << separator << OutputPartitionsCount() << " partition(s)";
   return stream.str();
@@ -34,7 +34,7 @@ const AbstractExchangeStrategy& ExchangeOperatorProxy::Strategy() const {
   return strategy_;
 }
 
-void ExchangeOperatorProxy::SetStrategy(AbstractExchangeStrategy strategy) {
+void ExchangeOperatorProxy::SetStrategy(std::unique_ptr<AbstractExchangeStrategy> strategy) {
   strategy_ = std::move(strategy);
 }
 
@@ -45,11 +45,11 @@ bool ExchangeOperatorProxy::IsPipelineBreaker() const {
 }
 
 size_t ExchangeOperatorProxy::OutputObjectsCount() const {
-  return strategy_.TargetObjectCount(InputObjectsCount());
+  return strategy_->TargetObjectCount(InputObjectsCount());
 }
 
 size_t ExchangeOperatorProxy::OutputPartitionsCount() const {
-  strategy_.TargetPartitionCount();
+  strategy_->TargetPartitionCount();
 }
 
 Aws::Utils::Json::JsonValue ExchangeOperatorProxy::ToJson() const {
