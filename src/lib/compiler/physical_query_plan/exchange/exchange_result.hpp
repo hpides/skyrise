@@ -4,7 +4,7 @@
 #include <optional>
 #include <string>
 
-#include "compiler/physical_query_plan/partition_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/partition_operator_proxy.hpp"
 #include "compiler/physical_query_plan/pipeline_fragment_template.hpp"
 #include "types.hpp"
 
