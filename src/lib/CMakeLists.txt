@@ -15,8 +15,6 @@ set(
     compiler/physical_query_plan/exchange/combine_objects_exchange_strategy.cpp
     compiler/physical_query_plan/exchange/combine_objects_exchange_strategy.hpp
     compiler/physical_query_plan/exchange/exchange_result.hpp
-    compiler/physical_query_plan/pqp_exchange_strategy.cpp
-    compiler/physical_query_plan/pqp_exchange_strategy.hpp
     compiler/physical_query_plan/pqp_pipeline_slicer.cpp
     compiler/physical_query_plan/pqp_pipeline_slicer.hpp
 )

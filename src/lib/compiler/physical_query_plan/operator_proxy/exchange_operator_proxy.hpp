@@ -4,7 +4,7 @@
 #include <string>
 
 #include "abstract_operator_proxy.hpp"
-#include "compiler/physical_query_plan/pqp_exchange_strategy.hpp"
+#include "compiler/physical_query_plan/exchange/abstract_exchange_strategy.hpp"
 #include "operator/partitioning_function.hpp"
 #include "types.hpp"
 
