@@ -109,13 +109,13 @@ TEST_F(PipelineFragmentTemplateTest, GenerateFragmentPlan) {
   PipelineFragmentTemplate fragment_template(pqp);
 
   // Define Fragment Plan
-  std::unordered_map<std::string, std::vector<ObjectReference>> identity_to_objects;
+  std::unordered_map<std::string, std::vector<ObjectReference>> identity_to_object_references;
   const std::vector<ObjectReference> import_objects = {ObjectReference("bucket", "import_key1"),
                                                        ObjectReference("bucket", "import_key2")};
-  identity_to_objects.emplace(import_proxy_a_->Identity(), import_objects);
+  identity_to_object_references.emplace(import_proxy_a_->Identity(), import_objects);
   const ObjectReference target_object("export_bucket", "export.orc");
   const auto target_format = ExportFormat::kOrc;
-  const PipelineFragmentDefinition fragment_definition(identity_to_objects, target_object, target_format);
+  const PipelineFragmentDefinition fragment_definition(identity_to_object_references, target_object, target_format);
 
   // Generate Fragment Plan
   const auto fragment_instance = fragment_template.GenerateFragmentPlan(fragment_definition);
@@ -149,14 +149,14 @@ TEST_F(PipelineFragmentTemplateTest, GenerateFragmentPlanMultipleImports) {
   PipelineFragmentTemplate fragment_template(pqp);
 
   // Define Fragment Plan
-  std::unordered_map<std::string, std::vector<ObjectReference>> identity_to_objects;
+  std::unordered_map<std::string, std::vector<ObjectReference>> identity_to_object_references;
   const std::vector<ObjectReference> import_objects_a = {ObjectReference("bucket", "import_key_a")};
   const std::vector<ObjectReference> import_objects_b = {ObjectReference("bucket", "import_key_b")};
-  identity_to_objects.emplace(import_proxy_a_->Identity(), import_objects_a);
-  identity_to_objects.emplace(import_proxy_b_->Identity(), import_objects_b);
+  identity_to_object_references.emplace(import_proxy_a_->Identity(), import_objects_a);
+  identity_to_object_references.emplace(import_proxy_b_->Identity(), import_objects_b);
   const ObjectReference target_object("export_bucket", "export.orc");
   const auto target_format = ExportFormat::kOrc;
-  const PipelineFragmentDefinition fragment_definition(identity_to_objects, target_object, target_format);
+  const PipelineFragmentDefinition fragment_definition(identity_to_object_references, target_object, target_format);
 
   // Generate Fragment Plan
   const auto fragment_instance = fragment_template.GenerateFragmentPlan(fragment_definition);

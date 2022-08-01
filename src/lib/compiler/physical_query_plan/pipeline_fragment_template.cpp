@@ -15,15 +15,15 @@ const ObjectReference kTargetObjectPlaceholder("Placeholder", "Placeholder");
 namespace skyrise {
 
 PipelineFragmentDefinition::PipelineFragmentDefinition(
-    std::unordered_map<std::string, std::vector<ObjectReference>> init_identity_to_objects,
+    std::unordered_map<std::string, std::vector<ObjectReference>> init_identity_to_object_references,
     ObjectReference init_target_object, ExportFormat init_target_format)
-    : identity_to_objects(std::move(init_identity_to_objects)),
+    : identity_to_object_references(std::move(init_identity_to_object_references)),
       target_object(std::move(init_target_object)),
       target_format(init_target_format) {
   if constexpr (SKYRISE_DEBUG) {
     // Validate input
-    Assert(!identity_to_objects.empty(), "At least one import definition must be specified.");
-    for (const auto& [identity, object_references] : identity_to_objects) {
+    Assert(!identity_to_object_references.empty(), "At least one import definition must be specified.");
+    for (const auto& [identity, object_references] : identity_to_object_references) {
       Assert(!identity.empty(), "For import proxy mapping, non-empty identity strings must be provided.");
       Assert(!object_references.empty(), "At least one import defintion must be provided.");
     }
@@ -34,7 +34,7 @@ PipelineFragmentDefinition::PipelineFragmentDefinition(
 
 bool PipelineFragmentDefinition::operator==(const PipelineFragmentDefinition& rhs) const {
   return target_format == rhs.target_format && target_object == rhs.target_object &&
-         identity_to_objects == rhs.identity_to_objects;
+         identity_to_object_references == rhs.identity_to_object_references;
 }
 
 PipelineFragmentTemplate::PipelineFragmentTemplate(const std::shared_ptr<AbstractOperatorProxy>& pipeline_plan) {
@@ -69,14 +69,14 @@ std::shared_ptr<AbstractOperatorProxy> PipelineFragmentTemplate::GenerateFragmen
 
   // Configure Imports
   auto leaf_proxies = PqpFindLeaves(fragment_instance);
-  Assert(leaf_proxies.size() == fragment_definition.identity_to_objects.size(),
+  Assert(leaf_proxies.size() == fragment_definition.identity_to_object_references.size(),
          "Number of import identities is not equal to the number of import proxy leaves in the fragment template.");
 
   for (const auto& leaf_proxy : leaf_proxies) {
     auto import_proxy = std::static_pointer_cast<ImportOperatorProxy>(leaf_proxy);
 
-    const auto object_references_iter = fragment_definition.identity_to_objects.find(import_proxy->Identity());
-    Assert(object_references_iter != fragment_definition.identity_to_objects.cend(),
+    const auto object_references_iter = fragment_definition.identity_to_object_references.find(import_proxy->Identity());
+    Assert(object_references_iter != fragment_definition.identity_to_object_references.cend(),
            "Did not find ObjectReference for given import proxy.");
     import_proxy->SetObjectReferences(object_references_iter->second);
     import_proxy->SetOutputObjectsCount(1);

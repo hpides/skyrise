@@ -21,11 +21,11 @@ const std::shared_ptr<PipelineFragmentTemplate>& PqpPipeline::FragmentTemplate()
 
 void PqpPipeline::AddFragmentDefinition(PipelineFragmentDefinition fragment_definition) {
   if constexpr (SKYRISE_DEBUG) {
-    for (const auto& import_identity_to_objects : fragment_definition.identity_to_objects) {
+    for (const auto& import_identity_to_object_references : fragment_definition.identity_to_object_references) {
       // All operator proxies in the fragment template have already been prefixed with the pipeline's identity.
       // Consequently, a PipelineFragmentDefinition must specify import proxy identities prefixed with the pipeline's
       // identity, so that PipelineFragmentTemplate can map the import definitions accordingly.
-      Assert(boost::starts_with(import_identity_to_objects.first, identity_),
+      Assert(boost::starts_with(import_identity_to_object_references.first, identity_),
              "PipelineFragmentDefinition specifies import proxy identities that are not prefixed with this pipeline's "
              "identity.");
     }

@@ -105,7 +105,7 @@ std::shared_ptr<ImportOperatorProxy> TpchImportProxy(const std::vector<std::stri
     ColumnId import_column_id = *column_id_by_column_name_iter;
     Assert(import_column_ids.empty() || import_column_ids.back() < import_column_id,
            "Expected TPC-H table column name order as defined by tpch_data_generator.cpp");
-    import_column_ids.push_back(column_id);
+    import_column_ids.push_back(import_column_id);
   }
 
   // Create proxy & set TPC-H table name as a comment to support debugging.

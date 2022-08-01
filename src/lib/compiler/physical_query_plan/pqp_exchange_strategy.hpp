@@ -28,18 +28,14 @@ struct ExchangeResult {
    * TODO(julianmenzler)
    */
   std::vector<PipelineFragmentDefinition> pipeline_fragment_definitions;
+  std::vector<ObjectReference> target_objects;
+  const size_t target_partition_count;
+  const size_t target_worker_count;
 
   /**
    * TODO(julianmenzler)
    */
   std::optional<std::shared_ptr<PartitionOperatorProxy>> pipeline_partition_proxy;
-
-  /**
-   * TODO(julianmenzler)
-   */
-  std::vector<ObjectReference> target_objects;
-  const size_t target_partition_count;
-  const size_t target_worker_count;
 };
 
 class AbstractExchangeStrategy {
