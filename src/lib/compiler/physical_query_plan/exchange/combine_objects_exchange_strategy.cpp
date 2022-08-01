@@ -9,7 +9,7 @@ CombineObjectsExchangeStrategy::CombineObjectsExchangeStrategy(size_t target_obj
 }
 
 std::unique_ptr<AbstractExchangeStrategy> CombineObjectsExchangeStrategy::DeepCopy() const {
-  return std::make_unique<AbstractExchangeStrategy>(CombineObjectsExchangeStrategy(target_object_count_));
+  return std::make_unique<CombineObjectsExchangeStrategy>(target_object_count_);
 }
 
 size_t CombineObjectsExchangeStrategy::TargetObjectCount(size_t /* input_object_count */) const {
