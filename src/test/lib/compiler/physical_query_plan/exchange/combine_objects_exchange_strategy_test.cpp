@@ -8,14 +8,13 @@
 #include "compiler/compilation_context.hpp"
 #include "configuration.hpp"
 #include "metadata/mock_catalog.hpp"
+#include "utils/pqp_test_utils.hpp"
 
 namespace skyrise {
 
 class CombineObjectsExchangeStrategyTest : public ::testing::Test {
  public:
   void SetUp() override {
-    mock_catalog_ = std::make_shared<MockCatalog>();
-
     SqlRequest request("SELECT * FROM XY", kMockUserName, std::chrono::system_clock::now());
     compilation_context_ = std::make_shared<CompilationContext>(request, std::make_shared<MockCatalog>());
   }
@@ -45,7 +44,13 @@ TEST_F(CombineObjectsExchangeStrategyTest, ComputeExchangeResultSingleImportProx
 //  ExchangeResult ComputeExchangeResult(
 //      const size_t pipeline_id, const std::shared_ptr<CompilationContext>& compilation_context,
 //      const std::vector<std::shared_ptr<ImportOperatorProxy>>& import_proxies) const override;
-  size_t pipeline_id = 1;
+
+  const auto mock_object_references = CreateMockObjectReferences("table_a", 100);
+  const std::vector<ColumnId> import_column_ids = {ColumnId{1}, ColumnId{3}};
+  const auto import_proxy = ImportOperatorProxy::Make(mock_object_references, import_column_ids);
+
+//  size_t pipeline_id = 1;
+
 }
 
 TEST_F(CombineObjectsExchangeStrategyTest, ComputeExchangeResultMultipleImportProxy) {
