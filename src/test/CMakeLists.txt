@@ -41,8 +41,6 @@ set(
     lib/compiler/physical_query_plan/pqp_pipeline_slicer_test.cpp
     lib/compiler/physical_query_plan/pqp_pipeline_test.cpp
     lib/compiler/physical_query_plan/pqp_serialization_test.cpp
-    lib/compiler/physical_query_plan/pqp_test_utils.cpp
-    lib/compiler/physical_query_plan/pqp_test_utils.hpp
     lib/compiler/physical_query_plan/pqp_utils_test.cpp
 
     lib/expression/expression_evaluator_to_result_test.cpp
@@ -117,6 +115,8 @@ set(
     lib/testing/load_table_test.cpp
     lib/testing/testing_assert.hpp
 
+    utils/pqp_test_utils.cpp
+    utils/pqp_test_utils.hpp
     utils/string_test_utils.cpp
     utils/string_test_utils.hpp
 )
