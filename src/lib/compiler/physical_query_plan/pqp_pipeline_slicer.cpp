@@ -130,6 +130,7 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::TryCutOffNextPipeline(
    * (3) CUT OFF PIPELINE PLAN AND GENERATE FRAGMENT DEFINITIONS
    */
    const size_t current_pipeline_id = compilation_context_->NextPipelineId();
+   const std::string current_pipeline_identity = compilation_context_->QueryIdentity() + "_" + std::to_string(current_pipeline_id);
    std::vector<PipelineFragmentDefinition> current_pipeline_fragment_definitions;
 
    // Check if we have reached the PQP's final pipeline plan.
@@ -142,7 +143,7 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::TryCutOffNextPipeline(
      // Apply the specified Exchange strategy
      Assert(current_pipeline_plan->Type() == OperatorType::kExchange, "Expected ExchangeOperatorProxy.");
      const auto exchange_proxy = std::static_pointer_cast<ExchangeOperatorProxy>(current_pipeline_plan);
-     const auto exchange_result = exchange_proxy->Strategy().ComputeExchangeResult(
+     const auto exchange_result = exchange_proxy->Strategy()->ComputeExchangeResult(
          current_pipeline_id, compilation_context_, current_pipeline_import_proxies);
      current_pipeline_fragment_definitions = std::move(exchange_result.pipeline_fragment_definitions);
 
@@ -156,10 +157,10 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::TryCutOffNextPipeline(
      auto import_column_ids = std::vector<ColumnId>(current_pipeline_plan->OutputColumnsCount());
      std::iota(import_column_ids.begin(), import_column_ids.end(), ColumnId{0});
      const auto import_proxy = ImportOperatorProxy::Make(std::move(exchange_result.target_objects), import_column_ids);
-     // TODO Consider: import_proxy->PrefixIdentity(compilation_context_->QueryIdentity());
      import_proxy->SetOutputObjectsCount(exchange_result.target_worker_count);
      import_proxy->SetOutputPartitionsCount(exchange_result.target_partition_count);
-     // TODO: Set current pipeline's identity as a comment, so that this pipeline can be resolved as a predecessor later.
+     // TODO: Re-consider: Set current pipeline's identity as a comment,
+     //                    so that this pipeline can be resolved as a predecessor later.
      import_proxy->SetComment(current_pipeline_identity);
 
      // Cut off the pipeline plan by substituting the exchange proxy with import and export proxies.
@@ -225,7 +226,6 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::TryCutOffNextPipeline(
   /**
    * (6) CREATE PIPELINE
    */
-  std::string current_pipeline_identity = compilation_context_->QueryIdentity() + "_" + std::to_string(current_pipeline_id);
   auto current_pipeline = std::make_shared<PqpPipeline>(current_pipeline_identity, current_pipeline_plan);
   for (const auto& pipeline : current_pipeline_predecessors) {
     pipeline->SetAsPredecessorOf(current_pipeline);
