@@ -163,24 +163,19 @@ std::shared_ptr<ExportOperatorProxy> CreateTpchQ1Pqp(size_t lineitem_mock_object
                                                                                          Sum_(PqpColumnFrom(ColumnId{6}, Sum_(CountStarPqp_()))),
                                                                                          Sum_(PqpColumnFrom(ColumnId{7}, Sum_(l_discount)))});
   };
-  // clang-format off
-
-    auto current_plan = q1_pre_aggregation_subplan;
-    for (size_t i = 0; i < combiner_stage_worker_count.size(); ++i) {
-      Assert(combiner_stage_worker_count[i] > 1, "The worker count for combiner stages must be greater than one.");
-      // clang-format off
-      const auto exchange_proxy =
-      ExchangeOperatorProxy::Make(CombineObjectsExchangeStrategy::Create(combiner_stage_worker_count[i]),
-        current_plan);
-      current_plan = get_q1_combine_aggregates_proxy();
-      current_plan->SetLeftInput(exchange_proxy);
-    }
-
-    // (3) Define final stage for TPC-H Q1
-    const auto exchange_proxy =
-    ExchangeOperatorProxy::Make(CombineObjectsExchangeStrategy::Create(1),
-      current_plan);
   // clang-format on
+
+  auto current_plan = q1_pre_aggregation_subplan;
+  for (size_t i = 0; i < combiner_stage_worker_count.size(); ++i) {
+    Assert(combiner_stage_worker_count[i] > 1, "The worker count for combiner stages must be greater than one.");
+    const auto exchange_proxy = ExchangeOperatorProxy::Make(
+        CombineObjectsExchangeStrategy::Create(combiner_stage_worker_count[i]), current_plan);
+    current_plan = get_q1_combine_aggregates_proxy();
+    current_plan->SetLeftInput(exchange_proxy);
+  }
+
+  // (3) Define final stage for TPC-H Q1
+  const auto exchange_proxy = ExchangeOperatorProxy::Make(CombineObjectsExchangeStrategy::Create(1), current_plan);
   current_plan = get_q1_combine_aggregates_proxy();
   current_plan->SetLeftInput(exchange_proxy);
 
@@ -190,21 +185,21 @@ std::shared_ptr<ExportOperatorProxy> CreateTpchQ1Pqp(size_t lineitem_mock_object
   const auto sum_l_discount = PqpColumnFrom(ColumnId{7}, Sum_(l_discount));
 
   // clang-format off
-    const auto q1_pqp =
-    ExportOperatorProxy::Dummy(
-      AliasOperatorProxy::Make(std::vector<ColumnId{}, std::vector<std::string>{},
-        SortOperatorProxy::Make(sort_definitions,
-          ProjectionOperatorProxy::Make(ExpressionVector_(PqpColumnFrom(ColumnId{0}, l_returnflag),
-                                                          PqpColumnFrom(ColumnId{1}, l_linestatus),
-                                                          sum_l_quantity,
-                                                          sum_l_extended_price,
-                                                          PqpColumnFrom(ColumnId{4}, Sum_(l_extendedprice_l_discount)),
-                                                          PqpColumnFrom(ColumnId{5}, Sum_(l_extendedprice_l_discount_l_tax)),
-                                                          Div_(Cast_(sum_l_quantity, DataType::kDouble), sum_count_star),         // Calculate AVG(l_quantity)
-                                                          Div_(Cast_(sum_l_extended_price, DataType::kDouble), sum_count_star),   // Calculate AVG(l_extended_price)
-                                                          Div_(Cast_(sum_l_discount, DataType::kDouble), sum_count_star),         // Calculate AVG(l_discount)
-                                                          sum_count_star),
-            current_plan))));
+  const auto q1_pqp =
+  ExportOperatorProxy::Dummy(
+    AliasOperatorProxy::Make(std::vector<ColumnId{}, std::vector<std::string>{},
+      SortOperatorProxy::Make(sort_definitions,
+        ProjectionOperatorProxy::Make(ExpressionVector_(PqpColumnFrom(ColumnId{0}, l_returnflag),
+                                                        PqpColumnFrom(ColumnId{1}, l_linestatus),
+                                                        sum_l_quantity,
+                                                        sum_l_extended_price,
+                                                        PqpColumnFrom(ColumnId{4}, Sum_(l_extendedprice_l_discount)),
+                                                        PqpColumnFrom(ColumnId{5}, Sum_(l_extendedprice_l_discount_l_tax)),
+                                                        Div_(Cast_(sum_l_quantity, DataType::kDouble), sum_count_star),         // Calculate AVG(l_quantity)
+                                                        Div_(Cast_(sum_l_extended_price, DataType::kDouble), sum_count_star),   // Calculate AVG(l_extended_price)
+                                                        Div_(Cast_(sum_l_discount, DataType::kDouble), sum_count_star),         // Calculate AVG(l_discount)
+                                                        sum_count_star),
+          current_plan))));
   // clang-format on
 
   return q1_pqp;
