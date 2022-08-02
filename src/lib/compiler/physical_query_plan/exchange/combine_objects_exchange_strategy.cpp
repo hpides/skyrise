@@ -1,5 +1,7 @@
 #include "combine_objects_exchange_strategy.hpp"
 
+#include <boost/container_hash/hash.hpp>
+
 namespace skyrise {
 
 CombineObjectsExchangeStrategy::CombineObjectsExchangeStrategy(size_t target_object_count)
