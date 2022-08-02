@@ -8,6 +8,7 @@
 #include "compiler/physical_query_plan/operator_proxy/exchange_operator_proxy.hpp"
 #include "compiler/physical_query_plan/operator_proxy/filter_operator_proxy.hpp"
 #include "compiler/physical_query_plan/operator_proxy/projection_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/sort_operator_proxy.hpp"
 #include "constants.hpp"
 #include "expression/expression_functional.hpp"
 #include "tpch/tpch_data_generator.hpp"
