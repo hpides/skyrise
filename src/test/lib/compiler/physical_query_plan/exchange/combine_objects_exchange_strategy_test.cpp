@@ -26,7 +26,7 @@ class CombineObjectsExchangeStrategyTest : public ::testing::Test {
 };
 
 TEST_F(CombineObjectsExchangeStrategyTest, Properties) {
-  EXPECT_TRHOW(CombineObjectsExchangeStrategy::Create(0), std::logic_error);
+  EXPECT_THROW(CombineObjectsExchangeStrategy::Create(0), std::logic_error);
 
   const auto full_merge_strategy = CombineObjectsExchangeStrategy::Create(1);
   EXPECT_EQ(full_merge_strategy->TargetPartitionCount(), 1);
