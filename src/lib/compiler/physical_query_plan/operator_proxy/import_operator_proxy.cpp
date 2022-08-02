@@ -26,7 +26,9 @@ namespace skyrise {
 
 ImportOperatorProxy::ImportOperatorProxy(std::vector<ObjectReference> object_references,
                                          std::vector<ColumnId> column_ids)
-    : AbstractOperatorProxy(OperatorType::kImport), column_ids_(std::move(column_ids)), object_references_(std::move(object_references)) {
+    : AbstractOperatorProxy(OperatorType::kImport),
+      column_ids_(std::move(column_ids)),
+      object_references_(std::move(object_references)) {
   Assert(!column_ids_.empty(), "Import must involve at least one ColumnId.");
 }
 

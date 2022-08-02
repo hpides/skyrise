@@ -3,8 +3,8 @@
 #include <string>
 
 #include "compiler/physical_query_plan/operator_proxy/abstract_operator_proxy.hpp"
-#include "compiler/physical_query_plan/operator_proxy/import_operator_proxy.hpp"
 #include "compiler/physical_query_plan/operator_proxy/export_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/import_operator_proxy.hpp"
 #include "expression/pqp_column_expression.hpp"
 
 namespace skyrise {

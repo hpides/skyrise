@@ -128,7 +128,7 @@ std::shared_ptr<ImportOperatorProxy> TpchImportProxy(const std::vector<std::stri
 }
 
 std::shared_ptr<ExportOperatorProxy> CreateTpchQ1Pqp(size_t lineitem_mock_objects_count,
-                                                     std::vector<size_t> combiner_stages_worker_count) {
+                                                     std::vector<size_t> combiner_stage_worker_count) {
   // (1) Define pipeline 1 or pre-aggregation stage for TPC-H Q1
   const auto l_shipdate = TpchPqpColumn("l_shipdate");
   const auto l_quantity = TpchPqpColumn("l_quantity");
@@ -137,40 +137,40 @@ std::shared_ptr<ExportOperatorProxy> CreateTpchQ1Pqp(size_t lineitem_mock_object
   const auto l_returnflag = TpchPqpColumn("l_returnflag");
   const auto l_linestatus = TpchPqpColumn("l_linestatus");
   // clang-format off
-    const auto l_extendedprice_l_discount = Mul_(l_extendedprice, Sub_(1, l_discount));                               // <=>  l_extendedprice * (1 - l_discount)
-    const auto l_extendedprice_l_discount_l_tax = Mul_(l_extendedprice_l_discount, Add_(1, TpchPqpColumn("l_tax")));  // <=> (l_extendedprice * (1 - l_discount)) * (1 + l_tax),
+  const auto l_extendedprice_l_discount = Mul_(l_extendedprice, Sub_(1, l_discount));                               // <=>  l_extendedprice * (1 - l_discount)
+  const auto l_extendedprice_l_discount_l_tax = Mul_(l_extendedprice_l_discount, Add_(1, TpchPqpColumn("l_tax")));  // <=> (l_extendedprice * (1 - l_discount)) * (1 + l_tax),
 
-    const auto q1_pre_aggregation_subplan =
-    AggregateOperatorProxy::Make(std::vector<ColumnId>{ColumnId{5}, ColumnId{6}}, // Group By l_returnflag, l_linestatus
-                                 std::vector<std::shared_ptr<AbstractExpression>>{Sum_(PqpColumnFrom(ColumnId{0}, l_quantity)),
-                                                                                  Sum_(PqpColumnFrom(ColumnId{1}, l_extendedprice)),
-                                                                                  Sum_(PqpColumnFrom(ColumnId{2}, l_extendedprice_l_discount)),
-                                                                                  Sum_(PqpColumnFrom(ColumnId{3}, l_extendedprice_l_discount_l_tax)),
-                                                                                  CountStarPqp_(),
-                                                                                  Sum_(PqpColumnFrom(ColumnId{4}, l_discount))},
-      ProjectionOperatorProxy::Make(ExpressionVector_(l_quantity, l_extendedprice, l_extendedprice_l_discount, l_extendedprice_l_discount_l_tax, l_discount, l_returnflag, l_linestatus),
-        FilterOperatorProxy::Make(LessThan_(l_shipdate, "1998-09-02"),
-          TpchImportProxy(std::vector<std::string>{"l_quantity", "l_extendedprice", "l_discount", "l_tax", "l_returnflag", "l_linestatus", "l_shipdate"},
-                          CreateMockObjectReferences("lineitem_", lineitem_mock_objects_count)))));
+  const auto q1_pre_aggregation_subplan =
+  AggregateOperatorProxy::Make(std::vector<ColumnId>{ColumnId{5}, ColumnId{6}}, // Group By l_returnflag, l_linestatus
+                               std::vector<std::shared_ptr<AbstractExpression>>{Sum_(PqpColumnFrom(ColumnId{0}, l_quantity)),
+                                                                                Sum_(PqpColumnFrom(ColumnId{1}, l_extendedprice)),
+                                                                                Sum_(PqpColumnFrom(ColumnId{2}, l_extendedprice_l_discount)),
+                                                                                Sum_(PqpColumnFrom(ColumnId{3}, l_extendedprice_l_discount_l_tax)),
+                                                                                CountStarPqp_(),
+                                                                                Sum_(PqpColumnFrom(ColumnId{4}, l_discount))},
+    ProjectionOperatorProxy::Make(ExpressionVector_(l_quantity, l_extendedprice, l_extendedprice_l_discount, l_extendedprice_l_discount_l_tax, l_discount, l_returnflag, l_linestatus),
+      FilterOperatorProxy::Make(LessThan_(l_shipdate, "1998-09-02"),
+        TpchImportProxy(std::vector<std::string>{"l_quantity", "l_extendedprice", "l_discount", "l_tax", "l_returnflag", "l_linestatus", "l_shipdate"},
+                        CreateMockObjectReferences("lineitem_", lineitem_mock_objects_count)))));
 
-    // (2) Define combiner stages for TPC-H Q1
-    const auto get_q1_combine_aggregates_proxy = [&]() {
-      return AggregateOperatorProxy::Make(std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}, // Combiner Stage: Group By l_returnflag, l_linestatus & use SUM(*) instead of COUNT(*)
-                                          std::vector<std::shared_ptr<AbstractExpression>>{Sum_(PqpColumnFrom(ColumnId{2}, Sum_(l_quantity))),
-                                                                                           Sum_(PqpColumnFrom(ColumnId{3}, Sum_(l_extendedprice))),
-                                                                                           Sum_(PqpColumnFrom(ColumnId{4}, Sum_(l_extendedprice_l_discount))),
-                                                                                           Sum_(PqpColumnFrom(ColumnId{5}, Sum_(l_extendedprice_l_discount_l_tax))),
-                                                                                           Sum_(PqpColumnFrom(ColumnId{6}, Sum_(CountStarPqp_()))),
-                                                                                           Sum_(PqpColumnFrom(ColumnId{7}, Sum_(l_discount)))});
-    };
-    // clang-format off
+  // (2) Define combiner stages for TPC-H Q1
+  const auto get_q1_combine_aggregates_proxy = [&]() {
+    return AggregateOperatorProxy::Make(std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}, // Combiner Stage: Group By l_returnflag, l_linestatus & use SUM(*) instead of COUNT(*)
+                                        std::vector<std::shared_ptr<AbstractExpression>>{Sum_(PqpColumnFrom(ColumnId{2}, Sum_(l_quantity))),
+                                                                                         Sum_(PqpColumnFrom(ColumnId{3}, Sum_(l_extendedprice))),
+                                                                                         Sum_(PqpColumnFrom(ColumnId{4}, Sum_(l_extendedprice_l_discount))),
+                                                                                         Sum_(PqpColumnFrom(ColumnId{5}, Sum_(l_extendedprice_l_discount_l_tax))),
+                                                                                         Sum_(PqpColumnFrom(ColumnId{6}, Sum_(CountStarPqp_()))),
+                                                                                         Sum_(PqpColumnFrom(ColumnId{7}, Sum_(l_discount)))});
+  };
+  // clang-format off
 
     auto current_plan = q1_pre_aggregation_subplan;
-    for (size_t i = 0; i < combiner_stages_worker_count.size(); ++i) {
-      Assert(combiner_stages_worker_count[i] > 1, "The worker count for combiner stages must be greater than one.");
+    for (size_t i = 0; i < combiner_stage_worker_count.size(); ++i) {
+      Assert(combiner_stage_worker_count[i] > 1, "The worker count for combiner stages must be greater than one.");
       // clang-format off
       const auto exchange_proxy =
-      ExchangeOperatorProxy::Make(CombineObjectsExchangeStrategy::Create(combiner_stages_worker_count[i]),
+      ExchangeOperatorProxy::Make(CombineObjectsExchangeStrategy::Create(combiner_stage_worker_count[i]),
         current_plan);
       current_plan = get_q1_combine_aggregates_proxy();
       current_plan->SetLeftInput(exchange_proxy);
@@ -180,16 +180,16 @@ std::shared_ptr<ExportOperatorProxy> CreateTpchQ1Pqp(size_t lineitem_mock_object
     const auto exchange_proxy =
     ExchangeOperatorProxy::Make(CombineObjectsExchangeStrategy::Create(1),
       current_plan);
-    // clang-format on
-    current_plan = get_q1_combine_aggregates_proxy();
-    current_plan->SetLeftInput(exchange_proxy);
+  // clang-format on
+  current_plan = get_q1_combine_aggregates_proxy();
+  current_plan->SetLeftInput(exchange_proxy);
 
-    const auto sum_l_quantity = PqpColumnFrom(ColumnId{2}, Sum_(l_quantity));
-    const auto sum_l_extended_price = PqpColumnFrom(ColumnId{3}, Sum_(l_extendedprice));
-    const auto sum_count_star = PqpColumnFrom(ColumnId{6}, Sum_(CountStarPqp_()));
-    const auto sum_l_discount = PqpColumnFrom(ColumnId{7}, Sum_(l_discount));
+  const auto sum_l_quantity = PqpColumnFrom(ColumnId{2}, Sum_(l_quantity));
+  const auto sum_l_extended_price = PqpColumnFrom(ColumnId{3}, Sum_(l_extendedprice));
+  const auto sum_count_star = PqpColumnFrom(ColumnId{6}, Sum_(CountStarPqp_()));
+  const auto sum_l_discount = PqpColumnFrom(ColumnId{7}, Sum_(l_discount));
 
-    // clang-format off
+  // clang-format off
     const auto q1_pqp =
     ExportOperatorProxy::Dummy(
       AliasOperatorProxy::Make(std::vector<ColumnId{}, std::vector<std::string>{},

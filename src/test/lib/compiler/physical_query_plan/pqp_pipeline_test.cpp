@@ -66,8 +66,8 @@ TEST_F(PqpPipelineTest, ValidateFragmentDefinitions) {
 
   // Exception is expected when the import proxy identity is not prefixed with the pipeline's identity.
   identity_to_object_references.emplace(kImportIdentity, import_objects_);
-  const PipelineFragmentDefinition fragment_definition(identity_to_object_references, ObjectReference("bucket", "target.csv"),
-                                                       ExportFormat::kCsv);
+  const PipelineFragmentDefinition fragment_definition(identity_to_object_references,
+                                                       ObjectReference("bucket", "target.csv"), ExportFormat::kCsv);
   EXPECT_THROW(pipeline_->AddFragmentDefinition(fragment_definition), std::logic_error);
 }
 
@@ -76,10 +76,10 @@ TEST_F(PqpPipelineTest, AddFragmentDefinitions) {
   const std::string import_identity = kPipelineIdentity + import_proxy_->Identity();
   std::unordered_map<std::string, std::vector<ObjectReference>> identity_to_object_references;
   identity_to_object_references.emplace(import_identity, import_objects_);
-  const PipelineFragmentDefinition fragment_definition_1(identity_to_object_references, ObjectReference("bucket", "target.csv"),
-                                                         ExportFormat::kCsv);
-  const PipelineFragmentDefinition fragment_definition_2(identity_to_object_references, ObjectReference("bucket2", "target2.csv"),
-                                                         ExportFormat::kCsv);
+  const PipelineFragmentDefinition fragment_definition_1(identity_to_object_references,
+                                                         ObjectReference("bucket", "target.csv"), ExportFormat::kCsv);
+  const PipelineFragmentDefinition fragment_definition_2(identity_to_object_references,
+                                                         ObjectReference("bucket2", "target2.csv"), ExportFormat::kCsv);
 
   pipeline_->AddFragmentDefinition(fragment_definition_1);
   EXPECT_EQ(pipeline_->FragmentDefinitions().size(), 1);

@@ -30,9 +30,7 @@ std::string ExchangeOperatorProxy::Description(const DescriptionMode mode) const
   return stream.str();
 }
 
-const std::shared_ptr<const AbstractExchangeStrategy>& ExchangeOperatorProxy::Strategy() const {
-  return strategy_;
-}
+const std::shared_ptr<const AbstractExchangeStrategy>& ExchangeOperatorProxy::Strategy() const { return strategy_; }
 
 void ExchangeOperatorProxy::SetStrategy(std::shared_ptr<const AbstractExchangeStrategy> strategy) {
   strategy_ = std::move(strategy);
@@ -44,13 +42,9 @@ bool ExchangeOperatorProxy::IsPipelineBreaker() const {
   return false;
 }
 
-size_t ExchangeOperatorProxy::OutputObjectsCount() const {
-  return strategy_->TargetObjectCount(InputObjectsCount());
-}
+size_t ExchangeOperatorProxy::OutputObjectsCount() const { return strategy_->TargetObjectCount(InputObjectsCount()); }
 
-size_t ExchangeOperatorProxy::OutputPartitionsCount() const {
-  return strategy_->TargetPartitionCount();
-}
+size_t ExchangeOperatorProxy::OutputPartitionsCount() const { return strategy_->TargetPartitionCount(); }
 
 Aws::Utils::Json::JsonValue ExchangeOperatorProxy::ToJson() const {
   Fail(Name() + " does not support (de)serialization.");
@@ -62,9 +56,7 @@ std::shared_ptr<AbstractOperatorProxy> ExchangeOperatorProxy::OnDeepCopy(
   return ExchangeOperatorProxy::Make(strategy_, copied_left_input);
 }
 
-size_t ExchangeOperatorProxy::ShallowHash() const {
-  return boost::hash_value(strategy_->Hash());
-}
+size_t ExchangeOperatorProxy::ShallowHash() const { return boost::hash_value(strategy_->Hash()); }
 
 std::shared_ptr<AbstractOperator> ExchangeOperatorProxy::CreateOperatorInstanceRecursively() {
   Fail(Name() + " does not have an operator equivalent since it is pure a logical entity.");

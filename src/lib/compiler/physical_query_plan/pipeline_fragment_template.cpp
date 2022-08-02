@@ -75,7 +75,8 @@ std::shared_ptr<AbstractOperatorProxy> PipelineFragmentTemplate::GenerateFragmen
   for (const auto& leaf_proxy : leaf_proxies) {
     auto import_proxy = std::static_pointer_cast<ImportOperatorProxy>(leaf_proxy);
 
-    const auto object_references_iter = fragment_definition.identity_to_object_references.find(import_proxy->Identity());
+    const auto object_references_iter =
+        fragment_definition.identity_to_object_references.find(import_proxy->Identity());
     Assert(object_references_iter != fragment_definition.identity_to_object_references.cend(),
            "Did not find ObjectReference for given import proxy.");
     import_proxy->SetObjectReferences(object_references_iter->second);

@@ -5,13 +5,13 @@
 namespace skyrise {
 
 CombineObjectsExchangeStrategy::CombineObjectsExchangeStrategy(size_t target_object_count)
-    : AbstractExchangeStrategy(ExchangeStrategyType::kCombineObjects),
-      target_object_count_(target_object_count) {
+    : AbstractExchangeStrategy(ExchangeStrategyType::kCombineObjects), target_object_count_(target_object_count) {
   Assert(target_object_count_ > 0, "Cannot combine to zero objects.");
 }
 
-std::shared_ptr<const CombineObjectsExchangeStrategy> CombineObjectsExchangeStrategy::Create(size_t target_object_count) {
-    return CombineObjectsExchangeStrategy::Create(target_object_count);
+std::shared_ptr<const CombineObjectsExchangeStrategy> CombineObjectsExchangeStrategy::Create(
+    size_t target_object_count) {
+  return CombineObjectsExchangeStrategy::Create(target_object_count);
 }
 
 size_t CombineObjectsExchangeStrategy::TargetObjectCount(size_t /* input_object_count */) const {
@@ -21,9 +21,8 @@ size_t CombineObjectsExchangeStrategy::TargetObjectCount(size_t /* input_object_
 size_t CombineObjectsExchangeStrategy::TargetPartitionCount() const { return 1; }
 
 ExchangeResult CombineObjectsExchangeStrategy::ComputeExchangeResult(
-      const size_t /*pipeline_id*/, const std::shared_ptr<CompilationContext>& /*compilation_context*/,
-      const std::vector<std::shared_ptr<ImportOperatorProxy>>& /*import_proxies*/) const  {
-
+    const size_t /*pipeline_id*/, const std::shared_ptr<CompilationContext>& /*compilation_context*/,
+    const std::vector<std::shared_ptr<ImportOperatorProxy>>& /*import_proxies*/) const {
   /**
    * TODOs
    * 1) Use Interface in ExchangeProxy -> Done.
@@ -40,8 +39,6 @@ ExchangeResult CombineObjectsExchangeStrategy::ComputeExchangeResult(
   return ExchangeResult(fragment_definitions, target_objects, partition_count, target_worker_count);
 }
 
-size_t CombineObjectsExchangeStrategy::ShallowHash() const {
-  return boost::hash_value(target_object_count_);
-}
+size_t CombineObjectsExchangeStrategy::ShallowHash() const { return boost::hash_value(target_object_count_); }
 
 }  // namespace skyrise

@@ -13,8 +13,9 @@
 namespace skyrise {
 
 struct PipelineFragmentDefinition final {
-  PipelineFragmentDefinition(std::unordered_map<std::string, std::vector<ObjectReference>> init_identity_to_object_references,
-                             ObjectReference init_target_object, ExportFormat init_target_format);
+  PipelineFragmentDefinition(
+      std::unordered_map<std::string, std::vector<ObjectReference>> init_identity_to_object_references,
+      ObjectReference init_target_object, ExportFormat init_target_format);
 
   bool operator==(const PipelineFragmentDefinition& rhs) const;
 
