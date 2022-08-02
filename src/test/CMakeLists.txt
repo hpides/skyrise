@@ -1,6 +1,7 @@
 include_directories(
     ${PROJECT_SOURCE_DIR}/src/benchmark/lib
     ${PROJECT_SOURCE_DIR}/src/test/lib
+    ${PROJECT_SOURCE_DIR}/src/test/utils
     ${PROJECT_SOURCE_DIR}/third_party/googletest/googletest/include
 )
 

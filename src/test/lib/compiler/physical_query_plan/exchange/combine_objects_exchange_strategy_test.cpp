@@ -8,7 +8,7 @@
 #include "compiler/compilation_context.hpp"
 #include "configuration.hpp"
 #include "metadata/mock_catalog.hpp"
-#include "src/test/utils/pqp_test_utils.hpp"
+#include "pqp_test_utils.hpp"
 
 namespace skyrise {
 
