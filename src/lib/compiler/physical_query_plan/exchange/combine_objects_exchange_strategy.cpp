@@ -11,7 +11,7 @@ CombineObjectsExchangeStrategy::CombineObjectsExchangeStrategy(size_t target_obj
 
 std::shared_ptr<const CombineObjectsExchangeStrategy> CombineObjectsExchangeStrategy::Create(
     size_t target_object_count) {
-  return CombineObjectsExchangeStrategy::Create(target_object_count);
+  return std::make_shared<const CombineObjectsExchangeStrategy>(target_object_count);
 }
 
 size_t CombineObjectsExchangeStrategy::TargetObjectCount(size_t /* input_object_count */) const {
