@@ -1,7 +1,10 @@
 #include "pqp_test_utils.hpp"
 
-#include "compiler/physical_query_plan/operator_proxy/alias_operator_proxy.hpp"
+#include <magic_enum.hpp>
+
+#include "compiler/physical_query_plan/exchange/combine_objects_exchange_strategy.hpp"
 #include "compiler/physical_query_plan/operator_proxy/aggregate_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/alias_operator_proxy.hpp"
 #include "compiler/physical_query_plan/operator_proxy/exchange_operator_proxy.hpp"
 #include "compiler/physical_query_plan/operator_proxy/filter_operator_proxy.hpp"
 #include "compiler/physical_query_plan/operator_proxy/projection_operator_proxy.hpp"
