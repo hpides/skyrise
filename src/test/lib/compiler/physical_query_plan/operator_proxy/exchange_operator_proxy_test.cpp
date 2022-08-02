@@ -113,7 +113,7 @@ TEST(ExchangeOperatorProxyTest, Description) {
 TEST(ExchangeOperatorProxyTest, DisabledFunctionality) {
   // clang-format off
   const auto exchange_proxy =
-  ExchangeOperatorProxy::Make(
+  ExchangeOperatorProxy::Make(CombineObjectsExchangeStrategy::Create(1),
     ImportOperatorProxy::Make(std::vector<ObjectReference>{ObjectReference("bucket_name", "import.orc")}, std::vector<ColumnId>{ColumnId{0}}));
 
   // clang-format on
