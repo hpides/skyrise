@@ -5,6 +5,7 @@
 
 #include <gtest/gtest.h>
 
+#include "compiler/physical_query_plan/exchange/combine_objects_exchange_strategy.hpp"
 #include "compiler/physical_query_plan/operator_proxy/import_operator_proxy.hpp"
 #include "types.hpp"
 

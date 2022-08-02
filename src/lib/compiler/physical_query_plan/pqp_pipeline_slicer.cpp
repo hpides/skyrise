@@ -178,8 +178,6 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::TryCutOffNextPipeline(
 
   /**
    * (3) GENERATE PIPELINE IMPORT DEFINITIONS
-   *
-
   // Level of intra-operator parallelism
   size_t worker_count = std::min(current_pipeline_plan->InputObjectsCount(), compilation_context_->MaxWorkerCount());
   std::vector<std::vector<PipelineFragmentDefinition>> current_pipeline_fragment_definitions =
@@ -198,9 +196,8 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::TryCutOffNextPipeline(
     }
   }
 
-  /**
-   * (4) GENERATE PIPELINE EXPORT KEYS
-   *
+  // (4) GENERATE PIPELINE EXPORT KEYS
+
   std::string current_pipeline_identity = compilation_context_->GeneratePipelineIdentity();
 
   auto current_pipeline_export_format = ExportFormat::kOrc;
