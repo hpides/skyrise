@@ -187,8 +187,8 @@ std::shared_ptr<ExportOperatorProxy> CreateTpchQ1Pqp(size_t lineitem_mock_object
   // clang-format off
   const auto q1_pqp =
   ExportOperatorProxy::Dummy(
-    AliasOperatorProxy::Make(std::vector<ColumnId{}, std::vector<std::string>{},
-      SortOperatorProxy::Make(sort_definitions,
+    AliasOperatorProxy::Make(std::vector<ColumnId>{ColumnId{0}, ColumnId{1}, ColumnId{2}, ColumnId{3}, ColumnId{4}, ColumnId{5}, ColumnId{6}, ColumnId{7}, ColumnId{8}, ColumnId{9}}, std::vector<std::string>{"l_returnflag", "l_linestatus", "sum_qty", "sum_base_price", "sum_disc_price", "sum_charge", "avg_qty", "avg_price", "avg_disc", "count_order"},
+      SortOperatorProxy::Make(std::vector<SortColumnDefinition>{SortColumnDefinition(ColumnId{0}), SortColumnDefinition(ColumnId{1})},
         ProjectionOperatorProxy::Make(ExpressionVector_(PqpColumnFrom(ColumnId{0}, l_returnflag),
                                                         PqpColumnFrom(ColumnId{1}, l_linestatus),
                                                         sum_l_quantity,
