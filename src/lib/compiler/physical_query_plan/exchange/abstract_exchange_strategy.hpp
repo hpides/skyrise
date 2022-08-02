@@ -19,7 +19,7 @@ class AbstractExchangeStrategy {
   ExchangeStrategyType Type() const;
 
   size_t Hash();
-  virtual std::unique_ptr<AbstractExchangeStrategy> DeepCopy() const = 0;
+  virtual std::shared_ptr<const AbstractExchangeStrategy> DeepCopy() const = 0;
 
   virtual size_t TargetObjectCount(size_t input_object_count) const;
   virtual size_t TargetPartitionCount() const = 0;

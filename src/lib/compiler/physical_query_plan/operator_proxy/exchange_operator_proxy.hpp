@@ -13,7 +13,7 @@ namespace skyrise {
 class ExchangeOperatorProxy : public EnableMakeForPlanNode<ExchangeOperatorProxy, AbstractOperatorProxy>,
                               public AbstractOperatorProxy {
  public:
-  ExchangeOperatorProxy(std::unique_ptr<AbstractExchangeStrategy> strategy);
+  ExchangeOperatorProxy(std::shared_ptr<const AbstractExchangeStrategy> strategy);
 
   const std::string& Name() const override;
   std::string Description(const DescriptionMode mode) const override;
@@ -21,8 +21,8 @@ class ExchangeOperatorProxy : public EnableMakeForPlanNode<ExchangeOperatorProxy
   /**
    * Accessors
    */
-  const AbstractExchangeStrategy& Strategy() const;
-  void SetStrategy(std::unique_ptr<AbstractExchangeStrategy> strategy);
+  const std::shared_ptr<const AbstractExchangeStrategy>& Strategy() const;
+  void SetStrategy(std::shared_ptr<const AbstractExchangeStrategy> strategy);
 
   /**
    * Optimization-relevant attributes
@@ -42,7 +42,7 @@ class ExchangeOperatorProxy : public EnableMakeForPlanNode<ExchangeOperatorProxy
   std::shared_ptr<AbstractOperator> CreateOperatorInstanceRecursively() override;
 
  private:
-  std::unique_ptr<AbstractExchangeStrategy> strategy_;
+  std::shared_ptr<const AbstractExchangeStrategy> strategy_;
 };
 
 }  // namespace skyrise

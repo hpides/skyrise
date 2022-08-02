@@ -15,7 +15,7 @@ const std::string kName = "Exchange";
 
 namespace skyrise {
 
-ExchangeOperatorProxy::ExchangeOperatorProxy(std::unique_ptr<AbstractExchangeStrategy> strategy)
+ExchangeOperatorProxy::ExchangeOperatorProxy(std::shared_ptr<const AbstractExchangeStrategy> strategy)
     : AbstractOperatorProxy(OperatorType::kExchange), strategy_(std::move(strategy)) {}
 
 const std::string& ExchangeOperatorProxy::Name() const { return kName; }
@@ -30,11 +30,11 @@ std::string ExchangeOperatorProxy::Description(const DescriptionMode mode) const
   return stream.str();
 }
 
-const AbstractExchangeStrategy& ExchangeOperatorProxy::Strategy() const {
-  return *strategy_;
+const std::shared_ptr<const AbstractExchangeStrategy>& ExchangeOperatorProxy::Strategy() const {
+  return strategy_;
 }
 
-void ExchangeOperatorProxy::SetStrategy(std::unique_ptr<AbstractExchangeStrategy> strategy) {
+void ExchangeOperatorProxy::SetStrategy(std::shared_ptr<const AbstractExchangeStrategy> strategy) {
   strategy_ = std::move(strategy);
 }
 
@@ -59,7 +59,7 @@ Aws::Utils::Json::JsonValue ExchangeOperatorProxy::ToJson() const {
 std::shared_ptr<AbstractOperatorProxy> ExchangeOperatorProxy::OnDeepCopy(
     const std::shared_ptr<AbstractOperatorProxy>& copied_left_input,
     const std::shared_ptr<AbstractOperatorProxy>& /*copied_right_input*/) const {
-  return ExchangeOperatorProxy::Make(strategy_->DeepCopy(), copied_left_input);
+  return ExchangeOperatorProxy::Make(strategy_, copied_left_input);
 }
 
 size_t ExchangeOperatorProxy::ShallowHash() const {
