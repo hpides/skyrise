@@ -14,8 +14,6 @@ class CombineObjectsExchangeStrategy : public AbstractExchangeStrategy {
  public:
   explicit CombineObjectsExchangeStrategy(size_t target_object_count);
 
-  std::shared_ptr<const AbstractExchangeStrategy> DeepCopy() const override;
-
   size_t TargetObjectCount(size_t input_object_count) const override;
   size_t TargetPartitionCount() const override;
 

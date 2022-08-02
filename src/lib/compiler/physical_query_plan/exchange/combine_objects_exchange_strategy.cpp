@@ -10,10 +10,6 @@ CombineObjectsExchangeStrategy::CombineObjectsExchangeStrategy(size_t target_obj
   Assert(target_object_count_ > 0, "Cannot combine to zero objects.");
 }
 
-std::shared_ptr<const AbstractExchangeStrategy> CombineObjectsExchangeStrategy::DeepCopy() const {
-  return std::make_unique<CombineObjectsExchangeStrategy>(target_object_count_);
-}
-
 size_t CombineObjectsExchangeStrategy::TargetObjectCount(size_t /* input_object_count */) const {
   return target_object_count_;
 }
