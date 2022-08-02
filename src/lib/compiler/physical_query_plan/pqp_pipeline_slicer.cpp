@@ -229,18 +229,20 @@ std::shared_ptr<PqpPipeline> PqpPipelineSlicer::TryCutOffNextPipeline(
   for (const auto& pipeline : current_pipeline_predecessors) {
     pipeline->SetAsPredecessorOf(current_pipeline);
   }
-  // Define fragments
 
-  std::shared_ptr<PqpPipeline> PqpPipelineSlicer::FindPipelinePredecessor(
-      std::shared_ptr<ImportOperatorProxy> import_proxy) const {
-    auto predecessor_pipeline_iter = std::find_if(
-        pipelines_.cbegin(), pipelines_.cend(),
-        [&import_proxy](const auto& pipeline) { return (import_proxy->Comment() == pipeline->Identity()); });
+  return current_pipeline;
+}
 
-    if (predecessor_pipeline_iter != pipelines_.cend()) {
-      return *predecessor_pipeline_iter;
-    }
-    return nullptr;
+std::shared_ptr<PqpPipeline> PqpPipelineSlicer::FindPipelinePredecessor(
+    std::shared_ptr<ImportOperatorProxy> import_proxy) const {
+  auto predecessor_pipeline_iter = std::find_if(
+      pipelines_.cbegin(), pipelines_.cend(),
+      [&import_proxy](const auto& pipeline) { return (import_proxy->Comment() == pipeline->Identity()); });
+
+  if (predecessor_pipeline_iter != pipelines_.cend()) {
+    return *predecessor_pipeline_iter;
   }
+  return nullptr;
+}
 
 }  // namespace skyrise
