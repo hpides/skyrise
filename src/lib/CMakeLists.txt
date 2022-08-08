@@ -223,6 +223,8 @@ set(
     storage/formats/orc_reader.hpp
     storage/formats/orc_writer.cpp
     storage/formats/orc_writer.hpp
+    storage/formats/parquet_writer.cpp
+    storage/formats/parquet_writer.hpp
     storage/storage_types.hpp
     storage/table/abstract_segment.hpp
     storage/table/abstract_table_constraint.cpp
@@ -300,6 +302,11 @@ set(
     aws-cpp-sdk-s3
     aws-cpp-sdk-sqs
     aws-cpp-sdk-xray
+
+    # Link Arrow and Parquet libraries in order of dependencies
+    arrow_dataset_static
+    parquet_static
+    arrow_static
 )
 
 add_library(skyriseSharedLibrary STATIC ${SHARED_SOURCES})
