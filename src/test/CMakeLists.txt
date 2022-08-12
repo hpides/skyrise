@@ -86,6 +86,7 @@ set(
 
     lib/storage/formats/csv_reader_test.cpp
     lib/storage/formats/csv_writer_test.cpp
+    lib/storage/formats/format_reader_test.cpp
     lib/storage/formats/mock_chunk_reader.cpp
     lib/storage/formats/mock_chunk_reader.hpp
     lib/storage/formats/orc_reader_test.cpp
