@@ -74,6 +74,7 @@ set(
     lib/statistics/statistics_collector_test.cpp
 
     lib/storage/backend/abstract_provider.hpp
+    lib/storage/backend/dynamodb_utils_test.cpp
     lib/storage/backend/filesystem_provider.hpp
     lib/storage/backend/mock_storage.cpp
     lib/storage/backend/mock_storage.hpp

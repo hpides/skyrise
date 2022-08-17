@@ -203,6 +203,8 @@ set(
 
     storage/backend/abstract_storage.cpp
     storage/backend/abstract_storage.hpp
+    storage/backend/dynamodb_utils.cpp
+    storage/backend/dynamodb_utils.hpp
     storage/backend/errors.cpp
     storage/backend/errors.hpp
     storage/backend/storage_filesystem.cpp
@@ -301,6 +303,7 @@ set(
     SHARED_LIBRARIES
 
     aws-cpp-sdk-core
+    aws-cpp-sdk-dynamodb
     aws-cpp-sdk-s3
     aws-cpp-sdk-sqs
     aws-cpp-sdk-xray

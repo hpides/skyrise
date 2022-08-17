@@ -101,7 +101,7 @@ void UploadFunctions(const std::shared_ptr<const Aws::IAM::IAMClient>& iam_clien
     auto function_state_polling_end = function_state_polling_start;
 
     while (!IsActive(lambda_client, create_function_outcome.GetResult().GetFunctionName())) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(kLambdaFunctionStatePollingIntervalMilliseconds));
+      std::this_thread::sleep_for(std::chrono::milliseconds(kStatePollingIntervalMilliseconds));
       function_state_polling_end = std::chrono::system_clock::now();
       Assert(std::chrono::duration<double>(function_state_polling_end - function_state_polling_start).count() <
                  kLambdaFunctionStatePollingTimeoutSeconds,

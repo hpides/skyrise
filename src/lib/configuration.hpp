@@ -24,11 +24,6 @@ inline constexpr std::string_view kLambdaFunctionRoleName = "AWSLambda";
 inline constexpr size_t kLambdaFunctionStatePollingTimeoutSeconds = 10;
 
 /**
- * The interval length for polling a function's state.
- */
-inline constexpr size_t kLambdaFunctionStatePollingIntervalMilliseconds = 100;
-
-/**
  * The AWS Lambda service-side timeout limit for functions is 15 minutes (cf.
  * https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html). Our own timeout is reduced to 5 minutes,
  * because we expect our cloud functions to never run longer than that. Thereby, we keep costs for erroneous function
@@ -42,6 +37,11 @@ inline constexpr size_t kLambdaFunctionTimeoutSeconds = 300;
  * which varies per Region (cf. https://docs.aws.amazon.com/lambda/latest/dg/invocation-scaling.html)
  */
 inline constexpr size_t kLambdaFunctionConcurrencyLimit = 3000;
+
+/**
+ * The interval length for polling a service's state.
+ */
+inline constexpr size_t kStatePollingIntervalMilliseconds = 100;
 
 /**
  * The maximum size for files to be read from the local filesystem.
