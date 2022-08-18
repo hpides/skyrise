@@ -29,12 +29,16 @@ ImportOperatorProxy::ImportOperatorProxy(std::vector<ObjectReference> object_ref
     : AbstractOperatorProxy(OperatorType::kImport),
       column_ids_(std::move(column_ids)),
       object_references_(std::move(object_references)) {
-  Assert(!column_ids_.empty(), "Import must involve at least one ColumnId.");
+  Assert(!column_ids_.empty(), "ImportOperatorProxy must specify at least one import ColumnId.");
+  output_data_traits_.column_count = column_ids_.size();
+  output_data_traits_.object_count = object_references_.size();
 }
+
 
 const std::string& ImportOperatorProxy::Name() const { return kName; }
 
 void ImportOperatorProxy::SetObjectReferences(std::vector<ObjectReference> object_references) {
+  output_data_traits_.object_count = object_references.size();
   object_references_ = std::move(object_references);
 }
 
@@ -72,26 +76,27 @@ void ImportOperatorProxy::SetImportOptions(std::shared_ptr<const ImportOptions> 
 
 std::shared_ptr<const ImportOptions> ImportOperatorProxy::GetImportOptions() const { return import_options_; }
 
-bool ImportOperatorProxy::IsPipelineBreaker() const { return false; }
 
-size_t ImportOperatorProxy::OutputObjectsCount() const {
-  Assert(!object_references_.empty(), "ImportOperatorProxy has no object keys set.");
-  return std::min(object_references_.size(), output_objects_count_);
+void ImportOperatorProxy::SetInputPartitioning(size_t input_partitions_count) {
+  output_data_traits_.partition_count = input_partitions_count;
 }
 
 void ImportOperatorProxy::SetOutputObjectsCount(size_t output_objects_count) {
-  Assert(output_objects_count >= 1, "ImportOperatorProxy must specify at least one output object.");
-  output_objects_count_ = output_objects_count;
+  Assert(output_objects_count > 1, "In PQPs, an ImportOperatorProxy must specify at least one output object.");
+  output_data_traits_.object_count = output_objects_count;
 }
-
-size_t ImportOperatorProxy::OutputPartitionsCount() const { return output_partitions_count_; }
 
 void ImportOperatorProxy::SetOutputPartitionsCount(size_t output_partitions_count) {
-  Assert(output_partitions_count > 0, "Invalid count of output partitions.");
-  output_partitions_count_ = output_partitions_count;
+  output_data_traits_.partition_count = output_partitions_count;
 }
 
-size_t ImportOperatorProxy::OutputColumnsCount() const { return column_ids_.size(); }
+const DataTraits& ImportOperatorProxy::OutputDataTraits() const {
+  Assert(output_data_traits_.column_count == column_ids_.size(), "Invalid column count in OutputDataTraits.");
+  Assert(output_data_traits_.object_count <= object_references_.size(), "Invalid object count in OutputDataTraits.");
+  return output_data_traits_;
+}
+
+bool ImportOperatorProxy::IsPipelineBreaker() const { return false; }
 
 Aws::Utils::Json::JsonValue ImportOperatorProxy::ToJson() const {
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> object_references_array(object_references_.size());
@@ -141,7 +146,7 @@ std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::OnDeepCopy(
     const std::shared_ptr<AbstractOperatorProxy>& /*copied_left_input*/,
     const std::shared_ptr<AbstractOperatorProxy>& /*copied_right_input*/) const {
   auto copy = ImportOperatorProxy::Make(object_references_, column_ids_);
-  copy->SetOutputObjectsCount(output_objects_count_);
+  copy->output_data_traits_ = output_data_traits_;
   if (import_options_ != nullptr) {
     copy->SetImportOptions(import_options_);
   }
@@ -166,7 +171,7 @@ size_t ImportOperatorProxy::ShallowHash() const {
     boost::hash_combine(hash, import_options_);
   }
 
-  boost::hash_combine(hash, output_objects_count_);
+  boost::hash_combine(hash, output_data_traits_.Hash());
 
   return hash;
 }

@@ -34,9 +34,8 @@ class JoinOperatorProxy : public EnableMakeForPlanNode<JoinOperatorProxy, Abstra
   /**
    * Optimization-relevant attributes
    */
+  const DataTraits& OutputDataTraits() const override;
   bool IsPipelineBreaker() const override;
-  size_t OutputObjectsCount() const override;
-  size_t OutputColumnsCount() const override;
   // Defines the implementation of this join by setting the proxy's operator type to @param operator_type.
   void SetImplementation(OperatorType operator_type);
 
@@ -60,6 +59,9 @@ class JoinOperatorProxy : public EnableMakeForPlanNode<JoinOperatorProxy, Abstra
   const JoinMode mode_;
   const std::shared_ptr<JoinOperatorPredicate> primary_predicate_;
   const std::vector<std::shared_ptr<JoinOperatorPredicate>> secondary_predicates_;
+
+  // Mutable because the data structure is refreshed in the Getter to align with InputDataTraits.
+  mutable DataTraits output_data_traits_;
 };
 
 /**

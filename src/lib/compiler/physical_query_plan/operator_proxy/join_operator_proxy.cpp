@@ -85,19 +85,20 @@ const std::vector<std::shared_ptr<JoinOperatorPredicate>>& JoinOperatorProxy::Se
   return secondary_predicates_;
 }
 
-bool JoinOperatorProxy::IsPipelineBreaker() const { return true; }
-
-size_t JoinOperatorProxy::OutputObjectsCount() const {
+const DataTraits& JoinOperatorProxy::OutputDataTraits() const {
   // TODO(anyone): Currently, we do not have a join implementation. But, since we aim for a distributed join, we assume
   //               multiple output partitions. The following partition output count, however, is arbitrary and just for
   //               testing purposes.
   //               Replace with some proper logic, if possible.
-  return std::max(LeftInput()->OutputObjectsCount(), RightInput()->OutputObjectsCount());
+  const auto left_input_data_traits = LeftInput()->OutputDataTraits();
+  const auto right_input_data_traits = RightInput()->OutputDataTraits();
+  output_data_traits_.column_count = left_input_data_traits.column_count + right_input_data_traits.column_count;
+  output_data_traits_.object_count = std::max(left_input_data_traits.partition_count, right_input_data_traits.partition_count);
+  output_data_traits_.partition_count = output_data_traits_.object_count;
+  return output_data_traits_;
 }
 
-size_t JoinOperatorProxy::OutputColumnsCount() const {
-  return LeftInput()->OutputColumnsCount() + RightInput()->OutputColumnsCount();
-}
+bool JoinOperatorProxy::IsPipelineBreaker() const { return true; }
 
 void JoinOperatorProxy::SetImplementation(OperatorType operator_type) {
   Assert(operator_type == OperatorType::kNestedLoopJoin || operator_type == OperatorType::kHashJoin,

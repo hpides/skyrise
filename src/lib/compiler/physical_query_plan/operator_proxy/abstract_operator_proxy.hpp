@@ -27,7 +27,22 @@ inline const std::string kJsonKeyOperatorType = "operator_type";
  *  describing a query execution plan is called a physical query plan (PQP).
  *  Thanks to the (de)serialization logic of operator proxies, PQPs or parts of them can be transferred across network
  *  boundaries and moved to, for example, cloud function workers.
+ *
+ * DataTraits
+ *  During query execution, the amount and structure of data flowing between operators changes constantly, depending on
+ *  base tables, operator types and operator configurations. In PQPs, we model DataTraits between operator proxies to
+ *  support the optimizer, including column counts, object counts, and information on partitioning
  */
+
+struct DataTraits {
+  DataTraits(const size_t init_column_count, const size_t init_object_count, const size_t init_partition_count);
+  size_t Hash() const;
+
+  size_t column_count;
+  size_t object_count;
+  size_t partition_count;
+};
+
 class AbstractOperatorProxy : public AbstractPlanNode<AbstractOperatorProxy> {
  public:
   explicit AbstractOperatorProxy(const OperatorType type);
@@ -46,11 +61,9 @@ class AbstractOperatorProxy : public AbstractPlanNode<AbstractOperatorProxy> {
   /**
    * Optimization-relevant attributes
    */
-  size_t InputObjectsCount() const;
-  virtual size_t OutputObjectsCount() const;
-  size_t InputPartitionsCount() const;
-  virtual size_t OutputPartitionsCount() const;
-  virtual size_t OutputColumnsCount() const;
+  virtual const DataTraits& InputDataTraits() const;
+  virtual const DataTraits& OutputDataTraits() const = 0;
+
   virtual bool IsPipelineBreaker() const = 0;
 
   /**

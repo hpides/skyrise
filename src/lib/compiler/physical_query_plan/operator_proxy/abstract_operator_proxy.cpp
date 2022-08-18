@@ -21,6 +21,20 @@ constexpr std::string_view kJsonKeyRightInputOperatorIdentity = "right_input_ope
 
 namespace skyrise {
 
+DataTraits::DataTraits(const size_t init_column_count, const size_t init_object_count, const size_t init_partition_count) :
+  column_count(init_column_count), object_count(init_object_count), partition_count(init_partition_count) {
+    Assert(column_count > 0, "Column count must be equal or greater than 1.");
+    Assert(object_count > 0, "Object count must be equal or greater than 1.");
+    Assert(partition_count > 0, "Partition count must be equal or greater than 1.");
+  }
+
+size_t DataTraits::Hash() const {
+  size_t hash = 0;
+  boost::hash_combine(hash, column_count);
+  boost::hash_combine(hash, object_count);
+  boost::hash_combine(hash, partition_count);
+}
+
 AbstractOperatorProxy::AbstractOperatorProxy(const OperatorType type) : type_(type) {}
 
 OperatorType AbstractOperatorProxy::Type() const { return type_; }
@@ -61,37 +75,10 @@ void AbstractOperatorProxy::SetIdentity(const std::string& identity) {
   identity_ = identity;
 }
 
-size_t AbstractOperatorProxy::InputObjectsCount() const {
-  size_t input_objects_count = 0;
-  if (LeftInput()) {
-    input_objects_count += LeftInput()->OutputObjectsCount();
-  }
-
-  if (RightInput()) {
-    input_objects_count += RightInput()->OutputObjectsCount();
-  }
-  return input_objects_count;
-}
-
-size_t AbstractOperatorProxy::OutputObjectsCount() const {
-  DebugAssert(!RightInput(), "Did not expect right input.");
-  return LeftInput()->OutputObjectsCount();
-}
-
-size_t AbstractOperatorProxy::InputPartitionsCount() const {
-  size_t partition_count = LeftInput()->OutputPartitionsCount();
-  if (RightInput()) {
-    Assert(partition_count == RightInput()->OutputPartitionsCount(),
-           "Expected both inputs to provide the same number of partitions.");
-  }
-  return partition_count;
-}
-
-size_t AbstractOperatorProxy::OutputPartitionsCount() const { return InputPartitionsCount(); }
-
-size_t AbstractOperatorProxy::OutputColumnsCount() const {
-  DebugAssert(!RightInput(), "Did not expect right input.");
-  return LeftInput()->OutputColumnsCount();
+const DataTraits& AbstractOperatorProxy::InputDataTraits() const {
+  Assert(!RightInput(), "Default implementation applies to single input operator proxies only.");
+  Assert(LeftInput(), "Cannot forward DataTraits because no input operator proxy is set.");
+  return LeftInput()->OutputDataTraits();
 }
 
 std::shared_ptr<AbstractOperatorProxy> AbstractOperatorProxy::DeepCopy() const {

@@ -27,9 +27,8 @@ class ExchangeOperatorProxy : public EnableMakeForPlanNode<ExchangeOperatorProxy
   /**
    * Optimization-relevant attributes
    */
+  size_t OutputDataTraits() const override;
   bool IsPipelineBreaker() const override;
-  size_t OutputObjectsCount() const override;
-  size_t OutputPartitionsCount() const override;
 
   // Fails, because it is unsupported.
   Aws::Utils::Json::JsonValue ToJson() const override;
@@ -43,6 +42,9 @@ class ExchangeOperatorProxy : public EnableMakeForPlanNode<ExchangeOperatorProxy
 
  private:
   std::shared_ptr<const AbstractExchangeStrategy> strategy_;
+
+  // Mutable because the data structure is refreshed in the Getter to align with InputDataTraits.
+  mutable DataTraits output_data_traits_;
 };
 
 }  // namespace skyrise

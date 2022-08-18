@@ -36,15 +36,19 @@ void ExchangeOperatorProxy::SetStrategy(std::shared_ptr<const AbstractExchangeSt
   strategy_ = std::move(strategy);
 }
 
+const DataTraits& ExchangeOperatorProxy::OutputDataTraits() const override {
+  // Since InputDataTraits might change as a result of optimizations, update the current OutputDataTraits accordingly.
+  output_data_traits_.column_count = InputDataTraits().column_count;
+  output_data_traits_.partition_count = strategy_->TargetPartitionCount();
+  output_data_traits_.object_count = strategy_->TargetObjectCount(InputDataTraits().object_count);
+  return output_data_traits_;
+}
+
 bool ExchangeOperatorProxy::IsPipelineBreaker() const {
   // This operator proxy does not specify data manipulation. Instead, it only specifies the mechanics of data exchange
   // between different pipelines in PQPs. Therefore, it is not considered as pipeline-breaking during optimization.
   return false;
 }
-
-size_t ExchangeOperatorProxy::OutputObjectsCount() const { return strategy_->TargetObjectCount(InputObjectsCount()); }
-
-size_t ExchangeOperatorProxy::OutputPartitionsCount() const { return strategy_->TargetPartitionCount(); }
 
 Aws::Utils::Json::JsonValue ExchangeOperatorProxy::ToJson() const {
   Fail(Name() + " does not support (de)serialization.");

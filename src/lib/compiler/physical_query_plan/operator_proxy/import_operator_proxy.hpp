@@ -32,12 +32,11 @@ class ImportOperatorProxy : public EnableMakeForPlanNode<ImportOperatorProxy, Ab
   /**
    * Optimization-relevant attributes
    */
-  bool IsPipelineBreaker() const override;
-  size_t OutputObjectsCount() const override;
-  void SetOutputObjectsCount(size_t output_objects_count);
-  size_t OutputPartitionsCount() const override;
-  void SetOutputPartitionsCount(size_t output_partitions_count);
-  size_t OutputColumnsCount() const override;
+   void SetInputPartitioning(size_t input_partitions_count);
+   void SetOutputObjectsCount(size_t output_objects_count);
+   void SetOutputPartitionsCount(size_t output_partitions_count);
+   const DataTraits& OutputDataTraits() const override;
+   bool IsPipelineBreaker() const override;
 
   /**
    * Serialization / Deserialization
@@ -56,8 +55,7 @@ class ImportOperatorProxy : public EnableMakeForPlanNode<ImportOperatorProxy, Ab
   const std::vector<ColumnId> column_ids_;
   std::vector<ObjectReference> object_references_;
   std::shared_ptr<const ImportOptions> import_options_;
-  size_t output_objects_count_ = std::numeric_limits<size_t>::max();
-  size_t output_partitions_count_ = 1;
+  DataTraits output_data_traits_;
 };
 
 }  // namespace skyrise
