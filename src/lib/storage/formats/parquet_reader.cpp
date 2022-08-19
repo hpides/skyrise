@@ -173,12 +173,12 @@ std::shared_ptr<AbstractSegment> ParquetFormatReader::ProcessArrowColumnToTypedS
     case arrow::Type::DOUBLE:
       return ArrowColumnToTypedSegment<double, arrow::DoubleArray>(column);
     case arrow::Type::BOOL:
-      return ArrowColumnToTypedSegment<int, arrow::Int8Array>(column);
+      return ArrowColumnToTypedSegment<int32_t, arrow::Int8Array>(column);
     case arrow::Type::INT32:
-      return ArrowColumnToTypedSegment<int, arrow::Int32Array>(column);
+      return ArrowColumnToTypedSegment<int32_t, arrow::Int32Array>(column);
     case arrow::Type::INT64:
     case arrow::Type::TIMESTAMP:
-      return ArrowColumnToTypedSegment<long, arrow::Int64Array>(column);
+      return ArrowColumnToTypedSegment<int64_t, arrow::Int64Array>(column);
     case arrow::Type::BINARY:
     case arrow::Type::FIXED_SIZE_BINARY:
     case arrow::Type::STRING:
@@ -189,7 +189,7 @@ std::shared_ptr<AbstractSegment> ParquetFormatReader::ProcessArrowColumnToTypedS
       if (configuration_.parse_dates_as_string) {
         return ArrowDateColumnToStringSegment(column);
       }
-      return ArrowColumnToTypedSegment<long, arrow::Int32Array>(column);
+      return ArrowColumnToTypedSegment<int64_t, arrow::Int32Array>(column);
 
     default:
       Fail("Encountered invalid type.");
