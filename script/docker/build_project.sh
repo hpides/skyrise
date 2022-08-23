@@ -42,6 +42,7 @@ NINJA_TOLERANCE="1"
 MAKE_TARGET="all"
 BUILD_TYPE="Debug"
 VERBOSE="false"
+PLATFORM=$(uname -m | cut -c 1-3)
 
 while [ "$#" -gt 0 ]; do
     case $1 in
@@ -86,7 +87,7 @@ GROUP="$(id -g)"
 COMMAND="docker run --rm -it \
                     --user ${USER}:${GROUP} \
                     --volume ${SOURCE_DIR}:${PROJECT_MOUNT_POINT} \
-                    ${IMAGE_PREFIX}/${IMAGE_NAME}-${IMAGE_DATE} bash -c \"${BUILD_COMMAND}\""
+                    ${IMAGE_PREFIX}/${IMAGE_NAME}-${PLATFORM}-${IMAGE_DATE} bash -c \"${BUILD_COMMAND}\""
 
 if [ "$VERBOSE" = true ]; then
     echo "Executing build command: ${COMMAND}"
