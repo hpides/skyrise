@@ -225,6 +225,8 @@ set(
     storage/formats/orc_reader.hpp
     storage/formats/orc_writer.cpp
     storage/formats/orc_writer.hpp
+    storage/formats/parquet_expression.cpp
+    storage/formats/parquet_expression.hpp
     storage/formats/parquet_reader.cpp
     storage/formats/parquet_reader.hpp
     storage/formats/parquet_writer.cpp
