@@ -26,7 +26,7 @@ class UnionOperatorProxy : public EnableMakeForPlanNode<UnionOperatorProxy, Abst
    * Optimization-relevant attributes
    */
   bool IsPipelineBreaker() const override;
-  size_t OutputObjectsCount() const override;
+  size_t OutputObjectsCount() const override; // TODO Replace
   size_t OutputColumnsCount() const override;
 
   /**

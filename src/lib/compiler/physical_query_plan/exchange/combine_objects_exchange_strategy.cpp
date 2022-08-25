@@ -18,7 +18,10 @@ size_t CombineObjectsExchangeStrategy::TargetObjectCount(size_t /* input_object_
   return target_object_count_;
 }
 
-size_t CombineObjectsExchangeStrategy::TargetPartitionCount() const { return 1; }
+size_t CombineObjectsExchangeStrategy::TargetPartitionCount() const {
+  // TODO Partition Preserving by default. Not supported by ImportOperator yet.
+  return 1;
+}
 
 ExchangeResult CombineObjectsExchangeStrategy::ComputeExchangeResult(
     const size_t /*pipeline_id*/, const std::shared_ptr<CompilationContext>& /*compilation_context*/,

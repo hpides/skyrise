@@ -10,6 +10,10 @@
 
 namespace skyrise {
 
+/**
+ * TODO
+ * Partition Preserving by default. Not supported by ImportOperator yet.
+ */
 class CombineObjectsExchangeStrategy : public AbstractExchangeStrategy {
  public:
   explicit CombineObjectsExchangeStrategy(size_t target_object_count);

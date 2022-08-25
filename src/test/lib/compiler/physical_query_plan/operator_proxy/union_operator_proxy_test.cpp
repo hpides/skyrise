@@ -30,8 +30,9 @@ TEST_F(UnionOperatorProxyTest, BaseProperties) {
   const auto union_all_proxy = UnionOperatorProxy::Make(SetOperationMode::kAll, import_proxy_a_, import_proxy_b_);
   EXPECT_EQ(union_all_proxy->Type(), OperatorType::kUnion);
   EXPECT_TRUE(union_all_proxy->IsPipelineBreaker());
-  EXPECT_EQ(union_all_proxy->OutputColumnsCount(), import_proxy_a_->OutputColumnsCount());
-  EXPECT_EQ(union_all_proxy->OutputObjectsCount(), import_proxy_a_->OutputObjectsCount());
+  EXPECT_EQ(union_all_proxy->OutputDataTraits().column_count, import_proxy_a_->OutputDataTraits().column_count);
+  EXPECT_EQ(union_all_proxy->OutputDataTraits().object_count, import_proxy_a_->OutputDataTraits().object_count);
+  EXPECT_EQ(union_all_proxy->OutputDataTraits().partition_count, import_proxy_a_->OutputDataTraits().partition_count);
 }
 
 TEST_F(UnionOperatorProxyTest, Description) {

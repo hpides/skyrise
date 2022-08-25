@@ -15,25 +15,26 @@ struct ExchangeResult {
       std::vector<PipelineFragmentDefinition> init_pipeline_fragment_definitions,
       std::vector<ObjectReference> init_target_objects, const size_t init_target_partition_count,
       const size_t init_target_worker_count,
-      std::optional<std::shared_ptr<PartitionOperatorProxy>> init_pipeline_partition_proxy = std::nullopt)
+      std::optional<std::shared_ptr<const AbstractPartitioningFunction>> init_pipeline_partition_proxy = std::nullopt)
       : pipeline_fragment_definitions(init_pipeline_fragment_definitions),
         target_objects(init_target_objects),
-        target_partition_count(init_target_partition_count),
+//        target_partition_count(init_target_partition_count),
         target_worker_count(init_target_worker_count),
-        pipeline_partition_proxy(init_pipeline_partition_proxy) {}
+//        pipeline_partition_proxy(init_pipeline_partition_proxy)
+        partitioning_function {}
 
   /**
    * TODO(julianmenzler)
    */
   std::vector<PipelineFragmentDefinition> pipeline_fragment_definitions;
   std::vector<ObjectReference> target_objects;
-  const size_t target_partition_count;
+  const size_t target_partitioning_function;
   const size_t target_worker_count;
 
   /**
    * TODO(julianmenzler)
    */
-  std::optional<std::shared_ptr<PartitionOperatorProxy>> pipeline_partition_proxy;
+  std::optional<std::shared_ptr<const AbstractPartitioningFunction>> target_partitioning_function;
 };
 
 }  // namespace skyrise

@@ -49,7 +49,7 @@ TEST_F(CombineObjectsExchangeStrategyTest, ComputeExchangeResultSingleImportProx
   const std::vector<ColumnId> import_column_ids = {ColumnId{1}, ColumnId{3}};
   const auto import_proxy = ImportOperatorProxy::Make(mock_object_references, import_column_ids);
 
-//  size_t pipeline_id = 1;
+  size_t pipeline_id = 1;
 
 }
 
