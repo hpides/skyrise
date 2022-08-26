@@ -92,6 +92,7 @@ set(
     lib/storage/formats/mock_chunk_reader.hpp
     lib/storage/formats/orc_reader_test.cpp
     lib/storage/formats/orc_writer_test.cpp
+    lib/storage/formats/parquet_reader_test.cpp
     lib/storage/formats/parquet_writer_test.cpp
     lib/storage/formats/parquet_expression_test.cpp
 

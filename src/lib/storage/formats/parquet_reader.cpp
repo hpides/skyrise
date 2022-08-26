@@ -98,6 +98,11 @@ ParquetFormatReader::ParquetFormatReader(std::unique_ptr<ObjectReader> source, C
     auto scan_builder =
         std::make_shared<arrow::dataset::ScannerBuilder>(parquet_schema, std::move(fragment), scan_options);
 
+    // If possible, push down predicate.
+    if (configuration_.arrow_expression.has_value()) {
+      HANDLE_RESULT(scan_builder->Filter(*configuration_.arrow_expression), "Failed to evaluate predicate");
+    }
+
     scanner_ = scan_builder->Finish().ValueOrDie();
     batch_iterator_ = scanner_->ScanBatches().ValueOrDie();
 
