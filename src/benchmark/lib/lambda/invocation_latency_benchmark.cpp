@@ -18,6 +18,12 @@
 #include "lambda_benchmark_output.hpp"
 #include "utils/assert.hpp"
 
+namespace {
+
+const Aws::String kName = "invocation_latency_benchmark";
+
+}  // namespace
+
 namespace skyrise {
 
 InvocationLatencyBenchmark::InvocationLatencyBenchmark(
@@ -238,13 +244,20 @@ Aws::Utils::Json::JsonValue InvocationLatencyBenchmark::GenerateResultOutput(
     const InvocationLatencyBenchmarkParameters& benchmark_parameters,
     const std::shared_ptr<std::unordered_map<Aws::String, LambdaSegmentDurations>>& result_segments) const {
   auto benchmark_output =
-      LambdaBenchmarkOutput("invocation_latency_benchmark", benchmark_result)
+      LambdaBenchmarkOutput(Name(), benchmark_result)
           .WithInt64Argument("function_instance_mb_size", benchmark_parameters.function_instance_mb_size)
           .WithInt64Argument("invocation_count", benchmark_parameters.invocation_count)
           .WithBoolArgument("warm_mode", benchmark_parameters.warm_mode)
           .WithInt64Argument("sleep_ms_duration", benchmark_parameters.sleep_ms_duration)
           .WithInt64Argument("repetition_count", benchmark_parameters.repetition_count)
           .WithStringArgument("function_package_name", benchmark_parameters.function_package_name);
+
+  benchmark_output.WithDoubleMetric("benchmark_cost_usd", static_cast<double>(benchmark_cost_))
+      .WithDoubleMetric("warm_up_cost_usd", static_cast<double>(benchmark_result->GetWarmUpCost()))
+      .WithDoubleInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
+        return std::make_tuple("function_cost_usd",
+                               ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size));
+      });
 
   const auto& segments = FunctionSegmentsAnalyzer::CreateLambdaSegmentDurations();
 
@@ -276,13 +289,6 @@ Aws::Utils::Json::JsonValue InvocationLatencyBenchmark::GenerateResultOutput(
         .WithDoubleMetric(segment.first + "_std_dev", aggregate.GetStandardDeviation());
   }
 
-  benchmark_output.WithDoubleMetric("benchmark_cost_usd", static_cast<double>(benchmark_cost_))
-      .WithDoubleMetric("warm_up_cost_usd", static_cast<double>(benchmark_result->GetWarmUpCost()))
-      .WithDoubleInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
-        return std::make_tuple("function_cost_usd",
-                               ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size));
-      });
-
   for (const auto& segment : segments) {
     benchmark_output.WithDoubleInvocationMetric([&segment, &result_segments](const LambdaInvokeResult& invoke_result) {
       return std::make_tuple(
@@ -293,5 +299,7 @@ Aws::Utils::Json::JsonValue InvocationLatencyBenchmark::GenerateResultOutput(
 
   return benchmark_output.Build();
 }
+
+const Aws::String& InvocationLatencyBenchmark::Name() const { return kName; }
 
 }  // namespace skyrise

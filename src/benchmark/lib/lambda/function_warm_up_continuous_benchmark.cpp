@@ -10,6 +10,12 @@
 #include "lambda_benchmark_output.hpp"
 #include "utils/map.hpp"
 
+namespace {
+
+const Aws::String kName = "benchmark_duration_ms";
+
+}  // namespace
+
 namespace skyrise {
 
 FunctionWarmUpContinuousBenchmark::FunctionWarmUpContinuousBenchmark(
@@ -100,7 +106,7 @@ Aws::Utils::Json::JsonValue FunctionWarmUpContinuousBenchmark::GenerateResultOut
   }
 
   auto benchmark_output =
-      LambdaBenchmarkOutput("function_warm_up_continuous_benchmark", benchmark_result)
+      LambdaBenchmarkOutput(Name(), benchmark_result)
           .WithInt64Argument("function_instance_mb_size", benchmark_parameters.function_instance_mb_size)
           .WithInt64Argument("invocation_count", benchmark_parameters.invocation_count)
           .WithInt64Argument("sleep_ms_duration", benchmark_parameters.sleep_ms_duration)
@@ -114,7 +120,10 @@ Aws::Utils::Json::JsonValue FunctionWarmUpContinuousBenchmark::GenerateResultOut
 
   const BenchmarkResultAggregate aggregate(warm_function_percentages);
 
-  return benchmark_output.WithDoubleMetric("warm_function_percentage_minimum", aggregate.GetMinimum())
+  return benchmark_output
+      .WithDoubleMetric("benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
+                                                  benchmark_result, benchmark_parameters.function_instance_mb_size)))
+      .WithDoubleMetric("warm_function_percentage_minimum", aggregate.GetMinimum())
       .WithDoubleMetric("warm_function_percentage_maximum", aggregate.GetMaximum())
       .WithDoubleMetric("warm_function_percentage_average", aggregate.GetAverage())
       .WithDoubleMetric("warm_function_percentage_median", aggregate.GetMedian())
@@ -124,12 +133,12 @@ Aws::Utils::Json::JsonValue FunctionWarmUpContinuousBenchmark::GenerateResultOut
       .WithDoubleMetric("warm_function_percentage_percentile_10", aggregate.GetPercentile(10))
       .WithDoubleMetric("warm_function_percentage_std_dev", aggregate.GetStandardDeviation())
       .WithDoubleMetric("warm_up_cost_usd", benchmark_result->GetWarmUpCost())
-      .WithDoubleMetric("benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
-                                                  benchmark_result, benchmark_parameters.function_instance_mb_size)))
       .WithBoolInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
         return std::make_tuple("is_warm_function", is_warm_function(invoke_result));
       })
       .Build();
 }
+
+const Aws::String& FunctionWarmUpContinuousBenchmark::Name() const { return kName; }
 
 }  // namespace skyrise

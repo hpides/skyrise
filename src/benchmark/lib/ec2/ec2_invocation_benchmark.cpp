@@ -9,6 +9,12 @@
 #include "ec2_benchmark_runner.hpp"
 #include "utils/assert.hpp"
 
+namespace {
+
+const Aws::String kName = "ec2_invocation_benchmark";
+
+}  // namespace
+
 namespace skyrise {
 
 Ec2InvocationBenchmark::Ec2InvocationBenchmark(const std::vector<size_t>& concurrent_invocation_counts,
@@ -72,7 +78,7 @@ Aws::Utils::Json::JsonValue Ec2InvocationBenchmark::GenerateResultOutput(
 
   auto json_output =
       Aws::Utils::Json::JsonValue()
-          .WithString("name", "ec2_invocation_benchmark")
+          .WithString("name", kName)
           .WithObject("arguments",
                       Aws::Utils::Json::JsonValue()
                           .WithInteger("concurrent_invocation_count", parameters.concurrent_invocation_count)
@@ -102,5 +108,7 @@ Aws::Utils::Json::JsonValue Ec2InvocationBenchmark::GenerateResultOutput(
 
   return json_output;
 }
+
+const Aws::String& Ec2InvocationBenchmark::Name() const { return kName; }
 
 }  // namespace skyrise

@@ -94,8 +94,9 @@ void BenchmarkExecutable::ExecuteBenchmark(const std::shared_ptr<skyrise::Abstra
   const auto output =
       Aws::Utils::Json::JsonValue()
           .WithObject("context", Aws::Utils::Json::JsonValue()
-                                     .WithString("date", skyrise::GetFormattedTimestamp("%Y/%m/%d-%H:%M:%S"))
-                                     .WithString("commit", GitMetadata::CommitSha1()))
+                                     .WithString("name", benchmark->Name())
+                                     .WithString("commit", GitMetadata::CommitSha1())
+                                     .WithString("date", skyrise::GetFormattedTimestamp("%Y/%m/%d-%H:%M:%S")))
           .WithArray("benchmarks", benchmark_result);
 
   skyrise::WriteStringToFile(output.View().WriteReadable(), cli_parse_result_["output"].as<std::string>());

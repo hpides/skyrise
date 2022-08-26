@@ -14,6 +14,12 @@
 #include "utils/map.hpp"
 #include "utils/string.hpp"
 
+namespace {
+
+const Aws::String kName = "idle_availability_benchmark";
+
+}  // namespace
+
 namespace skyrise {
 
 IdleAvailabilityBenchmark::IdleAvailabilityBenchmark(std::shared_ptr<const CostCalculator> cost_calculator,
@@ -140,11 +146,13 @@ Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
   const BenchmarkResultAggregate unavailable_phases_counts_aggregate(unavailable_phases_counts);
   const BenchmarkResultAggregate unavailable_phases_lengths_aggregate(unavailable_phases_lengths);
 
-  return LambdaBenchmarkOutput("idle_availability_benchmark", benchmark_result)
+  return LambdaBenchmarkOutput(Name(), benchmark_result)
       .WithInt64Argument("function_instance_mb_size", benchmark_parameters.function_instance_mb_size)
       .WithInt64Argument("invocation_count", benchmark_parameters.invocation_count)
       .WithInt64Argument("sleep_min_duration", benchmark_parameters.sleep_min_duration)
       .WithInt64Argument("repetition_count", benchmark_parameters.repetition_count)
+      .WithDoubleMetric("benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
+                                                  benchmark_result, benchmark_parameters.function_instance_mb_size)))
       .WithDoubleMetric("availability_percentage_minimum", availability_percentages_aggregate.GetMinimum())
       .WithDoubleMetric("availability_percentage_maximum", availability_percentages_aggregate.GetMaximum())
       .WithDoubleMetric("availability_percentage_average", availability_percentages_aggregate.GetAverage())
@@ -180,8 +188,6 @@ Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
                         unavailable_phases_lengths_aggregate.GetPercentile(99.99))
       .WithDoubleMetric("unavailable_phases_length_std_dev",
                         unavailable_phases_lengths_aggregate.GetStandardDeviation())
-      .WithDoubleMetric("benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
-                                                  benchmark_result, benchmark_parameters.function_instance_mb_size)))
       .WithDoubleInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
         return std::make_tuple("function_cost_usd",
                                ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size));
@@ -191,5 +197,7 @@ Aws::Utils::Json::JsonValue IdleAvailabilityBenchmark::GenerateResultOutput(
       })
       .Build();
 }
+
+const Aws::String& IdleAvailabilityBenchmark::Name() const { return kName; }
 
 }  // namespace skyrise

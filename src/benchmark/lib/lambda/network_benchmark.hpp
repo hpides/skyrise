@@ -8,6 +8,7 @@
 
 #include "benchmark_helper.hpp"
 #include "lambda_benchmark.hpp"
+#include "lambda_benchmark_output.hpp"
 #include "lambda_benchmark_runner.hpp"
 #include "utils/costs/cost_calculator.hpp"
 #include "utils/string.hpp"
@@ -38,6 +39,9 @@ class NetworkBenchmark : public LambdaBenchmark {
 
   virtual Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<LambdaBenchmarkResult>& result,
                                                            const NetworkBenchmarkParameters& parameters) = 0;
+
+  static LambdaBenchmarkOutput& AddArguments(LambdaBenchmarkOutput& output,
+                                             const NetworkBenchmarkParameters& parameters);
 
   void Setup();
   void Teardown();

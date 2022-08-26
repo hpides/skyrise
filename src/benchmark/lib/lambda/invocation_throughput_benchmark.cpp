@@ -9,6 +9,12 @@
 #include "lambda_benchmark_output.hpp"
 #include "utils/string.hpp"
 
+namespace {
+
+const Aws::String& kName = "invocation_throughput_benchmark";
+
+}  // namespace
+
 namespace skyrise {
 
 InvocationThroughputBenchmark::InvocationThroughputBenchmark(std::shared_ptr<const CostCalculator> cost_calculator,
@@ -88,12 +94,15 @@ Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
 
   const BenchmarkResultAggregate aggregate(invocation_throughputs);
 
-  return LambdaBenchmarkOutput("invocation_throughput_benchmark", benchmark_result)
+  return LambdaBenchmarkOutput(Name(), benchmark_result)
       .WithInt64Argument("function_instance_mb_size", benchmark_parameters.function_instance_mb_size)
       .WithInt64Argument("invocation_count", benchmark_parameters.invocation_count)
       .WithInt64Argument("function_payload_byte_size", benchmark_parameters.function_payload_byte_size)
       .WithInt64Argument("repetition_count", benchmark_parameters.repetition_count)
       .WithStringArgument("use_event_queue", std::string(magic_enum::enum_name(benchmark_parameters.use_event_queue)))
+      .WithDoubleMetric("benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
+                                                  benchmark_result, benchmark_parameters.function_instance_mb_size)))
+      .WithDoubleMetric("warm_up_cost_usd", static_cast<double>(benchmark_result->GetWarmUpCost()))
       .WithDoubleMetric("invocation_throughput_functions_per_s_minimum", aggregate.GetMinimum())
       .WithDoubleMetric("invocation_throughput_functions_per_s_maximum", aggregate.GetMaximum())
       .WithDoubleMetric("invocation_throughput_functions_per_s_average", aggregate.GetAverage())
@@ -103,9 +112,6 @@ Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
       .WithDoubleMetric("invocation_throughput_functions_per_s_percentile_1", aggregate.GetPercentile(1))
       .WithDoubleMetric("invocation_throughput_functions_per_s_percentile_10", aggregate.GetPercentile(10))
       .WithDoubleMetric("invocation_throughput_functions_per_s_std_dev", aggregate.GetStandardDeviation())
-      .WithDoubleMetric("benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
-                                                  benchmark_result, benchmark_parameters.function_instance_mb_size)))
-      .WithDoubleMetric("warm_up_cost_usd", static_cast<double>(benchmark_result->GetWarmUpCost()))
       .WithDoubleInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
         return std::make_tuple("function_cost_usd",
                                ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size));
@@ -117,5 +123,7 @@ Aws::Utils::Json::JsonValue InvocationThroughputBenchmark::GenerateResultOutput(
       })
       .Build();
 }
+
+const Aws::String& InvocationThroughputBenchmark::Name() const { return kName; }
 
 }  // namespace skyrise

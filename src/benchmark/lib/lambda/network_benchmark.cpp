@@ -52,6 +52,18 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> NetworkBenchmark::OnRun(
   return results_array;
 }
 
+LambdaBenchmarkOutput& NetworkBenchmark::AddArguments(LambdaBenchmarkOutput& output,
+                                                      const NetworkBenchmarkParameters& parameters) {
+  return output.WithInt64Argument("function_instance_mb_size", parameters.function_instance_mb_size)
+      .WithInt64Argument("object_byte_size", parameters.object_byte_size)
+      .WithInt64Argument("batch_size", parameters.batch_size)
+      .WithInt64Argument("thread_count", parameters.thread_count)
+      .WithInt64Argument("invocation_count", parameters.invocation_count)
+      .WithInt64Argument("bucket_count", parameters.bucket_count)
+      .WithInt64Argument("repetition_count", parameters.repetition_count)
+      .WithStringArgument("operation_type", std::string(magic_enum::enum_name(parameters.operation_type)));
+}
+
 void NetworkBenchmark::Setup() {
   const size_t bucket_count = *std::max_element(bucket_counts_.cbegin(), bucket_counts_.cend());
 
