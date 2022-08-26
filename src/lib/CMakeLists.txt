@@ -107,6 +107,8 @@ set(
     SHARED_METADATA_SOURCES
 
     metadata/abstract_catalog.hpp
+    metadata/glue_utils.cpp
+    metadata/glue_utils.hpp
     metadata/mock_catalog.cpp
     metadata/mock_catalog.hpp
     metadata/table_partition.cpp
@@ -306,6 +308,7 @@ set(
 
     aws-cpp-sdk-core
     aws-cpp-sdk-dynamodb
+    aws-cpp-sdk-glue
     aws-cpp-sdk-s3
     aws-cpp-sdk-sqs
     aws-cpp-sdk-xray

@@ -36,6 +36,9 @@ Client::Client() {
             std::make_shared<const Aws::DynamoDB::DynamoDBClient>(credentials_provider, client_configuration);
       },
       [&]() { ec2_client_ = std::make_shared<const Aws::EC2::EC2Client>(credentials_provider, client_configuration); },
+      [&]() {
+        glue_client_ = std::make_shared<const Aws::Glue::GlueClient>(credentials_provider, client_configuration);
+      },
       [&]() { iam_client_ = std::make_shared<const Aws::IAM::IAMClient>(credentials_provider, client_configuration); },
       [&]() {
         lambda_client_ = std::make_shared<const Aws::Lambda::LambdaClient>(credentials_provider, client_configuration);
@@ -69,6 +72,8 @@ std::shared_ptr<const Aws::CloudWatch::CloudWatchClient> Client::GetCloudWatchCl
 std::shared_ptr<const Aws::DynamoDB::DynamoDBClient> Client::GetDynamoDbClient() const { return dynamodb_client_; }
 
 std::shared_ptr<const Aws::EC2::EC2Client> Client::GetEc2Client() const { return ec2_client_; }
+
+std::shared_ptr<const Aws::Glue::GlueClient> Client::GetGlueClient() const { return glue_client_; }
 
 std::shared_ptr<const Aws::IAM::IAMClient> Client::GetIamClient() const { return iam_client_; }
 

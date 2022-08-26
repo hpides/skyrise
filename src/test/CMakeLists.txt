@@ -43,7 +43,9 @@ set(
     lib/expression/expression_evaluator_to_result_test.cpp
     lib/expression/expression_serialization_test.cpp
 
+    lib/metadata/glue_utils_test.cpp
     lib/metadata/mock_catalog_test.cpp
+    
     benchmark/lib/tpch/tpch_mock_catalog_test.cpp
 
     lib/monitoring/function_segments_test.cpp
