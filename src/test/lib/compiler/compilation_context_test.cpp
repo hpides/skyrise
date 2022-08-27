@@ -58,6 +58,13 @@ TEST_F(CompilationContextTest, QueryIdentity) {
   EXPECT_EQ(compilation_context_->QueryIdentity(), expected_identity);
 }
 
+TEST_F(CompilationContextTest, PipelineIdentity) {
+  EXPECT_THROW(compilation_context_->PipelineIdentity(0), std::logic_error);
+  EXPECT_EQ(compilation_context_->PipelineIdentity(1), compilation_context_->QueryIdentity() + "_001");
+  EXPECT_EQ(compilation_context_->PipelineIdentity(10), compilation_context_->QueryIdentity() + "_010");
+  EXPECT_EQ(compilation_context_->PipelineIdentity(100), compilation_context_->QueryIdentity() + "_100");
+}
+
 TEST_F(CompilationContextTest, NextPipelineId) {
   EXPECT_EQ(compilation_context_->NextPipelineId(), 1);
   EXPECT_EQ(compilation_context_->NextPipelineId(), 2);
@@ -66,12 +73,9 @@ TEST_F(CompilationContextTest, NextPipelineId) {
 
 TEST_F(CompilationContextTest, PipelineExportPrefix) {
   std::string prefix = "result/mock_user/2022-07-22_12:50:30'500_" + compilation_context_->QueryIdentity();
-  for (size_t i = 1; i < 10; ++i) {
-    EXPECT_EQ(compilation_context_->PipelineExportPrefix(i), prefix + "/pipeline_00" + std::to_string(i) + "/");
-  }
-  for (size_t i = 10; i < 100; ++i) {
-    EXPECT_EQ(compilation_context_->PipelineExportPrefix(i), prefix + "/pipeline_0" + std::to_string(i) + "/");
-  }
+  EXPECT_THROW(compilation_context_->PipelineExportPrefix(0), std::logic_error);
+  EXPECT_EQ(compilation_context_->PipelineExportPrefix(1), prefix + "/pipeline_001/");
+  EXPECT_EQ(compilation_context_->PipelineExportPrefix(10), prefix + "/pipeline_010/");
   EXPECT_EQ(compilation_context_->PipelineExportPrefix(100), prefix + "/pipeline_100/");
   EXPECT_EQ(compilation_context_->PipelineExportPrefix(1000), prefix + "/pipeline_1000/");
 }

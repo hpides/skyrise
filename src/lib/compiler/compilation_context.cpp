@@ -26,6 +26,13 @@ const std::string& CompilationContext::QueryString() const { return sql_request_
 
 const std::string& CompilationContext::QueryIdentity() const { return query_identity_; }
 
+std::string CompilationContext::PipelineIdentity(const size_t pipeline_id) {
+  Assert(pipeline_id > 0, "Expected pipeline id greater than 0.");
+  std::stringstream stream;
+  stream << QueryIdentity() << std::setfill('0') << std::setw(3) << pipeline_id;
+  return stream.str();
+}
+
 std::shared_ptr<AbstractCatalog> CompilationContext::Catalog() const { return catalog_; }
 
 const std::string& CompilationContext::ExportBucketName() const { return export_bucket_name_; }
@@ -53,6 +60,7 @@ std::string CompilationContext::ExportFileExtension() const {
 size_t CompilationContext::NextPipelineId() { return pipeline_counter_++; }
 
 std::string CompilationContext::PipelineExportPrefix(size_t pipeline_id) {
+  Assert(pipeline_id > 0, "Expected pipeline id greater than 0.");
   std::stringstream stream;
   if (pipeline_export_prefix_.empty()) {
     stream << kExportRootPrefix << sql_request_.user_name << '/';

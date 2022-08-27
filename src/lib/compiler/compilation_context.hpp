@@ -33,6 +33,11 @@ class CompilationContext {
   const std::string& QueryIdentity() const;
 
   /**
+   * @returns a pipeline identity string, which concatenates the query identity and @param pipeline_id.
+   */
+   std::string PipelineIdentity(size_t pipeline_id);
+
+  /**
    * @returns the catalog that provides lookup information, such as TableSchema data, to compile the query.
    */
   std::shared_ptr<AbstractCatalog> Catalog() const;
