@@ -65,4 +65,9 @@ inline constexpr ExportFormat kIntermediateResultsExportFormat = ExportFormat::k
  */
 inline constexpr size_t kMaxWorkerCountPerPipeline = kLambdaFunctionConcurrencyLimit;
 
+/**
+ * The default database schema name in Glue.
+ */
+inline constexpr std::string_view kDatabaseSchemaName = "SkyriseDB";
+
 }  // namespace skyrise

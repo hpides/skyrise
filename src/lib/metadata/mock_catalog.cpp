@@ -74,7 +74,7 @@ bool MockCatalog::TableExists(const std::string& table_name) const {
   return table_name_to_table_schema_.find(table_name) != table_name_to_table_schema_.cend();
 }
 
-std::shared_ptr<TableSchema> MockCatalog::GetEditableTableSchema(const std::string& table_name) {
+std::shared_ptr<TableSchema> MockCatalog::EditableTableSchema(const std::string& table_name) {
   auto table_name_to_table_schema_iterator = table_name_to_table_schema_.find(table_name);
   Assert(table_name_to_table_schema_iterator != table_name_to_table_schema_.cend(),
          "Could not find TableSchema for table '" + table_name + "'.");

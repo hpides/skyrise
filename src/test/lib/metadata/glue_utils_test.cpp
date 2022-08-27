@@ -60,7 +60,7 @@ TEST_F(AwsGlueUtilsTest, CreateReadDeleteTableSchema) {
 }
 
 TEST_F(AwsGlueUtilsTest, UpdateTableSchemaAndVersions) {
-  const std::string table_name = RandomString(10, kCharacterSetLower);
+  const std::string table_name = RandomString(8, kCharacterSetLower);
   std::map<std::string, std::string> parameters;
   parameters["A"] = "a";
 
@@ -86,7 +86,7 @@ TEST_F(AwsGlueUtilsTest, TableSchemas) {
   const size_t num_tables = 100;
   std::set<std::string> table_names;
   for (size_t i = 0; i < num_tables; ++i) {
-    const std::string table_name = RandomString(10, kCharacterSetLower);
+    const std::string table_name = RandomString(8, kCharacterSetLower);
     table_names.insert(table_name);
     const auto create_outcome =
         CreateGlueTableSchema(client_, database_name_, table_name, Aws::Glue::Model::StorageDescriptor());

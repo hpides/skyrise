@@ -107,6 +107,8 @@ set(
     SHARED_METADATA_SOURCES
 
     metadata/abstract_catalog.hpp
+    metadata/glue_catalog.cpp
+    metadata/glue_catalog.hpp
     metadata/glue_utils.cpp
     metadata/glue_utils.hpp
     metadata/mock_catalog.cpp
