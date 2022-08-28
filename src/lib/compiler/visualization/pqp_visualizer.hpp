@@ -8,7 +8,7 @@
 #include <unordered_set>
 #include <utility>
 
-#include "compiler/physical_query_plan/abstract_operator_proxy.hpp"
+#include "compiler/physical_query_plan/operator_proxy/abstract_operator_proxy.hpp"
 #include "compiler/visualization/abstract_visualizer.hpp"
 
 namespace skyrise {
