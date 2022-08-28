@@ -1,6 +1,6 @@
 /**
  * Taken and modified from our sister project Hyrise (https://github.com/hyrise/hyrise)
- * [TPCHBenchmarkItemRunner]
+ *  - See tpch_benchmark_item_runner.hpp/cpp
  */
 #pragma once
 
@@ -32,7 +32,7 @@ class TpchQueryGenerator : public Noncopyable {
  private:
   const float kScaleFactor;
 
-  // Used for naming the views generated in query 15
+  // Used for naming the views generated in query 15.
   std::atomic_size_t q15_view_id_{0};
 
   // We want deterministic seeds, but since the engine is thread-local, we need to make sure that each thread has its

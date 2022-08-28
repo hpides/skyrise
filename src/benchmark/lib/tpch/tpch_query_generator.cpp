@@ -27,7 +27,7 @@ namespace {
 using namespace skyrise;  // NOLINT(google-build-using-namespace)
 
 /**
- * Adds (or subtracts) specified number of months and days
+ * Adds (or subtracts) specified number of months and days.
  */
 std::string CalculateDate(boost::gregorian::date date, int months, int days = 0) {
   date = date + boost::gregorian::months(months) + boost::gregorian::days(days);
