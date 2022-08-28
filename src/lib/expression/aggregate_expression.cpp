@@ -28,12 +28,6 @@ std::string AggregateExpression::Description(const DescriptionMode mode) const {
   if (aggregate_function_ == AggregateFunction::kCountDistinct) {
     Assert(Argument(), "COUNT(DISTINCT ...) requires an argument");
     stream << "COUNT(DISTINCT " << Argument()->Description(mode) << ")";
-  } else if (IsCountStar(*this)) {
-    stream << "COUNT(";
-    if (const auto lqp_column_expression = std::dynamic_pointer_cast<const LQPColumnExpression>(Argument())) {
-      stream << lqp_column_expression->original_node_.lock() << ".";
-    }
-    stream << "*)";
   } else {
     stream << aggregate_function_ << "(";
     if (Argument()) {
@@ -88,34 +82,6 @@ DataType AggregateExpression::GetDataType() const {
   });
 
   return aggregate_data_type;
-}
-
-bool AggregateExpression::IsCountStar(const AbstractExpression& expression) {
-  // COUNT(*) is represented by an AggregateExpression with the COUNT function and an kInvalidColumnId.
-  if (expression.type_ != ExpressionType::kAggregate) {
-    return false;
-  }
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
-  const auto& aggregate_expression = static_cast<const AggregateExpression&>(expression);
-
-  if (aggregate_expression.aggregate_function_ != AggregateFunction::kCount) {
-    return false;
-  }
-
-  switch (aggregate_expression.Argument()->type_) {
-    case ExpressionType::kPqpColumn: {
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
-      const auto& pqp_column_expression = static_cast<PqpColumnExpression&>(*aggregate_expression.Argument());
-      if (pqp_column_expression.column_id_ != kInvalidColumnId) {
-        return false;
-      }
-    } break;
-    // TODO(anyone) Add case ExpressionType::kLqpColumn, after LqpColumnExpressions have been added.
-    default:
-      Fail("Unexpected AggregateExpression argument type.");
-  }
-
-  return true;
 }
 
 bool AggregateExpression::ShallowEquals(const AbstractExpression& expression) const {

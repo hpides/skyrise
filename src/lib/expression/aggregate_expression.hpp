@@ -23,11 +23,6 @@ class AggregateExpression : public AbstractExpression {
 
   const AggregateFunction aggregate_function_;
 
-  /**
-   * @return true, if the given @param expression is an AggregateExpression of type COUNT(*).
-   */
-  static bool IsCountStar(const AbstractExpression& expression);
-
  protected:
   bool ShallowEquals(const AbstractExpression& expression) const override;
   size_t ShallowHash() const override;
