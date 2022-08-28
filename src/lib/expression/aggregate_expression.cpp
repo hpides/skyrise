@@ -29,8 +29,11 @@ std::string AggregateExpression::Description(const DescriptionMode mode) const {
     Assert(Argument(), "COUNT(DISTINCT ...) requires an argument");
     stream << "COUNT(DISTINCT " << Argument()->Description(mode) << ")";
   } else if (IsCountStar(*this)) {
-    // TODO(anyone): Add LqpColumnExpression from Hyrise for detailed output when LqpColumnExpressions are available.
-    stream << "COUNT(*)";
+    stream << "COUNT(";
+    if (const auto lqp_column_expression = std::dynamic_pointer_cast<const LQPColumnExpression>(Argument())) {
+      stream << lqp_column_expression->original_node_.lock() << ".";
+    }
+    stream << "*)";
   } else {
     stream << aggregate_function_ << "(";
     if (Argument()) {
