@@ -20,8 +20,8 @@ class CombineObjectsExchangeStrategy : public AbstractExchangeStrategy {
 
   static std::shared_ptr<const CombineObjectsExchangeStrategy> Create(size_t target_object_count);
 
-  size_t TargetObjectCount(size_t input_object_count) const override;
-  size_t TargetPartitionCount() const override;
+  size_t TargetObjectsCount(size_t input_object_count) const override;
+  size_t TargetPartitionsCount() const override;
 
   ExchangeResult ComputeExchangeResult(
       const size_t pipeline_id, const std::shared_ptr<CompilationContext>& compilation_context,

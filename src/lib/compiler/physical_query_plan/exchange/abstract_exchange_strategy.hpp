@@ -15,29 +15,26 @@ namespace skyrise {
 struct ExchangeResult {
   explicit ExchangeResult(
       std::vector<PipelineFragmentDefinition> init_pipeline_fragment_definitions,
-      std::vector<ObjectReference> init_target_objects,
-      const size_t init_target_worker_count,
-      std::optional<std::shared_ptr<const AbstractPartitioningFunction>> init_pipeline_partitioning_function = std::nullopt)
-      : target_partitioning_function(init_pipeline_partitioning_function),
-        target_objects(std::move(init_target_objects)),
-        pipeline_fragment_definitions(std::move(init_pipeline_fragment_definitions)),
-        target_worker_count(init_target_worker_count),
+      size_t init_next_pipeline_target_object_count, // TODO remove this count?
+      std::optional<std::shared_ptr<const AbstractPartitioningFunction>> init_pipeline_partitioning_function = std::nullopt);
+
+  size_t PartitionCount() const;
+  std::vector<ObjectReference> ObjectReferences() const;
 
   /**
    * TODO(julianmenzler)
    */
-  const std::optional<std::shared_ptr<const AbstractPartitioningFunction>> target_partitioning_function;
-
+  const std::optional<std::shared_ptr<const AbstractPartitioningFunction>> pipeline_partitioning_function;
+  
   /**
    *
    */
-  std::vector<ObjectReference> target_objects;
   std::vector<PipelineFragmentDefinition> pipeline_fragment_definitions;
 
   /**
-   * TODO(julianmenzler)
+   * TODO(julianmenzler) Worker count
    */
-  const size_t target_worker_count;
+  const size_t next_pipeline_target_object_count;
 };
 
 class AbstractExchangeStrategy {

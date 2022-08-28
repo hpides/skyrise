@@ -13,7 +13,8 @@ namespace skyrise {
 class ImportOperatorProxy : public EnableMakeForPlanNode<ImportOperatorProxy, AbstractOperatorProxy>,
                             public AbstractOperatorProxy {
  public:
-  ImportOperatorProxy(std::vector<ObjectReference> object_references, std::vector<ColumnId> column_ids);
+  ImportOperatorProxy(std::vector<ObjectReference> object_references, std::vector<ColumnId> column_ids,
+                      std::string origin_identifier = "");
 
   const std::string& Name() const override;
   std::string Description(const DescriptionMode mode) const override;
@@ -25,6 +26,7 @@ class ImportOperatorProxy : public EnableMakeForPlanNode<ImportOperatorProxy, Ab
   const std::vector<ObjectReference>& ObjectReferences() const;
   const std::vector<ColumnId>& ColumnIds() const;
 
+
   // If desired, non-default options for reading CSV/ORC data can be set.
   void SetImportOptions(std::shared_ptr<const ImportOptions> import_options);
   std::shared_ptr<const ImportOptions> GetImportOptions() const;
@@ -32,11 +34,17 @@ class ImportOperatorProxy : public EnableMakeForPlanNode<ImportOperatorProxy, Ab
   /**
    * Optimization-relevant attributes
    */
-   void SetInputPartitioning(size_t input_partitions_count);
-   void SetOutputObjectsCount(size_t output_objects_count);
-   void SetOutputPartitionsCount(size_t output_partitions_count);
-   const DataTraits& OutputDataTraits() const override;
-   bool IsPipelineBreaker() const override;
+   // TODO Remove void SetOutputObjectsCount(size_t output_objects_count);
+   // TODO Remove void SetOutputPartitionsCount(size_t output_partitions_count);
+  const DataTraits& OutputDataTraits() const override;
+  bool IsPipelineBreaker() const override;
+
+  /**
+   * @returns a string that describes the origin of the objects to import.
+   *          Since it is an optional attribute, the returned string may be empty.
+   */
+  const std::string& OriginIdentifier() const;
+  void SetOriginAndDataTraits(std::string origin_identifier, size_t origin_partition_count, size_t target_object_count);
 
   /**
    * Serialization / Deserialization
@@ -55,6 +63,8 @@ class ImportOperatorProxy : public EnableMakeForPlanNode<ImportOperatorProxy, Ab
   const std::vector<ColumnId> column_ids_;
   std::vector<ObjectReference> object_references_;
   std::shared_ptr<const ImportOptions> import_options_;
+
+  std::string origin_identifier_;
   DataTraits output_data_traits_;
 };
 

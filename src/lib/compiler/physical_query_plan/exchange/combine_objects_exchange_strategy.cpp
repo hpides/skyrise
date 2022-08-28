@@ -14,11 +14,11 @@ std::shared_ptr<const CombineObjectsExchangeStrategy> CombineObjectsExchangeStra
   return std::make_shared<const CombineObjectsExchangeStrategy>(target_object_count);
 }
 
-size_t CombineObjectsExchangeStrategy::TargetObjectCount(size_t /* input_object_count */) const {
+size_t CombineObjectsExchangeStrategy::TargetObjectsCount(size_t /* input_object_count */) const {
   return target_object_count_;
 }
 
-size_t CombineObjectsExchangeStrategy::TargetPartitionCount() const {
+size_t CombineObjectsExchangeStrategy::TargetPartitionsCount() const {
   // TODO Partition Preserving by default. Not supported by ImportOperator yet.
   return 1;
 }
@@ -37,9 +37,9 @@ ExchangeResult CombineObjectsExchangeStrategy::ComputeExchangeResult(
   std::vector<PipelineFragmentDefinition> fragment_definitions;
   std::vector<ObjectReference> target_objects;
   const size_t partition_count = 1;
-  const size_t target_worker_count = target_object_count_;
+  const size_t next_pipeline_target_object_count = target_object_count_;
 
-  return ExchangeResult(fragment_definitions, target_objects, partition_count, target_worker_count);
+  return ExchangeResult(fragment_definitions, target_objects, partition_count, next_pipeline_target_object_count);
 }
 
 size_t CombineObjectsExchangeStrategy::ShallowHash() const { return boost::hash_value(target_object_count_); }

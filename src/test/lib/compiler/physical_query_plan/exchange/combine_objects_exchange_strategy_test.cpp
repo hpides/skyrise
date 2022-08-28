@@ -29,15 +29,15 @@ TEST_F(CombineObjectsExchangeStrategyTest, Properties) {
   EXPECT_THROW(CombineObjectsExchangeStrategy::Create(0), std::logic_error);
 
   const auto full_merge_strategy = CombineObjectsExchangeStrategy::Create(1);
-  EXPECT_EQ(full_merge_strategy->TargetPartitionCount(), 1);
-  EXPECT_EQ(full_merge_strategy->TargetObjectCount(1), 1);
-  EXPECT_EQ(full_merge_strategy->TargetObjectCount(200), 1);
+  EXPECT_EQ(full_merge_strategy->TargetPartitionsCount(), 1);
+  EXPECT_EQ(full_merge_strategy->TargetObjectsCount(1), 1);
+  EXPECT_EQ(full_merge_strategy->TargetObjectsCount(200), 1);
 
   const auto partial_merge_strategy = CombineObjectsExchangeStrategy::Create(50);
-  EXPECT_EQ(partial_merge_strategy->TargetPartitionCount(), 1);
-  EXPECT_EQ(partial_merge_strategy->TargetObjectCount(1), 50);
-  EXPECT_EQ(partial_merge_strategy->TargetObjectCount(50), 50);
-  EXPECT_EQ(partial_merge_strategy->TargetObjectCount(200), 50);
+  EXPECT_EQ(partial_merge_strategy->TargetPartitionsCount(), 1);
+  EXPECT_EQ(partial_merge_strategy->TargetObjectsCount(1), 50);
+  EXPECT_EQ(partial_merge_strategy->TargetObjectsCount(50), 50);
+  EXPECT_EQ(partial_merge_strategy->TargetObjectsCount(200), 50);
 }
 
 TEST_F(CombineObjectsExchangeStrategyTest, ComputeExchangeResultSingleImportProxy) {

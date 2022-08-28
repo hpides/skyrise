@@ -38,6 +38,7 @@ class ImportOperatorProxyTest : public ::testing::Test {
 TEST_F(ImportOperatorProxyTest, BaseProperties) {
   const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
   EXPECT_EQ(import_proxy->Type(), OperatorType::kImport);
+  EXPECT_EQ(import_proxy->OriginIdentifier(), "");
   EXPECT_EQ(import_proxy->ObjectReferences(), kObjectReferences);
   EXPECT_EQ(import_proxy->ColumnIds(), kColumnIds);
   EXPECT_FALSE(import_proxy->IsPipelineBreaker());
@@ -51,6 +52,12 @@ TEST_F(ImportOperatorProxyTest, Description) {
   EXPECT_EQ(import_proxy->Description(DescriptionMode::kSingleLine), "[Import] dummy_bucket/dummy_object ColumnIds{0}");
   EXPECT_EQ(import_proxy->Description(DescriptionMode::kMultiLine),
             "[Import]\ndummy_bucket/\ndummy_object\nColumnIds{0}");
+
+  const auto import_proxy_with_origin = ImportOperatorProxy::Make(object_reference, column_ids, "lineitem");
+  EXPECT_EQ(import_proxy_with_origin->Description(DescriptionMode::kSingleLine),
+            "[Import] dummy_bucket/dummy_object ColumnIds{0} – Origin: lineitem");
+  EXPECT_EQ(import_proxy_with_origin->Description(DescriptionMode::kMultiLine),
+            "[Import]\ndummy_bucket/\ndummy_object\nColumnIds{0}\nOrigin: lineitem");
 }
 
 TEST_F(ImportOperatorProxyTest, DescriptionMultipleObjects) {
@@ -62,26 +69,6 @@ TEST_F(ImportOperatorProxyTest, DescriptionMultipleObjects) {
             "[Import]\ndummy_bucket/\n{3 objects}\nColumnIds{0, 1, 3}");
 }
 
-TEST_F(ImportOperatorProxyTest, OutputObjectsCount) {
-  ASSERT_EQ(kObjectReferences.size(), 3);
-  const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
-  EXPECT_EQ(import_proxy->OutputObjectsCount(), 3);
-  import_proxy->SetOutputObjectsCount(4);
-  EXPECT_EQ(import_proxy->OutputObjectsCount(), 3);
-  import_proxy->SetOutputObjectsCount(2);
-  EXPECT_EQ(import_proxy->OutputObjectsCount(), 2);
-  import_proxy->SetOutputObjectsCount(1);
-  EXPECT_EQ(import_proxy->OutputObjectsCount(), 1);
-  EXPECT_THROW(import_proxy->SetOutputObjectsCount(0), std::logic_error);
-}
-
-TEST_F(ImportOperatorProxyTest, OutputPartitionsCount) {
-  const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
-  EXPECT_EQ(import_proxy->OutputPartitionsCount(), 1);
-  import_proxy->SetOutputPartitionsCount(100);
-  EXPECT_EQ(import_proxy->OutputPartitionsCount(), 100);
-}
-
 TEST_F(ImportOperatorProxyTest, SetImportOptions) {
   const auto proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
   ASSERT_EQ(proxy->GetImportOptions(), nullptr);
@@ -91,6 +78,38 @@ TEST_F(ImportOperatorProxyTest, SetImportOptions) {
   const auto import_operator = proxy->GetOrCreateOperatorInstance();
   // After creating (and caching) an operator instance, it should no longer be possible to modify proxy attributes.
   EXPECT_THROW(proxy->SetImportOptions(import_options_csv_), std::logic_error);
+}
+
+TEST_F(ImportOperatorProxyTest, OriginAndDataTraits) {
+  auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
+  EXPECT_TRUE(import_proxy->OriginIdentifier().empty());
+  EXPECT_EQ(import_proxy->OutputDataTraits().column_count, 3);
+  EXPECT_EQ(import_proxy->OutputDataTraits().object_count, 3);
+  EXPECT_EQ(import_proxy->OutputDataTraits().partition_count, 1);
+
+  // Change ObjectReferences
+  std::vector<ObjectReference> object_references;
+  object_references.emplace_back("bucket_a", "a_1.orc");
+  object_references.emplace_back("bucket_a", "a_2.orc");
+  object_references.emplace_back("bucket_b", "b_1.orc");
+  object_references.emplace_back("bucket_b", "b_2.orc");
+  import_proxy->SetObjectReferences(object_references);
+  EXPECT_EQ(import_proxy->OutputDataTraits().object_count, 4);
+
+  // Set Origin and DataTraits
+  const std::string origin = "query_XYZ_pipeline_001";
+  const size_t partition_count = 3;
+  const size_t target_object_count = 2;
+  import_proxy->SetOriginAndDataTraits(origin, partition_count, target_object_count);
+  EXPECT_EQ(import_proxy->OriginIdentifier(), origin);
+  EXPECT_EQ(import_proxy->OutputDataTraits().partition_count, partition_count);
+  EXPECT_EQ(import_proxy->OutputDataTraits().object_count, target_object_count);
+
+  // Try illegal parameters
+  EXPECT_THROW(import_proxy->SetOriginAndDataTraits("", partition_count, target_object_count), std::logic_error);
+  EXPECT_THROW(import_proxy->SetOriginAndDataTraits(origin, 0, target_object_count), std::logic_error);
+  EXPECT_THROW(import_proxy->SetOriginAndDataTraits(origin, partition_count, 0), std::logic_error);
+  EXPECT_THROW(import_proxy->SetOriginAndDataTraits(origin, partition_count, object_references.size() + 1), std::logic_error);
 }
 
 TEST_F(ImportOperatorProxyTest, SerializeAndDeserialize) {
@@ -142,14 +161,23 @@ TEST_F(ImportOperatorProxyTest, SerializeAndDeserializeImportOptionsCsv) {
 
 TEST_F(ImportOperatorProxyTest, DeepCopy) {
   auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
-  import_proxy->SetOutputObjectsCount(2);
   import_proxy->SetImportOptions(import_options_csv_);
 
+  const std::string origin = "query_XYZ_pipeline_001";
+  const size_t partition_count = 3;
+  const size_t target_object_count = 2;
+  import_proxy->SetOriginAndDataTraits(origin, partition_count, target_object_count);
+
+  // Verify DeepCopy
   const auto import_proxy_copy = std::dynamic_pointer_cast<ImportOperatorProxy>(import_proxy->DeepCopy());
   EXPECT_EQ(import_proxy_copy->ObjectReferences(), kObjectReferences);
   EXPECT_EQ(import_proxy_copy->ColumnIds(), kColumnIds);
-  EXPECT_EQ(import_proxy_copy->OutputObjectsCount(), 2);
   EXPECT_EQ(import_proxy_copy->GetImportOptions(), import_options_csv_);
+
+  EXPECT_EQ(import_proxy_copy->OriginIdentifier(), origin);
+  EXPECT_EQ(import_proxy_copy->OutputDataTraits().column_count, kColumnIds.size());
+  EXPECT_EQ(import_proxy_copy->OutputDataTraits().object_count, target_object_count);
+  EXPECT_EQ(import_proxy_copy->OutputDataTraits().partition_count, partition_count);
 }
 
 TEST_F(ImportOperatorProxyTest, CreateOperatorInstance) {

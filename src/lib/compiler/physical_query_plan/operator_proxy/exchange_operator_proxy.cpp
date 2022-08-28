@@ -39,8 +39,8 @@ void ExchangeOperatorProxy::SetStrategy(std::shared_ptr<const AbstractExchangeSt
 const DataTraits& ExchangeOperatorProxy::OutputDataTraits() const override {
   // Since InputDataTraits might change as a result of optimizations, update the current OutputDataTraits accordingly.
   output_data_traits_.column_count = InputDataTraits().column_count;
-  output_data_traits_.partition_count = strategy_->TargetPartitionCount();
-  output_data_traits_.object_count = strategy_->TargetObjectCount(InputDataTraits().object_count);
+  output_data_traits_.partition_count = strategy_->TargetPartitionsCount();
+  output_data_traits_.object_count = strategy_->TargetObjectsCount(InputDataTraits().object_count);
   return output_data_traits_;
 }
 

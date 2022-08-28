@@ -25,10 +25,10 @@ const std::string kJsonKeyObjectEtag = "etag";
 namespace skyrise {
 
 ImportOperatorProxy::ImportOperatorProxy(std::vector<ObjectReference> object_references,
-                                         std::vector<ColumnId> column_ids)
+                                         std::vector<ColumnId> column_ids,
+                                         std::string origin_identifier)
     : AbstractOperatorProxy(OperatorType::kImport),
-      column_ids_(std::move(column_ids)),
-      object_references_(std::move(object_references)) {
+      column_ids_(std::move(column_ids)), object_references_(std::move(object_references), origin_identifier_(origin_identifier)) {
   Assert(!column_ids_.empty(), "ImportOperatorProxy must specify at least one import ColumnId.");
   output_data_traits_.column_count = column_ids_.size();
   output_data_traits_.object_count = object_references_.size();
@@ -36,13 +36,6 @@ ImportOperatorProxy::ImportOperatorProxy(std::vector<ObjectReference> object_ref
 
 
 const std::string& ImportOperatorProxy::Name() const { return kName; }
-
-void ImportOperatorProxy::SetObjectReferences(std::vector<ObjectReference> object_references) {
-  output_data_traits_.object_count = object_references.size();
-  object_references_ = std::move(object_references);
-}
-
-const std::vector<ObjectReference>& ImportOperatorProxy::ObjectReferences() const { return object_references_; }
 
 std::string ImportOperatorProxy::Description(const DescriptionMode mode) const {
   std::stringstream stream;
@@ -59,11 +52,29 @@ std::string ImportOperatorProxy::Description(const DescriptionMode mode) const {
   } else {
     stream << "{" << object_references_.size() << " objects}";
   }
-  // todo(anyone) input format ORC/CSV?
 
   stream << separator << "ColumnIds{" << column_ids_ << "}";
+
+  if (origin_identifier_.empty()) {
+    return stream.str();
+  }
+
+  // Origin details
+  stream << separator;
+  if (mode == DescriptionMode::kSingleLine) {
+    stream << "- ";
+  }
+  stream << "Origin: " << origin_identifier_;
+
   return stream.str();
 }
+
+void ImportOperatorProxy::SetObjectReferences(std::vector<ObjectReference> object_references) {
+  output_data_traits_.object_count = object_references.size();
+  object_references_ = std::move(object_references);
+}
+
+const std::vector<ObjectReference>& ImportOperatorProxy::ObjectReferences() const { return object_references_; }
 
 const std::vector<ColumnId>& ImportOperatorProxy::ColumnIds() const { return column_ids_; }
 
@@ -76,27 +87,25 @@ void ImportOperatorProxy::SetImportOptions(std::shared_ptr<const ImportOptions> 
 
 std::shared_ptr<const ImportOptions> ImportOperatorProxy::GetImportOptions() const { return import_options_; }
 
-
-void ImportOperatorProxy::SetInputPartitioning(size_t input_partitions_count) {
-  output_data_traits_.partition_count = input_partitions_count;
-}
-
-void ImportOperatorProxy::SetOutputObjectsCount(size_t output_objects_count) {
-  Assert(output_objects_count > 1, "In PQPs, an ImportOperatorProxy must specify at least one output object.");
-  output_data_traits_.object_count = output_objects_count;
-}
-
-void ImportOperatorProxy::SetOutputPartitionsCount(size_t output_partitions_count) {
-  output_data_traits_.partition_count = output_partitions_count;
-}
-
 const DataTraits& ImportOperatorProxy::OutputDataTraits() const {
   Assert(output_data_traits_.column_count == column_ids_.size(), "Invalid column count in OutputDataTraits.");
-  Assert(output_data_traits_.object_count <= object_references_.size(), "Invalid object count in OutputDataTraits.");
   return output_data_traits_;
 }
 
 bool ImportOperatorProxy::IsPipelineBreaker() const { return false; }
+
+const std::string& ImportOperatorProxy::OriginIdentifier() const { return origin_identifier_; }
+
+void ImportOperatorProxy::SetOriginAndDataTraits(std::string origin_identifier, const size_t origin_partition_count, const size_t target_object_count) {
+  Assert(!origin_identifier.empty(), "Empty pipeline identity string.");
+  Assert(origin_partition_count > 0, "Invalid partition count.");
+  Assert(target_object_count > 0, "In PQPs, an ImportOperatorProxy must specify at least one output object.");
+  Assert(target_object_count <= object_references_.size(), "Target object count is greater than the count of import objects.");
+
+  origin_identifier_ = std::move(origin_identifier);
+  output_data_traits_.partition_count = origin_partition_count;
+  output_data_traits_.object_count = target_object_count;
+}
 
 Aws::Utils::Json::JsonValue ImportOperatorProxy::ToJson() const {
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> object_references_array(object_references_.size());
@@ -145,7 +154,7 @@ std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::FromJson(const Aws::
 std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::OnDeepCopy(
     const std::shared_ptr<AbstractOperatorProxy>& /*copied_left_input*/,
     const std::shared_ptr<AbstractOperatorProxy>& /*copied_right_input*/) const {
-  auto copy = ImportOperatorProxy::Make(object_references_, column_ids_);
+  auto copy = ImportOperatorProxy::Make(object_references_, column_ids_, origin_identifier_);
   copy->output_data_traits_ = output_data_traits_;
   if (import_options_ != nullptr) {
     copy->SetImportOptions(import_options_);
