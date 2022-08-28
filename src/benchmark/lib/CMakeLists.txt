@@ -60,11 +60,15 @@ set(
     lambda/network_throughput_parallel_benchmark.hpp
     synthetic_table_generator.cpp
     synthetic_table_generator.hpp
-    tpch/tpch_data_generator.hpp
+    table_builder.hpp
     tpch/tpch_data_generator.cpp
+    tpch/tpch_data_generator.hpp
     tpch/tpch_mock_catalog.cpp
     tpch/tpch_mock_catalog.hpp
-    table_builder.hpp
+    tpch/tpch_queries.cpp
+    tpch/tpch_queries.hpp
+    tpch/tpch_query_generator.cpp
+    tpch/tpch_query_generator.hpp
 )
 
 set(
