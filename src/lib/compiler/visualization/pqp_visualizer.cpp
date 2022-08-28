@@ -1,7 +1,7 @@
 /**
  * Taken and modified from our sister project Hyrise (https://github.com/hyrise/hyrise)
  */
-#include "visualization/pqp_visualizer.hpp"
+#include "pqp_visualizer.hpp"
 
 #include <chrono>
 #include <memory>
