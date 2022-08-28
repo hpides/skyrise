@@ -9,7 +9,7 @@
 #include <utility>
 
 #include "compiler/physical_query_plan/abstract_operator_proxy.hpp"
-#include "visualization/abstract_visualizer.hpp"
+#include "compiler/visualization/abstract_visualizer.hpp"
 
 namespace skyrise {
 
