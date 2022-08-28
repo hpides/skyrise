@@ -65,4 +65,36 @@ TEST_F(HashJoinOperatorTest, InnerJoin) {
   EXPECT_EQ(result->RowCount(), 5);
 }
 
+TEST_F(HashJoinOperatorTest, LeftOuterJoin) {
+  const auto table_wrapper_left = std::make_shared<TableWrapper>(table_left_);
+  const auto table_wrapper_right = std::make_shared<TableWrapper>(table_right_);
+
+  const auto predicate =
+      std::make_shared<JoinOperatorPredicate>(JoinOperatorPredicate{0, 1, PredicateCondition::kEquals});
+  const auto join_operator =
+      std::make_shared<HashJoinOperator>(table_wrapper_left, table_wrapper_right, predicate, JoinMode::kLeftOuter);
+
+  EXPECT_EQ(join_operator->Name(), "HashJoin");
+
+  table_wrapper_left->Execute();
+  table_wrapper_right->Execute();
+  join_operator->Execute();
+
+  const auto result = join_operator->GetOutput();
+
+  EXPECT_EQ(result->ChunkCount(), 2);
+  EXPECT_EQ(result->GetColumnCount(), 4);
+  EXPECT_EQ(result->RowCount(), 6);
+
+  for (ChunkId i = 0; i < result->ChunkCount(); ++i) {
+    const auto& abstract_segment_left = result->GetChunk(i)->GetSegment(0);
+    const auto& values_int_left = std::dynamic_pointer_cast<ValueSegment<int>>(abstract_segment_left)->Values();
+    const auto& typed_segment_right = std::dynamic_pointer_cast<ValueSegment<int>>(result->GetChunk(i)->GetSegment(3));
+
+    for (ChunkOffset j = 0; j < result->GetChunk(i)->Size(); ++j) {
+      EXPECT_EQ(typed_segment_right->IsNull(j), values_int_left[j] == 2);
+    }
+  }
+}
+
 }  // namespace skyrise

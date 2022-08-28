@@ -82,4 +82,9 @@ size_t StringHeapSize(const std::string& string);
  */
 size_t StringVectorMemoryUsage(const std::vector<std::string>& string_vector);
 
+/**
+ * @return The passed string in lowercase characters.
+ */
+std::string ToLowerCase(const std::string& input_string);
+
 }  // namespace skyrise

@@ -29,6 +29,7 @@ class FunctionWarmUpBenchmark : public LambdaBenchmark {
                           const std::vector<size_t>& invocation_counts, const std::vector<size_t>& sleep_ms_durations,
                           const std::vector<double>& provisioning_factors, const bool enable_provisioned_concurrency,
                           const size_t repetition_count);
+  const Aws::String& Name() const override;
 
  protected:
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> OnRun(

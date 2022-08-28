@@ -148,6 +148,10 @@ set(
     SHARED_METADATA_SOURCES
 
     metadata/abstract_catalog.hpp
+    metadata/glue_catalog.cpp
+    metadata/glue_catalog.hpp
+    metadata/glue_utils.cpp
+    metadata/glue_utils.hpp
     metadata/mock_catalog.cpp
     metadata/mock_catalog.hpp
     metadata/table_partition.cpp
@@ -244,6 +248,8 @@ set(
 
     storage/backend/abstract_storage.cpp
     storage/backend/abstract_storage.hpp
+    storage/backend/dynamodb_utils.cpp
+    storage/backend/dynamodb_utils.hpp
     storage/backend/errors.cpp
     storage/backend/errors.hpp
     storage/backend/storage_filesystem.cpp
@@ -264,6 +270,12 @@ set(
     storage/formats/orc_reader.hpp
     storage/formats/orc_writer.cpp
     storage/formats/orc_writer.hpp
+    storage/formats/parquet_expression.cpp
+    storage/formats/parquet_expression.hpp
+    storage/formats/parquet_reader.cpp
+    storage/formats/parquet_reader.hpp
+    storage/formats/parquet_writer.cpp
+    storage/formats/parquet_writer.hpp
     storage/storage_types.hpp
     storage/table/abstract_segment.hpp
     storage/table/abstract_table_constraint.cpp
@@ -338,9 +350,16 @@ set(
     SHARED_LIBRARIES
 
     aws-cpp-sdk-core
+    aws-cpp-sdk-dynamodb
+    aws-cpp-sdk-glue
     aws-cpp-sdk-s3
     aws-cpp-sdk-sqs
     aws-cpp-sdk-xray
+
+    # Link Arrow and Parquet libraries in order of dependencies
+    arrow_dataset_static
+    parquet_static
+    arrow_static
 )
 
 add_library(skyriseSharedLibrary STATIC ${SHARED_SOURCES})

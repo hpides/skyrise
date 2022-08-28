@@ -26,6 +26,10 @@ class Ec2InvocationBenchmark : public AbstractBenchmark {
   static Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<Ec2BenchmarkResult>& benchmark_result,
                                                           const Ec2InvocationBenchmarkParameters& parameters);
 
+ protected:
+  const Aws::String& Name() const override;
+
+ private:
   std::vector<std::pair<std::shared_ptr<Ec2BenchmarkConfig>, Ec2InvocationBenchmarkParameters>> benchmark_configs_;
   std::vector<std::shared_ptr<Ec2BenchmarkResult>> benchmark_results_;
 };

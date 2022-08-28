@@ -27,6 +27,7 @@ class InvocationLatencyBenchmark : public LambdaBenchmark {
                              const std::vector<size_t>& function_instance_mb_sizes,
                              const std::vector<size_t>& invocation_counts, const std::vector<bool>& warm_modes,
                              const std::vector<size_t>& sleep_ms_durations, const size_t repetition_count);
+  const Aws::String& Name() const override;
 
  protected:
   Aws::Utils::Array<Aws::Utils::Json::JsonValue> OnRun(

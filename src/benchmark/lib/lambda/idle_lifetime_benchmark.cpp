@@ -13,6 +13,12 @@
 #include "utils/map.hpp"
 #include "utils/string.hpp"
 
+namespace {
+
+const Aws::String kName = "idle_lifetime_benchmark";
+
+}  // namespace
+
 namespace skyrise {
 
 IdleLifetimeBenchmark::IdleLifetimeBenchmark(std::shared_ptr<const CostCalculator> cost_calculator,
@@ -96,11 +102,13 @@ Aws::Utils::Json::JsonValue IdleLifetimeBenchmark::GenerateResultOutput(
 
   const BenchmarkResultAggregate aggregate(idle_lifetime_percentages);
 
-  return LambdaBenchmarkOutput("idle_lifetime_benchmark", benchmark_result)
+  return LambdaBenchmarkOutput(Name(), benchmark_result)
       .WithInt64Argument("function_instance_mb_size", benchmark_parameters.function_instance_mb_size)
       .WithInt64Argument("invocation_count", benchmark_parameters.invocation_count)
       .WithInt64Argument("sleep_min_duration", benchmark_parameters.sleep_min_duration)
       .WithInt64Argument("repetition_count", benchmark_parameters.repetition_count)
+      .WithDoubleMetric("benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
+                                                  benchmark_result, benchmark_parameters.function_instance_mb_size)))
       .WithDoubleMetric("idle_lifetime_percentage_minimum", aggregate.GetMinimum())
       .WithDoubleMetric("idle_lifetime_percentage_maximum", aggregate.GetMaximum())
       .WithDoubleMetric("idle_lifetime_percentage_average", aggregate.GetAverage())
@@ -110,8 +118,6 @@ Aws::Utils::Json::JsonValue IdleLifetimeBenchmark::GenerateResultOutput(
       .WithDoubleMetric("idle_lifetime_percentage_percentile_1", aggregate.GetPercentile(1))
       .WithDoubleMetric("idle_lifetime_percentage_percentile_10", aggregate.GetPercentile(10))
       .WithDoubleMetric("idle_lifetime_percentage_std_dev", aggregate.GetStandardDeviation())
-      .WithDoubleMetric("benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
-                                                  benchmark_result, benchmark_parameters.function_instance_mb_size)))
       .WithDoubleInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
         return std::make_tuple("function_cost_usd",
                                ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size));
@@ -121,5 +127,7 @@ Aws::Utils::Json::JsonValue IdleLifetimeBenchmark::GenerateResultOutput(
       })
       .Build();
 }
+
+const Aws::String& IdleLifetimeBenchmark::Name() const { return kName; }
 
 }  // namespace skyrise

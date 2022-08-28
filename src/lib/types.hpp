@@ -6,7 +6,10 @@
 #include <cstdint>
 #include <limits>
 #include <ostream>
+#include <regex>
 #include <vector>
+
+#include <aws/core/utils/json/JsonSerializer.h>
 
 #include "utils/assert.hpp"
 
@@ -168,6 +171,27 @@ struct ObjectReference {
       : bucket_name(std::move(init_bucket_name)), identifier(std::move(init_identifier)), etag(std::move(init_etag)) {
     Assert(!bucket_name.empty(), "ObjectReference requires a non-empty bucket name.");
     Assert(!identifier.empty(), "ObjectReference requires a non-empty object identifier.");
+  }
+
+  ObjectReference(const std::string& s3_uri) {
+    std::smatch match;
+    std::regex_search(s3_uri, match, std::regex("^s3://([\\w-]+)/(.*)$"));
+    DebugAssert(match.size() == 3, "Unable to extract the S3 bucket and prefix from \"" + s3_uri + "\".");
+
+    bucket_name = match[1];
+    identifier = match[2];
+  }
+
+  ObjectReference(const Aws::Utils::Json::JsonView& json)
+      : ObjectReference(json.GetString("bucket"), json.GetString("id"), json.GetString("etag")) {}
+
+  std::string S3Uri() const { return "s3://" + bucket_name + "/" + identifier; }
+
+  Aws::Utils::Json::JsonValue Serialize() const {
+    return Aws::Utils::Json::JsonValue()
+        .WithString("bucket", bucket_name)
+        .WithString("id", identifier)
+        .WithString("etag", etag);
   }
 
   bool operator==(const ObjectReference& other) const {

@@ -7,6 +7,7 @@
 #include <aws/lambda/model/CreateFunctionRequest.h>
 #include <aws/lambda/model/GetFunctionConfigurationRequest.h>
 #include <aws/lambda/model/PublishVersionRequest.h>
+#include <sys/utsname.h>
 #include <unistd.h>
 
 #include "configuration.hpp"
@@ -63,6 +64,15 @@ void UploadFunctions(const std::shared_ptr<const Aws::IAM::IAMClient>& iam_clien
   Assert(get_role_outcome.IsSuccess(), get_role_outcome.GetError().GetMessage());
   const auto role_arn = get_role_outcome.GetResult().GetRole().GetArn();
 
+  // We deploy functions based on the host system's processor architecture.
+  // Once we support cross-compilation, e.g. from x86 to ARM, we have to revisit this.
+  utsname cpu_information;
+  uname(&cpu_information);
+  auto function_architecture = Aws::Lambda::Model::Architecture::x86_64;
+  if (cpu_information.machine == std::string("aarch64")) {
+    function_architecture = Aws::Lambda::Model::Architecture::arm64;
+  }
+
   std::vector<Aws::Lambda::Model::CreateFunctionOutcomeCallable> create_function_outcome_callables;
   create_function_outcome_callables.reserve(function_deployables.size());
   for (const auto& function_deployable : function_deployables) {
@@ -70,6 +80,7 @@ void UploadFunctions(const std::shared_ptr<const Aws::IAM::IAMClient>& iam_clien
         Aws::Lambda::Model::CreateFunctionRequest()
             .WithFunctionName(function_deployable.function_name)
             .WithRuntime(Aws::Lambda::Model::Runtime::provided_al2)
+            .WithArchitectures(Aws::Vector<Aws::Lambda::Model::Architecture>{function_architecture})
             .WithRole(role_arn)
             .WithHandler(kLambdaFunctionHandler.data())
             .WithCode(function_deployable.function_code.View())
@@ -90,7 +101,7 @@ void UploadFunctions(const std::shared_ptr<const Aws::IAM::IAMClient>& iam_clien
     auto function_state_polling_end = function_state_polling_start;
 
     while (!IsActive(lambda_client, create_function_outcome.GetResult().GetFunctionName())) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(kLambdaFunctionStatePollingIntervalMilliseconds));
+      std::this_thread::sleep_for(std::chrono::milliseconds(kStatePollingIntervalMilliseconds));
       function_state_polling_end = std::chrono::system_clock::now();
       Assert(std::chrono::duration<double>(function_state_polling_end - function_state_polling_start).count() <
                  kLambdaFunctionStatePollingTimeoutSeconds,

@@ -58,7 +58,10 @@ set(
     lib/expression/expression_evaluator_to_result_test.cpp
     lib/expression/expression_serialization_test.cpp
 
+    lib/metadata/glue_catalog_test.cpp
+    lib/metadata/glue_utils_test.cpp
     lib/metadata/mock_catalog_test.cpp
+
     benchmark/lib/tpch/tpch_mock_catalog_test.cpp
 
     lib/monitoring/function_segments_test.cpp
@@ -89,6 +92,7 @@ set(
     lib/statistics/statistics_collector_test.cpp
 
     lib/storage/backend/abstract_provider.hpp
+    lib/storage/backend/dynamodb_utils_test.cpp
     lib/storage/backend/filesystem_provider.hpp
     lib/storage/backend/mock_storage.cpp
     lib/storage/backend/mock_storage.hpp
@@ -101,10 +105,14 @@ set(
 
     lib/storage/formats/csv_reader_test.cpp
     lib/storage/formats/csv_writer_test.cpp
+    lib/storage/formats/format_reader_test.cpp
     lib/storage/formats/mock_chunk_reader.cpp
     lib/storage/formats/mock_chunk_reader.hpp
     lib/storage/formats/orc_reader_test.cpp
     lib/storage/formats/orc_writer_test.cpp
+    lib/storage/formats/parquet_reader_test.cpp
+    lib/storage/formats/parquet_writer_test.cpp
+    lib/storage/formats/parquet_expression_test.cpp
 
     lib/storage/table/chunk_reader_test.cpp
     lib/storage/table/chunk_test.cpp

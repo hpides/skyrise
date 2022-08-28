@@ -11,6 +11,12 @@
 #include "utils/literal.hpp"
 #include "utils/string.hpp"
 
+namespace {
+
+const Aws::String kName = "network_latency_benchmark";
+
+}  // namespace
+
 namespace skyrise {
 
 NetworkLatencyBenchmark::NetworkLatencyBenchmark(std::shared_ptr<const BenchmarkHelper> helper,
@@ -65,15 +71,11 @@ Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
 
   const BenchmarkResultAggregate aggregate(latencies);
 
-  return LambdaBenchmarkOutput("network_latency_benchmark", benchmark_result)
-      .WithInt64Argument("function_instance_mb_size", benchmark_parameters.function_instance_mb_size)
-      .WithInt64Argument("object_byte_size", benchmark_parameters.object_byte_size)
-      .WithInt64Argument("batch_size", benchmark_parameters.batch_size)
-      .WithInt64Argument("thread_count", benchmark_parameters.thread_count)
-      .WithInt64Argument("invocation_count", benchmark_parameters.invocation_count)
-      .WithInt64Argument("bucket_count", benchmark_parameters.bucket_count)
-      .WithInt64Argument("repetition_count", benchmark_parameters.repetition_count)
-      .WithStringArgument("operation_type", std::string(magic_enum::enum_name(benchmark_parameters.operation_type)))
+  LambdaBenchmarkOutput output(Name(), benchmark_result);
+
+  return AddArguments(output, benchmark_parameters)
+      .WithDoubleMetric("benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
+                                                  benchmark_result, benchmark_parameters.function_instance_mb_size)))
       .WithDoubleMetric("latency_ms_minimum", aggregate.GetMinimum())
       .WithDoubleMetric("latency_ms_maximum", aggregate.GetMaximum())
       .WithDoubleMetric("latency_ms_average", aggregate.GetAverage())
@@ -83,14 +85,12 @@ Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
       .WithDoubleMetric("latency_ms_percentile_99.9", aggregate.GetPercentile(99.9))
       .WithDoubleMetric("latency_ms_percentile_99.99", aggregate.GetPercentile(99.99))
       .WithDoubleMetric("latency_ms_std_dev", aggregate.GetStandardDeviation())
-      .WithDoubleMetric("benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
-                                                  benchmark_result, benchmark_parameters.function_instance_mb_size)))
       .WithDoubleInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
         return std::make_tuple("function_cost_usd",
                                ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size));
       })
       .WithDoubleInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
-        return std::make_tuple("billed_lambda_duration_ms", invoke_result.GetLogResult()->GetBilledDurationMs());
+        return std::make_tuple("invocation_billed_duration_ms", invoke_result.GetLogResult()->GetBilledDurationMs());
       })
       .WithObjectInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
         const auto ms_durations = invoke_result.GetResponseBody().GetArray("ms_durations");
@@ -107,5 +107,7 @@ Aws::Utils::Json::JsonValue NetworkLatencyBenchmark::GenerateResultOutput(
       })
       .Build();
 }
+
+const Aws::String& NetworkLatencyBenchmark::Name() const { return kName; }
 
 }  // namespace skyrise

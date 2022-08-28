@@ -93,8 +93,6 @@ TEST_F(AwsBenchmarkOutputTest, Build) {
 
   const auto json_view = benchmark_output.View();
 
-  EXPECT_TRUE(json_view.ValueExists("name"));
-
   EXPECT_TRUE(json_view.ValueExists("arguments"));
   const auto arguments = json_view.GetObject("arguments");
 
@@ -113,8 +111,7 @@ TEST_F(AwsBenchmarkOutputTest, Build) {
 
   EXPECT_TRUE(json_view.ValueExists("repetitions"));
   const auto repetitions = json_view.GetArray("repetitions");
-  EXPECT_TRUE(repetitions[0].ValueExists("repetition"));
-  EXPECT_TRUE(repetitions[0].ValueExists("duration_ms"));
+  EXPECT_TRUE(repetitions[0].ValueExists("repetition_duration_ms"));
   EXPECT_TRUE(repetitions[0].ValueExists("invocations"));
   EXPECT_TRUE(repetitions[0].ValueExists("bool_repetition_metric"));
   EXPECT_TRUE(repetitions[0].ValueExists("double_repetition_metric"));

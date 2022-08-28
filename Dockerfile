@@ -28,9 +28,20 @@ ARG LLVM_CLANG_DIR=/opt/build/llvm-clang-${LLVM_CLANG_VERSION}
 ARG ORC_DIR=/opt/build/orc-${ORC_VERSION}
 ARG VALGRIND_DIR=/opt/run/valgrind-${VALGRIND_VERSION}
 
+# The Docker images are based on the latest Amazon Linux 2 (AL2) Serverless Application Model (SAM) image.
+# We set different environment variables based on the target processor architecture.
+FROM public.ecr.aws/sam/build-provided.al2:latest AS base-install-amd64
+ENV CMAKE_ARCH=x86_64
+ENV AWS_SDK_BUILD_SHARED_LIBS=OFF
+
+
+FROM public.ecr.aws/sam/build-provided.al2:latest AS base-install-arm64
+ENV CMAKE_ARCH=aarch64
+ENV AWS_SDK_BUILD_SHARED_LIBS=ON
 
 # Packages for builing Docker images
-FROM amazon/aws-sam-cli-build-image-provided.al2 AS base-install
+FROM base-install-${TARGETARCH} AS base-install
+ARG TARGETARCH
 
     # Update packages
 RUN yum update -y && \
@@ -54,6 +65,12 @@ RUN yum update -y && \
     libunwind-devel \
     # LLDB dependency
     libedit-devel && \
+    # On ARM, the Linux kernel headers need to be updated for building LLDB.
+    if [ "$TARGETARCH" = "arm64" ]; then \
+        yum install -y amazon-linux-extras && \
+        amazon-linux-extras install kernel-5.4 -y && \
+        yum install -y kernel-headers.aarch64;  \
+    fi && \
     # Cleanup packages
     yum remove -y \
     cmake && \
@@ -66,9 +83,10 @@ FROM base-install AS base-cmake
 ARG CMAKE_MAJOR_MINOR
 ARG CMAKE_PATCH
 ARG CMAKE_DIR
+ARG CMAKE_ARCH
 
 WORKDIR ${CMAKE_DIR}
-RUN wget -nv https://cmake.org/files/v${CMAKE_MAJOR_MINOR}/cmake-${CMAKE_MAJOR_MINOR}.${CMAKE_PATCH}-linux-x86_64.tar.gz -O - \
+RUN wget -nv https://cmake.org/files/v${CMAKE_MAJOR_MINOR}/cmake-${CMAKE_MAJOR_MINOR}.${CMAKE_PATCH}-linux-${CMAKE_ARCH}.tar.gz -O - \
         | tar -xz --strip-components=1 && \
     for file in ${CMAKE_DIR}/bin/*; \
         do \
@@ -205,6 +223,7 @@ RUN wget -nv https://sourceware.org/pub/valgrind/valgrind-${VALGRIND_VERSION}.ta
 FROM base-llvm-clang AS base-aws-sdk
 ARG AWS_SDK_VERSION
 ARG AWS_SDK_DIR
+ARG AWS_SDK_BUILD_SHARED_LIBS
 
 WORKDIR ${AWS_SDK_DIR}
 RUN git clone --branch ${AWS_SDK_VERSION} --depth 1 --recurse-submodules --shallow-submodules https://github.com/aws/aws-sdk-cpp.git src && \
@@ -214,7 +233,7 @@ RUN git clone --branch ${AWS_SDK_VERSION} --depth 1 --recurse-submodules --shall
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=${AWS_SDK_DIR} \
             -DBUILD_ONLY="dynamodb;ec2;glue;iam;lambda;logs;monitoring;pricing;s3;sqs;ssm;xray" \
-            -DBUILD_SHARED_LIBS=OFF \
+            -DBUILD_SHARED_LIBS=${AWS_SDK_BUILD_SHARED_LIBS} \
             -DCPP_STANDARD=17 \
             -DCUSTOM_MEMORY_MANAGEMENT=OFF \
             -DENABLE_TESTING=OFF \
@@ -292,7 +311,7 @@ RUN wget -nv https://github.com/apache/arrow/archive/refs/tags/apache-arrow-${AR
 
 
 # Base stage combining all tools
-FROM amazon/aws-sam-cli-build-image-provided.al2 AS base
+FROM public.ecr.aws/sam/build-provided.al2:latest AS base
 ARG ARROW_PARQUET_DIR
 ARG AWS_SDK_DIR
 ARG BOOST_DIR
@@ -319,7 +338,7 @@ COPY --from=base-valgrind ${VALGRIND_DIR} ${VALGRIND_DIR}
 
 
 # Amazon Linux 2 Docker image for building Skyrise
-FROM amazon/aws-sam-cli-build-image-provided.al2 AS al2
+FROM public.ecr.aws/sam/build-provided.al2:latest AS al2
 ARG ARROW_PARQUET_DIR
 ARG AWS_SDK_DIR
 ARG BOOST_DIR

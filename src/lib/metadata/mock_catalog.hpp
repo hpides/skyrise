@@ -23,7 +23,7 @@ class MockCatalog : public AbstractCatalog {
   void AddTableSchemaFromFileHeader(const std::string& table_name, const std::string& file_name);
 
   bool TableExists(const std::string& table_name) const override;
-  std::shared_ptr<TableSchema> GetEditableTableSchema(const std::string& table_name);
+  std::shared_ptr<TableSchema> EditableTableSchema(const std::string& table_name);
   std::shared_ptr<const TableSchema> GetTableSchema(const std::string& table_name) const override;
 
   const std::string& TableBucketName(const std::string& table_name) const override;

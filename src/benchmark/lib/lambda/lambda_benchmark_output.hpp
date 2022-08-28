@@ -8,6 +8,18 @@
 
 namespace skyrise {
 
+template <class T>
+struct MetricFunctors {
+ public:
+  Aws::Utils::Json::JsonValue& AppendMetrics(T result, Aws::Utils::Json::JsonValue& output) const;
+
+  std::vector<std::function<std::tuple<Aws::String, bool>(const T&)>> bool_functors;
+  std::vector<std::function<std::tuple<Aws::String, long long>(const T&)>> int64_functors;
+  std::vector<std::function<std::tuple<Aws::String, double>(const T&)>> double_functors;
+  std::vector<std::function<std::tuple<Aws::String, Aws::String>(const T&)>> string_functors;
+  std::vector<std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const T&)>> object_functors;
+};
+
 class LambdaBenchmarkOutput {
  public:
   LambdaBenchmarkOutput(Aws::String benchmark_name, std::shared_ptr<LambdaBenchmarkResult> benchmark_result);
@@ -53,23 +65,8 @@ class LambdaBenchmarkOutput {
   Aws::Utils::Json::JsonValue arguments_;
   Aws::Utils::Json::JsonValue metrics_;
 
-  std::vector<std::function<std::tuple<Aws::String, bool>(const LambdaInvokeResult&)>> bool_invocation_functors_;
-  std::vector<std::function<std::tuple<Aws::String, long long>(const LambdaInvokeResult&)>> int64_invocation_functors_;
-  std::vector<std::function<std::tuple<Aws::String, double>(const LambdaInvokeResult&)>> double_invocation_functors_;
-  std::vector<std::function<std::tuple<Aws::String, Aws::String>(const LambdaInvokeResult&)>>
-      string_invocation_functors_;
-  std::vector<std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const LambdaInvokeResult&)>>
-      object_invocation_functors_;
-
-  std::vector<std::function<std::tuple<Aws::String, bool>(const LambdaBenchmarkRepetition&)>> bool_repetition_functors_;
-  std::vector<std::function<std::tuple<Aws::String, long long>(const LambdaBenchmarkRepetition&)>>
-      int64_repetition_functors_;
-  std::vector<std::function<std::tuple<Aws::String, double>(const LambdaBenchmarkRepetition&)>>
-      double_repetition_functors_;
-  std::vector<std::function<std::tuple<Aws::String, Aws::String>(const LambdaBenchmarkRepetition&)>>
-      string_repetition_functors_;
-  std::vector<std::function<std::tuple<Aws::String, Aws::Utils::Json::JsonValue>(const LambdaBenchmarkRepetition&)>>
-      object_repetition_functors_;
+  MetricFunctors<LambdaBenchmarkRepetition> repetition_functors_;
+  MetricFunctors<LambdaInvokeResult> invocation_functors_;
 };
 
 }  // namespace skyrise

@@ -17,6 +17,7 @@ class NetworkThroughputParallelBenchmark : public NetworkBenchmark {
                                      const std::vector<size_t>& invocation_counts,
                                      const std::vector<size_t>& bucket_counts, const bool enable_reads,
                                      const size_t repetition_count);
+  const Aws::String& Name() const override;
 
  private:
   Aws::Utils::Json::JsonValue GenerateResultOutput(const std::shared_ptr<LambdaBenchmarkResult>& benchmark_result,

@@ -11,6 +11,12 @@
 #include "utils/string.hpp"
 #include "utils/unit_conversion.hpp"
 
+namespace {
+
+const Aws::String kName = "network_throughput_parallel_benchmark";
+
+}  // namespace
+
 namespace skyrise {
 
 NetworkThroughputParallelBenchmark::NetworkThroughputParallelBenchmark(
@@ -70,15 +76,11 @@ Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateResultOu
 
   const BenchmarkResultAggregate aggregate(throughputs);
 
-  return LambdaBenchmarkOutput("network_throughput_parallel_benchmark", benchmark_result)
-      .WithInt64Argument("function_instance_mb_size", benchmark_parameters.function_instance_mb_size)
-      .WithInt64Argument("object_byte_size", benchmark_parameters.object_byte_size)
-      .WithInt64Argument("batch_size", benchmark_parameters.batch_size)
-      .WithInt64Argument("thread_count", benchmark_parameters.thread_count)
-      .WithInt64Argument("invocation_count", benchmark_parameters.invocation_count)
-      .WithInt64Argument("bucket_count", benchmark_parameters.bucket_count)
-      .WithInt64Argument("repetition_count", benchmark_parameters.repetition_count)
-      .WithStringArgument("operation_type", std::string(magic_enum::enum_name(benchmark_parameters.operation_type)))
+  LambdaBenchmarkOutput output(Name(), benchmark_result);
+
+  return AddArguments(output, benchmark_parameters)
+      .WithDoubleMetric("benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
+                                                  benchmark_result, benchmark_parameters.function_instance_mb_size)))
       .WithDoubleMetric("throughput_parallel_mb_per_s_minimum", aggregate.GetMinimum())
       .WithDoubleMetric("throughput_parallel_mb_per_s_maximum", aggregate.GetMaximum())
       .WithDoubleMetric("throughput_parallel_mb_per_s_average", aggregate.GetAverage())
@@ -88,14 +90,12 @@ Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateResultOu
       .WithDoubleMetric("throughput_parallel_mb_per_s_percentile_1", aggregate.GetPercentile(1))
       .WithDoubleMetric("throughput_parallel_mb_per_s_percentile_10", aggregate.GetPercentile(10))
       .WithDoubleMetric("throughput_parallel_mb_per_s_std_dev", aggregate.GetStandardDeviation())
-      .WithDoubleMetric("benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
-                                                  benchmark_result, benchmark_parameters.function_instance_mb_size)))
       .WithDoubleInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
         return std::make_tuple("function_cost_usd",
                                ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size));
       })
       .WithDoubleInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
-        return std::make_tuple("billed_lambda_duration_ms", invoke_result.GetLogResult()->GetBilledDurationMs());
+        return std::make_tuple("invocation_billed_duration_ms", invoke_result.GetLogResult()->GetBilledDurationMs());
       })
       .WithDoubleInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
         const auto duration_views = invoke_result.GetResponseBody().GetArray("ms_durations");
@@ -155,5 +155,7 @@ Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateResultOu
       })
       .Build();
 }
+
+const Aws::String& NetworkThroughputParallelBenchmark::Name() const { return kName; }
 
 }  // namespace skyrise

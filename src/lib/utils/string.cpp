@@ -75,4 +75,12 @@ size_t StringVectorMemoryUsage(const std::vector<std::string>& string_vector) {
   return base_size + elements_size;
 }
 
+std::string ToLowerCase(const std::string& input_string) {
+  std::string output_string;
+  output_string.resize(input_string.size());
+  std::transform(input_string.begin(), input_string.end(), output_string.begin(),
+                 [](unsigned char input_string_character) { return std::tolower(input_string_character); });
+  return output_string;
+}
+
 }  // namespace skyrise

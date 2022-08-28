@@ -6,6 +6,7 @@
 #include "storage/formats/csv_reader.hpp"
 #include "storage/formats/mock_chunk_reader.hpp"
 #include "storage/formats/orc_reader.hpp"
+#include "storage/formats/parquet_reader.hpp"
 #include "storage/table/value_segment.hpp"
 
 namespace skyrise {
@@ -66,6 +67,7 @@ class ChunkReaderTest : public ::testing::Test {
 
   CsvFormatReaderOptions csv_options_;
   OrcFormatReaderOptions orc_options_;
+  ParquetFormatReaderOptions parquet_options_;
 
   MockChunkReaderConfiguration mock_formatter_configuration_;
   MockChunkReaderConfiguration mock_formatter_configuration_error_;
@@ -110,6 +112,27 @@ TEST_F(ChunkReaderTest, OrcFormatterTest) {
   auto factory = std::make_shared<FormatReaderFactory<OrcFormatReader>>(orc_options_);
   const std::unique_ptr<skyrise::AbstractChunkReader> reader =
       factory->Get(test_data->OpenForReading("orc/with_types.orc"));
+
+  EXPECT_FALSE(reader->HasError());
+  EXPECT_TRUE(reader->HasNext());
+
+  size_t chunk_counter = 0;
+  while (reader->HasNext()) {
+    auto chunk = reader->Next();
+    if (chunk != nullptr) {
+      ++chunk_counter;
+    }
+  }
+
+  ASSERT_FALSE(reader->HasError());
+  ASSERT_EQ(chunk_counter, 1);
+}
+
+TEST_F(ChunkReaderTest, ParquetFormatterTest) {
+  auto test_data = std::make_shared<TestdataStorage>();
+  auto factory = std::make_shared<FormatReaderFactory<ParquetFormatReader>>(parquet_options_);
+  const std::unique_ptr<skyrise::AbstractChunkReader> reader =
+      factory->Get(test_data->OpenForReading("parquet/with_types.parquet"));
 
   EXPECT_FALSE(reader->HasError());
   EXPECT_TRUE(reader->HasNext());

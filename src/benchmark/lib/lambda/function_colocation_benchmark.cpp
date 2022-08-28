@@ -14,6 +14,12 @@
 #include "utils/map.hpp"
 #include "utils/string.hpp"
 
+namespace {
+
+const Aws::String kName = "function_colocation_benchmark";
+
+}  // namespace
+
 namespace skyrise {
 
 FunctionColocationBenchmark::FunctionColocationBenchmark(std::shared_ptr<const CostCalculator> cost_calculator,
@@ -94,11 +100,13 @@ Aws::Utils::Json::JsonValue FunctionColocationBenchmark::GenerateResultOutput(
 
   const BenchmarkResultAggregate aggregate(colocation_counts);
 
-  return LambdaBenchmarkOutput("function_colocation_benchmark", benchmark_result)
+  return LambdaBenchmarkOutput(Name(), benchmark_result)
       .WithInt64Argument("function_instance_mb_size", benchmark_parameters.function_instance_mb_size)
       .WithInt64Argument("invocation_count", benchmark_parameters.invocation_count)
       .WithInt64Argument("sleep_min_duration", benchmark_parameters.sleep_min_duration)
       .WithInt64Argument("repetition_count", benchmark_parameters.repetition_count)
+      .WithDoubleMetric("benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
+                                                  benchmark_result, benchmark_parameters.function_instance_mb_size)))
       .WithDoubleMetric("colocation_counts_minimum", aggregate.GetMinimum())
       .WithDoubleMetric("colocation_counts_maximum", aggregate.GetMaximum())
       .WithDoubleMetric("colocation_counts_average", aggregate.GetAverage())
@@ -108,8 +116,6 @@ Aws::Utils::Json::JsonValue FunctionColocationBenchmark::GenerateResultOutput(
       .WithDoubleMetric("colocation_counts_percentile_99.9", aggregate.GetPercentile(99.9))
       .WithDoubleMetric("colocation_counts_percentile_99.99", aggregate.GetPercentile(99.99))
       .WithDoubleMetric("colocation_counts_std_dev", aggregate.GetStandardDeviation())
-      .WithDoubleMetric("benchmark_cost_usd", static_cast<double>(CalculateOverallFunctionCost(
-                                                  benchmark_result, benchmark_parameters.function_instance_mb_size)))
       .WithDoubleInvocationMetric([&](const LambdaInvokeResult& invoke_result) {
         return std::make_tuple("function_cost_usd",
                                ExtractFunctionCost(invoke_result, benchmark_parameters.function_instance_mb_size));
@@ -119,5 +125,7 @@ Aws::Utils::Json::JsonValue FunctionColocationBenchmark::GenerateResultOutput(
       })
       .Build();
 }
+
+const Aws::String& FunctionColocationBenchmark::Name() const { return kName; }
 
 }  // namespace skyrise

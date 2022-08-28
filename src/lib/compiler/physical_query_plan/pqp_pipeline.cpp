@@ -1,6 +1,7 @@
 #include "pqp_pipeline.hpp"
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/container_hash/hash.hpp>
 
 #include "pqp_utils.hpp"
 
@@ -79,5 +80,34 @@ std::ostream& operator<<(std::ostream& stream, const PqpPipeline& pipeline) {
 
   return stream;
 }
+
+void PqpPipeline::SetSynthetic(bool state) { is_synthetic_pipeline_ = state; }
+
+bool PqpPipeline::IsSynthetic() const { return is_synthetic_pipeline_; }
+
+size_t PqpPipeline::ResultCacheHash(bool skip_synthetic_pipelines) const {
+  std::vector<size_t> predecessor_hashes;
+  predecessor_hashes.reserve(predecessors_.size());
+
+  for (const auto& predecessor : predecessors_) {
+    predecessor_hashes.push_back(predecessor.lock()->ResultCacheHash(skip_synthetic_pipelines));
+  }
+  std::sort(predecessor_hashes.begin(), predecessor_hashes.end());
+
+  size_t hash = 0;
+  if (IsSynthetic() && skip_synthetic_pipelines) {
+    Assert(!predecessors_.empty(), "PqpPipeline cannot be synthetic and without predecessors.");
+    hash = predecessor_hashes[0];
+    predecessor_hashes.erase(predecessor_hashes.begin());
+  } else {
+    hash = FragmentTemplate()->TemplatedPlan()->Hash();
+  }
+
+  for (const size_t predecessor_hash : predecessor_hashes) {
+    boost::hash_combine(hash, predecessor_hash);
+  }
+
+  return hash;
+};
 
 }  // namespace skyrise
