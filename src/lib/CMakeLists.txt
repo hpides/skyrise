@@ -323,6 +323,8 @@ set(
     arrow_dataset_static
     parquet_static
     arrow_static
+        
+    sqlparser
 )
 
 add_library(skyriseSharedLibrary STATIC ${SHARED_SOURCES})

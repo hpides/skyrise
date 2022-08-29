@@ -26,6 +26,10 @@
 	path = third_party/orc
 	url = https://github.com/apache/orc.git
 	shallow = true
+[submodule "third_party/sql-parser"]
+	path = third_party/sql-parser
+	url = https://github.com/hyrise/sql-parser.git
+	shallow = true
 [submodule "third_party/termcolor"]
 	path = third_party/termcolor
 	url = https://github.com/ikalnytskyi/termcolor

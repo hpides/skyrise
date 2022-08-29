@@ -16,6 +16,7 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/third_party/cxxopts/include
     ${PROJECT_SOURCE_DIR}/third_party/magic_enum/include
     ${PROJECT_SOURCE_DIR}/third_party/orc/c++/include
+    ${PROJECT_SOURCE_DIR}/third_party/sql-parser/src
     ${PROJECT_SOURCE_DIR}/third_party/termcolor/include
     ${PROJECT_SOURCE_DIR}/third_party/tpch-dbgen
     ${CMAKE_BINARY_DIR}/third_party/orc/c++/include
