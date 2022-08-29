@@ -15,13 +15,13 @@
 #include "compiler/logical_query_plan/projection_node.hpp"
 #include "compiler/logical_query_plan/stored_table_node.hpp"
 #include "expression/expression_functional.hpp"
-#include "metadata/remote_catalog.hpp"
+#include "metadata/remote_catalog.hpp" // TODO Adopt glue_catalog.hpp
 #include "metadata/table_schema.hpp"
 #include "metadata/tpch_mock_catalog.hpp"
 #include "testing/testing_assert.hpp"
 #include "tpch/tpch_query_generator.hpp"
-#include "visualization/lqp_visualizer.hpp"
-#include "visualization/pqp_visualizer.hpp"
+//#include "visualization/lqp_visualizer.hpp"
+//#include "visualization/pqp_visualizer.hpp"
 
 namespace {
 using namespace skyrise;  // NOLINT(google-build-using-namespace)
@@ -29,6 +29,7 @@ using namespace skyrise;  // NOLINT(google-build-using-namespace)
 const std::string kTableNameLineitem = "lineitem";
 const std::string kTpchDatabaseNameSF1000 = "CI_TPCH_SF1000_Database";
 
+// Consider removing visualization stuff – relict from master's thesis.
 void VisualizePlans(QueryCompiler& query_compiler, const std::string& query_name) {
   std::cout << *query_compiler.GetOptimizedLqps().front() << std::endl;
   std::cout << *query_compiler.GetOptimizedPqps().front() << std::endl;
