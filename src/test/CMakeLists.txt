@@ -20,6 +20,7 @@ set(
     benchmark/lib/tpch/tpch_data_generator_test.cpp
 
     lib/compiler/compilation_context_test.cpp
+    lib/compiler/query_compiler_test.cpp
 
     lib/compiler/physical_query_plan/operator_proxy/aggregate_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/operator_proxy/alias_operator_proxy_test.cpp
