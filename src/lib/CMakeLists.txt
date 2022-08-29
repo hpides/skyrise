@@ -10,6 +10,10 @@ set(
     compiler/compilation_context.hpp
     compiler/logical_query_plan/functional_dependency.cpp
     compiler/logical_query_plan/functional_dependency.hpp
+    compiler/query_compiler.cpp
+    compiler/query_compiler.hpp
+    compiler/query_statement_compiler.cpp
+    compiler/query_statement_compiler.hpp
 )
 
 set(
