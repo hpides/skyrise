@@ -30,22 +30,23 @@ const std::string kTableNameLineitem = "lineitem";
 const std::string kTpchDatabaseNameSF1000 = "CI_TPCH_SF1000_Database";
 
 void VisualizePlans(QueryCompiler& query_compiler, const std::string& query_name) {
-  // std::cout << *query_compiler.GetOptimizedLqps().front() << std::endl;
+  std::cout << *query_compiler.GetOptimizedLqps().front() << std::endl;
   std::cout << *query_compiler.GetOptimizedPqps().front() << std::endl;
 
-  const std::string prefix = "Plan_" + query_name;
-  GraphvizConfig graphviz_config;
-  const std::string format = "dot";
-  graphviz_config.format = format;
-  LqpVisualizer{graphviz_config}.Visualize(query_compiler.GetLqps(), prefix + "_LQP." + format);
-  LqpVisualizer{graphviz_config}.Visualize(query_compiler.GetOptimizedLqps(), prefix + "_LQP_optimized." + format);
-  PqpVisualizer{graphviz_config}.Visualize(query_compiler.GetPqps(), prefix + "_PQP." + format);
-  PqpVisualizer{graphviz_config}.Visualize(query_compiler.GetOptimizedPqps(), prefix + "_PQP_optimized." + format);
-  for (const auto& pipeline : query_compiler.GetPqpPipelines()) {
-    std::string file_name = prefix;
-    file_name.append("_").append(pipeline->Identity()).append(".").append(format);
-    PqpVisualizer{graphviz_config}.Visualize(pipeline->GetFragments(), file_name);
-  }
+  // Create SVG plan visualization
+
+//  const std::string prefix = "Plan_" + query_name;
+//  GraphvizConfig graphviz_config;
+//  graphviz_config.format = "svg";
+//  LqpVisualizer{graphviz_config}.Visualize(query_compiler.GetLqps(), prefix + "_LQP." + format);
+//  LqpVisualizer{graphviz_config}.Visualize(query_compiler.GetOptimizedLqps(), prefix + "_LQP_optimized." + format);
+//  PqpVisualizer{graphviz_config}.Visualize(query_compiler.GetPqps(), prefix + "_PQP." + format);
+//  PqpVisualizer{graphviz_config}.Visualize(query_compiler.GetOptimizedPqps(), prefix + "_PQP_optimized." + format);
+//  for (const auto& pipeline : query_compiler.GetPqpPipelines()) {
+//    std::string file_name = prefix;
+//    file_name.append("_").append(pipeline->Identity()).append(".").append(format);
+//    PqpVisualizer{graphviz_config}.Visualize(pipeline->GetFragments(), file_name);
+//  }
 }
 
 }  // namespace
@@ -193,7 +194,7 @@ TEST_F(QueryCompilerTest, Metrics) {
 }
 
 /**
- * // TODO(julianmenzler): Enable after implementing PlaceholderExpression
+ * // TODO(): Enable after implementing PlaceholderExpression
 TEST_F(QueryCompilerTest, SqlTranslationInfo) {
   {
     auto query_compiler = QueryCompiler{"SELECT * FROM table_a"};
@@ -237,7 +238,7 @@ TEST_F(AwsQueryCompilerTest, TpchQ1) {
   EXPECT_EQ(query_compiler.GetOptimizedLqps().size(), 1);
   EXPECT_EQ(query_compiler.GetOptimizedPqps().size(), 1);
   //  EXPECT_EQ(query_compiler.GetPqpPipelines().size(), xx);
-  //  VisualizePlans(query_compiler, "Aws_TpchQ1");
+  VisualizePlans(query_compiler, "Aws_TpchQ1");
 }
 
 TEST_F(QueryCompilerTest, DISABLED_TpchQ2) {  // misses hsql::kExprSelect
@@ -253,7 +254,7 @@ TEST_F(QueryCompilerTest, TpchQ3) {
   auto query_compiler = QueryCompiler(q3, catalog_);
   EXPECT_EQ(query_compiler.GetOptimizedLqps().size(), 1);
   EXPECT_EQ(query_compiler.GetOptimizedPqps().size(), 1);
-  //  VisualizePlans(query_compiler, "TpchQ3");
+  VisualizePlans(query_compiler, "TpchQ3");
 }
 
 TEST_F(QueryCompilerTest, DISABLED_TpchQ4) {  // misses hsql::kOpExists:
@@ -269,7 +270,7 @@ TEST_F(QueryCompilerTest, TpchQ5) {
   auto query_compiler = QueryCompiler(q5, catalog_);
   EXPECT_EQ(query_compiler.GetOptimizedLqps().size(), 1);
   EXPECT_EQ(query_compiler.GetOptimizedPqps().size(), 1);
-  //  VisualizePlans(query_compiler, "TpchQ5");
+  VisualizePlans(query_compiler, "TpchQ5");
 }
 
 TEST_F(QueryCompilerTest, TpchQ6) {
@@ -278,7 +279,7 @@ TEST_F(QueryCompilerTest, TpchQ6) {
   EXPECT_EQ(query_compiler.GetOptimizedLqps().size(), 1);
   EXPECT_EQ(query_compiler.GetOptimizedPqps().size(), 1);
   EXPECT_EQ(query_compiler.GetPqpPipelines().size(), 2);
-  //  VisualizePlans(query_compiler, "TpchQ6");
+  VisualizePlans(query_compiler, "TpchQ6");
 }
 
 TEST_F(AwsQueryCompilerTest, TpchQ6) {
@@ -287,7 +288,7 @@ TEST_F(AwsQueryCompilerTest, TpchQ6) {
   EXPECT_EQ(query_compiler.GetOptimizedLqps().size(), 1);
   EXPECT_EQ(query_compiler.GetOptimizedPqps().size(), 1);
   //  EXPECT_EQ(query_compiler.GetPqpPipelines().size(), xx);
-  //  VisualizePlans(query_compiler, "Aws_TpchQ6");
+  VisualizePlans(query_compiler, "Aws_TpchQ6");
 }
 
 TEST_F(QueryCompilerTest, DISABLED_TpchQ7) {  // misses FunctionExpression
@@ -319,7 +320,7 @@ TEST_F(QueryCompilerTest, TpchQ10) {
   auto query_compiler = QueryCompiler(q10, catalog_);
   EXPECT_EQ(query_compiler.GetOptimizedLqps().size(), 1);
   EXPECT_EQ(query_compiler.GetOptimizedPqps().size(), 1);
-  //  VisualizePlans(query_compiler, "TpchQ10");
+  VisualizePlans(query_compiler, "TpchQ10");
 }
 
 TEST_F(QueryCompilerTest, DISABLED_TpchQ11) {  // misses hsql::kExprSelect
@@ -343,7 +344,7 @@ TEST_F(QueryCompilerTest, TpchQ13) {
   auto query_compiler = QueryCompiler(q13, catalog_);
   EXPECT_EQ(query_compiler.GetOptimizedLqps().size(), 1);
   EXPECT_EQ(query_compiler.GetOptimizedPqps().size(), 1);
-  //  VisualizePlans(query_compiler, "TpchQ13");
+  VisualizePlans(query_compiler, "TpchQ13");
 }
 
 TEST_F(QueryCompilerTest, DISABLED_TpchQ14) {  // misses CaseExpression
