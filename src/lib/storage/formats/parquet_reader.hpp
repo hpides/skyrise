@@ -19,6 +19,7 @@ namespace skyrise {
 struct ParquetFormatReaderOptions {
   bool parse_dates_as_string = false;
   std::shared_ptr<TableColumnDefinitions> expected_schema = nullptr;
+  std::optional<std::vector<ColumnId>> include_columns = std::nullopt;
   std::optional<arrow::compute::Expression> arrow_expression = std::nullopt;
 };
 

@@ -98,9 +98,23 @@ ParquetFormatReader::ParquetFormatReader(std::unique_ptr<ObjectReader> source, C
     auto scan_builder =
         std::make_shared<arrow::dataset::ScannerBuilder>(parquet_schema, std::move(fragment), scan_options);
 
-    // If possible, push down predicate.
+    // Push down any available predicates.
     if (configuration_.arrow_expression.has_value()) {
       HANDLE_RESULT(scan_builder->Filter(*configuration_.arrow_expression), "Failed to evaluate predicate");
+    }
+
+    // Push down any available projections.
+    if (configuration_.include_columns.has_value()) {
+      const auto field_names = parquet_schema->field_names();
+      const auto columns = *configuration_.include_columns;
+      std::vector<std::string> include_columns;
+      include_columns.reserve(columns.size());
+
+      for (const auto column_id : columns) {
+        include_columns.emplace_back(field_names[column_id]);
+      }
+
+      HANDLE_RESULT(scan_builder->Project(include_columns), "Failed to project columns");
     }
 
     scanner_ = scan_builder->Finish().ValueOrDie();
