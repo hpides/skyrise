@@ -40,6 +40,8 @@ set(
     lib/compiler/physical_query_plan/pqp_serialization_test.cpp
     lib/compiler/physical_query_plan/pqp_utils_test.cpp
 
+    lib/compiler/optimizer/strategy/lqp_column_pruning_rule_test.cpp
+
     lib/expression/expression_evaluator_to_result_test.cpp
     lib/expression/expression_serialization_test.cpp
 
