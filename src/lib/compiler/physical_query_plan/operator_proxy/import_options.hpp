@@ -8,10 +8,11 @@
 #include "storage/formats/abstract_chunk_reader.hpp"
 #include "storage/formats/csv_reader.hpp"
 #include "storage/formats/orc_reader.hpp"
+#include "storage/formats/parquet_reader.hpp"
 
 namespace skyrise {
 
-enum class ImportFormat { kCsv, kOrc };
+enum class ImportFormat { kCsv, kOrc, kParquet };
 
 class ImportOptions {
  public:
@@ -19,11 +20,12 @@ class ImportOptions {
   ImportOptions(ImportFormat object_format, const std::vector<skyrise::ColumnId>& columns_to_load);
   ImportOptions(CsvFormatReaderOptions csv_format_reader_options);
   ImportOptions(OrcFormatReaderOptions orc_format_reader_options);
+  ImportOptions(ParquetFormatReaderOptions parquet_format_reader_options);
 
   /**
-   * @return a FormatReaderFactory for either CSV or ORC data.
+   * @return a FormatReaderFactory for either CSV, ORC or PARQUET data.
    *          The factory uses custom reader options, if provided. Otherwise, the factory is initialized with default
-   *          reader options for CSV and ORC data.
+   *          reader options for CSV, ORC or PARQUET data, respectively.
    */
   std::shared_ptr<AbstractChunkReaderFactory> CreateReaderFactory() const;
 
@@ -39,7 +41,7 @@ class ImportOptions {
 
  private:
   ImportFormat import_format_;
-  std::variant<CsvFormatReaderOptions, OrcFormatReaderOptions> reader_options_;
+  std::variant<CsvFormatReaderOptions, OrcFormatReaderOptions, ParquetFormatReaderOptions> reader_options_;
 };
 
 }  // namespace skyrise

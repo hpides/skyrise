@@ -6,5 +6,6 @@ namespace skyrise {
 
 inline constexpr std::string_view kCsvExtension = ".csv";
 inline constexpr std::string_view kOrcExtension = ".orc";
+inline constexpr std::string_view kParquetExtension = ".parquet";
 
 }  // namespace skyrise

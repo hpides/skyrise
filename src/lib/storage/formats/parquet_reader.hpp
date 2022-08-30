@@ -21,6 +21,7 @@ struct ParquetFormatReaderOptions {
   std::shared_ptr<TableColumnDefinitions> expected_schema = nullptr;
   std::optional<std::vector<ColumnId>> include_columns = std::nullopt;
   std::optional<arrow::compute::Expression> arrow_expression = std::nullopt;
+  std::optional<std::shared_ptr<AbstractPredicateExpression>> skyrise_expression = std::nullopt;
 };
 
 class ParquetFormatReader : public AbstractChunkReader {

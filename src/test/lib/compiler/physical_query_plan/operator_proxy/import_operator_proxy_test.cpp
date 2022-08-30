@@ -15,14 +15,18 @@ class ImportOperatorProxyTest : public ::testing::Test {
     column_definitions_a_ = std::make_shared<TableColumnDefinitions>();
     column_definitions_a_->emplace_back("a", DataType::kInt, false);
 
+    CsvFormatReaderOptions csv_options;
+    csv_options.expected_schema = column_definitions_a_;
+    import_options_csv_ = std::make_shared<const ImportOptions>(csv_options);
+
     OrcFormatReaderOptions orc_options;
     orc_options.expected_schema = column_definitions_a_;
     orc_options.select_partition_range = std::make_pair(1, 1);
     import_options_orc_ = std::make_shared<const ImportOptions>(orc_options);
 
-    CsvFormatReaderOptions csv_options;
-    csv_options.expected_schema = column_definitions_a_;
-    import_options_csv_ = std::make_shared<const ImportOptions>(csv_options);
+    ParquetFormatReaderOptions parquet_options;
+    parquet_options.expected_schema = column_definitions_a_;
+    import_options_parquet_ = std::make_shared<const ImportOptions>(parquet_options);
   }
 
  protected:
@@ -31,8 +35,9 @@ class ImportOperatorProxyTest : public ::testing::Test {
       ObjectReference{"dummy_bucket", "key3.orc", "etag3"}};
   static inline const std::vector<ColumnId> kColumnIds = {ColumnId{0}, ColumnId{1}, ColumnId{3}};
   std::shared_ptr<TableColumnDefinitions> column_definitions_a_;
-  std::shared_ptr<const ImportOptions> import_options_orc_;
   std::shared_ptr<const ImportOptions> import_options_csv_;
+  std::shared_ptr<const ImportOptions> import_options_orc_;
+  std::shared_ptr<const ImportOptions> import_options_parquet_;
 };
 
 TEST_F(ImportOperatorProxyTest, BaseProperties) {
@@ -133,6 +138,21 @@ TEST_F(ImportOperatorProxyTest, SerializeAndDeserializeImportOptionsCsv) {
   EXPECT_EQ(deserialized_proxy_csv_json, proxy_csv_json);
 }
 
+TEST_F(ImportOperatorProxyTest, SerializeAndDeserializeImportOptionsParquet) {
+  const auto import_proxy_parquet = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
+  import_proxy_parquet->SetImportOptions(import_options_parquet_);
+  // (1) Serialize
+  const auto proxy_parquet_json = import_proxy_parquet->ToJson();
+
+  // (2) Deserialize
+  const auto deserialized_proxy_parquet = ImportOperatorProxy::FromJson(proxy_parquet_json);
+  ASSERT_NE(std::static_pointer_cast<ImportOperatorProxy>(deserialized_proxy_parquet)->GetImportOptions(), nullptr);
+
+  // (3) Serialize again
+  const auto deserialized_proxy_parquet_json = deserialized_proxy_parquet->ToJson();
+  EXPECT_EQ(deserialized_proxy_parquet_json, proxy_parquet_json);
+}
+
 TEST_F(ImportOperatorProxyTest, DeepCopy) {
   auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
   import_proxy->SetOutputObjectsCount(2);
@@ -168,6 +188,13 @@ TEST_F(ImportOperatorProxyTest, CreateOperatorInstance) {
     EXPECT_TRUE(import_proxy->GetOrCreateOperatorInstance());
     EXPECT_EQ(import_proxy->GetOrCreateOperatorInstance()->Type(), OperatorType::kImport);
   }
+  {
+    const std ::vector<ObjectReference> object_references = {ObjectReference("dummy_bucket", "key1.parquet"),
+                                                             ObjectReference("dummy_bucket", "key2.parquet")};
+    const auto import_proxy = ImportOperatorProxy::Make(object_references, kColumnIds);
+    EXPECT_TRUE(import_proxy->GetOrCreateOperatorInstance());
+    EXPECT_EQ(import_proxy->GetOrCreateOperatorInstance()->Type(), OperatorType::kImport);
+  }
 }
 
 TEST_F(ImportOperatorProxyTest, CreateOperatorInstanceCustomCsvOptions) {
@@ -179,6 +206,12 @@ TEST_F(ImportOperatorProxyTest, CreateOperatorInstanceCustomCsvOptions) {
 TEST_F(ImportOperatorProxyTest, CreateOperatorInstanceCustomOrcOptions) {
   const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
   import_proxy->SetImportOptions(import_options_orc_);
+  EXPECT_TRUE(import_proxy->GetOrCreateOperatorInstance());
+}
+
+TEST_F(ImportOperatorProxyTest, CreateOperatorInstanceCustomParquetOptions) {
+  const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
+  import_proxy->SetImportOptions(import_options_parquet_);
   EXPECT_TRUE(import_proxy->GetOrCreateOperatorInstance());
 }
 

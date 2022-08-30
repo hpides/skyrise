@@ -2,6 +2,8 @@
 
 #include <magic_enum.hpp>
 
+#include "expression/expression_serialization.hpp"
+#include "storage/formats/parquet_expression.hpp"
 #include "utils/json.hpp"
 
 namespace {
@@ -30,6 +32,12 @@ const std::string kJsonKeyCsvHasHeader = "has_header";
 const std::string kJsonKeyCsvHasTypes = "has_types";
 const std::string kJsonKeyCsvReadBufferSize = "read_buffer_size";
 
+// ParquetFormatReaderOptions
+const std::string kJsonKeyParquetFormatReaderOptions = "parquet_format_reader_options";
+const std::string kJsonKeyParquetParseDatesAsString = "parse_dates_as_string";
+const std::string kJsonKeyParquetIncludeColumns = "include_columns";
+const std::string kJsonKeyParquetExpression = "skyrise_expression";
+
 }  // namespace
 
 namespace skyrise {
@@ -48,6 +56,11 @@ ImportOptions::ImportOptions(ImportFormat object_format, const std::vector<Colum
       options.include_columns = columns_to_load;
       reader_options_ = options;
     } break;
+    case ImportFormat::kParquet: {
+      auto options = ParquetFormatReaderOptions();
+      options.include_columns = columns_to_load;
+      reader_options_ = options;
+    } break;
     default:
       Fail("Unexpected ImportFormat.");
   }
@@ -58,6 +71,9 @@ ImportOptions::ImportOptions(CsvFormatReaderOptions csv_format_reader_options)
 
 ImportOptions::ImportOptions(OrcFormatReaderOptions orc_format_reader_options)
     : import_format_(ImportFormat::kOrc), reader_options_(std::move(orc_format_reader_options)){};
+
+ImportOptions::ImportOptions(ParquetFormatReaderOptions parquet_format_reader_options)
+    : import_format_(ImportFormat::kParquet), reader_options_(std::move(parquet_format_reader_options)){};
 
 Aws::Utils::Json::JsonValue ImportOptions::ToJson() const {
   Aws::Utils::Json::JsonValue json_output;
@@ -110,6 +126,30 @@ Aws::Utils::Json::JsonValue ImportOptions::ToJson() const {
 
       json_output.WithObject(kJsonKeyOrcFormatReaderOptions, json_orc_options);
 
+    } break;
+
+    case ImportFormat::kParquet: {
+      const auto& parquet_options = std::get<ParquetFormatReaderOptions>(reader_options_);
+      auto json_parquet_options = Aws::Utils::Json::JsonValue();
+
+      json_parquet_options.WithBool(kJsonKeyParquetParseDatesAsString, parquet_options.parse_dates_as_string);
+
+      if (parquet_options.include_columns.has_value()) {
+        json_parquet_options.WithArray(kJsonKeyParquetIncludeColumns,
+                                       VectorToJsonArray<ColumnId>(parquet_options.include_columns.value()));
+      }
+
+      if (parquet_options.expected_schema) {
+        json_parquet_options.WithArray(kJsonKeyExpectedSchema,
+                                       TableColumnDefinitionsToJsonArray(parquet_options.expected_schema));
+      }
+
+      if (parquet_options.skyrise_expression.has_value()) {
+        json_parquet_options.WithObject(kJsonKeyParquetExpression,
+                                        SerializeExpression(parquet_options.skyrise_expression.value()));
+      }
+
+      json_output.WithObject(kJsonKeyParquetFormatReaderOptions, json_parquet_options);
     } break;
 
     default:
@@ -170,6 +210,30 @@ std::shared_ptr<const ImportOptions> ImportOptions::FromJson(const Aws::Utils::J
     return std::make_shared<ImportOptions>(orc_options);
   }
 
+  // (c) PARQUET Options
+  if (json_in.ValueExists(kJsonKeyParquetFormatReaderOptions)) {
+    const auto json = json_in.GetObject(kJsonKeyParquetFormatReaderOptions);
+    ParquetFormatReaderOptions parquet_options;
+    parquet_options.parse_dates_as_string = json.GetObject(kJsonKeyParquetParseDatesAsString).AsBool();
+
+    if (json.KeyExists(kJsonKeyExpectedSchema)) {
+      parquet_options.expected_schema =
+          ImportOptions::TableColumnDefinitionsFromJsonArray(json.GetArray(kJsonKeyExpectedSchema));
+    }
+
+    if (json.KeyExists(kJsonKeyParquetIncludeColumns)) {
+      parquet_options.include_columns = JsonArrayToVector<ColumnId>(json.GetArray(kJsonKeyParquetIncludeColumns));
+    }
+
+    if (json.KeyExists(kJsonKeyParquetExpression)) {
+      const auto serialized_expression = json.GetObject(kJsonKeyParquetExpression);
+      const auto skyrise_expression = DeserializeExpression(serialized_expression);
+      parquet_options.arrow_expression = CreateArrowExpression(skyrise_expression);
+    }
+
+    return std::make_shared<ImportOptions>(parquet_options);
+  }
+
   Fail("Failed to create ImportOptions because JSON values are missing.");
 }
 
@@ -179,6 +243,9 @@ std::shared_ptr<AbstractChunkReaderFactory> ImportOptions::CreateReaderFactory()
       return std::make_shared<FormatReaderFactory<CsvFormatReader>>(std::get<CsvFormatReaderOptions>(reader_options_));
     case ImportFormat::kOrc:
       return std::make_shared<FormatReaderFactory<OrcFormatReader>>(std::get<OrcFormatReaderOptions>(reader_options_));
+    case ImportFormat::kParquet:
+      return std::make_shared<FormatReaderFactory<ParquetFormatReader>>(
+          std::get<ParquetFormatReaderOptions>(reader_options_));
     default:
       Fail("Unexpected ImportFormat.");
   }
