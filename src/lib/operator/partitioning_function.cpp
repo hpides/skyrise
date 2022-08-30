@@ -13,7 +13,10 @@ namespace skyrise {
 AbstractPartitioningFunction::AbstractPartitioningFunction(const PartitioningFunctionType type,
                                                            const std::set<ColumnId>& partition_column_ids,
                                                            const size_t partition_count)
-    : type_(type), partition_column_ids_(partition_column_ids), partition_count_(partition_count) {}
+    : type_(type), partition_column_ids_(partition_column_ids), partition_count_(partition_count) {
+  Assert(partition_count_ > 1, "Invalid partition count.");
+  Assert(!partition_column_ids_.empty(), "Invalid partition column ids.");
+}
 
 std::shared_ptr<AbstractPartitioningFunction> AbstractPartitioningFunction::FromJson(
     const Aws::Utils::Json::JsonView& json) {

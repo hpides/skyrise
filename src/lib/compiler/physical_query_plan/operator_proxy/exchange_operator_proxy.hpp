@@ -1,10 +1,10 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "abstract_operator_proxy.hpp"
-#include "compiler/physical_query_plan/exchange/abstract_exchange_strategy.hpp"
 #include "operator/partitioning_function.hpp"
 #include "types.hpp"
 
@@ -13,7 +13,9 @@ namespace skyrise {
 class ExchangeOperatorProxy : public EnableMakeForPlanNode<ExchangeOperatorProxy, AbstractOperatorProxy>,
                               public AbstractOperatorProxy {
  public:
-  ExchangeOperatorProxy(std::shared_ptr<const AbstractExchangeStrategy> strategy);
+  ExchangeOperatorProxy(
+      ExchangeType exchange_type, size_t target_bucket_count,
+      std::optional<std::shared_ptr<const AbstractPartitioningFunction>> target_partitioning_function);
 
   const std::string& Name() const override;
   std::string Description(const DescriptionMode mode) const override;
@@ -21,13 +23,14 @@ class ExchangeOperatorProxy : public EnableMakeForPlanNode<ExchangeOperatorProxy
   /**
    * Accessors
    */
-  const std::shared_ptr<const AbstractExchangeStrategy>& Strategy() const;
-  void SetStrategy(std::shared_ptr<const AbstractExchangeStrategy> strategy);
+  ExchangeType GetExchangeType() const;
+  size_t TargetBucketCount() const;
+  const std::optional<std::shared_ptr<const AbstractPartitioningFunction>>& TargetPartitioningFunction() const;
 
   /**
    * Optimization-relevant attributes
    */
-  size_t OutputDataTraits() const override;
+  const DataTraits& OutputDataTraits() const override;
   bool IsPipelineBreaker() const override;
 
   // Fails, because it is unsupported.
@@ -41,7 +44,9 @@ class ExchangeOperatorProxy : public EnableMakeForPlanNode<ExchangeOperatorProxy
   std::shared_ptr<AbstractOperator> CreateOperatorInstanceRecursively() override;
 
  private:
-  std::shared_ptr<const AbstractExchangeStrategy> strategy_;
+  const ExchangeType exchange_type_;
+  const size_t target_bucket_count_;
+  const std::optional<std::shared_ptr<const AbstractPartitioningFunction>> target_partitioning_function_;
 
   // Mutable because the data structure is refreshed in the Getter to align with InputDataTraits.
   mutable DataTraits output_data_traits_;

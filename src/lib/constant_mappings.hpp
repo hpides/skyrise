@@ -21,7 +21,7 @@ namespace skyrise {
  */
 extern const boost::bimap<AggregateFunction, std::string> kAggregateFunctionToString;
 extern const boost::bimap<DataType, std::string> kDataTypeToString;
-extern const boost::bimap<ExchangeStrategyType, std::string> kExchangeStrategyTypeToString;
+extern const boost::bimap<ExchangeType, std::string> kExchangeTypeToString;
 extern const boost::bimap<JoinMode, std::string> kJoinModeToString;
 extern const boost::bimap<PredicateCondition, std::string> kPredicateConditionToString;
 extern const boost::bimap<SetOperationMode, std::string> kSetOperationModeToString;

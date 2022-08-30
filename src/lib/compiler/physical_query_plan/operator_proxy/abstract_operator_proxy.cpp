@@ -21,17 +21,20 @@ constexpr std::string_view kJsonKeyRightInputOperatorIdentity = "right_input_ope
 
 namespace skyrise {
 
-DataTraits::DataTraits(const size_t init_column_count, const size_t init_object_count, const size_t init_partition_count) :
-  column_count(init_column_count), object_count(init_object_count), partition_count(init_partition_count) {
-    Assert(column_count > 0, "Column count must be equal or greater than 1.");
-    Assert(object_count > 0, "Object count must be equal or greater than 1.");
-    Assert(partition_count > 0, "Partition count must be equal or greater than 1.");
-  }
+DataTraits::DataTraits(const size_t init_column_count, const size_t init_bucket_count,
+                       const size_t init_partition_count)
+    : column_count(init_column_count), bucket_count(init_bucket_count), partition_count(init_partition_count) {
+  Assert(bucket_count > 0, "Bucket count must be equal or greater than 1.");
+  Assert(column_count > 0, "Column count must be equal or greater than 1.");
+  Assert(partition_count > 0, "Partition count must be equal or greater than 1.");
+}
+
+bool DataTraits::PartitioningIsEnabled() const { return partition_count > 1; }
 
 size_t DataTraits::Hash() const {
   size_t hash = 0;
   boost::hash_combine(hash, column_count);
-  boost::hash_combine(hash, object_count);
+  boost::hash_combine(hash, bucket_count);
   boost::hash_combine(hash, partition_count);
 }
 
@@ -76,8 +79,8 @@ void AbstractOperatorProxy::SetIdentity(const std::string& identity) {
 }
 
 const DataTraits& AbstractOperatorProxy::InputDataTraits() const {
-  Assert(!RightInput(), "Default implementation applies to single input operator proxies only.");
   Assert(LeftInput(), "Cannot forward DataTraits because no input operator proxy is set.");
+  Assert(!RightInput(), "Default implementation applies to single input operator proxies only.");
   return LeftInput()->OutputDataTraits();
 }
 

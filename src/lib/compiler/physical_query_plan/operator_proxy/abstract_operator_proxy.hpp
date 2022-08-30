@@ -28,18 +28,24 @@ inline const std::string kJsonKeyOperatorType = "operator_type";
  *  Thanks to the (de)serialization logic of operator proxies, PQPs or parts of them can be transferred across network
  *  boundaries and moved to, for example, cloud function workers.
  *
- * DataTraits
- *  During query execution, the amount and structure of data flowing between operators changes constantly, depending on
- *  base tables, operator types and operator configurations. In PQPs, we model DataTraits between operator proxies to
- *  support the optimizer, including column counts, object counts, and information on partitioning
+ *  DataTraits
+ *   During query execution, the amount and structure of data flowing between operators changes constantly, depending on
+ *   base tables, operator types and operator configurations. In PQPs, we model DataTraits between operator proxies to
+ *   support the optimizer. These traits include
+ *    - bucket_count         Buckets represent pools of data that can be processed independently from each other, using
+ *                           cloud function workers, for example. Since buckets are an abstraction from concrete data,
+ *                           they may comprise data from one or multiple files or objects in a storage service.
+ *    - column_count         (shared across buckets)
+ *    - partition_count      (shared across buckets, if partitioning is enabled)
  */
 
 struct DataTraits {
-  DataTraits(const size_t init_column_count, const size_t init_object_count, const size_t init_partition_count);
-  size_t Hash() const;
+  explicit DataTraits(size_t init_bucket_count, size_t init_column_count, size_t init_partition_count = 0);
 
+  bool PartitioningIsEnabled() const;
+
+  size_t bucket_count;
   size_t column_count;
-  size_t object_count;
   size_t partition_count;
 };
 

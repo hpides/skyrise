@@ -30,11 +30,11 @@ const boost::bimap<AggregateFunction, std::string> kAggregateFunctionToString =
         {AggregateFunction::kSum, "SUM"},
     });
 
-const boost::bimap<ExchangeStrategyType, std::string> kExchangeStrategyTypeToString =
-    MakeBimap<ExchangeStrategyType, std::string>({
-        {ExchangeStrategyType::kShuffle, "Shuffle"},
-        {ExchangeStrategyType::kCombineObjects, "Combine Objects"},
-    });
+const boost::bimap<ExchangeType, std::string> kExchangeTypeToString = MakeBimap<ExchangeType, std::string>({
+    {ExchangeType::kShuffle, "Shuffle"},
+    {ExchangeType::kCombine, "Combine"},
+    {ExchangeType::kBroadcast, "Broadcast"},
+});
 
 const boost::bimap<DataType, std::string> kDataTypeToString = MakeBimap<DataType, std::string>({
     {DataType::kDouble, "double"},

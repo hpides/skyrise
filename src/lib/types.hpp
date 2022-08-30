@@ -112,8 +112,8 @@ PredicateCondition ConditionsToBetween(const PredicateCondition lower, const Pre
 enum class AggregateFunction { kAny, kAvg, kCount, kCountDistinct, kMax, kMin, kStandardDeviationSample, kSum };
 std::ostream& operator<<(std::ostream& stream, const AggregateFunction aggregate_function);
 
-enum class ExchangeStrategyType { kCombineObjects, kShuffle };
-std::ostream& operator<<(std::ostream& stream, ExchangeStrategyType exchange_mode);
+enum class ExchangeType { kCombine, kShuffle, kBroadcast };
+std::ostream& operator<<(std::ostream& stream, ExchangeType exchange_mode);
 
 /**
  * Let R and S be two tables and we want to perform R <JoinMode> S ON <condition>
