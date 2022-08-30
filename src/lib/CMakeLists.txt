@@ -10,6 +10,8 @@ set(
     compiler/compilation_context.hpp
     compiler/logical_query_plan/functional_dependency.cpp
     compiler/logical_query_plan/functional_dependency.hpp
+    compiler/optimizer/strategy/lqp_column_pruning_rule.cpp
+    compiler/optimizer/strategy/lqp_column_pruning_rule.hpp
 )
 
 set(
