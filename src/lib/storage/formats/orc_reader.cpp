@@ -2,8 +2,8 @@
 
 #include <magic_enum.hpp>
 
+#include "configuration.hpp"
 #include "serialization/binary_serialization_stream.hpp"
-#include "storage/backend/stream.hpp"
 #include "storage/table/value_segment.hpp"
 #include "utils/literal.hpp"
 
@@ -21,31 +21,29 @@ class OrcInputProxy : public orc::InputStream {
   const std::string& getName() const override;
 
  private:
-  static constexpr size_t kNaturalReadSize = 20_MB;
-  ObjectReaderStream stream_;
-  size_t object_size_;
+  std::unique_ptr<ObjectReader> source_;
   std::string name_;
+  size_t object_size_;
+  std::vector<char> buffer_;
 };
 
 OrcInputProxy::OrcInputProxy(std::unique_ptr<ObjectReader> source)
-    : stream_(std::move(source), true), name_("OrcInputProxy") {
-  // Get Size of object from stream.
-  stream_.seekg(0, std::ios::end);
-  object_size_ = stream_.tellg();
-  stream_.seekg(0, std::ios::beg);
+    : source_(std::move(source)), name_("OrcInputProxy") {
+  object_size_ = source_->GetStatus().GetSize();
 }
 
 uint64_t OrcInputProxy::getLength() const { return object_size_; }
 
-uint64_t OrcInputProxy::getNaturalReadSize() const { return kNaturalReadSize; }
+uint64_t OrcInputProxy::getNaturalReadSize() const { return kS3NaturalReadSize; }
 
 void OrcInputProxy::read(void* buf, uint64_t length, uint64_t offset) {
-  stream_.seekg(static_cast<std::streamoff>(offset));
-  stream_.read(static_cast<char*>(buf), length);
+  StorageError error = source_->Read(offset, offset + length - 1, &buffer_);
 
-  if (!stream_.good() || stream_.gcount() != static_cast<std::streamsize>(length)) {
-    throw std::logic_error("Error while reading from orc file.");
+  if (error || buffer_.size() != length) {
+    throw std::logic_error("Error while reading from ORC file.");
   }
+
+  std::memcpy(buf, buffer_.data(), length);
 }
 
 const std::string& OrcInputProxy::getName() const { return name_; }
@@ -140,14 +138,18 @@ std::shared_ptr<AbstractSegment> CreateSegment(orc::ColumnVectorBatch* batch, or
 namespace skyrise {
 
 OrcFormatReader::OrcFormatReader(std::unique_ptr<ObjectReader> source, Configuration configuration)
-    : configuration_(std::move(configuration)) {
-  auto input_stream = std::make_unique<OrcInputProxy>(std::move(source));
+    : configuration_(std::move(configuration)), cache_manager_(std::make_shared<CacheManager>()) {
   Assert(!(configuration_.select_partition_range.has_value() && configuration_.select_row_range.has_value()),
          "You may only select by partition or rows.");
   orc::ReaderOptions options;
 
+  auto caching_reader = std::make_unique<CachingObjectReader>(std::move(source), cache_manager_);
+  InitializeCacheManager(caching_reader);
+  auto input_stream = std::make_unique<OrcInputProxy>(std::move(caching_reader));
+
   try {
     reader_ = orc::createReader(std::move(input_stream), options);
+    DetermineCacheableLocations();
 
     // TODO(anyone): Once predicates become available through the configuration object and we decided on an internal
     // representation, push them down to orc::Reader.
@@ -183,6 +185,34 @@ OrcFormatReader::OrcFormatReader(std::unique_ptr<ObjectReader> source, Configura
   } catch (const orc::ParseError& error) {
     // Parsing errors are treated the same.
     SetError(StorageError(StorageErrorType::kIOError, error.what()));
+  }
+}
+
+void OrcFormatReader::InitializeCacheManager(const std::unique_ptr<CachingObjectReader>& caching_reader) {
+  // The ORC library always requests the last 16 KB. We also want to consider the natural read size of S3.
+  constexpr size_t kTailCacheDefaultSize = std::max<size_t>(kS3NaturalReadSize, 16_KB);
+
+  std::vector<char> temporary_buffer;
+  cache_manager_->SetAccessPattern(CacheAccessPattern::kRandom);
+  cache_manager_->AddTail(kTailCacheDefaultSize);
+  StorageError error = caching_reader->ReadTail(std::min<size_t>(kTailCacheDefaultSize, caching_reader->MaxCacheSize()),
+                                                &temporary_buffer);
+  if (error) {
+    SetError(error);
+  }
+}
+
+void OrcFormatReader::DetermineCacheableLocations() {
+  // All stripes and streams are cacheable locations.
+  for (uint64_t stripe_id = 0; stripe_id < reader_->getNumberOfStripes(); ++stripe_id) {
+    auto stripe_information = reader_->getStripe(stripe_id);
+    cache_manager_->AddLocation(
+        CacheableLocation::WithOffsetSize(stripe_information->getOffset(), stripe_information->getLength()));
+    for (uint64_t stream_id = 0; stream_id < stripe_information->getNumberOfStreams(); ++stream_id) {
+      auto stream_information = stripe_information->getStreamInformation(stream_id);
+      cache_manager_->AddLocation(
+          CacheableLocation::WithOffsetSize(stream_information->getOffset(), stream_information->getLength()));
+    }
   }
 }
 

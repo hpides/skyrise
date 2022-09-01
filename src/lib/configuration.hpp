@@ -61,6 +61,11 @@ inline constexpr ExportFormat kFinalResultsExportFormat = ExportFormat::kCsv;
 inline constexpr ExportFormat kIntermediateResultsExportFormat = ExportFormat::kOrc;
 
 /**
+ * The typical size for byte-range requests on S3 storage.
+ */
+inline constexpr size_t kS3NaturalReadSize = 20_MB;
+
+/**
  * Defines the maximum number of workers for the execution of a PqpPipeline.
  */
 inline constexpr size_t kMaxWorkerCountPerPipeline = kLambdaFunctionConcurrencyLimit;

@@ -22,6 +22,7 @@ StorageError MockReader::Read(size_t first_byte, size_t last_byte, std::vector<c
     last_byte = data_->size() - 1;
   }
 
+  buffer->clear();
   buffer->insert(buffer->end(), &data_->c_str()[first_byte], &data_->c_str()[last_byte + 1]);
 
   return StorageError::Success();

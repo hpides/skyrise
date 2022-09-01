@@ -8,6 +8,7 @@
 
 #include "abstract_chunk_reader.hpp"
 #include "storage/backend/abstract_storage.hpp"
+#include "storage/backend/caching_object_reader.hpp"
 
 namespace skyrise {
 
@@ -76,6 +77,8 @@ class OrcFormatReader : public AbstractChunkReader {
   std::unique_ptr<Chunk> Next() override;
 
  protected:
+  void InitializeCacheManager(const std::unique_ptr<CachingObjectReader>& caching_reader);
+  void DetermineCacheableLocations();
   void ExtractSchema();
   std::vector<size_t> ExtractPartitionInformation();
   void SeekToSelectedRows();
@@ -88,6 +91,7 @@ class OrcFormatReader : public AbstractChunkReader {
  private:
   size_t num_rows_read_ = 0;
   size_t read_at_most_num_rows_ = std::numeric_limits<size_t>::max();
+  std::shared_ptr<CacheManager> cache_manager_;
 };
 
 }  // namespace skyrise
