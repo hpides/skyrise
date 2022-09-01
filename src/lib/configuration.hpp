@@ -70,4 +70,9 @@ inline constexpr size_t kMaxWorkerCountPerPipeline = kLambdaFunctionConcurrencyL
  */
 inline constexpr std::string_view kDatabaseSchemaName = "SkyriseDB";
 
+/**
+ * Defines the per item size the DynamoDB storage reserves for metadata (e.g., timestamp or checksum).
+ */
+inline constexpr size_t kDynamoDbStorageMetadataSize = 1_KB;
+
 }  // namespace skyrise

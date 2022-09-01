@@ -243,4 +243,39 @@ TEST_F(AwsDynamoDbUtilsTest, ActivateTimeToLive) {
   EXPECT_TRUE(ttl_specefication.GetEnabled());
 }
 
+TEST(DynamoDbUtilsTest, TestErrorTranslation) {
+  std::map<StorageErrorType, std::vector<Aws::DynamoDB::DynamoDBErrors>> mapping = {
+      {StorageErrorType::kInvalidArgument,
+       {Aws::DynamoDB::DynamoDBErrors::INCOMPLETE_SIGNATURE, Aws::DynamoDB::DynamoDBErrors::INVALID_ACTION,
+        Aws::DynamoDB::DynamoDBErrors::INVALID_PARAMETER_COMBINATION,
+        Aws::DynamoDB::DynamoDBErrors::INVALID_PARAMETER_VALUE, Aws::DynamoDB::DynamoDBErrors::INVALID_QUERY_PARAMETER,
+        Aws::DynamoDB::DynamoDBErrors::INVALID_SIGNATURE, Aws::DynamoDB::DynamoDBErrors::MALFORMED_QUERY_STRING,
+        Aws::DynamoDB::DynamoDBErrors::MISSING_ACTION, Aws::DynamoDB::DynamoDBErrors::MISSING_PARAMETER,
+        Aws::DynamoDB::DynamoDBErrors::OPT_IN_REQUIRED, Aws::DynamoDB::DynamoDBErrors::REQUEST_EXPIRED,
+        Aws::DynamoDB::DynamoDBErrors::REQUEST_TIME_TOO_SKEWED}},
+      {StorageErrorType::kInternalError,
+       {Aws::DynamoDB::DynamoDBErrors::INTERNAL_FAILURE, Aws::DynamoDB::DynamoDBErrors::SERVICE_UNAVAILABLE}},
+      {StorageErrorType::kAlreadyExist, {Aws::DynamoDB::DynamoDBErrors::TABLE_ALREADY_EXISTS}},
+      {StorageErrorType::kPermissionDenied,
+       {Aws::DynamoDB::DynamoDBErrors::ACCESS_DENIED, Aws::DynamoDB::DynamoDBErrors::INVALID_ACCESS_KEY_ID,
+        Aws::DynamoDB::DynamoDBErrors::INVALID_CLIENT_TOKEN_ID,
+        Aws::DynamoDB::DynamoDBErrors::MISSING_AUTHENTICATION_TOKEN,
+        Aws::DynamoDB::DynamoDBErrors::SIGNATURE_DOES_NOT_MATCH, Aws::DynamoDB::DynamoDBErrors::UNRECOGNIZED_CLIENT,
+        Aws::DynamoDB::DynamoDBErrors::VALIDATION}},
+      {StorageErrorType::kTemporary,
+       {Aws::DynamoDB::DynamoDBErrors::SLOW_DOWN, Aws::DynamoDB::DynamoDBErrors::THROTTLING,
+        Aws::DynamoDB::DynamoDBErrors::TABLE_IN_USE}},
+      {StorageErrorType::kIOError,
+       {Aws::DynamoDB::DynamoDBErrors::REQUEST_TIMEOUT, Aws::DynamoDB::DynamoDBErrors::NETWORK_CONNECTION}},
+      {StorageErrorType::kNotFound,
+       {Aws::DynamoDB::DynamoDBErrors::RESOURCE_NOT_FOUND, Aws::DynamoDB::DynamoDBErrors::TABLE_NOT_FOUND}},
+      {StorageErrorType::kUnknown, {Aws::DynamoDB::DynamoDBErrors::UNKNOWN}}};
+
+  for (const auto& check : mapping) {
+    for (const auto& error : check.second) {
+      ASSERT_EQ(TranslateDynamoDbError(error), check.first);
+    }
+  }
+}
+
 }  // namespace skyrise

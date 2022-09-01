@@ -211,6 +211,8 @@ set(
     storage/backend/dynamodb_utils.hpp
     storage/backend/errors.cpp
     storage/backend/errors.hpp
+    storage/backend/dynamodb_storage.cpp
+    storage/backend/dynamodb_storage.hpp
     storage/backend/storage_filesystem.cpp
     storage/backend/storage_filesystem.hpp
     storage/backend/storage_s3.cpp

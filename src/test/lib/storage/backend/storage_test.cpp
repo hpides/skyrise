@@ -5,6 +5,9 @@
 #include <unistd.h>
 
 #include "abstract_provider.hpp"
+#include "configuration.hpp"
+#include "constants.hpp"
+#include "dynamodb_provider.hpp"
 #include "filesystem_provider.hpp"
 #include "s3_provider.hpp"
 #include "utils/assert.hpp"
@@ -62,7 +65,7 @@ class AwsBaseStorageTest : public ::testing::Test {
 template <typename Provider>
 Provider AwsBaseStorageTest<Provider>::provider_;
 
-using StorageProviderTypes = ::testing::Types<FilesystemStorageProvider, S3StorageProvider>;
+using StorageProviderTypes = ::testing::Types<DynamoDbStorageProvider, FilesystemStorageProvider, S3StorageProvider>;
 
 TYPED_TEST_SUITE(AwsBaseStorageTest, StorageProviderTypes, );
 // Trailing comma on purpose (https://github.com/google/googletest/issues/1419)
@@ -152,7 +155,13 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadTailDeleteSmallObject) {
 
 TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteBigObject) {
   constexpr size_t kChunkSize = 16_KB;
-  constexpr size_t kTestFileSize = 31_MB;
+  size_t kTestFileSize = 31_MB;
+
+  // DynamoDB's maximum item size is 400KB, including data and metadata.
+  if (dynamic_cast<DynamoDbStorage*>(this->storage_) != nullptr) {
+    kTestFileSize = kDynamoDbMaxItemSize - kDynamoDbStorageMetadataSize;
+  }
+
   static const std::string kFilename{"big.txt"};
   std::vector<char> buffer(kChunkSize, 'x');
 
