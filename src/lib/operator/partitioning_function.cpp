@@ -77,11 +77,15 @@ PartitionedPositionLists HashPartitioningFunction::Partition(const std::shared_p
   ChunkId chunk_index = 0;
   // The row index that is related to the current chunk
   size_t relative_row_index = 0;
+  std::vector<size_t> chunk_sizes(chunk_count);
+  for (size_t i = 0; i < chunk_count; ++i) {
+    chunk_sizes[i] = table->GetChunk(i)->Size();
+  }
 
   for (const auto& hash : hashes) {
     position_lists[hash % partition_count_].emplace_back(chunk_index, relative_row_index);
 
-    if (relative_row_index == table->GetChunk(chunk_index)->Size() - 1) {
+    if (relative_row_index == chunk_sizes[chunk_index] - 1) {
       relative_row_index = 0;
       ++chunk_index;
     } else {
