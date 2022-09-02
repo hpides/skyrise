@@ -180,7 +180,7 @@ DynamoDbObjectReader::DynamoDbObjectReader(std::shared_ptr<const Aws::DynamoDB::
                                            std::string table_name, std::string object_id)
     : client_(std::move(client)), table_name_(std::move(table_name)), object_id_(std::move(object_id)) {}
 
-StorageError DynamoDbObjectReader::Read(size_t first_byte, size_t last_byte, std::vector<char>* buffer) {
+StorageError DynamoDbObjectReader::Read(size_t first_byte, size_t last_byte, ByteBuffer* buffer) {
   DynamoDbItem item_key;
   item_key.emplace(kItemIdentifierAttribute, object_id_);
 
@@ -203,9 +203,8 @@ StorageError DynamoDbObjectReader::Read(size_t first_byte, size_t last_byte, std
   last_byte = std::min(last_byte, data.size() - 1);
   const size_t read_length = last_byte - first_byte + 1;
 
-  buffer->clear();
-  buffer->resize(read_length);
-  std::copy_n(start, read_length, buffer->begin());
+  buffer->Resize(read_length);
+  std::copy_n(start, read_length, buffer->CharData());
 
   return StorageError::Success();
 }

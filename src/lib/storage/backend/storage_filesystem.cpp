@@ -148,7 +148,7 @@ StorageError FilesystemReader::Close() {
   }
   return StorageError::Success();
 }
-StorageError FilesystemReader::Read(size_t first_byte, size_t last_byte, std::vector<char>* buffer) {
+StorageError FilesystemReader::Read(size_t first_byte, size_t last_byte, ByteBuffer* buffer) {
   if (error_) {
     return error_;
   }
@@ -181,9 +181,8 @@ StorageError FilesystemReader::Read(size_t first_byte, size_t last_byte, std::ve
     bytes_left = file_size - first_byte;
   }
 
-  buffer->clear();
-  buffer->resize(bytes_left);
-  in_.read(buffer->data(), bytes_left);
+  buffer->Resize(bytes_left);
+  in_.read(buffer->CharData(), bytes_left);
 
   if (static_cast<size_t>(in_.gcount()) != bytes_left || !in_.good()) {
     return StorageError(StorageErrorType::kIOError);

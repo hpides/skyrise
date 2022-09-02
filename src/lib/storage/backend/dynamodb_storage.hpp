@@ -43,7 +43,7 @@ class DynamoDbObjectReader : public ObjectReader {
    * A higher level caching strategy may be useful in case many small byte ranges are fetched
    * (e.g., by a FormatReader).
    */
-  StorageError Read(size_t first_byte, size_t last_byte, std::vector<char>* buffer) override;
+  StorageError Read(size_t first_byte, size_t last_byte, ByteBuffer* buffer) override;
   const ObjectStatus& GetStatus() override;
   StorageError Close() override;
 

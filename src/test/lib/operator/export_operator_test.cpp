@@ -64,9 +64,9 @@ TEST_F(ExportOperatorTest, ExportToCsv) {
 
   auto reader = storage->OpenForReading(output_object_name);
   size_t lines = 0;
-  std::vector<char> buffer;
+  ByteBuffer buffer;
   reader->Read(0, ObjectReader::kLastByteInFile, &buffer);
-  lines = std::count(buffer.begin(), buffer.end(), '\n');
+  lines = std::count(buffer.CharData(), buffer.CharData() + buffer.Size(), '\n');
 
   reader->Close();
 

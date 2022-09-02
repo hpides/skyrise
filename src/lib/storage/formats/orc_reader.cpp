@@ -37,13 +37,12 @@ uint64_t OrcInputProxy::getLength() const { return object_size_; }
 uint64_t OrcInputProxy::getNaturalReadSize() const { return kS3NaturalReadSize; }
 
 void OrcInputProxy::read(void* buf, uint64_t length, uint64_t offset) {
-  StorageError error = source_->Read(offset, offset + length - 1, &buffer_);
+  ByteBuffer buffer_view(buf, length);
+  StorageError error = source_->Read(offset, offset + length - 1, &buffer_view);
 
-  if (error || buffer_.size() != length) {
+  if (error || buffer_view.Size() != length || buffer_view.Data() != buf) {
     throw std::logic_error("Error while reading from ORC file.");
   }
-
-  std::memcpy(buf, buffer_.data(), length);
 }
 
 const std::string& OrcInputProxy::getName() const { return name_; }
@@ -192,11 +191,12 @@ void OrcFormatReader::InitializeCacheManager(const std::unique_ptr<CachingObject
   // The ORC library always requests the last 16 KB. We also want to consider the natural read size of S3.
   constexpr size_t kTailCacheDefaultSize = std::max<size_t>(kS3NaturalReadSize, 16_KB);
 
-  std::vector<char> temporary_buffer;
   cache_manager_->SetAccessPattern(CacheAccessPattern::kRandom);
   cache_manager_->AddTail(kTailCacheDefaultSize);
-  StorageError error = caching_reader->ReadTail(std::min<size_t>(kTailCacheDefaultSize, caching_reader->MaxCacheSize()),
-                                                &temporary_buffer);
+  const size_t temporary_read_size = std::min<size_t>(kTailCacheDefaultSize, caching_reader->MaxCacheSize());
+  ByteBuffer temporary_buffer(temporary_read_size);
+
+  StorageError error = caching_reader->ReadTail(temporary_read_size, &temporary_buffer);
   if (error) {
     SetError(error);
   }

@@ -1,5 +1,6 @@
 #include "caching_object_reader.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 
@@ -182,7 +183,7 @@ size_t CachingObjectReader::TryResolveLastByte(size_t last_byte) {
   return last_byte;
 }
 
-StorageError CachingObjectReader::Read(size_t first_byte, size_t last_byte, std::vector<char>* buffer) {
+StorageError CachingObjectReader::Read(size_t first_byte, size_t last_byte, ByteBuffer* buffer) {
   const size_t resolved_last_byte = TryResolveLastByte(last_byte);
 
   // If we do not know the size of the request, nothing will be cached.
@@ -223,8 +224,11 @@ StorageError CachingObjectReader::Read(size_t first_byte, size_t last_byte, std:
 StorageError CachingObjectReader::FillCache(const CacheableLocation& cacheable_location) {
   buffered_location_.reset();
 
+  cache_.resize(cacheable_location.Size());
+  ByteBuffer cache_view(cache_.data(), cache_.size());
   const StorageError error =
-      source_->Read(cacheable_location.FirstByte(), cacheable_location.LastByteInclusive(), &cache_);
+      source_->Read(cacheable_location.FirstByte(), cacheable_location.LastByteInclusive(), &cache_view);
+  cache_.resize(cache_view.Size());
   if (error) {
     return error;
   }
@@ -235,13 +239,12 @@ StorageError CachingObjectReader::FillCache(const CacheableLocation& cacheable_l
   return StorageError::Success();
 }
 
-StorageError CachingObjectReader::ServeFromCache(const CacheableLocation& location, std::vector<char>* buffer) {
-  buffer->reserve(location.Size());
-  buffer->clear();
+StorageError CachingObjectReader::ServeFromCache(const CacheableLocation& location, ByteBuffer* buffer) {
+  buffer->Resize(location.Size());
 
   auto begin = cache_.cbegin();
   begin += location.FirstByte() - buffered_location_->FirstByte();
-  buffer->insert(buffer->end(), begin, begin + location.Size());
+  std::copy_n(begin, location.Size(), buffer->Data());
 
   return StorageError::Success();
 }
@@ -257,7 +260,7 @@ StorageError CachingObjectReader::Close() {
   return source_->Close();
 }
 
-StorageError CachingObjectReader::ReadTailAndSetSize(size_t num_last_bytes, std::vector<char>* buffer) {
+StorageError CachingObjectReader::ReadTailAndSetSize(size_t num_last_bytes, ByteBuffer* buffer) {
   source_size_is_known_ = true;
   const StorageError error = source_->ReadTail(num_last_bytes, buffer);
   if (!error) {
@@ -266,7 +269,7 @@ StorageError CachingObjectReader::ReadTailAndSetSize(size_t num_last_bytes, std:
   return error;
 }
 
-StorageError CachingObjectReader::ReadTail(size_t num_last_bytes, std::vector<char>* buffer) {
+StorageError CachingObjectReader::ReadTail(size_t num_last_bytes, ByteBuffer* buffer) {
   // If more bytes are requested than the cache can hold, nothing will be cached.
   if (num_last_bytes > static_cast<size_t>(max_cache_size_) ||
       num_last_bytes > static_cast<size_t>(cache_manager_->Tail())) {
@@ -287,7 +290,11 @@ StorageError CachingObjectReader::ReadTail(size_t num_last_bytes, std::vector<ch
 
 StorageError CachingObjectReader::FillCacheWithTail() {
   const size_t request_size = std::min<int64_t>(cache_manager_->Tail(), max_cache_size_);
-  const StorageError error = source_->ReadTail(request_size, &cache_);
+  cache_.resize(request_size);
+  ByteBuffer cache_view(cache_.data(), request_size);
+  const StorageError error = source_->ReadTail(request_size, &cache_view);
+  cache_.resize(cache_view.Size());
+
   if (error) {
     return error;
   }

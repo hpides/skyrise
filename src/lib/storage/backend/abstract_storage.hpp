@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 
+#include "bytebuffer.hpp"
 #include "errors.hpp"
 
 namespace skyrise {
@@ -63,13 +64,13 @@ class ObjectReader {
    * written to buffer, which is cleared before writing the first byte. For performance reasons the caller should
    * allocate enough memory to hold the response (e.g. using reserve). This function is not thread-safe.
    */
-  virtual StorageError Read(size_t first_byte, size_t last_byte, std::vector<char>* buffer) = 0;
+  virtual StorageError Read(size_t first_byte, size_t last_byte, ByteBuffer* buffer) = 0;
   /**
    * Reads `num_last_bytes` from the end of the object. If the object is smaller than the requested number of bytes,
    * this function reads the whole object. Some storage backends provide optimizations that do not need to receive the
    * size of an objects for this call.
    */
-  virtual StorageError ReadTail(size_t num_last_bytes, std::vector<char>* buffer);
+  virtual StorageError ReadTail(size_t num_last_bytes, ByteBuffer* buffer);
   virtual const ObjectStatus& GetStatus() = 0;
   virtual StorageError Close() = 0;
 

@@ -127,8 +127,7 @@ TEST_F(StreamTest, TestGetFilesize) {
 }
 
 TEST(DelegateStreamTest, SimpleWriteRead) {
-  std::vector<char> stream_buffer;
-  stream_buffer.reserve(3);
+  ByteBuffer stream_buffer(3);
   DelegateStreamBuffer buffer_stream(&stream_buffer);
   std::iostream test_stream(&buffer_stream);
 
@@ -136,7 +135,7 @@ TEST(DelegateStreamTest, SimpleWriteRead) {
   test_stream.put('C');
 
   EXPECT_TRUE(test_stream.good());
-  EXPECT_TRUE(memcmp(stream_buffer.data(), "ABC", 3) == 0);
+  EXPECT_TRUE(memcmp(stream_buffer.CharData(), "ABC", 3) == 0);
 
   EXPECT_EQ(test_stream.get(), 'A');
   EXPECT_EQ(test_stream.get(), 'B');
@@ -145,20 +144,20 @@ TEST(DelegateStreamTest, SimpleWriteRead) {
 }
 
 TEST(DelegateStreamTest, RandomAccessReadWrite) {
-  std::vector<char> stream_buffer;
+  ByteBuffer stream_buffer;
   DelegateStreamBuffer buffer_stream(&stream_buffer);
   std::iostream test_stream(&buffer_stream);
 
   test_stream << "ABCDEFG";
-  EXPECT_EQ(std::string(stream_buffer.data(), stream_buffer.size()), "ABCDEFG");
+  EXPECT_EQ(std::string(stream_buffer.CharData(), stream_buffer.Size()), "ABCDEFG");
 
   test_stream.seekg(1);
   EXPECT_EQ(test_stream.get(), 'B');
 
   test_stream.seekp(1);
   test_stream << "X";
-  EXPECT_EQ(std::string(stream_buffer.data(), stream_buffer.size()), "AXCDEFG");
-  EXPECT_EQ(stream_buffer.size(), 7);
+  EXPECT_EQ(std::string(stream_buffer.CharData(), stream_buffer.Size()), "AXCDEFG");
+  EXPECT_EQ(stream_buffer.Size(), 7);
 
   test_stream.seekg(1);
   EXPECT_EQ(test_stream.get(), 'X');
@@ -166,11 +165,15 @@ TEST(DelegateStreamTest, RandomAccessReadWrite) {
 
   test_stream.seekp(6);
   test_stream << "P";
-  EXPECT_EQ(std::string(stream_buffer.data(), stream_buffer.size()), "AXCDEFP");
+  EXPECT_EQ(std::string(stream_buffer.CharData(), stream_buffer.Size()), "AXCDEFP");
+
+  test_stream.seekp(6);
+  test_stream << "AB";
+  EXPECT_EQ(std::string(stream_buffer.CharData(), stream_buffer.Size()), "AXCDEFAB");
 }
 
 TEST(DelegateStreamTest, RelativeSeeking) {
-  std::vector<char> stream_buffer;
+  ByteBuffer stream_buffer;
   DelegateStreamBuffer buffer_stream(&stream_buffer);
   std::iostream test_stream(&buffer_stream);
 
@@ -184,7 +187,7 @@ TEST(DelegateStreamTest, RelativeSeeking) {
   test_stream << "X";
   golden_stream << "X";
   EXPECT_EQ(golden_stream.str(), "ABX");
-  EXPECT_EQ(golden_stream.str(), std::string(stream_buffer.data(), stream_buffer.size()));
+  EXPECT_EQ(golden_stream.str(), std::string(stream_buffer.CharData(), stream_buffer.Size()));
 }
 
 }  // namespace skyrise

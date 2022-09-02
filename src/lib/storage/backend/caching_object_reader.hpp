@@ -104,8 +104,8 @@ class CachingObjectReader : public ObjectReader {
   /**
    * The following functions implement ObjectReader.
    */
-  StorageError Read(size_t first_byte, size_t last_byte, std::vector<char>* buffer) override;
-  StorageError ReadTail(size_t num_last_bytes, std::vector<char>* buffer) override;
+  StorageError Read(size_t first_byte, size_t last_byte, ByteBuffer* buffer) override;
+  StorageError ReadTail(size_t num_last_bytes, ByteBuffer* buffer) override;
   const ObjectStatus& GetStatus() override;
   StorageError Close() override;
 
@@ -117,10 +117,10 @@ class CachingObjectReader : public ObjectReader {
   constexpr static size_t kMaxBufferSizeDivisor = 6;
   constexpr static size_t kFallbackMaxBufferSize = 64_MB;
 
-  StorageError ServeFromCache(const CacheableLocation& location, std::vector<char>* buffer);
+  StorageError ServeFromCache(const CacheableLocation& location, ByteBuffer* buffer);
   StorageError FillCache(const CacheableLocation& cacheable_location);
   StorageError FillCacheWithTail();
-  StorageError ReadTailAndSetSize(size_t num_last_bytes, std::vector<char>* buffer);
+  StorageError ReadTailAndSetSize(size_t num_last_bytes, ByteBuffer* buffer);
   size_t TryResolveLastByte(size_t last_byte);
   void DeallocateCache();
 

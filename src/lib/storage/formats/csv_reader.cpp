@@ -10,6 +10,7 @@
 #include <boost/convert.hpp>
 #include <boost/convert/strtol.hpp>
 
+#include "storage/backend/bytebuffer.hpp"
 #include "storage/table/value_segment.hpp"
 
 struct boost::cnv::by_default : public boost::cnv::strtol {};
@@ -248,7 +249,10 @@ StorageError CsvFormatReader::FillBuffer() {
     return StorageError::Success();
   }
 
-  StorageError error = source_->Read(chunk_offset_, chunk_offset_ + configuration_.read_buffer_size - 1, &buffer_);
+  buffer_.resize(configuration_.read_buffer_size);
+  ByteBuffer buffer_view(buffer_.data(), configuration_.read_buffer_size);
+  StorageError error = source_->Read(chunk_offset_, chunk_offset_ + configuration_.read_buffer_size - 1, &buffer_view);
+  buffer_.resize(buffer_view.Size());
 
   if (error) {
     buffer_.clear();

@@ -1,5 +1,6 @@
 #include "mock_storage.hpp"
 
+#include <algorithm>
 #include <vector>
 
 namespace skyrise {
@@ -7,7 +8,7 @@ namespace skyrise {
 MockReader::MockReader(std::shared_ptr<std::string> data, std::string identifier)
     : data_(std::move(data)), identifier_(std::move(identifier)) {}
 
-StorageError MockReader::Read(size_t first_byte, size_t last_byte, std::vector<char>* buffer) {
+StorageError MockReader::Read(size_t first_byte, size_t last_byte, ByteBuffer* buffer) {
   num_reads_++;
 
   if (!data_) {
@@ -22,8 +23,9 @@ StorageError MockReader::Read(size_t first_byte, size_t last_byte, std::vector<c
     last_byte = data_->size() - 1;
   }
 
-  buffer->clear();
-  buffer->insert(buffer->end(), &data_->c_str()[first_byte], &data_->c_str()[last_byte + 1]);
+  const size_t length = last_byte - first_byte + 1;
+  buffer->Resize(length);
+  std::copy_n(&data_->c_str()[first_byte], length, buffer->Data());
 
   return StorageError::Success();
 }

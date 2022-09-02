@@ -15,19 +15,19 @@ class LoggingReader : public ObjectReader {
       : status_("testing", 0, "checksum", object_size),
         requests_(std::make_shared<std::multiset<CacheableLocation>>()) {}
 
-  StorageError Read(size_t first_byte, size_t last_byte, std::vector<char>* buffer) override {
+  StorageError Read(size_t first_byte, size_t last_byte, ByteBuffer* buffer) override {
     last_byte = (last_byte == ObjectReader::kLastByteInFile) ? status_.GetSize() - 1 : last_byte;
     const size_t length = last_byte - first_byte + 1;
-    buffer->resize(length);
+    buffer->Resize(length);
     char c = static_cast<char>(first_byte % 256);
     for (size_t i = 0; i < length; ++i, ++c) {
-      (*buffer)[i] = c;
+      buffer->CharData()[i] = c;
     }
     requests_->emplace(CacheableLocation::WithFirstLastByteInclusive(first_byte, last_byte));
     return StorageError::Success();
   }
 
-  StorageError ReadTail(size_t num_last_bytes, std::vector<char>* buffer) override {
+  StorageError ReadTail(size_t num_last_bytes, ByteBuffer* buffer) override {
     const size_t first_byte = std::max<int64_t>(0, status_.GetSize() - num_last_bytes);
     return Read(first_byte, status_.GetSize() - 1, buffer);
   }
@@ -155,15 +155,15 @@ TEST(CachingObjectReaderTest, ObjectReaderSequentialCaching) {
   auto caching_reader = std::make_unique<CachingObjectReader>(std::move(reader), locations);
   caching_reader->SetMaxCacheSize(50);
 
-  std::vector<char> tmp_data_destination;
+  ByteBuffer tmp_data_destination;
   caching_reader->Read(5, 9, &tmp_data_destination);
-  EXPECT_EQ(tmp_data_destination.size(), 5);
-  EXPECT_EQ(tmp_data_destination[0], 5);
-  EXPECT_EQ(tmp_data_destination[4], 9);
+  EXPECT_EQ(tmp_data_destination.Size(), 5);
+  EXPECT_EQ(tmp_data_destination.CharData()[0], 5);
+  EXPECT_EQ(tmp_data_destination.CharData()[4], 9);
   caching_reader->Read(20, 39, &tmp_data_destination);
-  EXPECT_EQ(tmp_data_destination.size(), 20);
-  EXPECT_EQ(tmp_data_destination[0], 20);
-  EXPECT_EQ(tmp_data_destination[19], 39);
+  EXPECT_EQ(tmp_data_destination.Size(), 20);
+  EXPECT_EQ(tmp_data_destination.CharData()[0], 20);
+  EXPECT_EQ(tmp_data_destination.CharData()[19], 39);
 
   EXPECT_EQ(requests->size(), 1);
   EXPECT_NE(requests->find(CacheableLocation::WithFirstLastByteInclusive(5, 54)), requests->end());
@@ -182,15 +182,15 @@ TEST(CachingObjectReaderTest, ObjectReaderRandomCaching) {
   auto caching_reader = std::make_unique<CachingObjectReader>(std::move(reader), locations);
   caching_reader->SetMaxCacheSize(50);
 
-  std::vector<char> tmp_data_destination;
+  ByteBuffer tmp_data_destination;
   caching_reader->Read(5, 9, &tmp_data_destination);
-  EXPECT_EQ(tmp_data_destination.size(), 5);
-  EXPECT_EQ(tmp_data_destination[0], 5);
-  EXPECT_EQ(tmp_data_destination[4], 9);
+  EXPECT_EQ(tmp_data_destination.Size(), 5);
+  EXPECT_EQ(tmp_data_destination.CharData()[0], 5);
+  EXPECT_EQ(tmp_data_destination.CharData()[4], 9);
   caching_reader->Read(0, 5, &tmp_data_destination);
-  EXPECT_EQ(tmp_data_destination.size(), 6);
-  EXPECT_EQ(tmp_data_destination[0], 0);
-  EXPECT_EQ(tmp_data_destination[5], 5);
+  EXPECT_EQ(tmp_data_destination.Size(), 6);
+  EXPECT_EQ(tmp_data_destination.CharData()[0], 0);
+  EXPECT_EQ(tmp_data_destination.CharData()[5], 5);
 
   EXPECT_EQ(requests->size(), 1);
   EXPECT_NE(requests->find(CacheableLocation::WithFirstLastByteInclusive(0, 49)), requests->end());
@@ -207,15 +207,15 @@ TEST(CachingObjectReaderTest, ObjectReaderTailCaching) {
   auto caching_reader = std::make_unique<CachingObjectReader>(std::move(reader), locations);
   caching_reader->SetMaxCacheSize(50);
 
-  std::vector<char> tmp_data_destination;
+  ByteBuffer tmp_data_destination;
   caching_reader->ReadTail(10, &tmp_data_destination);
-  EXPECT_EQ(tmp_data_destination.size(), 10);
-  EXPECT_EQ(tmp_data_destination[0], static_cast<char>(190));
-  EXPECT_EQ(tmp_data_destination[9], static_cast<char>(199));
+  EXPECT_EQ(tmp_data_destination.Size(), 10);
+  EXPECT_EQ(tmp_data_destination.CharData()[0], static_cast<char>(190));
+  EXPECT_EQ(tmp_data_destination.CharData()[9], static_cast<char>(199));
   caching_reader->Read(165, 199, &tmp_data_destination);
-  EXPECT_EQ(tmp_data_destination.size(), 35);
-  EXPECT_EQ(tmp_data_destination[0], static_cast<char>(165));
-  EXPECT_EQ(tmp_data_destination[34], static_cast<char>(199));
+  EXPECT_EQ(tmp_data_destination.Size(), 35);
+  EXPECT_EQ(tmp_data_destination.CharData()[0], static_cast<char>(165));
+  EXPECT_EQ(tmp_data_destination.CharData()[34], static_cast<char>(199));
 
   EXPECT_EQ(requests->size(), 1);
   EXPECT_NE(requests->find(CacheableLocation::WithFirstLastByteInclusive(150, 199)), requests->end());
@@ -232,15 +232,15 @@ TEST(CachingObjectReaderTest, ObjectReaderLargerCacheThanFile) {
   auto caching_reader = std::make_unique<CachingObjectReader>(std::move(reader), locations);
   caching_reader->SetMaxCacheSize(1024);
 
-  std::vector<char> tmp_data_destination;
+  ByteBuffer tmp_data_destination;
   caching_reader->ReadTail(10, &tmp_data_destination);
-  EXPECT_EQ(tmp_data_destination.size(), 10);
-  EXPECT_EQ(tmp_data_destination[0], 90);
-  EXPECT_EQ(tmp_data_destination[9], 99);
+  EXPECT_EQ(tmp_data_destination.Size(), 10);
+  EXPECT_EQ(tmp_data_destination.CharData()[0], 90);
+  EXPECT_EQ(tmp_data_destination.CharData()[9], 99);
   caching_reader->Read(0, 9, &tmp_data_destination);
-  EXPECT_EQ(tmp_data_destination.size(), 10);
-  EXPECT_EQ(tmp_data_destination[0], 0);
-  EXPECT_EQ(tmp_data_destination[9], 9);
+  EXPECT_EQ(tmp_data_destination.Size(), 10);
+  EXPECT_EQ(tmp_data_destination.CharData()[0], 0);
+  EXPECT_EQ(tmp_data_destination.CharData()[9], 9);
 
   EXPECT_EQ(requests->size(), 1);
   EXPECT_NE(requests->find(CacheableLocation::WithFirstLastByteInclusive(0, 99)), requests->end());
@@ -258,26 +258,26 @@ TEST(CachingObjectReaderTest, ObjectReaderRequestsLargerThanCache) {
   auto caching_reader = std::make_unique<CachingObjectReader>(std::move(reader), locations);
   caching_reader->SetMaxCacheSize(5);
 
-  std::vector<char> tmp_data_destination;
+  ByteBuffer tmp_data_destination;
   caching_reader->ReadTail(10, &tmp_data_destination);
-  EXPECT_EQ(tmp_data_destination.size(), 10);
-  EXPECT_EQ(tmp_data_destination[0], 90);
-  EXPECT_EQ(tmp_data_destination[9], 99);
+  EXPECT_EQ(tmp_data_destination.Size(), 10);
+  EXPECT_EQ(tmp_data_destination.CharData()[0], 90);
+  EXPECT_EQ(tmp_data_destination.CharData()[9], 99);
 
   caching_reader->Read(0, 9, &tmp_data_destination);
-  EXPECT_EQ(tmp_data_destination.size(), 10);
-  EXPECT_EQ(tmp_data_destination[0], 0);
-  EXPECT_EQ(tmp_data_destination[9], 9);
+  EXPECT_EQ(tmp_data_destination.Size(), 10);
+  EXPECT_EQ(tmp_data_destination.CharData()[0], 0);
+  EXPECT_EQ(tmp_data_destination.CharData()[9], 9);
 
   caching_reader->Read(0, 9, &tmp_data_destination);
-  EXPECT_EQ(tmp_data_destination.size(), 10);
-  EXPECT_EQ(tmp_data_destination[0], 0);
-  EXPECT_EQ(tmp_data_destination[9], 9);
+  EXPECT_EQ(tmp_data_destination.Size(), 10);
+  EXPECT_EQ(tmp_data_destination.CharData()[0], 0);
+  EXPECT_EQ(tmp_data_destination.CharData()[9], 9);
 
   caching_reader->Read(10, 19, &tmp_data_destination);
-  EXPECT_EQ(tmp_data_destination.size(), 10);
-  EXPECT_EQ(tmp_data_destination[0], 10);
-  EXPECT_EQ(tmp_data_destination[9], 19);
+  EXPECT_EQ(tmp_data_destination.Size(), 10);
+  EXPECT_EQ(tmp_data_destination.CharData()[0], 10);
+  EXPECT_EQ(tmp_data_destination.CharData()[9], 19);
 
   EXPECT_EQ(requests->size(), 4);
   caching_reader->Close();
@@ -293,16 +293,16 @@ TEST(CachingObjectReaderTest, ObjectReaderRequestsLargerThanTailCache) {
   auto caching_reader = std::make_unique<CachingObjectReader>(std::move(reader), locations);
   caching_reader->SetMaxCacheSize(25);
 
-  std::vector<char> tmp_data_destination;
+  ByteBuffer tmp_data_destination;
   caching_reader->ReadTail(10, &tmp_data_destination);
-  EXPECT_EQ(tmp_data_destination.size(), 10);
-  EXPECT_EQ(tmp_data_destination[0], 90);
-  EXPECT_EQ(tmp_data_destination[9], 99);
+  EXPECT_EQ(tmp_data_destination.Size(), 10);
+  EXPECT_EQ(tmp_data_destination.CharData()[0], 90);
+  EXPECT_EQ(tmp_data_destination.CharData()[9], 99);
 
   caching_reader->ReadTail(10, &tmp_data_destination);
-  EXPECT_EQ(tmp_data_destination.size(), 10);
-  EXPECT_EQ(tmp_data_destination[0], 90);
-  EXPECT_EQ(tmp_data_destination[9], 99);
+  EXPECT_EQ(tmp_data_destination.Size(), 10);
+  EXPECT_EQ(tmp_data_destination.CharData()[0], 90);
+  EXPECT_EQ(tmp_data_destination.CharData()[9], 99);
 
   EXPECT_EQ(requests->size(), 2);
   caching_reader->Close();
@@ -342,14 +342,14 @@ TEST(CachingObjectReaderTest, ObjectReaderReadAll) {
   auto caching_reader = std::make_unique<CachingObjectReader>(std::move(reader), manager);
   caching_reader->SetMaxCacheSize(kVirtualObjectSize);
 
-  std::vector<char> tmp_data_destination;
+  ByteBuffer tmp_data_destination;
   auto error = caching_reader->Read(0, ObjectReader::kLastByteInFile, &tmp_data_destination);
   EXPECT_FALSE(error);
-  EXPECT_EQ(tmp_data_destination.size(), kVirtualObjectSize);
+  EXPECT_EQ(tmp_data_destination.Size(), kVirtualObjectSize);
 
   error = caching_reader->Read(10, ObjectReader::kLastByteInFile, &tmp_data_destination);
   EXPECT_FALSE(error);
-  EXPECT_EQ(tmp_data_destination.size(), kVirtualObjectSize - 10);
+  EXPECT_EQ(tmp_data_destination.Size(), kVirtualObjectSize - 10);
 
   EXPECT_EQ(requests->size(), 2);
   caching_reader->Close();

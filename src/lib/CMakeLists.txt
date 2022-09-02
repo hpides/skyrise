@@ -207,6 +207,8 @@ set(
 
     storage/backend/abstract_storage.cpp
     storage/backend/abstract_storage.hpp
+    storage/backend/bytebuffer.cpp
+    storage/backend/bytebuffer.hpp
     storage/backend/caching_object_reader.cpp
     storage/backend/caching_object_reader.hpp
     storage/backend/dynamodb_utils.cpp

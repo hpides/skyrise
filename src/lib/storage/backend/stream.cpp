@@ -80,7 +80,10 @@ int ObjectReaderStreamBuffer::underflow() {
     return traits_type::eof();
   }
 
-  StorageError read_result = reader_->Read(read_from, read_until_inclusive, &buffer_);
+  buffer_.resize(expected_bytes);
+  ByteBuffer buffer_view(buffer_.data(), expected_bytes);
+  StorageError read_result = reader_->Read(read_from, read_until_inclusive, &buffer_view);
+  buffer_.resize(buffer_view.Size());
 
   if (read_result.IsError()) {
     AWS_LOGSTREAM_ERROR(kStreamLoggingTag, "Read failed with message: " << read_result.GetMessage());
@@ -100,7 +103,9 @@ int ObjectReaderStreamBuffer::underflow() {
 void ObjectReaderStreamBuffer::FillBufferWithTail() {
   buffer_.clear();
 
-  const StorageError readtail_result = reader_->ReadTail(kBufferSize, &buffer_);
+  ByteBuffer buffer_view(buffer_.data(), kBufferSize);
+  const StorageError readtail_result = reader_->ReadTail(kBufferSize, &buffer_view);
+  buffer_.resize(buffer_view.Size());
 
   if (readtail_result.IsError()) {
     // Since this is an optimization, we do not propagate the error. Instead, a subsequent read will.
@@ -119,44 +124,36 @@ ObjectReaderStream::ObjectReaderStream(std::unique_ptr<ObjectReader> reader, boo
   }
 }
 
-DelegateStreamBuffer::DelegateStreamBuffer(std::vector<char>* buffer) { Reset(buffer); }
+DelegateStreamBuffer::DelegateStreamBuffer(ByteBuffer* buffer) { Reset(buffer); }
 
-void DelegateStreamBuffer::Reset(std::vector<char>* buffer) {
+void DelegateStreamBuffer::Reset(ByteBuffer* buffer) {
   buffer_ = buffer;
-  setg(buffer_->data(), buffer_->data(), buffer_->data() + buffer_->size());
-  setp(buffer_->data(), buffer_->data());
+  setg(buffer_->CharData(), buffer_->CharData(), buffer_->CharData() + buffer_->Size());
+  setp(buffer_->CharData(), buffer_->CharData());
 }
 
 std::streamsize DelegateStreamBuffer::xsputn(const char* s, std::streamsize n) {
-  const size_t write_offset = pptr() - buffer_->data();
-  const size_t read_offset = gptr() - buffer_->data();
+  const size_t write_offset = pptr() - buffer_->CharData();
+  const size_t read_offset = gptr() - buffer_->CharData();
+  const size_t resulting_write_offset = write_offset + n;
 
-  if (write_offset + n > buffer_->capacity()) {
-    buffer_->resize(write_offset);
-    buffer_->insert(buffer_->end(), s, s + n);
-  } else {
-    if (write_offset + n > buffer_->size()) {
-      buffer_->resize(write_offset + n);
-    }
-    std::copy_n(s, n, buffer_->begin() + write_offset);
+  if (resulting_write_offset > buffer_->Size()) {
+    buffer_->Resize(resulting_write_offset);
   }
 
-  setg(buffer_->data(), buffer_->data() + read_offset, buffer_->data() + buffer_->size());
-  setp(buffer_->data() + write_offset + n, buffer_->data() + buffer_->size());
+  std::copy_n(s, n, buffer_->CharData() + write_offset);
+
+  setg(buffer_->CharData(), buffer_->CharData() + read_offset, buffer_->CharData() + buffer_->Size());
+  setp(buffer_->CharData() + write_offset + n, buffer_->CharData() + buffer_->Size());
 
   return n;
 }
 
 int DelegateStreamBuffer::overflow(int ch) {
-  const size_t write_offset = pptr() - buffer_->data();
-  const size_t read_offset = gptr() - buffer_->data();
-
   if (ch != traits_type::eof()) {
-    buffer_->push_back(ch);
+    char c = ch;
+    xsputn(&c, 1);
   }
-
-  setg(buffer_->data(), buffer_->data() + read_offset, buffer_->data() + buffer_->size());
-  setp(buffer_->data() + write_offset, buffer_->data() + buffer_->size());
 
   return ch;
 }
@@ -165,18 +162,18 @@ DelegateStreamBuffer::pos_type DelegateStreamBuffer::seekpos(pos_type pos, std::
   const bool is_in = (std::ios::in & which) != 0;
   const bool is_out = (std::ios::out & which) != 0;
   const size_t new_position = pos;
-  const size_t max_position = buffer_->size();
+  const size_t max_position = buffer_->Size();
 
   if (new_position > max_position) {
     return pos_type(off_type(-1));
   }
 
   if (is_in) {
-    setg(buffer_->data(), buffer_->data() + pos, buffer_->data() + max_position);
+    setg(buffer_->CharData(), buffer_->CharData() + pos, buffer_->CharData() + max_position);
   }
 
   if (is_out) {
-    setp(buffer_->data() + pos, buffer_->data() + max_position);
+    setp(buffer_->CharData() + pos, buffer_->CharData() + max_position);
   }
 
   return pos_type(off_type(pos));
@@ -188,7 +185,7 @@ DelegateStreamBuffer::pos_type DelegateStreamBuffer::seekoff(DelegateStreamBuffe
     return seekpos(off, which);
   }
   if (dir == std::ios::end) {
-    return seekpos(buffer_->size() - off, which);
+    return seekpos(buffer_->Size() - off, which);
   }
 
   const bool is_in = (std::ios::in & which) != 0;
@@ -197,10 +194,10 @@ DelegateStreamBuffer::pos_type DelegateStreamBuffer::seekoff(DelegateStreamBuffe
 
   if (dir == std::ios::cur) {
     if (is_in) {
-      result = seekpos(this->gptr() - buffer_->data() + off, std::ios::in);
+      result = seekpos(this->gptr() - buffer_->CharData() + off, std::ios::in);
     }
     if (is_out) {
-      result = seekpos(this->pptr() - buffer_->data() + off, std::ios::out);
+      result = seekpos(this->pptr() - buffer_->CharData() + off, std::ios::out);
     }
   }
   return result;

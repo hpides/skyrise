@@ -91,27 +91,26 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteSmallObject) {
 
   // Read
   auto reader = this->storage_->OpenForReading(kFilename);
-  std::vector<char> buffer;
-  buffer.reserve(kFileSize);
+  ByteBuffer buffer(kFileSize);
   EXPECT_FALSE(reader->Read(0, ObjectReader::kLastByteInFile, &buffer));
   EXPECT_FALSE(reader->Close());
 
-  EXPECT_EQ(buffer.size(), kFileSize);
+  EXPECT_EQ(buffer.Size(), kFileSize);
 
-  for (size_t i = 0; i < buffer.size(); ++i) {
-    EXPECT_EQ(buffer[i], kFileContent[i]);
+  for (size_t i = 0; i < buffer.Size(); ++i) {
+    EXPECT_EQ(buffer.CharData()[i], kFileContent[i]);
   }
 
   // Read specific byte ranges
-  buffer.clear();
+  buffer.Resize(0);
   reader = this->storage_->OpenForReading(kFilename);
   auto compare_against = kFileContent.substr(1, 2);
   EXPECT_FALSE(reader->Read(1, 2, &buffer));
   EXPECT_FALSE(reader->Close());
 
-  EXPECT_EQ(buffer.size(), 2);
-  for (size_t i = 0; i < buffer.size(); ++i) {
-    EXPECT_EQ(buffer[i], compare_against[i]);
+  EXPECT_EQ(buffer.Size(), 2);
+  for (size_t i = 0; i < buffer.Size(); ++i) {
+    EXPECT_EQ(buffer.CharData()[i], compare_against[i]);
   }
 
   // Delete
@@ -136,12 +135,12 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadTailDeleteSmallObject) {
 
   // ReadTail
   auto reader = this->storage_->OpenForReading(kFilename);
-  std::vector<char> buffer;
-  buffer.reserve(kFileSize);
+  ByteBuffer buffer;
+  buffer.Resize(kFileSize);
   EXPECT_FALSE(reader->ReadTail(1, &buffer));
 
-  EXPECT_EQ(buffer.size(), 1);
-  EXPECT_EQ(buffer[0], 'd');
+  EXPECT_EQ(buffer.Size(), 1);
+  EXPECT_EQ(buffer.CharData()[0], 'd');
 
   EXPECT_FALSE(reader->GetStatus().GetError().IsError());
   EXPECT_EQ(reader->GetStatus().GetSize(), kFileSize);
@@ -176,8 +175,10 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteBigObject) {
 
   // Read
   auto reader = this->storage_->OpenForReading(kFilename);
-  EXPECT_FALSE(reader->Read(0, ObjectReader::kLastByteInFile, &buffer));
-  EXPECT_TRUE(std::find_if(buffer.cbegin(), buffer.cend(), [](char x) { return x != 'x'; }) == buffer.end());
+  ByteBuffer read_buffer;
+  EXPECT_FALSE(reader->Read(0, ObjectReader::kLastByteInFile, &read_buffer));
+  EXPECT_TRUE(std::find_if(read_buffer.CharData(), read_buffer.CharData() + read_buffer.Size(),
+                           [](char x) { return x != 'x'; }) == read_buffer.CharData() + read_buffer.Size());
   EXPECT_FALSE(reader->Close());
 
   // Delete

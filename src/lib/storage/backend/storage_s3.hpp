@@ -92,8 +92,8 @@ class S3ObjectReader : public ObjectReader {
   S3ObjectReader(std::shared_ptr<const Aws::S3::S3Client> client, std::string bucket, std::string object_id);
   S3ObjectReader(const S3ObjectReader&) = delete;
 
-  StorageError Read(size_t first_byte, size_t last_byte, std::vector<char>* buffer) override;
-  StorageError ReadTail(size_t num_last_bytes, std::vector<char>* buffer) override;
+  StorageError Read(size_t first_byte, size_t last_byte, ByteBuffer* buffer) override;
+  StorageError ReadTail(size_t num_last_bytes, ByteBuffer* buffer) override;
   const ObjectStatus& GetStatus() override;
   StorageError Close() override;
 
@@ -102,7 +102,7 @@ class S3ObjectReader : public ObjectReader {
   static std::string GetRangeStringForTail(size_t num_last_bytes);
   static size_t ParseContentLengthFromRange(const Aws::String& content_range);
 
-  Aws::S3::Model::GetObjectRequest CreateGetObjectRequest(std::vector<char>* buffer, const std::string& range = "");
+  Aws::S3::Model::GetObjectRequest CreateGetObjectRequest(ByteBuffer* buffer, const std::string& range = "");
   StorageError ProcessGetObjectRequest(const Aws::S3::Model::GetObjectRequest& request);
 
   std::shared_ptr<const Aws::S3::S3Client> client_;

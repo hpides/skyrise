@@ -366,13 +366,12 @@ S3ObjectReader::S3ObjectReader(std::shared_ptr<const Aws::S3::S3Client> client, 
                                std::string object_id)
     : client_(std::move(client)), bucket_(std::move(bucket)), object_id_(std::move(object_id)) {}
 
-Aws::S3::Model::GetObjectRequest S3ObjectReader::CreateGetObjectRequest(std::vector<char>* buffer,
-                                                                        const std::string& range) {
+Aws::S3::Model::GetObjectRequest S3ObjectReader::CreateGetObjectRequest(ByteBuffer* buffer, const std::string& range) {
   Aws::S3::Model::GetObjectRequest request;
   request.SetBucket(bucket_);
   request.SetKey(object_id_);
   request.SetResponseStreamFactory([this, buffer]() {
-    buffer->clear();
+    buffer->Resize(0);
     stream_.Reset(buffer);
     return new std::iostream(&stream_);
   });
@@ -383,7 +382,7 @@ Aws::S3::Model::GetObjectRequest S3ObjectReader::CreateGetObjectRequest(std::vec
   return request;
 }
 
-StorageError S3ObjectReader::Read(size_t first_byte, size_t last_byte, std::vector<char>* buffer) {
+StorageError S3ObjectReader::Read(size_t first_byte, size_t last_byte, ByteBuffer* buffer) {
   bool read_entire_object = (first_byte == 0 && last_byte == kLastByteInFile);
   std::string range_string;
   if (!read_entire_object) {
@@ -393,7 +392,7 @@ StorageError S3ObjectReader::Read(size_t first_byte, size_t last_byte, std::vect
   return ProcessGetObjectRequest(CreateGetObjectRequest(buffer, range_string));
 }
 
-StorageError S3ObjectReader::ReadTail(size_t num_last_bytes, std::vector<char>* buffer) {
+StorageError S3ObjectReader::ReadTail(size_t num_last_bytes, ByteBuffer* buffer) {
   const std::string range_string = GetRangeStringForTail(num_last_bytes);
   return ProcessGetObjectRequest(CreateGetObjectRequest(buffer, range_string));
 }

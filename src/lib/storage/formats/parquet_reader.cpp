@@ -30,47 +30,53 @@
 
 namespace {
 
+using namespace skyrise;  // NOLINT(google-build-using-namespace)
+
 class ParquetInputProxy : public arrow::io::RandomAccessFile {
  public:
-  ParquetInputProxy(std::unique_ptr<skyrise::ObjectReader> source) : stream_(std::move(source), true) {
-    stream_.seekg(0, std::ios::end);
-    object_size_ = stream_.tellg();
-    stream_.seekg(0, std::ios::beg);
+  ParquetInputProxy(std::unique_ptr<skyrise::ObjectReader> source) : source_(std::move(source)), offset_(0) {
+    object_size_ = source_->GetStatus().GetSize();
   }
 
-  arrow::Result<int64_t> Tell() const override {
-    int64_t pos = stream_.tellg();
-    if (!stream_.good()) {
-      return arrow::Result<int64_t>(arrow::Status::IOError("IOError"));
-    }
-    return arrow::Result<int64_t>(pos);
-  }
+  arrow::Result<int64_t> Tell() const override { return arrow::Result<int64_t>(offset_); }
 
   bool closed() const override { return false; }
 
   arrow::Status Close() override { Fail("Close is not implemented for ParquetInputProxy"); }
 
   arrow::Result<int64_t> Read(int64_t nbytes, void* out) override {
-    stream_.read(static_cast<char*>(out), nbytes);
-    return arrow::Result(stream_.gcount());
+    ByteBuffer buffer_view(out, nbytes);
+    StorageError error = source_->Read(offset_, offset_ + nbytes - 1, &buffer_view);
+    offset_ += buffer_view.Size();
+
+    if (error || static_cast<int64_t>(buffer_view.Size()) != nbytes || buffer_view.Data() != out) {
+      return arrow::Result<int64_t>(arrow::Status::IOError("IOError"));
+    }
+
+    return arrow::Result(buffer_view.Size());
   }
 
   arrow::Result<std::shared_ptr<arrow::Buffer>> Read(int64_t nbytes) override {
     arrow::BufferBuilder builder;
     RETURN_NOT_OK(builder.Reserve(nbytes));
-    stream_.read(reinterpret_cast<char*>(builder.mutable_data()), nbytes);
-    builder.UnsafeAdvance(stream_.gcount());
+    ByteBuffer buffer_view(builder.mutable_data(), nbytes);
+    StorageError error = source_->Read(offset_, offset_ + nbytes - 1, &buffer_view);
+    if (error || static_cast<int64_t>(buffer_view.Size()) != nbytes || buffer_view.Data() != builder.mutable_data()) {
+      return arrow::Result<std::shared_ptr<arrow::Buffer>>(arrow::Status::IOError("IOError"));
+    }
+    builder.UnsafeAdvance(nbytes);
     return builder.Finish();
   }
 
   arrow::Status Seek(int64_t position) override {
-    stream_.seekg(static_cast<std::streamoff>(position), std::ios::beg);
+    offset_ = static_cast<size_t>(position);
     return arrow::Status::OK();
   }
 
   arrow::Result<int64_t> GetSize() override { return arrow::Result<int64_t>(object_size_); }
 
-  mutable skyrise::ObjectReaderStream stream_;
+  mutable std::unique_ptr<skyrise::ObjectReader> source_;
+  size_t offset_;
   size_t object_size_;
 };
 
