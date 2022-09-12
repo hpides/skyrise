@@ -132,6 +132,10 @@ std::shared_ptr<AbstractSegment> CreateSegment(orc::ColumnVectorBatch* batch, or
   }
 }
 
+bool RangeIncludes(const std::pair<size_t, size_t>& range, size_t index) {
+  return range.first <= index && range.second >= index;
+}
+
 }  // namespace
 
 namespace skyrise {
@@ -203,16 +207,41 @@ void OrcFormatReader::InitializeCacheManager(const std::unique_ptr<CachingObject
 }
 
 void OrcFormatReader::DetermineCacheableLocations() {
-  // All stripes and streams are cacheable locations.
+  const bool select_stripes = configuration_.select_partition_range.has_value();
+  std::optional<size_t> first_selected_stripe_offset;
+
   for (uint64_t stripe_id = 0; stripe_id < reader_->getNumberOfStripes(); ++stripe_id) {
+    if (select_stripes && !RangeIncludes(*configuration_.select_partition_range, stripe_id)) {
+      continue;
+    }
+
     auto stripe_information = reader_->getStripe(stripe_id);
+    if (!first_selected_stripe_offset) {
+      first_selected_stripe_offset.emplace(stripe_information->getOffset());
+    }
+
+    // Add the stripe itself.
     cache_manager_->AddLocation(
         CacheableLocation::WithOffsetSize(stripe_information->getOffset(), stripe_information->getLength()));
+
+    // Add all stripes up to the current stripe for continuouse access.
+    if (*first_selected_stripe_offset != stripe_information->getOffset()) {
+      cache_manager_->AddLocation(CacheableLocation::WithFirstLastByteInclusive(
+          *first_selected_stripe_offset, stripe_information->getOffset() + stripe_information->getLength() - 1));
+    }
+
+    // Add all streams as fallback for small cache size.
     for (uint64_t stream_id = 0; stream_id < stripe_information->getNumberOfStreams(); ++stream_id) {
       auto stream_information = stripe_information->getStreamInformation(stream_id);
       cache_manager_->AddLocation(
           CacheableLocation::WithOffsetSize(stream_information->getOffset(), stream_information->getLength()));
     }
+  }
+
+  if (!select_stripes) {
+    // A file is cacheable in its entirety. This, however, is not done when only specific stripes are requested to avoid
+    // caching of irrelevant data.
+    cache_manager_->AddLocation(CacheableLocation::WithOffsetSize(0, reader_->getFileLength()));
   }
 }
 
