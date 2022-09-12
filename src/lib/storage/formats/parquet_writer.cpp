@@ -12,27 +12,27 @@ ParquetFormatWriter::ParquetFormatWriter(Configuration config) : config_(std::mo
       detail::ParquetOutputProxy::Make([this](const char* data, size_t length) { WriteToOutput(data, length); });
 }
 
-void ParquetFormatWriter::Initialize(const TableColumnDefinitions& schema) {
+void ParquetFormatWriter::Initialize(const TableColumnDefinitions& skyrise_schema) {
   parquet::WriterProperties::Builder builder;
   builder.compression(config_.compression);
   builder.compression_level(config_.compression_level);
   parquet::schema::NodeVector fields;
 
-  for (const auto& column : schema) {
+  for (const auto& column : skyrise_schema) {
     fields.push_back(SkyriseTypeToParquetType(column.name, column.data_type, column.nullable));
   }
 
-  const auto schema_ = std::static_pointer_cast<parquet::schema::GroupNode>(
+  const auto parquet_schema = std::static_pointer_cast<parquet::schema::GroupNode>(
       parquet::schema::GroupNode::Make("schema", parquet::Repetition::REQUIRED, fields));
 
-  writer_ = parquet::ParquetFileWriter::Open(output_proxy_, schema_, builder.build());
+  writer_ = parquet::ParquetFileWriter::Open(output_proxy_, parquet_schema, builder.build());
 };
 
 void ParquetFormatWriter::ProcessChunk(std::shared_ptr<const Chunk> chunk) {
   parquet::RowGroupWriter* row_group_writer = writer_->AppendRowGroup();
   for (size_t i = 0; i < chunk->GetColumnCount(); ++i) {
     const auto segment = chunk->GetSegment(i);
-    const auto column_writer = row_group_writer->NextColumn();
+    parquet::ColumnWriter* column_writer = row_group_writer->NextColumn();
     CopySegmentToParquetColumn(segment, column_writer);
   }
 };
@@ -68,24 +68,24 @@ void ParquetFormatWriter::CopySegmentToParquetColumn(const std::shared_ptr<Abstr
                                                      parquet::ColumnWriter* column_writer) {
   switch (segment->GetDataType()) {
     case DataType::kLong:
-      GenericCopySegmentToParquetColumn(static_cast<ValueSegment<int64_t>*>(segment.get()),
-                                        static_cast<parquet::Int64Writer*>(column_writer));
+      GenericCopySegmentToParquetColumn(dynamic_cast<ValueSegment<int64_t>*>(segment.get()),
+                                        dynamic_cast<parquet::Int64Writer*>(column_writer));
       return;
     case DataType::kInt:
-      GenericCopySegmentToParquetColumn(static_cast<ValueSegment<int32_t>*>(segment.get()),
-                                        static_cast<parquet::Int32Writer*>(column_writer));
+      GenericCopySegmentToParquetColumn(dynamic_cast<ValueSegment<int32_t>*>(segment.get()),
+                                        dynamic_cast<parquet::Int32Writer*>(column_writer));
       return;
     case DataType::kFloat:
-      GenericCopySegmentToParquetColumn(static_cast<ValueSegment<float>*>(segment.get()),
-                                        static_cast<parquet::FloatWriter*>(column_writer));
+      GenericCopySegmentToParquetColumn(dynamic_cast<ValueSegment<float>*>(segment.get()),
+                                        dynamic_cast<parquet::FloatWriter*>(column_writer));
       return;
     case DataType::kDouble:
-      GenericCopySegmentToParquetColumn(static_cast<ValueSegment<double>*>(segment.get()),
-                                        static_cast<parquet::DoubleWriter*>(column_writer));
+      GenericCopySegmentToParquetColumn(dynamic_cast<ValueSegment<double>*>(segment.get()),
+                                        dynamic_cast<parquet::DoubleWriter*>(column_writer));
       return;
     case DataType::kString:
-      GenericCopySegmentToParquetColumn(static_cast<ValueSegment<std::string>*>(segment.get()),
-                                        static_cast<parquet::ByteArrayWriter*>(column_writer));
+      GenericCopySegmentToParquetColumn(dynamic_cast<ValueSegment<std::string>*>(segment.get()),
+                                        dynamic_cast<parquet::ByteArrayWriter*>(column_writer));
       return;
     default:
       Fail("Invalid type found.");

@@ -238,7 +238,7 @@ std::shared_ptr<JoinOperatorPredicate> JoinOperatorPredicate_(
   const auto right_pqp_column =
       std::static_pointer_cast<PqpColumnExpression>(binary_predicate_expression->RightOperand());
 
-  const auto join_operator_predicate = std::make_shared<JoinOperatorPredicate>(JoinOperatorPredicate{
+  auto join_operator_predicate = std::make_shared<JoinOperatorPredicate>(JoinOperatorPredicate{
       left_pqp_column->column_id_, right_pqp_column->column_id_, binary_predicate_expression->predicate_condition_});
   return join_operator_predicate;
 }

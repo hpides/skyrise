@@ -124,6 +124,10 @@ class CachingObjectReader : public ObjectReader {
   size_t TryResolveLastByte(size_t last_byte);
   void DeallocateCache();
 
+  /**
+   * Determines the maximum cache size based on environment variables in the host environment. This function is not
+   * thread-safe.
+   */
   static size_t DetermineMaxCacheSize();
 
   std::unique_ptr<ObjectReader> source_;

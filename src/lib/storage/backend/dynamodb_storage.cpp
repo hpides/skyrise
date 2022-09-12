@@ -30,18 +30,18 @@ ObjectStatus GetObjectStatusFromOutcome(const Aws::DynamoDB::Model::GetItemOutco
       return ObjectStatus(StorageError(StorageErrorType::kNotFound));
     }
 
-    auto ExtractRequiredValue = [&item](const std::string& key) -> Aws::DynamoDB::Model::AttributeValue {
+    auto extract_required_value = [&item](const std::string& key) -> Aws::DynamoDB::Model::AttributeValue {
       const auto potential_match = item.find(key);
       Assert(potential_match != item.end(), "Required key does not exist in item.");
       return potential_match->second;
     };
 
-    const std::string id = ExtractRequiredValue(kItemIdentifierAttribute).GetS();
-    const time_t last_modified = std::stoi(ExtractRequiredValue(kItemLastModifiedAttribute).GetN());
-    const std::string etag = ExtractRequiredValue(kItemChecksumAttribute).GetS();
-    const size_t size = std::stoul(ExtractRequiredValue(kItemSizeAttribute).GetS());
+    const std::string id = extract_required_value(kItemIdentifierAttribute).GetS();
+    const time_t last_modified = std::stoi(extract_required_value(kItemLastModifiedAttribute).GetN());
+    const std::string etag = extract_required_value(kItemChecksumAttribute).GetS();
+    const size_t size = std::stoul(extract_required_value(kItemSizeAttribute).GetS());
 
-    return ObjectStatus(id, last_modified, etag, size);
+    return {id, last_modified, etag, size};
   } else {
     return ObjectStatus(GetErrorFromOutcome(outcome));
   }

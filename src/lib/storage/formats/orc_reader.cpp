@@ -28,9 +28,7 @@ class OrcInputProxy : public orc::InputStream {
 };
 
 OrcInputProxy::OrcInputProxy(std::unique_ptr<ObjectReader> source)
-    : source_(std::move(source)), name_("OrcInputProxy") {
-  object_size_ = source_->GetStatus().GetSize();
-}
+    : source_(std::move(source)), name_("OrcInputProxy"), object_size_(source_->GetStatus().GetSize()) {}
 
 uint64_t OrcInputProxy::getLength() const { return object_size_; }
 

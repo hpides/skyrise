@@ -29,10 +29,10 @@ class Noncopyable {
 
 enum class DescriptionMode { kSingleLine, kMultiLine };
 
+using ChunkId = uint32_t;
+using ChunkOffset = uint32_t;
 using ColumnCount = uint32_t;
 using ColumnId = uint32_t;
-using ChunkId = uint32_t;
-
 using TaskId = uint32_t;
 
 inline constexpr ColumnId kInvalidColumnId = std::numeric_limits<ColumnId>::max();

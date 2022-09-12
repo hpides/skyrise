@@ -44,7 +44,7 @@ class AwsGlueCatalogTest : public ::testing::Test {
     catalog_->DeleteDatabase();
   }
 
-  void CompareSchemas(const std::shared_ptr<const TableSchema>& a, const std::shared_ptr<const TableSchema>& b) {
+  static void CompareSchemas(const std::shared_ptr<const TableSchema>& a, const std::shared_ptr<const TableSchema>& b) {
     EXPECT_EQ(a->TableColumnCount(), b->TableColumnCount());
     for (size_t i = 0; i < a->TableColumnCount(); ++i) {
       EXPECT_EQ(a->GetTableColumnDefinition(i), b->GetTableColumnDefinition(i));
@@ -91,8 +91,8 @@ TEST_F(AwsGlueCatalogTest, GetTableSchema) {
 
 TEST_F(AwsGlueCatalogTest, IgnoreCaseSensitivity) {
   const ObjectReference data_location("bucket", "directory");
-  const auto table_name_lc = "tablename";
-  const auto table_name = "TableName";
+  const std::string table_name = "Table_Name";
+  const std::string table_name_lc = "table_name";
 
   catalog_->AddTableMetadata(table_name, schema_, data_location);
   EXPECT_ANY_THROW(catalog_->AddTableMetadata(table_name_lc, schema_, data_location));

@@ -52,9 +52,9 @@ class ParquetFormatWriter : public AbstractFormatWriter {
  public:
   using Configuration = ParquetFormatWriterOptions;
 
-  explicit ParquetFormatWriter(Configuration options = Configuration());
+  explicit ParquetFormatWriter(Configuration config = Configuration());
 
-  void Initialize(const TableColumnDefinitions& schema) override;
+  void Initialize(const TableColumnDefinitions& skyrise_schema) override;
   void ProcessChunk(std::shared_ptr<const Chunk> chunk) override;
   void Finalize() override;
 

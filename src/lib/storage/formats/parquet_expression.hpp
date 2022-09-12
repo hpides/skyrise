@@ -14,6 +14,6 @@ namespace skyrise {
  *
  * @param expression AbstractExpression that should be converted into an arrow expression
  */
-arrow::compute::Expression CreateArrowExpression(std::shared_ptr<AbstractExpression> expression);
+arrow::compute::Expression CreateArrowExpression(const std::shared_ptr<AbstractExpression>& expression);
 
 }  // namespace skyrise

@@ -165,7 +165,7 @@ DelegateStreamBuffer::pos_type DelegateStreamBuffer::seekpos(pos_type pos, std::
   const size_t max_position = buffer_->Size();
 
   if (new_position > max_position) {
-    return pos_type(off_type(-1));
+    return {off_type(-1)};
   }
 
   if (is_in) {
@@ -176,7 +176,7 @@ DelegateStreamBuffer::pos_type DelegateStreamBuffer::seekpos(pos_type pos, std::
     setp(buffer_->CharData() + pos, buffer_->CharData() + max_position);
   }
 
-  return pos_type(off_type(pos));
+  return {off_type(pos)};
 }
 
 DelegateStreamBuffer::pos_type DelegateStreamBuffer::seekoff(DelegateStreamBuffer::off_type off, std::ios::seekdir dir,
@@ -190,7 +190,7 @@ DelegateStreamBuffer::pos_type DelegateStreamBuffer::seekoff(DelegateStreamBuffe
 
   const bool is_in = (std::ios::in & which) != 0;
   const bool is_out = (std::ios::out & which) != 0;
-  pos_type result = pos_type(off_type(-1));
+  pos_type result = {off_type(-1)};
 
   if (dir == std::ios::cur) {
     if (is_in) {

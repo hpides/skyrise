@@ -14,10 +14,10 @@ namespace skyrise {
 struct SqlRequest {
   SqlRequest(std::string init_query_string, std::string init_user_name,
              std::chrono::time_point<std::chrono::system_clock> init_arrival_time)
-      : arrival_time(init_arrival_time), query_string(std::move(init_query_string)), user_name(init_user_name) {}
-  const std::chrono::time_point<std::chrono::system_clock> arrival_time;
+      : query_string(std::move(init_query_string)), user_name(init_user_name), arrival_time(init_arrival_time) {}
   const std::string query_string;
   const std::string user_name;
+  const std::chrono::time_point<std::chrono::system_clock> arrival_time;
 };
 
 class CompilationContext {

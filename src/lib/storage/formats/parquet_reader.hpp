@@ -40,9 +40,9 @@ class ParquetFormatReader : public AbstractChunkReader {
 
   template <typename BasicType, typename ArrowArrayType>
   std::shared_ptr<AbstractSegment> ArrowColumnToTypedSegment(std::shared_ptr<arrow::Array>& column);
-  std::shared_ptr<AbstractSegment> ArrowDateColumnToStringSegment(std::shared_ptr<arrow::Array>& column);
+  static std::shared_ptr<AbstractSegment> ArrowDateColumnToStringSegment(std::shared_ptr<arrow::Array>& column);
 
-  DataType ArrowTypeToSkyriseType(const arrow::Type::type& type);
+  DataType ArrowTypeToSkyriseType(const arrow::Type::type& type) const;
 
   Configuration configuration_;
 

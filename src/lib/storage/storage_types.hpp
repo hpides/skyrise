@@ -6,10 +6,9 @@
 #include <memory>
 #include <vector>
 
-namespace skyrise {
+#include "types.hpp"
 
-using ChunkId = uint32_t;
-using ChunkOffset = uint32_t;
+namespace skyrise {
 
 inline constexpr ChunkId kInvalidChunkId{std::numeric_limits<ChunkId>::max()};
 inline constexpr ChunkOffset kInvalidChunkOffset{std::numeric_limits<ChunkOffset>::max()};

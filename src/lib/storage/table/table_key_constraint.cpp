@@ -15,7 +15,7 @@ KeyConstraintType TableKeyConstraint::KeyType() const { return key_type_; }
 bool TableKeyConstraint::OnEquals(const AbstractTableConstraint& table_constraint) const {
   DebugAssert(dynamic_cast<const TableKeyConstraint*>(&table_constraint),
               "Different table_constraint type should have been caught by AbstractTableConstraint::operator==.");
-  return KeyType() == static_cast<const TableKeyConstraint&>(table_constraint).KeyType();
+  return KeyType() == dynamic_cast<const TableKeyConstraint&>(table_constraint).KeyType();
 }
 
 }  // namespace skyrise

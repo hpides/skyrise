@@ -181,7 +181,7 @@ void BatchGetItem(const std::shared_ptr<const Aws::DynamoDB::DynamoDBClient>& cl
 
   // It can happen that we receive fewer items than expected.
   const auto unprocessed_items = outcome.GetResult().GetUnprocessedKeys();
-  if (unprocessed_items.size() > 0) {
+  if (!unprocessed_items.empty()) {
     BatchGetItem(client, table_name, unprocessed_items.at(table_name), outcomes);
   }
 }

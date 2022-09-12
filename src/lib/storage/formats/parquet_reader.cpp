@@ -24,7 +24,7 @@
 #include "storage/table/value_segment.hpp"
 
 #define HANDLE_RESULT(result, reason) \
-  if (!result.ok()) {                 \
+  if (!((result).ok())) {             \
     throw std::logic_error(reason);   \
   }
 
@@ -34,11 +34,10 @@ using namespace skyrise;  // NOLINT(google-build-using-namespace)
 
 class ParquetInputProxy : public arrow::io::RandomAccessFile {
  public:
-  ParquetInputProxy(std::unique_ptr<skyrise::ObjectReader> source) : source_(std::move(source)), offset_(0) {
-    object_size_ = source_->GetStatus().GetSize();
-  }
+  explicit ParquetInputProxy(std::unique_ptr<skyrise::ObjectReader> source)
+      : source_(std::move(source)), object_size_(source_->GetStatus().GetSize()) {}
 
-  arrow::Result<int64_t> Tell() const override { return arrow::Result<int64_t>(offset_); }
+  arrow::Result<int64_t> Tell() const override { return {offset_}; }
 
   bool closed() const override { return false; }
 
@@ -50,7 +49,7 @@ class ParquetInputProxy : public arrow::io::RandomAccessFile {
     offset_ += buffer_view.Size();
 
     if (error || static_cast<int64_t>(buffer_view.Size()) != nbytes || buffer_view.Data() != out) {
-      return arrow::Result<int64_t>(arrow::Status::IOError("IOError"));
+      return {arrow::Status::IOError("IOError")};
     }
 
     return arrow::Result(buffer_view.Size());
@@ -62,7 +61,7 @@ class ParquetInputProxy : public arrow::io::RandomAccessFile {
     ByteBuffer buffer_view(builder.mutable_data(), nbytes);
     StorageError error = source_->Read(offset_, offset_ + nbytes - 1, &buffer_view);
     if (error || static_cast<int64_t>(buffer_view.Size()) != nbytes || buffer_view.Data() != builder.mutable_data()) {
-      return arrow::Result<std::shared_ptr<arrow::Buffer>>(arrow::Status::IOError("IOError"));
+      return {arrow::Status::IOError("IOError")};
     }
     builder.UnsafeAdvance(nbytes);
     return builder.Finish();
@@ -73,10 +72,11 @@ class ParquetInputProxy : public arrow::io::RandomAccessFile {
     return arrow::Status::OK();
   }
 
-  arrow::Result<int64_t> GetSize() override { return arrow::Result<int64_t>(object_size_); }
+  arrow::Result<int64_t> GetSize() override { return {object_size_}; }
 
+ private:
   mutable std::unique_ptr<skyrise::ObjectReader> source_;
-  size_t offset_;
+  size_t offset_ = 0;
   size_t object_size_;
 };
 
@@ -248,20 +248,20 @@ std::shared_ptr<AbstractSegment> ParquetFormatReader::ArrowColumnToTypedSegment(
   return std::make_shared<ValueSegment<BasicType>>(std::move(vector));
 }
 
-void ParquetFormatReader::ExtractSchema(const std::shared_ptr<arrow::Schema>& parquet_schema) {
+void ParquetFormatReader::ExtractSchema(const std::shared_ptr<arrow::Schema>& arrow_schema) {
   auto table_definitions = std::make_shared<TableColumnDefinitions>();
 
-  for (int i = 0; i < parquet_schema->num_fields(); ++i) {
-    const DataType type = ArrowTypeToSkyriseType(parquet_schema->field(i)->type()->id());
-    const std::string name = parquet_schema->field(i)->name();
-    const bool nullable = parquet_schema->field(i)->nullable();
+  for (int i = 0; i < arrow_schema->num_fields(); ++i) {
+    const DataType type = ArrowTypeToSkyriseType(arrow_schema->field(i)->type()->id());
+    const std::string name = arrow_schema->field(i)->name();
+    const bool nullable = arrow_schema->field(i)->nullable();
 
     table_definitions->emplace_back(name, type, nullable);
   }
   schema_ = std::move(table_definitions);
 }
 
-DataType ParquetFormatReader::ArrowTypeToSkyriseType(const arrow::Type::type& type) {
+DataType ParquetFormatReader::ArrowTypeToSkyriseType(const arrow::Type::type& type) const {
   switch (type) {
     case arrow::Type::FLOAT:
       return DataType::kFloat;

@@ -47,10 +47,10 @@ TEST_F(AwsGlueUtilsTest, CreateReadDeleteTableSchema) {
   EXPECT_EQ(table.GetName(), table_name);
   EXPECT_EQ(table.GetVersionId(), "0");
 
-  const auto storage_descriptor = table.GetStorageDescriptor();
+  const auto& storage_descriptor = table.GetStorageDescriptor();
   EXPECT_EQ(storage_descriptor.GetLocation(), data_location);
 
-  const auto table_parameters = table.GetParameters();
+  const auto& table_parameters = table.GetParameters();
   EXPECT_EQ(table_parameters, parameters);
 
   const auto delete_outcome = DeleteGlueTableSchema(client_, database_name_, table_name);

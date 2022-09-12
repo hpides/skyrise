@@ -154,11 +154,15 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadTailDeleteSmallObject) {
 
 TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteBigObject) {
   constexpr size_t kChunkSize = 16_KB;
-  size_t kTestFileSize = 31_MB;
+  size_t test_file_size = 31_MB;
 
   // DynamoDB's maximum item size is 400KB, including data and metadata.
-  if (dynamic_cast<DynamoDbStorage*>(this->storage_) != nullptr) {
-    kTestFileSize = kDynamoDbMaxItemSize - kDynamoDbStorageMetadataSize;
+  if (this->storage_ != nullptr) {
+    if (dynamic_cast<DynamoDbStorage*>(this->storage_) != nullptr) {
+      test_file_size = kDynamoDbMaxItemSize - kDynamoDbStorageMetadataSize;
+    }
+  } else {
+    FAIL() << "No storage backend provided.";
   }
 
   static const std::string kFilename{"big.txt"};
@@ -166,8 +170,8 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteBigObject) {
 
   // Create
   auto writer = this->storage_->OpenForWriting(kFilename);
-  for (size_t written = 0; written < kTestFileSize; written += kChunkSize) {
-    EXPECT_FALSE(writer->Write(buffer.data(), std::min(kTestFileSize - written, kChunkSize)));
+  for (size_t written = 0; written < test_file_size; written += kChunkSize) {
+    EXPECT_FALSE(writer->Write(buffer.data(), std::min(test_file_size - written, kChunkSize)));
   }
   EXPECT_FALSE(writer->Close());
 

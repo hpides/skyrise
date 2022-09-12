@@ -11,7 +11,7 @@ namespace {
 
 class LoggingReader : public ObjectReader {
  public:
-  LoggingReader(size_t object_size)
+  explicit LoggingReader(size_t object_size)
       : status_("testing", 0, "checksum", object_size),
         requests_(std::make_shared<std::multiset<CacheableLocation>>()) {}
 
@@ -314,12 +314,15 @@ TEST(CachingObjectReaderTest, ObjectReaderDefaultCacheSize) {
   auto reader2 = std::make_unique<LoggingReader>(1);
   auto reader3 = std::make_unique<LoggingReader>(1);
 
+  // NOLINTNEXTLINE(concurrency-mt-unsafe)
   ::setenv("AWS_LAMBDA_FUNCTION_MEMORY_SIZE", "128", 1);
   const int64_t size_low = CachingObjectReader(std::move(reader1), locations).MaxCacheSize();
 
+  // NOLINTNEXTLINE(concurrency-mt-unsafe)
   ::setenv("AWS_LAMBDA_FUNCTION_MEMORY_SIZE", "10240", 1);
   const int64_t size_high = CachingObjectReader(std::move(reader2), locations).MaxCacheSize();
 
+  // NOLINTNEXTLINE(concurrency-mt-unsafe)
   ::unsetenv("AWS_LAMBDA_FUNCTION_MEMORY_SIZE");
   const int64_t size_fallback = CachingObjectReader(std::move(reader3), locations).MaxCacheSize();
 

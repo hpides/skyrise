@@ -94,8 +94,10 @@ StorageError FilesystemStorage::ListDirectoryRecursively(const std::string& dire
   if (dir == nullptr) {
     return StorageError(StorageErrorType::kNotFound);
   }
+
   struct dirent* dir_entry{};
-  while ((dir_entry = readdir(dir)) != nullptr) {  // NOLINT(concurrency-mt-unsafe)
+  // NOLINTNEXTLINE(concurrency-mt-unsafe)
+  while ((dir_entry = readdir(dir)) != nullptr) {
     if (dir_entry->d_name[0] == '.') {
       continue;
     }

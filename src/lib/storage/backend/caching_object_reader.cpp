@@ -151,17 +151,19 @@ std::optional<CacheableLocation> CacheManager::CacheableLocationIncluding(const 
 
 CachingObjectReader::CachingObjectReader(std::unique_ptr<ObjectReader> source_reader,
                                          std::shared_ptr<CacheManager> cache_manager)
-    : source_(std::move(source_reader)), cache_manager_(std::move(cache_manager)), source_size_is_known_(false) {
-  max_cache_size_ = DetermineMaxCacheSize();
-}
+    : source_(std::move(source_reader)),
+      cache_manager_(std::move(cache_manager)),
+      max_cache_size_(DetermineMaxCacheSize()),
+      source_size_is_known_(false) {}
 
 size_t CachingObjectReader::DetermineMaxCacheSize() {
+  // NOLINTNEXTLINE(concurrency-mt-unsafe)
   const char* memory_mb_string = std::getenv("AWS_LAMBDA_FUNCTION_MEMORY_SIZE");
   if (memory_mb_string == nullptr || memory_mb_string[0] == '\0') {
     return CachingObjectReader::kFallbackMaxBufferSize;
   }
 
-  long memory_mb_number = std::atol(memory_mb_string) * 1_MB;
+  long memory_mb_number = std::strtol(memory_mb_string, nullptr, 10) * 1_MB;
   if (memory_mb_number == 0) {
     return CachingObjectReader::kFallbackMaxBufferSize;
   }
@@ -213,7 +215,7 @@ StorageError CachingObjectReader::Read(size_t first_byte, size_t last_byte, Byte
     return source_->Read(first_byte, last_byte, buffer);
   }
 
-  const StorageError error = FillCache(*cacheable_location);
+  StorageError error = FillCache(*cacheable_location);
   if (error) {
     return error;
   }
@@ -226,7 +228,7 @@ StorageError CachingObjectReader::FillCache(const CacheableLocation& cacheable_l
 
   cache_.resize(cacheable_location.Size());
   ByteBuffer cache_view(cache_.data(), cache_.size());
-  const StorageError error =
+  StorageError error =
       source_->Read(cacheable_location.FirstByte(), cacheable_location.LastByteInclusive(), &cache_view);
   cache_.resize(cache_view.Size());
   if (error) {
@@ -262,7 +264,7 @@ StorageError CachingObjectReader::Close() {
 
 StorageError CachingObjectReader::ReadTailAndSetSize(size_t num_last_bytes, ByteBuffer* buffer) {
   source_size_is_known_ = true;
-  const StorageError error = source_->ReadTail(num_last_bytes, buffer);
+  StorageError error = source_->ReadTail(num_last_bytes, buffer);
   if (!error) {
     cache_manager_->SetSourceSize(source_->GetStatus().GetSize());
   }
@@ -277,7 +279,7 @@ StorageError CachingObjectReader::ReadTail(size_t num_last_bytes, ByteBuffer* bu
   }
 
   if (!source_size_is_known_) {
-    const StorageError error = FillCacheWithTail();
+    StorageError error = FillCacheWithTail();
     if (error) {
       return error;
     }
@@ -292,7 +294,7 @@ StorageError CachingObjectReader::FillCacheWithTail() {
   const size_t request_size = std::min<int64_t>(cache_manager_->Tail(), max_cache_size_);
   cache_.resize(request_size);
   ByteBuffer cache_view(cache_.data(), request_size);
-  const StorageError error = source_->ReadTail(request_size, &cache_view);
+  StorageError error = source_->ReadTail(request_size, &cache_view);
   cache_.resize(cache_view.Size());
 
   if (error) {

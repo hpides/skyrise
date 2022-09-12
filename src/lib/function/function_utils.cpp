@@ -66,7 +66,7 @@ void UploadFunctions(const std::shared_ptr<const Aws::IAM::IAMClient>& iam_clien
 
   // We deploy functions based on the host system's processor architecture.
   // Once we support cross-compilation, e.g. from x86 to ARM, we have to revisit this.
-  utsname cpu_information;
+  utsname cpu_information{};
   uname(&cpu_information);
   auto function_architecture = Aws::Lambda::Model::Architecture::x86_64;
   if (cpu_information.machine == std::string("aarch64")) {
