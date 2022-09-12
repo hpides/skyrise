@@ -18,18 +18,59 @@
 #include <magic_enum.hpp>
 
 #include "configuration.hpp"
+#include "constants.hpp"
 #include "utils/assert.hpp"
 
 namespace skyrise {
 
-namespace {
+StorageErrorType TranslateDynamoDbError(const Aws::DynamoDB::DynamoDBErrors error) {
+  switch (error) {
+    case Aws::DynamoDB::DynamoDBErrors::INCOMPLETE_SIGNATURE:
+    case Aws::DynamoDB::DynamoDBErrors::INVALID_ACTION:
+    case Aws::DynamoDB::DynamoDBErrors::INVALID_PARAMETER_COMBINATION:
+    case Aws::DynamoDB::DynamoDBErrors::INVALID_PARAMETER_VALUE:
+    case Aws::DynamoDB::DynamoDBErrors::INVALID_QUERY_PARAMETER:
+    case Aws::DynamoDB::DynamoDBErrors::INVALID_SIGNATURE:
+    case Aws::DynamoDB::DynamoDBErrors::MALFORMED_QUERY_STRING:
+    case Aws::DynamoDB::DynamoDBErrors::MISSING_ACTION:
+    case Aws::DynamoDB::DynamoDBErrors::MISSING_PARAMETER:
+    case Aws::DynamoDB::DynamoDBErrors::OPT_IN_REQUIRED:
+    case Aws::DynamoDB::DynamoDBErrors::REQUEST_EXPIRED:
+    case Aws::DynamoDB::DynamoDBErrors::REQUEST_TIME_TOO_SKEWED:
+      return StorageErrorType::kInvalidArgument;
 
-// These are hard limits in DynamoDB. Exceeding them will either cause a ValidationException or the entire batch
-// operation is rejected.
-constexpr uint kDynamoDBatchGetItemLimit = 100;
-constexpr uint kDynamoDBatchWriteItemLimit = 25;
+    case Aws::DynamoDB::DynamoDBErrors::INTERNAL_FAILURE:
+    case Aws::DynamoDB::DynamoDBErrors::SERVICE_UNAVAILABLE:
+      return StorageErrorType::kInternalError;
 
-}  // namespace
+    case Aws::DynamoDB::DynamoDBErrors::TABLE_ALREADY_EXISTS:
+      return StorageErrorType::kAlreadyExist;
+
+    case Aws::DynamoDB::DynamoDBErrors::ACCESS_DENIED:
+    case Aws::DynamoDB::DynamoDBErrors::INVALID_ACCESS_KEY_ID:
+    case Aws::DynamoDB::DynamoDBErrors::INVALID_CLIENT_TOKEN_ID:
+    case Aws::DynamoDB::DynamoDBErrors::MISSING_AUTHENTICATION_TOKEN:
+    case Aws::DynamoDB::DynamoDBErrors::SIGNATURE_DOES_NOT_MATCH:
+    case Aws::DynamoDB::DynamoDBErrors::UNRECOGNIZED_CLIENT:
+    case Aws::DynamoDB::DynamoDBErrors::VALIDATION:
+      return StorageErrorType::kPermissionDenied;
+
+    case Aws::DynamoDB::DynamoDBErrors::RESOURCE_NOT_FOUND:
+    case Aws::DynamoDB::DynamoDBErrors::TABLE_NOT_FOUND:
+      return StorageErrorType::kNotFound;
+
+    case Aws::DynamoDB::DynamoDBErrors::SLOW_DOWN:
+    case Aws::DynamoDB::DynamoDBErrors::TABLE_IN_USE:
+    case Aws::DynamoDB::DynamoDBErrors::THROTTLING:
+      return StorageErrorType::kTemporary;
+
+    case Aws::DynamoDB::DynamoDBErrors::NETWORK_CONNECTION:
+    case Aws::DynamoDB::DynamoDBErrors::REQUEST_TIMEOUT:
+      return StorageErrorType::kIOError;
+    default:
+      return StorageErrorType::kUnknown;
+  }
+}
 
 Aws::DynamoDB::Model::UpdateTimeToLiveOutcome ActivateTimeToLive(
     const std::shared_ptr<const Aws::DynamoDB::DynamoDBClient>& client, const std::string& table_name,
@@ -48,7 +89,7 @@ Aws::DynamoDB::Model::KeySchemaElement CreateKeySchemaElement(
   return element;
 }
 
-Aws::DynamoDB::Model::CreateTableOutcome CreateTable(
+Aws::DynamoDB::Model::CreateTableOutcome CreateDynamoDbTable(
     const std::shared_ptr<const Aws::DynamoDB::DynamoDBClient>& client, const std::string& table_name,
     const Aws::DynamoDB::Model::AttributeDefinition& partition_key_definition,
     const std::optional<Aws::DynamoDB::Model::AttributeDefinition>& sort_key_definition,
@@ -90,7 +131,7 @@ Aws::DynamoDB::Model::CreateTableOutcome CreateDynamoDbTableAndWaitForActivation
     const std::optional<Aws::DynamoDB::Model::AttributeDefinition>& sort_key_definition,
     const std::optional<Aws::DynamoDB::Model::StreamSpecification>& stream_specificationn) {
   Aws::DynamoDB::Model::CreateTableOutcome outcome =
-      CreateTable(client, table_name, partition_key_definition, sort_key_definition, stream_specificationn);
+      CreateDynamoDbTable(client, table_name, partition_key_definition, sort_key_definition, stream_specificationn);
 
   if (outcome.IsSuccess()) {
     WaitForActivation(client, table_name);
@@ -140,16 +181,17 @@ void BatchGetItem(const std::shared_ptr<const Aws::DynamoDB::DynamoDBClient>& cl
 
   // It can happen that we receive fewer items than expected.
   const auto unprocessed_items = outcome.GetResult().GetUnprocessedKeys();
-  if (unprocessed_items.size() > 0) {
+  if (!unprocessed_items.empty()) {
     BatchGetItem(client, table_name, unprocessed_items.at(table_name), outcomes);
   }
 }
 
 Aws::DynamoDB::Model::GetItemOutcome GetDynamoDbItem(const std::shared_ptr<const Aws::DynamoDB::DynamoDBClient>& client,
                                                      const std::string& table_name, const DynamoDbItem& item_key,
-                                                     const std::vector<std::string>& attributes) {
+                                                     const std::vector<std::string>& attributes,
+                                                     const bool strongly_consistent_read) {
   Aws::DynamoDB::Model::GetItemRequest request;
-  request.WithTableName(table_name).WithKey(item_key);
+  request.WithTableName(table_name).WithKey(item_key).WithConsistentRead(strongly_consistent_read);
   if (!attributes.empty()) {
     request.WithAttributesToGet(attributes);
   }
@@ -158,15 +200,15 @@ Aws::DynamoDB::Model::GetItemOutcome GetDynamoDbItem(const std::shared_ptr<const
 
 std::vector<Aws::DynamoDB::Model::BatchGetItemOutcome> GetDynamoDbItems(
     const std::shared_ptr<const Aws::DynamoDB::DynamoDBClient>& client, const std::string& table_name,
-    const std::vector<DynamoDbItem>& item_keys) {
+    const std::vector<DynamoDbItem>& item_keys, const bool strongly_consistent_read) {
   std::vector<Aws::DynamoDB::Model::BatchGetItemOutcome> outcomes;
-  outcomes.reserve(std::ceil(item_keys.size() / kDynamoDBatchGetItemLimit));
+  outcomes.reserve(std::ceil(item_keys.size() / kDynamoDbBatchGetItemLimit));
 
-  for (size_t batch_start = 0; batch_start < item_keys.size(); batch_start += kDynamoDBatchGetItemLimit) {
+  for (size_t batch_start = 0; batch_start < item_keys.size(); batch_start += kDynamoDbBatchGetItemLimit) {
     Aws::DynamoDB::Model::KeysAndAttributes keys;
-    for (size_t offset = batch_start; offset < item_keys.size() && offset < (batch_start + kDynamoDBatchGetItemLimit);
+    for (size_t offset = batch_start; offset < item_keys.size() && offset < (batch_start + kDynamoDbBatchGetItemLimit);
          ++offset) {
-      keys.AddKeys(item_keys.at(offset));
+      keys.AddKeys(item_keys.at(offset)).WithConsistentRead(strongly_consistent_read);
     }
 
     BatchGetItem(client, table_name, keys, &outcomes);
@@ -194,11 +236,12 @@ void ScanAllItems(const std::shared_ptr<const Aws::DynamoDB::DynamoDBClient>& cl
 
 std::vector<Aws::DynamoDB::Model::ScanOutcome> ScanDynamoDbTable(
     const std::shared_ptr<const Aws::DynamoDB::DynamoDBClient>& client, const std::string& table_name,
-    const std::string& projection_expression, const std::string& filter_expression, const DynamoDbItem& filter_values) {
+    const std::string& projection_expression, const std::string& filter_expression, const DynamoDbItem& filter_values,
+    const bool strongly_consistent_read) {
   std::vector<Aws::DynamoDB::Model::ScanOutcome> outcomes;
 
   Aws::DynamoDB::Model::ScanRequest request;
-  request.WithTableName(table_name);
+  request.WithTableName(table_name).WithConsistentRead(strongly_consistent_read);
   if (!projection_expression.empty()) {
     request.WithProjectionExpression(projection_expression);
   }
@@ -245,10 +288,10 @@ std::vector<Aws::DynamoDB::Model::BatchWriteItemOutcome> WriteDynamoDbItems(
   Aws::DynamoDB::Model::WriteRequest write_request;
   Aws::DynamoDB::Model::PutRequest put_request;
 
-  for (size_t batch_start = 0; batch_start < items.size(); batch_start += kDynamoDBatchWriteItemLimit) {
+  for (size_t batch_start = 0; batch_start < items.size(); batch_start += kDynamoDbBatchWriteItemLimit) {
     Aws::Vector<Aws::DynamoDB::Model::WriteRequest> write_requests;
-    write_requests.reserve(kDynamoDBatchWriteItemLimit);
-    for (size_t offset = batch_start; offset < items.size() && offset < (batch_start + kDynamoDBatchWriteItemLimit);
+    write_requests.reserve(kDynamoDbBatchWriteItemLimit);
+    for (size_t offset = batch_start; offset < items.size() && offset < (batch_start + kDynamoDbBatchWriteItemLimit);
          ++offset) {
       put_request.SetItem(items.at(offset));
       write_request.SetPutRequest(put_request);

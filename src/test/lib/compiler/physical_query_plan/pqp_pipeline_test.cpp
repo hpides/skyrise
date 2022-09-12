@@ -23,15 +23,15 @@ class PqpPipelineTest : public ::testing::Test {
   void SetUp() override {
     import_objects_.emplace_back("bucket_a", "obj.orc");
     column_ids_ = {ColumnId{0}, ColumnId{1}};
-    const auto a_a_ = PqpColumn_(ColumnId{0}, DataType::kLong, false, "a_a");
-    const auto a_b_ = PqpColumn_(ColumnId{1}, DataType::kLong, false, "a_b");
+    const auto a_a = PqpColumn_(ColumnId{0}, DataType::kLong, false, "a_a");
+    const auto a_b = PqpColumn_(ColumnId{1}, DataType::kLong, false, "a_b");
     import_proxy_ = ImportOperatorProxy::Make(import_objects_, column_ids_);
     import_proxy_->SetIdentity(kImportIdentity);
 
     // clang-format off
     pipeline_plan_ =
     ExportOperatorProxy::Dummy(
-      FilterOperatorProxy::Make(GreaterThan_(a_a_, a_b_),
+      FilterOperatorProxy::Make(GreaterThan_(a_a, a_b),
         import_proxy_));
     // clang-format on
 

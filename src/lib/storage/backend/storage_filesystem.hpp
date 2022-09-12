@@ -25,7 +25,7 @@ class FilesystemReader : public ObjectReader {
   explicit FilesystemReader(const std::string& filename, size_t num_characters_hidden = 0);
   FilesystemReader(const FilesystemReader&) = delete;
   ~FilesystemReader() override;
-  StorageError Read(size_t first_byte, size_t last_byte, std::vector<char>* buffer) override;
+  StorageError Read(size_t first_byte, size_t last_byte, ByteBuffer* buffer) override;
   const ObjectStatus& GetStatus() override;
   StorageError Close() override;
 

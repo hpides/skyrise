@@ -27,7 +27,7 @@ class MockReader : public ObjectReader {
  public:
   MockReader() = default;
   MockReader(std::shared_ptr<std::string> data, std::string identifier);
-  StorageError Read(size_t first_byte, size_t last_byte, std::vector<char>* buffer) override;
+  StorageError Read(size_t first_byte, size_t last_byte, ByteBuffer* buffer) override;
   const ObjectStatus& GetStatus() override;
   StorageError Close() override;
 

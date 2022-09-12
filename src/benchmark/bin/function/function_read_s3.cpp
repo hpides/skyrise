@@ -41,7 +41,7 @@ aws::lambda_runtime::invocation_response FunctionReadS3::OnHandleRequest(
     for (size_t j = 0; j < keys.GetLength(); ++j) {
       read_object_result_futures.emplace_back(std::async(
           [&](const size_t i) {
-            std::vector<char> buffer;
+            ByteBuffer buffer;
             return S3ObjectReader(client, bucket, keys[i].AsString() + std::to_string(i))
                 .Read(0, S3ObjectReader::kLastByteInFile, &buffer);
           },

@@ -5,6 +5,8 @@
 
 #include <gtest/gtest.h>
 
+#include "expression/binary_predicate_expression.hpp"
+#include "expression/value_expression.hpp"
 #include "storage/formats/csv_reader.hpp"
 #include "storage/formats/orc_reader.hpp"
 #include "types.hpp"
@@ -164,18 +166,42 @@ TEST_F(ImportOptionsTest, IncludeColumns) {
 
   const auto import_options = std::make_shared<ImportOptions>(ImportFormat::kOrc, include_columns);
 
-  const auto reader_factory_A = import_options->CreateReaderFactory();
-  const auto orc_reader_factory_A = std::dynamic_pointer_cast<FormatReaderFactory<OrcFormatReader>>(reader_factory_A);
-  EXPECT_TRUE(orc_reader_factory_A->Configuration().include_columns.has_value());
-  EXPECT_EQ(orc_reader_factory_A->Configuration().include_columns.value(), include_columns);
+  const auto reader_factory_a = import_options->CreateReaderFactory();
+  const auto orc_reader_factory_a = std::dynamic_pointer_cast<FormatReaderFactory<OrcFormatReader>>(reader_factory_a);
+  EXPECT_TRUE(orc_reader_factory_a->Configuration().include_columns.has_value());
+  EXPECT_EQ(orc_reader_factory_a->Configuration().include_columns.value(), include_columns);
 
   const auto serialized_json = import_options->ToJson();
   const auto deserialized_import_options = ImportOptions::FromJson(serialized_json);
 
-  const auto reader_factory_B = deserialized_import_options->CreateReaderFactory();
-  const auto orc_reader_factory_B = std::dynamic_pointer_cast<FormatReaderFactory<OrcFormatReader>>(reader_factory_B);
-  EXPECT_TRUE(orc_reader_factory_B->Configuration().include_columns.has_value());
-  EXPECT_EQ(orc_reader_factory_B->Configuration().include_columns.value(), include_columns);
+  const auto reader_factory_b = deserialized_import_options->CreateReaderFactory();
+  const auto orc_reader_factory_b = std::dynamic_pointer_cast<FormatReaderFactory<OrcFormatReader>>(reader_factory_b);
+  EXPECT_TRUE(orc_reader_factory_b->Configuration().include_columns.has_value());
+  EXPECT_EQ(orc_reader_factory_b->Configuration().include_columns.value(), include_columns);
+}
+
+TEST_F(ImportOptionsTest, CreateReaderFactoryParquetCustomOptions) {
+  // ParquetOptions with BinaryPredicateExpression
+  ParquetFormatReaderOptions parquet_format_reader_options;
+
+  parquet_format_reader_options.skyrise_expression = std::make_optional(std::make_shared<BinaryPredicateExpression>(
+      PredicateCondition::kEquals, std::make_shared<ValueExpression>(1), std::make_shared<ValueExpression>(1)));
+  const auto arrow_expression = arrow::compute::equal(arrow::compute::literal(1), arrow::compute::literal(1));
+  const auto import_options = std::make_shared<ImportOptions>(parquet_format_reader_options);
+  const auto reader_factory = import_options->CreateReaderFactory();
+  const auto parquet_reader_factory =
+      std::dynamic_pointer_cast<FormatReaderFactory<ParquetFormatReader>>(reader_factory);
+  ASSERT_NE(parquet_reader_factory, nullptr);
+
+  // Serialize / Deserialize
+  const auto serialized_json = import_options->ToJson();
+  const auto deserialized_import_options = ImportOptions::FromJson(serialized_json);
+  const auto reader_factory_b = deserialized_import_options->CreateReaderFactory();
+  const auto parquet_reader_factory_b =
+      std::dynamic_pointer_cast<FormatReaderFactory<ParquetFormatReader>>(reader_factory_b);
+  ASSERT_NE(parquet_reader_factory_b, nullptr);
+  ASSERT_TRUE(parquet_reader_factory_b->Configuration().arrow_expression.has_value());
+  EXPECT_EQ(arrow_expression, parquet_reader_factory_b->Configuration().arrow_expression);
 }
 
 }  // namespace skyrise

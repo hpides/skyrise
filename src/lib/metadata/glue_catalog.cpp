@@ -78,17 +78,17 @@ std::shared_ptr<const TableSchema> TableSchemaFromGlueTable(const Aws::Glue::Mod
       const std::vector<ColumnId> column_ids =
           JsonArrayToVector<ColumnId>(key_constraint_json.GetArray(kKeyConstraintColumnIdsKey));
       const auto type = magic_enum::enum_cast<KeyConstraintType>(key_constraint_json.GetString(kKeyConstraintTypeKey));
-      const auto key_constraint =
+      auto key_constraint =
           TableKeyConstraint(std::unordered_set<ColumnId>(column_ids.begin(), column_ids.end()), type.value());
 
-      table_schema->AddKeyConstraint(std::move(key_constraint));
+      table_schema->AddKeyConstraint(key_constraint);
     }
   }
 
   return table_schema;
 }
 
-GlueCatalog::GlueCatalog(const std::shared_ptr<Client>& client, const std::string database_name)
+GlueCatalog::GlueCatalog(std::shared_ptr<Client> client, std::string database_name)
     : client_(std::move(client)), glue_client_(client_->GetGlueClient()), database_name_(std::move(database_name)) {
   const auto outcome = CreateGlueDatabaseSchema(glue_client_, database_name_);
   Assert(outcome.IsSuccess() || outcome.GetError().GetErrorType() == Aws::Glue::GlueErrors::ALREADY_EXISTS,
@@ -146,18 +146,17 @@ const std::vector<TablePartition>& GlueCatalog::GetTablePartitions(const std::st
   return table->partitions;
 }
 
-const std::shared_ptr<GlueCatalog::TableMetadata> GlueCatalog::ToTableMetadata(
-    const Aws::Glue::Model::Table& glue_table) const {
+std::shared_ptr<GlueCatalog::TableMetadata> GlueCatalog::ToTableMetadata(const Aws::Glue::Model::Table& glue_table) {
   const auto table_schema = TableSchemaFromGlueTable(glue_table);
-  const auto table_parameter = glue_table.GetParameters();
+  const auto& table_parameter = glue_table.GetParameters();
 
   const auto location = std::make_shared<ObjectReference>(glue_table.GetStorageDescriptor().GetLocation());
 
   std::shared_ptr<const ObjectReference> manifest;
   const auto potential_manifest = table_parameter.find(kManifestRootKey);
   if (potential_manifest != table_parameter.cend()) {
-    const auto reference = ObjectReference(Aws::Utils::Json::JsonValue(potential_manifest->second));
-    manifest = std::make_shared<ObjectReference>(std::move(reference));
+    auto reference = ObjectReference(Aws::Utils::Json::JsonValue(potential_manifest->second));
+    manifest = std::make_shared<ObjectReference>(reference);
   }
 
   return std::make_shared<TableMetadata>(
@@ -171,10 +170,10 @@ const std::shared_ptr<GlueCatalog::TableMetadata>& GlueCatalog::LoadTableMetadat
     return potential_table->second;
   }
 
-  const auto glue_table = GlueTableSchema(glue_client_, database_name_, lc_table_name);
-  const auto table = ToTableMetadata(glue_table);
+  auto glue_table = GlueTableSchema(glue_client_, database_name_, lc_table_name);
+  auto table = ToTableMetadata(glue_table);
 
-  return cache_.emplace(table->table_name, std::move(table)).first->second;
+  return cache_.emplace(table->table_name, table).first->second;
 }
 
 void GlueCatalog::DeleteDatabase() {
@@ -187,12 +186,12 @@ std::string GlueCatalog::GetDatabaseName() const { return database_name_; };
 
 void GlueCatalog::AddTableMetadata(const std::string& table_name,
                                    const std::shared_ptr<const TableSchema>& table_schema,
-                                   const ObjectReference& s3_location) {
+                                   const ObjectReference& metadata) {
   Aws::Glue::Model::StorageDescriptor storage_descriptor;
   std::map<std::string, std::string> parameters;
 
   // (1) Set data location.
-  storage_descriptor.SetLocation(s3_location.S3Uri());
+  storage_descriptor.SetLocation(metadata.S3Uri());
 
   // (2) Set table column definitions.
   for (size_t column_id = 0; column_id < table_schema->TableColumnCount(); ++column_id) {

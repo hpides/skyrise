@@ -19,7 +19,9 @@ namespace skyrise {
 struct ParquetFormatReaderOptions {
   bool parse_dates_as_string = false;
   std::shared_ptr<TableColumnDefinitions> expected_schema = nullptr;
+  std::optional<std::vector<ColumnId>> include_columns = std::nullopt;
   std::optional<arrow::compute::Expression> arrow_expression = std::nullopt;
+  std::optional<std::shared_ptr<AbstractPredicateExpression>> skyrise_expression = std::nullopt;
 };
 
 class ParquetFormatReader : public AbstractChunkReader {
@@ -38,9 +40,9 @@ class ParquetFormatReader : public AbstractChunkReader {
 
   template <typename BasicType, typename ArrowArrayType>
   std::shared_ptr<AbstractSegment> ArrowColumnToTypedSegment(std::shared_ptr<arrow::Array>& column);
-  std::shared_ptr<AbstractSegment> ArrowDateColumnToStringSegment(std::shared_ptr<arrow::Array>& column);
+  static std::shared_ptr<AbstractSegment> ArrowDateColumnToStringSegment(std::shared_ptr<arrow::Array>& column);
 
-  DataType ArrowTypeToSkyriseType(const arrow::Type::type& type);
+  DataType ArrowTypeToSkyriseType(const arrow::Type::type& type) const;
 
   Configuration configuration_;
 

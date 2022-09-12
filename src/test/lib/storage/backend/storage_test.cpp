@@ -5,6 +5,9 @@
 #include <unistd.h>
 
 #include "abstract_provider.hpp"
+#include "configuration.hpp"
+#include "constants.hpp"
+#include "dynamodb_provider.hpp"
 #include "filesystem_provider.hpp"
 #include "s3_provider.hpp"
 #include "utils/assert.hpp"
@@ -62,7 +65,7 @@ class AwsBaseStorageTest : public ::testing::Test {
 template <typename Provider>
 Provider AwsBaseStorageTest<Provider>::provider_;
 
-using StorageProviderTypes = ::testing::Types<FilesystemStorageProvider, S3StorageProvider>;
+using StorageProviderTypes = ::testing::Types<DynamoDbStorageProvider, FilesystemStorageProvider, S3StorageProvider>;
 
 TYPED_TEST_SUITE(AwsBaseStorageTest, StorageProviderTypes, );
 // Trailing comma on purpose (https://github.com/google/googletest/issues/1419)
@@ -88,27 +91,26 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteSmallObject) {
 
   // Read
   auto reader = this->storage_->OpenForReading(kFilename);
-  std::vector<char> buffer;
-  buffer.reserve(kFileSize);
+  ByteBuffer buffer(kFileSize);
   EXPECT_FALSE(reader->Read(0, ObjectReader::kLastByteInFile, &buffer));
   EXPECT_FALSE(reader->Close());
 
-  EXPECT_EQ(buffer.size(), kFileSize);
+  EXPECT_EQ(buffer.Size(), kFileSize);
 
-  for (size_t i = 0; i < buffer.size(); ++i) {
-    EXPECT_EQ(buffer[i], kFileContent[i]);
+  for (size_t i = 0; i < buffer.Size(); ++i) {
+    EXPECT_EQ(buffer.CharData()[i], kFileContent[i]);
   }
 
   // Read specific byte ranges
-  buffer.clear();
+  buffer.Resize(0);
   reader = this->storage_->OpenForReading(kFilename);
   auto compare_against = kFileContent.substr(1, 2);
   EXPECT_FALSE(reader->Read(1, 2, &buffer));
   EXPECT_FALSE(reader->Close());
 
-  EXPECT_EQ(buffer.size(), 2);
-  for (size_t i = 0; i < buffer.size(); ++i) {
-    EXPECT_EQ(buffer[i], compare_against[i]);
+  EXPECT_EQ(buffer.Size(), 2);
+  for (size_t i = 0; i < buffer.Size(); ++i) {
+    EXPECT_EQ(buffer.CharData()[i], compare_against[i]);
   }
 
   // Delete
@@ -133,12 +135,12 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadTailDeleteSmallObject) {
 
   // ReadTail
   auto reader = this->storage_->OpenForReading(kFilename);
-  std::vector<char> buffer;
-  buffer.reserve(kFileSize);
+  ByteBuffer buffer;
+  buffer.Resize(kFileSize);
   EXPECT_FALSE(reader->ReadTail(1, &buffer));
 
-  EXPECT_EQ(buffer.size(), 1);
-  EXPECT_EQ(buffer[0], 'd');
+  EXPECT_EQ(buffer.Size(), 1);
+  EXPECT_EQ(buffer.CharData()[0], 'd');
 
   EXPECT_FALSE(reader->GetStatus().GetError().IsError());
   EXPECT_EQ(reader->GetStatus().GetSize(), kFileSize);
@@ -152,14 +154,24 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadTailDeleteSmallObject) {
 
 TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteBigObject) {
   constexpr size_t kChunkSize = 16_KB;
-  constexpr size_t kTestFileSize = 31_MB;
+  size_t test_file_size = 31_MB;
+
+  // DynamoDB's maximum item size is 400KB, including data and metadata.
+  if (this->storage_ != nullptr) {
+    if (dynamic_cast<DynamoDbStorage*>(this->storage_) != nullptr) {
+      test_file_size = kDynamoDbMaxItemSize - kDynamoDbStorageMetadataSize;
+    }
+  } else {
+    FAIL() << "No storage backend provided.";
+  }
+
   static const std::string kFilename{"big.txt"};
   std::vector<char> buffer(kChunkSize, 'x');
 
   // Create
   auto writer = this->storage_->OpenForWriting(kFilename);
-  for (size_t written = 0; written < kTestFileSize; written += kChunkSize) {
-    EXPECT_FALSE(writer->Write(buffer.data(), std::min(kTestFileSize - written, kChunkSize)));
+  for (size_t written = 0; written < test_file_size; written += kChunkSize) {
+    EXPECT_FALSE(writer->Write(buffer.data(), std::min(test_file_size - written, kChunkSize)));
   }
   EXPECT_FALSE(writer->Close());
 
@@ -167,8 +179,10 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteBigObject) {
 
   // Read
   auto reader = this->storage_->OpenForReading(kFilename);
-  EXPECT_FALSE(reader->Read(0, ObjectReader::kLastByteInFile, &buffer));
-  EXPECT_TRUE(std::find_if(buffer.cbegin(), buffer.cend(), [](char x) { return x != 'x'; }) == buffer.end());
+  ByteBuffer read_buffer;
+  EXPECT_FALSE(reader->Read(0, ObjectReader::kLastByteInFile, &read_buffer));
+  EXPECT_TRUE(std::find_if(read_buffer.CharData(), read_buffer.CharData() + read_buffer.Size(),
+                           [](char x) { return x != 'x'; }) == read_buffer.CharData() + read_buffer.Size());
   EXPECT_FALSE(reader->Close());
 
   // Delete

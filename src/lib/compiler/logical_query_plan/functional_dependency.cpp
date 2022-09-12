@@ -3,6 +3,8 @@
  */
 #include "functional_dependency.hpp"
 
+#include <algorithm>
+
 #include <boost/container_hash/hash.hpp>
 
 namespace skyrise {
@@ -33,14 +35,10 @@ bool FunctionalDependency::operator==(const FunctionalDependency& other) const {
     }
   }
   // Compare dependants
-  for (const auto& dependent_expression : other.dependent_expressions) {
-    // TODO(anyone): C++20: Replace with .contains
-    if (dependent_expressions.find(dependent_expression) == dependent_expressions.cend()) {
-      return false;
-    }
-  }
-
-  return true;
+  return std::all_of(other.dependent_expressions.cbegin(), other.dependent_expressions.cend(),
+                     [this](const std::shared_ptr<AbstractExpression>& dependent_expression) {
+                       return dependent_expressions.find(dependent_expression) == dependent_expressions.cend();
+                     });
 }
 
 bool FunctionalDependency::operator!=(const FunctionalDependency& other) const { return !(other == *this); }

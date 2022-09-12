@@ -6,9 +6,13 @@
 #include <aws/dynamodb/model/AttributeDefinition.h>
 #include <aws/dynamodb/model/ReturnValue.h>
 
+#include "storage/backend/errors.hpp"
+
 namespace skyrise {
 
 using DynamoDbItem = Aws::Map<Aws::String, Aws::DynamoDB::Model::AttributeValue>;
+
+StorageErrorType TranslateDynamoDbError(const Aws::DynamoDB::DynamoDBErrors error);
 
 // Table operations
 
@@ -56,18 +60,23 @@ Aws::DynamoDB::Model::DeleteItemOutcome DeleteDynamoDbItem(
     const std::shared_ptr<const Aws::DynamoDB::DynamoDBClient>& client, const std::string& table_name,
     const DynamoDbItem& item_key);
 
+/**
+ * Strongly consistent reads come with some disadvantages: higher latency and costs (i.e., twice as many reading units)
+ * than eventually consistent reads.
+ */
 Aws::DynamoDB::Model::GetItemOutcome GetDynamoDbItem(const std::shared_ptr<const Aws::DynamoDB::DynamoDBClient>& client,
                                                      const std::string& table_name, const DynamoDbItem& item_key,
-                                                     const std::vector<std::string>& attributes = {});
+                                                     const std::vector<std::string>& attributes = {},
+                                                     const bool strongly_consistent_read = true);
 
 std::vector<Aws::DynamoDB::Model::BatchGetItemOutcome> GetDynamoDbItems(
     const std::shared_ptr<const Aws::DynamoDB::DynamoDBClient>& client, const std::string& table_name,
-    const std::vector<DynamoDbItem>& item_keys);
+    const std::vector<DynamoDbItem>& item_keys, const bool strongly_consistent_read = true);
 
 std::vector<Aws::DynamoDB::Model::ScanOutcome> ScanDynamoDbTable(
     const std::shared_ptr<const Aws::DynamoDB::DynamoDBClient>& client, const std::string& table_name,
     const std::string& projection_expression = "", const std::string& filter_expression = "",
-    const DynamoDbItem& filter_values = {});
+    const DynamoDbItem& filter_values = {}, const bool strongly_consistent_read = true);
 
 /**
  * Updates a single item.

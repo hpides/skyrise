@@ -61,6 +61,11 @@ inline constexpr ExportFormat kFinalResultsExportFormat = ExportFormat::kCsv;
 inline constexpr ExportFormat kIntermediateResultsExportFormat = ExportFormat::kOrc;
 
 /**
+ * The typical size for byte-range requests on S3 storage.
+ */
+inline constexpr size_t kS3NaturalReadSize = 20_MB;
+
+/**
  * Defines the maximum number of workers for the execution of a PqpPipeline.
  */
 inline constexpr size_t kMaxWorkerCountPerPipeline = kLambdaFunctionConcurrencyLimit;
@@ -69,5 +74,10 @@ inline constexpr size_t kMaxWorkerCountPerPipeline = kLambdaFunctionConcurrencyL
  * The default database schema name in Glue.
  */
 inline constexpr std::string_view kDatabaseSchemaName = "SkyriseDB";
+
+/**
+ * Defines the per item size the DynamoDB storage reserves for metadata (e.g., timestamp or checksum).
+ */
+inline constexpr size_t kDynamoDbStorageMetadataSize = 1_KB;
 
 }  // namespace skyrise

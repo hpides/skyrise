@@ -26,4 +26,24 @@ TEST_F(ParquetFormatReaderTest, ArrowPredicatePushdown) {
   EXPECT_EQ(5, chunk->GetSegment(ColumnId(0))->Size());
 }
 
+TEST_F(ParquetFormatReaderTest, ProjectionPushdown) {
+  const auto parquet_options = ParquetFormatReaderOptions{};
+
+  // Test without projection
+  auto parquet_reader = ParquetFormatReader(
+      test_data_storage_->OpenForReading("parquet/partitioned_int_string.parquet"), parquet_options);
+
+  const auto chunk = parquet_reader.Next();
+  EXPECT_EQ(2, chunk->GetColumnCount());
+
+  // Test with projection
+  auto parquet_options_projection = ParquetFormatReaderOptions{};
+  parquet_options_projection.include_columns = std::vector<ColumnId>{0};
+  auto parquet_reader_projection = ParquetFormatReader(
+      test_data_storage_->OpenForReading("parquet/partitioned_int_string.parquet"), parquet_options_projection);
+
+  const auto chunk_projection = parquet_reader_projection.Next();
+  EXPECT_EQ(1, chunk_projection->GetColumnCount());
+}
+
 }  // namespace skyrise

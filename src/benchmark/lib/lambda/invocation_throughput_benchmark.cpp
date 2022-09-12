@@ -11,7 +11,7 @@
 
 namespace {
 
-const Aws::String& kName = "invocation_throughput_benchmark";
+const Aws::String kName = "invocation_throughput_benchmark";
 
 }  // namespace
 

@@ -9,7 +9,7 @@
 
 namespace {
 
-static const std::string kName = "HashJoin";
+const std::string kName = "HashJoin";
 
 }  // namespace
 

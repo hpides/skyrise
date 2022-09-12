@@ -24,53 +24,59 @@
 #include "storage/table/value_segment.hpp"
 
 #define HANDLE_RESULT(result, reason) \
-  if (!result.ok()) {                 \
+  if (!((result).ok())) {             \
     throw std::logic_error(reason);   \
   }
 
 namespace {
 
+using namespace skyrise;  // NOLINT(google-build-using-namespace)
+
 class ParquetInputProxy : public arrow::io::RandomAccessFile {
  public:
-  ParquetInputProxy(std::unique_ptr<skyrise::ObjectReader> source) : stream_(std::move(source), true) {
-    stream_.seekg(0, std::ios::end);
-    object_size_ = stream_.tellg();
-    stream_.seekg(0, std::ios::beg);
-  }
+  explicit ParquetInputProxy(std::unique_ptr<skyrise::ObjectReader> source)
+      : source_(std::move(source)), object_size_(source_->GetStatus().GetSize()) {}
 
-  arrow::Result<int64_t> Tell() const override {
-    int64_t pos = stream_.tellg();
-    if (!stream_.good()) {
-      return arrow::Result<int64_t>(arrow::Status::IOError("IOError"));
-    }
-    return arrow::Result<int64_t>(pos);
-  }
+  arrow::Result<int64_t> Tell() const override { return {offset_}; }
 
   bool closed() const override { return false; }
 
   arrow::Status Close() override { Fail("Close is not implemented for ParquetInputProxy"); }
 
   arrow::Result<int64_t> Read(int64_t nbytes, void* out) override {
-    stream_.read(static_cast<char*>(out), nbytes);
-    return arrow::Result(stream_.gcount());
+    ByteBuffer buffer_view(out, nbytes);
+    StorageError error = source_->Read(offset_, offset_ + nbytes - 1, &buffer_view);
+    offset_ += buffer_view.Size();
+
+    if (error || static_cast<int64_t>(buffer_view.Size()) != nbytes || buffer_view.Data() != out) {
+      return {arrow::Status::IOError("IOError")};
+    }
+
+    return arrow::Result(buffer_view.Size());
   }
 
   arrow::Result<std::shared_ptr<arrow::Buffer>> Read(int64_t nbytes) override {
     arrow::BufferBuilder builder;
     RETURN_NOT_OK(builder.Reserve(nbytes));
-    stream_.read(reinterpret_cast<char*>(builder.mutable_data()), nbytes);
-    builder.UnsafeAdvance(stream_.gcount());
+    ByteBuffer buffer_view(builder.mutable_data(), nbytes);
+    StorageError error = source_->Read(offset_, offset_ + nbytes - 1, &buffer_view);
+    if (error || static_cast<int64_t>(buffer_view.Size()) != nbytes || buffer_view.Data() != builder.mutable_data()) {
+      return {arrow::Status::IOError("IOError")};
+    }
+    builder.UnsafeAdvance(nbytes);
     return builder.Finish();
   }
 
   arrow::Status Seek(int64_t position) override {
-    stream_.seekg(static_cast<std::streamoff>(position), std::ios::beg);
+    offset_ = static_cast<size_t>(position);
     return arrow::Status::OK();
   }
 
-  arrow::Result<int64_t> GetSize() override { return arrow::Result<int64_t>(object_size_); }
+  arrow::Result<int64_t> GetSize() override { return {object_size_}; }
 
-  mutable skyrise::ObjectReaderStream stream_;
+ private:
+  mutable std::unique_ptr<skyrise::ObjectReader> source_;
+  size_t offset_ = 0;
   size_t object_size_;
 };
 
@@ -98,9 +104,23 @@ ParquetFormatReader::ParquetFormatReader(std::unique_ptr<ObjectReader> source, C
     auto scan_builder =
         std::make_shared<arrow::dataset::ScannerBuilder>(parquet_schema, std::move(fragment), scan_options);
 
-    // If possible, push down predicate.
+    // Push down any available predicates.
     if (configuration_.arrow_expression.has_value()) {
       HANDLE_RESULT(scan_builder->Filter(*configuration_.arrow_expression), "Failed to evaluate predicate");
+    }
+
+    // Push down any available projections.
+    if (configuration_.include_columns.has_value()) {
+      const auto field_names = parquet_schema->field_names();
+      const auto columns = *configuration_.include_columns;
+      std::vector<std::string> include_columns;
+      include_columns.reserve(columns.size());
+
+      for (const auto column_id : columns) {
+        include_columns.emplace_back(field_names[column_id]);
+      }
+
+      HANDLE_RESULT(scan_builder->Project(include_columns), "Failed to project columns");
     }
 
     scanner_ = scan_builder->Finish().ValueOrDie();
@@ -228,20 +248,20 @@ std::shared_ptr<AbstractSegment> ParquetFormatReader::ArrowColumnToTypedSegment(
   return std::make_shared<ValueSegment<BasicType>>(std::move(vector));
 }
 
-void ParquetFormatReader::ExtractSchema(const std::shared_ptr<arrow::Schema>& parquet_schema) {
+void ParquetFormatReader::ExtractSchema(const std::shared_ptr<arrow::Schema>& arrow_schema) {
   auto table_definitions = std::make_shared<TableColumnDefinitions>();
 
-  for (int i = 0; i < parquet_schema->num_fields(); ++i) {
-    const DataType type = ArrowTypeToSkyriseType(parquet_schema->field(i)->type()->id());
-    const std::string name = parquet_schema->field(i)->name();
-    const bool nullable = parquet_schema->field(i)->nullable();
+  for (int i = 0; i < arrow_schema->num_fields(); ++i) {
+    const DataType type = ArrowTypeToSkyriseType(arrow_schema->field(i)->type()->id());
+    const std::string name = arrow_schema->field(i)->name();
+    const bool nullable = arrow_schema->field(i)->nullable();
 
     table_definitions->emplace_back(name, type, nullable);
   }
   schema_ = std::move(table_definitions);
 }
 
-DataType ParquetFormatReader::ArrowTypeToSkyriseType(const arrow::Type::type& type) {
+DataType ParquetFormatReader::ArrowTypeToSkyriseType(const arrow::Type::type& type) const {
   switch (type) {
     case arrow::Type::FLOAT:
       return DataType::kFloat;

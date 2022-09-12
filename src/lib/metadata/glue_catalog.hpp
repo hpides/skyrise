@@ -23,8 +23,7 @@ namespace skyrise {
 class GlueCatalog : public AbstractCatalog {
  public:
   GlueCatalog() = delete;
-  GlueCatalog(const std::shared_ptr<Client>& client,
-              const std::string database_name = std::string(kDatabaseSchemaName));
+  GlueCatalog(std::shared_ptr<Client> client, std::string database_name = std::string(kDatabaseSchemaName));
 
   /**
    * In case there is no TableSchema/TableStatistics in the local cache, the latest table version for given
@@ -51,7 +50,7 @@ class GlueCatalog : public AbstractCatalog {
   void DeleteDatabase();
 
   void AddTableMetadata(const std::string& table_name, const std::shared_ptr<const TableSchema>& table_schema,
-                        const ObjectReference& s3_data_location);
+                        const ObjectReference& metadata);
   void DeleteTableMetadata(const std::string& table_name);
   std::vector<std::string> Tables() const;
   std::vector<Aws::Glue::Model::TableVersion> TableVersions(const std::string& table_name) const;
@@ -75,7 +74,7 @@ class GlueCatalog : public AbstractCatalog {
    * Retrieves and caches the table metadata from Glue.
    */
   const std::shared_ptr<TableMetadata>& LoadTableMetadata(const std::string& table_name) const;
-  const std::shared_ptr<TableMetadata> ToTableMetadata(const Aws::Glue::Model::Table& glue_table) const;
+  static std::shared_ptr<TableMetadata> ToTableMetadata(const Aws::Glue::Model::Table& glue_table);
 };
 
 }  // namespace skyrise

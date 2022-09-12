@@ -15,7 +15,7 @@ namespace skyrise {
 
 CompilationContext::CompilationContext(SqlRequest sql_request, std::shared_ptr<AbstractCatalog> catalog)
     : sql_request_(std::move(sql_request)), catalog_(std::move(catalog)) {
-  Assert(!sql_request.query_string.empty(), "Unexpected empty query string.");
+  Assert(!sql_request_.query_string.empty(), "Unexpected empty query string.");
   Assert(catalog_, "A catalog instance is required to create a valid CompilationContext.");
 
   // Generate query identity, which is used to generate object key prefixes for pipeline results.

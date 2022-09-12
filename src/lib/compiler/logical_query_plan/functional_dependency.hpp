@@ -42,7 +42,7 @@ struct FunctionalDependency {
   ExpressionUnorderedSet dependent_expressions;
 };
 
-std::ostream& operator<<(std::ostream& stream, const FunctionalDependency& expression);
+std::ostream& operator<<(std::ostream& stream, const FunctionalDependency& functional_dependency);
 
 /**
  * @return The given FDs as an unordered set in an inflated form.

@@ -92,6 +92,9 @@ set(
     lib/statistics/statistics_collector_test.cpp
 
     lib/storage/backend/abstract_provider.hpp
+    lib/storage/backend/bytebuffer_test.cpp
+    lib/storage/backend/caching_object_reader_test.cpp
+    lib/storage/backend/dynamodb_provider.hpp
     lib/storage/backend/dynamodb_utils_test.cpp
     lib/storage/backend/filesystem_provider.hpp
     lib/storage/backend/mock_storage.cpp

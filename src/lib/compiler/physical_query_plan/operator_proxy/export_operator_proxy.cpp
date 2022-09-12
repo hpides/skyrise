@@ -22,7 +22,7 @@ ExportOperatorProxy::ExportOperatorProxy(ObjectReference target_object, ExportFo
     : AbstractOperatorProxy(OperatorType::kExport),
       target_object_(std::move(target_object)),
       export_format_(export_format) {
-  Assert(target_object.etag.empty(), "Target ObjectReference should not specify an ETag attribute.");
+  Assert(target_object_.etag.empty(), "The target object reference should not specify the ETag attribute.");
 }
 
 const std::string& ExportOperatorProxy::Name() const { return kName; }

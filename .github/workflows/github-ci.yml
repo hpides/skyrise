@@ -13,21 +13,21 @@ concurrency:
   group: group-${{ github.head_ref }}
   cancel-in-progress: true
 jobs:
-  format-check:
+  check-format:
     runs-on: [self-hosted, amazonlinux2]
     if: github.event_name == 'push' || !github.event.pull_request.draft
-    name: "Format Check"
+    name: "Check Format"
     steps:
       - uses: actions/checkout@v2
-      - name: "C++ Format Check"
+      - name: "C++"
         run: "python3 script/run_clang_format.py --clang_format_binary clang-format --source_dir src --quiet"
-      - name: "Python Format Check"
+      - name: "Python"
         run: "yapf --diff --recursive --parallel script"
   
-  clang-debug-build:
+  test-clang-debug-al2:
     runs-on: [self-hosted, amazonlinux2]
-    name: "Clang Debug Build on Amazon Linux 2"
-    needs: format-check
+    name: "Test Clang Debug on Amazon Linux 2"
+    needs: check-format
     steps:
       - uses: actions/checkout@v2
         with:
@@ -108,17 +108,56 @@ jobs:
           s3-object-name: skyrise-ci-bucket/coverage_percentage.txt
           region: us-east-1
           mode: commit
-  
-  clang-release-build:
+
+  check-full-ci:
+    # This job prevents PRs from being merged that have not run and passed the full CI pipeline. The job only succeeds
+    # when the "full-ci" label is set. This is necessary because most other jobs are skipped without the label, and thus
+    # do not fail and block the merge. This job may be skipped for draft PRs, since they cannot be merged anyhow.
+    runs-on: [self-hosted]
+    if: github.event_name == 'pull_request' && !github.event.pull_request.draft
+    name: "Check Full CI"
+    steps:
+      - name: "Has full-ci label"
+        if: contains(github.event.pull_request.labels.*.name, 'full-ci')
+        run: true
+      - name: "Has no full-ci label"
+        if: (!contains(github.event.pull_request.labels.*.name, 'full-ci'))
+        run: false
+
+  tidy-clang-debug-al2:
     runs-on: [self-hosted, amazonlinux2]
-    name: "Clang Release Build on Amazon Linux 2"
-    needs: format-check
+    name: "Tidy Clang Debug on Amazon Linux 2"
+    needs: check-format
     if: contains(github.event.pull_request.labels.*.name, 'full-ci') && github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: 'recursive'
-      - name: "CMake Release Configure"
+      - name: "Configure Clang Debug with Tidy"
+        run: |
+          mkdir cmake-build-debug
+          cd cmake-build-debug
+          cmake .. -GNinja \
+            -DCMAKE_C_COMPILER=/usr/bin/clang \
+            -DCMAKE_CXX_COMPILER=/usr/bin/clang++ \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DSKYRISE_ENABLE_CCACHE=OFF \
+            -DSKYRISE_ENABLE_CLANG_TIDY=ON
+      - name: "Tidy Clang Debug"
+        run: |
+          cd cmake-build-debug
+          ninja-build all -j$(nproc)
+
+  build-clang-release-al2:
+    runs-on: [self-hosted, amazonlinux2]
+    name: "Build Clang Release on Amazon Linux 2"
+    needs: check-format
+    if: contains(github.event.pull_request.labels.*.name, 'full-ci') && github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      - name: "Configure Clang Release"
         run: |
           mkdir cmake-build-release
           cd cmake-build-release
@@ -127,21 +166,21 @@ jobs:
             -DCMAKE_CXX_COMPILER=/usr/bin/clang++ \
             -DCMAKE_BUILD_TYPE=Release \
             -DSKYRISE_ENABLE_CCACHE=OFF
-      - name: "Build"
+      - name: "Build Clang Release"
         run: |
           cd cmake-build-release
           ninja-build all -j$(nproc)
-  
-  ubuntu-debug-build:
+
+  build-gcc-debug-ubuntu:
     runs-on: [self-hosted, ubuntu]
-    name: "GCC Debug Build on Ubuntu"
-    needs: format-check
+    name: "Build GCC Debug on Ubuntu"
+    needs: check-format
     if: contains(github.event.pull_request.labels.*.name, 'full-ci') && github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: 'recursive'
-      - name: "GCC Debug Configure"
+      - name: "Configure GCC Debug"
         run: |
           mkdir cmake-build-debug
           cd cmake-build-debug
@@ -150,23 +189,7 @@ jobs:
             -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
             -DCMAKE_BUILD_TYPE=Debug \
             -DSKYRISE_ENABLE_CCACHE=OFF
-      - name: "Build"
+      - name: "Build GCC Debug"
         run: |
           cd cmake-build-debug
-          ninja all -j$(nproc)
-
-  full-ci-filter:
-    # This job prevents PRs from being merged that have not run and passed the full CI pipeline. The job only succeeds
-    # when the "full-ci" label is set. This is necessary because most other jobs are skipped without the label, and thus
-    # do not fail and block the merge. This job may be skipped for draft PRs, since they cannot be merged anyhow.
-
-    runs-on: [self-hosted]
-    if: github.event_name == 'pull_request' && !github.event.pull_request.draft
-    name: "Full CI Label Set"
-    steps:
-      - name: "Has full-ci label"
-        if: contains(github.event.pull_request.labels.*.name, 'full-ci')
-        run: true
-      - name: "Has no full-ci label"
-        if: (!contains(github.event.pull_request.labels.*.name, 'full-ci'))
-        run: false
+          ninja all -j$(($(nproc) / 2))

@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "abstract_storage.hpp"
+#include "bytebuffer.hpp"
 #include "utils/literal.hpp"
 
 namespace skyrise {
@@ -76,10 +77,10 @@ class ObjectReaderStream : public std::iostream {
  */
 class DelegateStreamBuffer : public std::streambuf {
  public:
-  DelegateStreamBuffer() : buffer_(nullptr) {}
+  DelegateStreamBuffer() {}
 
-  DelegateStreamBuffer(std::vector<char>* data);
-  void Reset(std::vector<char>* data);
+  DelegateStreamBuffer(ByteBuffer* buffer);
+  void Reset(ByteBuffer* buffer);
 
  protected:
   std::streamsize xsputn(const char* s, std::streamsize n) override;
@@ -90,7 +91,7 @@ class DelegateStreamBuffer : public std::streambuf {
   int overflow(int ch = traits_type::eof()) override;
 
  private:
-  std::vector<char>* buffer_;
+  ByteBuffer* buffer_ = nullptr;
 };
 
 }  // namespace skyrise

@@ -20,6 +20,8 @@ namespace skyrise {
 
 namespace {
 
+using TableOffset = uint64_t;
+
 template <typename T>
 std::vector<T> GenerateValues(const std::vector<int>& values) {
   std::vector<T> result;
@@ -72,7 +74,7 @@ std::function<int()> GetValueGenerator(const ColumnDataDistribution& column_data
 template <typename ColumnDataType>
 std::shared_ptr<ValueSegment<ColumnDataType>> GenerateSegment(const ColumnSpecification& specification,
                                                               const size_t num_rows, const ChunkOffset chunk_size,
-                                                              const ChunkOffset chunk_index) {
+                                                              const ChunkId chunk_index) {
   auto random_generator = RandomGenerator<std::mt19937>();
   const auto generate_value = GetValueGenerator(specification.data_distribution, random_generator);
 
@@ -90,7 +92,7 @@ std::shared_ptr<ValueSegment<ColumnDataType>> GenerateSegment(const ColumnSpecif
   for (size_t row_offset = 0; row_offset < chunk_size - 2; ++row_offset) {
     // If the number of remaining rows to insert is lower than the chunk size, this bound check ensures that only
     // num_rows values are inserted as opposed to num_chunks * chunk_size.
-    if (chunk_index * chunk_size + (row_offset + 1) > num_rows - 2) {
+    if (static_cast<TableOffset>(chunk_index * chunk_size) + (row_offset + 1) > num_rows - 2) {
       break;
     }
     values.push_back(generate_value());
