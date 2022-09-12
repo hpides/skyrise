@@ -10,11 +10,20 @@
 
 namespace skyrise {
 
+/**
+ * TODO Explain: Required for PQPs and the optimizer. In QE buckets refer to single Lambda function workers.
+ */
+enum class ObjectToBucketStrategy {
+  SingleBucket,       // Lambda function workers read all objects. (e.g., for a broadcast join)
+  MultipleBuckets,    // Lambda function workers read distinct object subsets. (e.g., for data parallelism)
+  PartitionedBuckets  // Lambda function workers read all objects, but only distinct partition subsets.
+                      // (e.g., for data shuffling purposes)
+};
+
 class ImportOperatorProxy : public EnableMakeForPlanNode<ImportOperatorProxy, AbstractOperatorProxy>,
                             public AbstractOperatorProxy {
  public:
-  ImportOperatorProxy(std::vector<ObjectReference> object_references, std::vector<ColumnId> column_ids,
-                      std::string origin_identifier = "");
+  ImportOperatorProxy(std::vector<ObjectReference> object_references, std::vector<ColumnId> column_ids);
 
   const std::string& Name() const override;
   std::string Description(const DescriptionMode mode) const override;
@@ -22,29 +31,23 @@ class ImportOperatorProxy : public EnableMakeForPlanNode<ImportOperatorProxy, Ab
   /**
    * Accessors
    */
-  void SetObjectReferences(std::vector<ObjectReference> object_references);
-  const std::vector<ObjectReference>& ObjectReferences() const;
   const std::vector<ColumnId>& ColumnIds() const;
-
+  const std::vector<ObjectReference>& ObjectReferences() const;
+  void SetObjectReferences(std::vector<ObjectReference> object_references);
 
   // If desired, non-default options for reading CSV/ORC data can be set.
-  void SetImportOptions(std::shared_ptr<const ImportOptions> import_options);
   std::shared_ptr<const ImportOptions> GetImportOptions() const;
+  void SetImportOptions(std::shared_ptr<const ImportOptions> import_options);
 
   /**
    * Optimization-relevant attributes
    */
-   // TODO Remove void SetOutputObjectsCount(size_t output_objects_count);
-   // TODO Remove void SetOutputPartitionsCount(size_t output_partitions_count);
   const DataTraits& OutputDataTraits() const override;
   bool IsPipelineBreaker() const override;
-
-  /**
-   * @returns a string that describes the origin of the objects to import.
-   *          Since it is an optional attribute, the returned string may be empty.
-   */
-  const std::string& OriginIdentifier() const;
-  void SetOriginAndDataTraits(std::string origin_identifier, size_t origin_partition_count, size_t target_object_count);
+  const std::optional<std::string>& OriginIdentifier() const;
+  void SetOriginTraits(const std::string& origin_identifier, size_t partition_count);
+  ObjectToBucketStrategy GetObjectToBucketStrategy() const;
+  void SetObjectToBucketStrategy(ObjectToBucketStrategy object_to_bucket_strategy, size_t bucket_count);
 
   /**
    * Serialization / Deserialization
@@ -64,8 +67,21 @@ class ImportOperatorProxy : public EnableMakeForPlanNode<ImportOperatorProxy, Ab
   std::vector<ObjectReference> object_references_;
   std::shared_ptr<const ImportOptions> import_options_;
 
-  std::string origin_identifier_;
-  DataTraits output_data_traits_;
+  /**
+   * Attributes for query compilation, and PQPs.
+   */
+  ObjectToBucketStrategy object_to_bucket_strategy_;
+
+  // Mutable because the data structure is updated in the Getter.
+  mutable DataTraits output_data_traits_;
+
+  // Origin identifier is applicable to all object references specified.
+  std::optional<std::string> origin_identifier_;
+
+  // In PQPs, the object references from an Import proxy represent a pool of data, that either comes from a base table,
+  // or a previously executed pipeline. In case of partitioned data, all objects have the same data layout, and thus
+  // the same partition count.
+  size_t expected_partition_count_;
 };
 
 }  // namespace skyrise

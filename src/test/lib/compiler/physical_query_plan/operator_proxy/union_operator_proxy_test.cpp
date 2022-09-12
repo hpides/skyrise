@@ -31,7 +31,7 @@ TEST_F(UnionOperatorProxyTest, BaseProperties) {
   EXPECT_EQ(union_all_proxy->Type(), OperatorType::kUnion);
   EXPECT_TRUE(union_all_proxy->IsPipelineBreaker());
   EXPECT_EQ(union_all_proxy->OutputDataTraits().column_count, import_proxy_a_->OutputDataTraits().column_count);
-  EXPECT_EQ(union_all_proxy->OutputDataTraits().object_count, import_proxy_a_->OutputDataTraits().object_count);
+  EXPECT_EQ(union_all_proxy->OutputDataTraits().bucket_count, import_proxy_a_->OutputDataTraits().bucket_count);
   EXPECT_EQ(union_all_proxy->OutputDataTraits().partition_count, import_proxy_a_->OutputDataTraits().partition_count);
 }
 

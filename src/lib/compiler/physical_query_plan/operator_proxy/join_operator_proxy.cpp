@@ -93,8 +93,9 @@ const DataTraits& JoinOperatorProxy::OutputDataTraits() const {
   const auto left_input_data_traits = LeftInput()->OutputDataTraits();
   const auto right_input_data_traits = RightInput()->OutputDataTraits();
   output_data_traits_.column_count = left_input_data_traits.column_count + right_input_data_traits.column_count;
-  output_data_traits_.object_count = std::max(left_input_data_traits.partition_count, right_input_data_traits.partition_count);
-  output_data_traits_.partition_count = output_data_traits_.object_count;
+  output_data_traits_.bucket_count =
+      std::max(left_input_data_traits.partition_count, right_input_data_traits.partition_count);
+  output_data_traits_.partition_count = output_data_traits_.bucket_count;
   return output_data_traits_;
 }
 

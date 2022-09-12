@@ -129,7 +129,7 @@ std::shared_ptr<ImportOperatorProxy> TpchImportProxy(const std::vector<std::stri
 }
 
 std::shared_ptr<AbstractOperatorProxy> CreateTpchQ1Pqp(size_t lineitem_mock_objects_count,
-                                                     std::vector<size_t> combiner_stage_worker_count) {
+                                                       std::vector<size_t> combiner_stage_worker_count) {
   // (1) Define pipeline 1 or pre-aggregation stage for TPC-H Q1
   const auto l_shipdate = TpchPqpColumn("l_shipdate");
   const auto l_quantity = TpchPqpColumn("l_quantity");

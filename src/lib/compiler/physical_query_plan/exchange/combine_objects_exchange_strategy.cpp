@@ -5,7 +5,7 @@
 namespace skyrise {
 
 CombineObjectsExchangeStrategy::CombineObjectsExchangeStrategy(size_t target_object_count)
-    : AbstractExchangeStrategy(ExchangeStrategyType::kCombineObjects), target_object_count_(target_object_count) {
+    : AbstractExchangeStrategy(ExchangeType::kCombine), target_object_count_(target_object_count) {
   Assert(target_object_count_ > 0, "Cannot combine to zero objects.");
 }
 
@@ -30,7 +30,7 @@ ExchangeResult CombineObjectsExchangeStrategy::ComputeExchangeResult(
    * TODOs
    * 1) Use Interface in ExchangeProxy -> Done.
    * 2) Use Interface in Pipeline Slicer
-   * 2) Build ExchangeStrategyType tests
+   * 2) Build ExchangeType tests
    * 3) Implement this function
    */
 

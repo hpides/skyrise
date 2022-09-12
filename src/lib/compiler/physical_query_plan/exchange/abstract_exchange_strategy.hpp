@@ -13,10 +13,10 @@
 namespace skyrise {
 
 struct ExchangeResult {
-  explicit ExchangeResult(
-      std::vector<PipelineFragmentDefinition> init_pipeline_fragment_definitions,
-      size_t init_next_pipeline_target_object_count, // TODO remove this count?
-      std::optional<std::shared_ptr<const AbstractPartitioningFunction>> init_pipeline_partitioning_function = std::nullopt);
+  explicit ExchangeResult(std::vector<PipelineFragmentDefinition> init_pipeline_fragment_definitions,
+                          size_t init_next_pipeline_target_object_count,  // TODO remove this count?
+                          std::optional<std::shared_ptr<const AbstractPartitioningFunction>>
+                              init_pipeline_partitioning_function = std::nullopt);
 
   size_t PartitionCount() const;
   std::vector<ObjectReference> ObjectReferences() const;
@@ -25,7 +25,7 @@ struct ExchangeResult {
    * TODO(julianmenzler)
    */
   const std::optional<std::shared_ptr<const AbstractPartitioningFunction>> pipeline_partitioning_function;
-  
+
   /**
    *
    */
@@ -39,10 +39,10 @@ struct ExchangeResult {
 
 class AbstractExchangeStrategy {
  public:
-  explicit AbstractExchangeStrategy(const ExchangeStrategyType type);
+  explicit AbstractExchangeStrategy(const ExchangeType type);
   virtual ~AbstractExchangeStrategy() = default;
 
-  ExchangeStrategyType Type() const;
+  ExchangeType Type() const;
 
   size_t Hash() const;
 
@@ -54,7 +54,7 @@ class AbstractExchangeStrategy {
       const std::vector<std::shared_ptr<ImportOperatorProxy>>& import_proxies) const = 0;
 
  protected:
-  const ExchangeStrategyType type_;
+  const ExchangeType type_;
 
   virtual size_t ShallowHash() const = 0;
 };

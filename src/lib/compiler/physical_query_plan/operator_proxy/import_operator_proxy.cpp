@@ -3,6 +3,7 @@
 #include <boost/container_hash/hash.hpp>
 #include <magic_enum.hpp>
 
+#include "configuration.hpp"
 #include "constants.hpp"
 #include "operator/import_operator.hpp"
 #include "storage/formats/csv_reader.hpp"
@@ -25,15 +26,20 @@ const std::string kJsonKeyObjectEtag = "etag";
 namespace skyrise {
 
 ImportOperatorProxy::ImportOperatorProxy(std::vector<ObjectReference> object_references,
-                                         std::vector<ColumnId> column_ids,
-                                         std::string origin_identifier)
+                                         std::vector<ColumnId> column_ids)
     : AbstractOperatorProxy(OperatorType::kImport),
-      column_ids_(std::move(column_ids)), object_references_(std::move(object_references), origin_identifier_(origin_identifier)) {
+      column_ids_(std::move(column_ids)),
+      object_references_(std::move(object_references)) {
   Assert(!column_ids_.empty(), "ImportOperatorProxy must specify at least one import ColumnId.");
   output_data_traits_.column_count = column_ids_.size();
-  output_data_traits_.object_count = object_references_.size();
-}
 
+  // We aim for maximum data parallelism by default. Ideally, this means that objects are processed in separate buckets,
+  // meaning by individual Lambda function workers.
+  object_to_bucket_strategy_ = ObjectToBucketStrategy::MultipleBuckets;
+  // Data parallelism, however, is limited by the burst concurrency quota of the AWS Lambda service.
+  output_data_traits_.bucket_count = std::min(object_references_.size(), kLambdaFunctionConcurrencyLimit);
+  output_data_traits_.partition_count = 1;
+}
 
 const std::string& ImportOperatorProxy::Name() const { return kName; }
 
@@ -55,7 +61,7 @@ std::string ImportOperatorProxy::Description(const DescriptionMode mode) const {
 
   stream << separator << "ColumnIds{" << column_ids_ << "}";
 
-  if (origin_identifier_.empty()) {
+  if (!origin_identifier_) {
     return stream.str();
   }
 
@@ -64,19 +70,21 @@ std::string ImportOperatorProxy::Description(const DescriptionMode mode) const {
   if (mode == DescriptionMode::kSingleLine) {
     stream << "- ";
   }
-  stream << "Origin: " << origin_identifier_;
+  stream << "Origin: " << *origin_identifier_;
 
   return stream.str();
 }
 
-void ImportOperatorProxy::SetObjectReferences(std::vector<ObjectReference> object_references) {
-  output_data_traits_.object_count = object_references.size();
-  object_references_ = std::move(object_references);
-}
+const std::vector<ColumnId>& ImportOperatorProxy::ColumnIds() const { return column_ids_; }
 
 const std::vector<ObjectReference>& ImportOperatorProxy::ObjectReferences() const { return object_references_; }
 
-const std::vector<ColumnId>& ImportOperatorProxy::ColumnIds() const { return column_ids_; }
+void ImportOperatorProxy::SetObjectReferences(std::vector<ObjectReference> object_references) {
+  output_data_traits_.bucket_count = object_references.size();
+  object_references_ = std::move(object_references);
+}
+
+std::shared_ptr<const ImportOptions> ImportOperatorProxy::GetImportOptions() const { return import_options_; }
 
 void ImportOperatorProxy::SetImportOptions(std::shared_ptr<const ImportOptions> import_options) {
   Assert(import_options != nullptr, "Setting the ImportOptions requires a non-null shared pointer.");
@@ -85,10 +93,15 @@ void ImportOperatorProxy::SetImportOptions(std::shared_ptr<const ImportOptions> 
   import_options_ = std::move(import_options);
 }
 
-std::shared_ptr<const ImportOptions> ImportOperatorProxy::GetImportOptions() const { return import_options_; }
-
 const DataTraits& ImportOperatorProxy::OutputDataTraits() const {
   Assert(output_data_traits_.column_count == column_ids_.size(), "Invalid column count in OutputDataTraits.");
+  Assert(output_data_traits_.bucket_count <= kLambdaFunctionConcurrencyLimit,
+         "Data parallelism exceeds burst concurrency quota of AWS Lambda.");
+  if (object_to_bucket_strategy_ == ObjectToBucketStrategy::PartitionedBuckets) {
+    output_data_traits_.partition_count = expected_partition_count_;
+  } else {
+    output_data_traits_.partition_count = 1;
+  }
   return output_data_traits_;
 }
 
@@ -96,15 +109,25 @@ bool ImportOperatorProxy::IsPipelineBreaker() const { return false; }
 
 const std::string& ImportOperatorProxy::OriginIdentifier() const { return origin_identifier_; }
 
-void ImportOperatorProxy::SetOriginAndDataTraits(std::string origin_identifier, const size_t origin_partition_count, const size_t target_object_count) {
-  Assert(!origin_identifier.empty(), "Empty pipeline identity string.");
-  Assert(origin_partition_count > 0, "Invalid partition count.");
-  Assert(target_object_count > 0, "In PQPs, an ImportOperatorProxy must specify at least one output object.");
-  Assert(target_object_count <= object_references_.size(), "Target object count is greater than the count of import objects.");
+void ImportOperatorProxy::SetOriginTraits(const std::string& origin_identifier, const size_t partition_count) {
+  Assert(origin_identifier.empty(), "Empty origin identifier.");
+  origin_identifier_ = origin_identifier;
+  expected_partition_count_ = partition_count;
+}
 
-  origin_identifier_ = std::move(origin_identifier);
-  output_data_traits_.partition_count = origin_partition_count;
-  output_data_traits_.object_count = target_object_count;
+ObjectToBucketStrategy ImportOperatorProxy::GetObjectToBucketStrategy() const { return object_to_bucket_strategy_; }
+
+void ImportOperatorProxy::SetObjectToBucketStrategy(ObjectToBucketStrategy object_to_bucket_strategy,
+                                                    size_t bucket_count) {
+  Assert(object_to_bucket_strategy == ObjectToBucketStrategy::SingleBucket || bucket_count > 1,
+         "Invalid bucket_count for given ObjectToBucketStrategy.");
+  Assert(bucket_count <= object_references_.size(), "Bucket count cannot be greater than count of objects to import.");
+  object_to_bucket_strategy_ = object_to_bucket_strategy;
+  output_data_traits_.bucket_count = bucket_count;
+
+  if (object_to_bucket_strategy_ == ObjectToBucketStrategy::PartitionedBuckets) {
+    Assert()
+  }
 }
 
 Aws::Utils::Json::JsonValue ImportOperatorProxy::ToJson() const {
@@ -124,6 +147,13 @@ Aws::Utils::Json::JsonValue ImportOperatorProxy::ToJson() const {
   if (import_options_ != nullptr) {
     json_output.WithObject(kJsonKeyImportOptions, import_options_->ToJson());
   }
+
+  // The following attributes do not get serialized because they are relevant for query execution, and thus must not be
+  // transferred to cloud function workers, for instance.
+  //  - object_to_bucket_strategy_
+  //  - output_data_traits_
+  //  - origin_identifier_
+  //  - expected_partition_count_
 
   return json_output;
 }
@@ -154,11 +184,13 @@ std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::FromJson(const Aws::
 std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::OnDeepCopy(
     const std::shared_ptr<AbstractOperatorProxy>& /*copied_left_input*/,
     const std::shared_ptr<AbstractOperatorProxy>& /*copied_right_input*/) const {
-  auto copy = ImportOperatorProxy::Make(object_references_, column_ids_, origin_identifier_);
+  auto copy = ImportOperatorProxy::Make(object_references_, column_ids_);
+  copy->import_options_ = import_options_;
+
+  copy->object_to_bucket_strategy_ = object_to_bucket_strategy_;
   copy->output_data_traits_ = output_data_traits_;
-  if (import_options_ != nullptr) {
-    copy->SetImportOptions(import_options_);
-  }
+  copy->origin_identifier_ = origin_identifier_;
+  copy->expected_partition_count_ = expected_partition_count_;
 
   return copy;
 }
@@ -180,7 +212,11 @@ size_t ImportOperatorProxy::ShallowHash() const {
     boost::hash_combine(hash, import_options_);
   }
 
-  boost::hash_combine(hash, output_data_traits_.Hash());
+  boost::hash_combine(hash, object_to_bucket_strategy_);
+  boost::hash_combine(hash, output_data_traits_.bucket_count);
+  boost::hash_combine(hash, output_data_traits_.partition_count);
+  boost::hash_combine(hash, *origin_identifier_);
+  boost::hash_combine(hash, expected_partition_count_);
 
   return hash;
 }

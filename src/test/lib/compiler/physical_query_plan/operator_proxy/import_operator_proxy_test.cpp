@@ -38,10 +38,13 @@ class ImportOperatorProxyTest : public ::testing::Test {
 TEST_F(ImportOperatorProxyTest, BaseProperties) {
   const auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
   EXPECT_EQ(import_proxy->Type(), OperatorType::kImport);
-  EXPECT_EQ(import_proxy->OriginIdentifier(), "");
-  EXPECT_EQ(import_proxy->ObjectReferences(), kObjectReferences);
   EXPECT_EQ(import_proxy->ColumnIds(), kColumnIds);
+  EXPECT_EQ(import_proxy->ObjectReferences(), kObjectReferences);
+  EXPECT_EQ(import_proxy->GetImportOptions(), nullptr);
+
   EXPECT_FALSE(import_proxy->IsPipelineBreaker());
+  EXPECT_FALSE(import_proxy->OriginIdentifier());
+  EXPECT_EQ(import_proxy->GetObjectToBucketStrategy(), ObjectToBucketStrategy::MultipleBuckets);
 }
 
 TEST_F(ImportOperatorProxyTest, Description) {
@@ -84,7 +87,7 @@ TEST_F(ImportOperatorProxyTest, OriginAndDataTraits) {
   auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
   EXPECT_TRUE(import_proxy->OriginIdentifier().empty());
   EXPECT_EQ(import_proxy->OutputDataTraits().column_count, 3);
-  EXPECT_EQ(import_proxy->OutputDataTraits().object_count, 3);
+  EXPECT_EQ(import_proxy->OutputDataTraits().bucket_count, 3);
   EXPECT_EQ(import_proxy->OutputDataTraits().partition_count, 1);
 
   // Change ObjectReferences
@@ -94,22 +97,22 @@ TEST_F(ImportOperatorProxyTest, OriginAndDataTraits) {
   object_references.emplace_back("bucket_b", "b_1.orc");
   object_references.emplace_back("bucket_b", "b_2.orc");
   import_proxy->SetObjectReferences(object_references);
-  EXPECT_EQ(import_proxy->OutputDataTraits().object_count, 4);
+  EXPECT_EQ(import_proxy->OutputDataTraits().bucket_count, 4);
 
   // Set Origin and DataTraits
   const std::string origin = "query_XYZ_pipeline_001";
   const size_t partition_count = 3;
   const size_t target_object_count = 2;
-  import_proxy->SetOriginAndDataTraits(origin, partition_count, target_object_count);
+  import_proxy->SetOrigin(origin, partition_count, target_object_count);
   EXPECT_EQ(import_proxy->OriginIdentifier(), origin);
   EXPECT_EQ(import_proxy->OutputDataTraits().partition_count, partition_count);
-  EXPECT_EQ(import_proxy->OutputDataTraits().object_count, target_object_count);
+  EXPECT_EQ(import_proxy->OutputDataTraits().bucket_count, target_object_count);
 
   // Try illegal parameters
-  EXPECT_THROW(import_proxy->SetOriginAndDataTraits("", partition_count, target_object_count), std::logic_error);
-  EXPECT_THROW(import_proxy->SetOriginAndDataTraits(origin, 0, target_object_count), std::logic_error);
-  EXPECT_THROW(import_proxy->SetOriginAndDataTraits(origin, partition_count, 0), std::logic_error);
-  EXPECT_THROW(import_proxy->SetOriginAndDataTraits(origin, partition_count, object_references.size() + 1), std::logic_error);
+  EXPECT_THROW(import_proxy->SetOrigin("", partition_count, target_object_count), std::logic_error);
+  EXPECT_THROW(import_proxy->SetOrigin(origin, 0, target_object_count), std::logic_error);
+  EXPECT_THROW(import_proxy->SetOrigin(origin, partition_count, 0), std::logic_error);
+  EXPECT_THROW(import_proxy->SetOrigin(origin, partition_count, object_references.size() + 1), std::logic_error);
 }
 
 TEST_F(ImportOperatorProxyTest, SerializeAndDeserialize) {
@@ -162,11 +165,11 @@ TEST_F(ImportOperatorProxyTest, SerializeAndDeserializeImportOptionsCsv) {
 TEST_F(ImportOperatorProxyTest, DeepCopy) {
   auto import_proxy = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
   import_proxy->SetImportOptions(import_options_csv_);
-
-  const std::string origin = "query_XYZ_pipeline_001";
-  const size_t partition_count = 3;
-  const size_t target_object_count = 2;
-  import_proxy->SetOriginAndDataTraits(origin, partition_count, target_object_count);
+  const size_t target_bucket_count = 2;
+  import_proxy->SetObjectToBucketStrategy(ObjectToBucketStrategy::PartitionedBuckets, target_bucket_count);
+  const std::string origin_identifier = "pipeline_01";
+  const size_t expected_partition_count = 4;
+  import_proxy->SetOriginTraits(origin_identifier, expected_partition_count);
 
   // Verify DeepCopy
   const auto import_proxy_copy = std::dynamic_pointer_cast<ImportOperatorProxy>(import_proxy->DeepCopy());
@@ -174,10 +177,8 @@ TEST_F(ImportOperatorProxyTest, DeepCopy) {
   EXPECT_EQ(import_proxy_copy->ColumnIds(), kColumnIds);
   EXPECT_EQ(import_proxy_copy->GetImportOptions(), import_options_csv_);
 
-  EXPECT_EQ(import_proxy_copy->OriginIdentifier(), origin);
-  EXPECT_EQ(import_proxy_copy->OutputDataTraits().column_count, kColumnIds.size());
-  EXPECT_EQ(import_proxy_copy->OutputDataTraits().object_count, target_object_count);
-  EXPECT_EQ(import_proxy_copy->OutputDataTraits().partition_count, partition_count);
+  EXPECT_EQ(import_proxy_copy->OutputDataTraits());
+  EXPECT_EQ(import_proxy_copy->OriginIdentifier(), origin_identifier);
 }
 
 TEST_F(ImportOperatorProxyTest, CreateOperatorInstance) {
