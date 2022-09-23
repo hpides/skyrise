@@ -352,6 +352,10 @@ set(
     monitoring/function_segments.hpp
     scheduler/warm_up_strategy.cpp
     scheduler/warm_up_strategy.hpp
+    tool/function_upload_tool.cpp
+    tool/function_upload_tool.hpp
+    tool/tool_config.cpp
+    tool/tool_config.hpp
     utils/costs/cost_calculator.cpp
     utils/costs/cost_calculator.hpp
     utils/costs/pricing.cpp

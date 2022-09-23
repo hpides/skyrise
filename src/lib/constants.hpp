@@ -20,4 +20,6 @@ inline constexpr size_t kDynamoDbMaxItemSize = 400_KB;
 inline constexpr uint kDynamoDbBatchGetItemLimit = 100;
 inline constexpr uint kDynamoDbBatchWriteItemLimit = 25;
 
+inline constexpr std::string_view kConstPrefix = "k";
+
 }  // namespace skyrise
