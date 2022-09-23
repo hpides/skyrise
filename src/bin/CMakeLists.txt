@@ -1,11 +1,11 @@
 add_executable(
-    skyriseConsole
-    
-    console.cpp
+    skyrise
+
+    skyrise.cpp
 )
 
 target_link_libraries(
-    skyriseConsole
+    skyrise
 
     PRIVATE
     skyriseCoordinator

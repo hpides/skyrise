@@ -81,6 +81,7 @@ void UploadFunctions(const std::shared_ptr<const Aws::IAM::IAMClient>& iam_clien
             .WithFunctionName(function_deployable.function_name)
             .WithRuntime(Aws::Lambda::Model::Runtime::provided_al2)
             .WithArchitectures(Aws::Vector<Aws::Lambda::Model::Architecture>{function_architecture})
+            .WithDescription(function_deployable.function_description)
             .WithRole(role_arn)
             .WithHandler(kLambdaFunctionHandler.data())
             .WithCode(function_deployable.function_code.View())
@@ -129,7 +130,7 @@ void UploadFunctions(const std::shared_ptr<const Aws::IAM::IAMClient>& iam_clien
       function_code = GetRemoteFunctionCode(function_config.function_path, function_config.function_name);
     }
     function_deployables.emplace_back(function_config.function_name, function_code.Jsonize(),
-                                      function_config.memory_size);
+                                      function_config.memory_size, function_config.function_description);
   }
 
   UploadFunctions(iam_client, lambda_client, function_deployables, enable_tracing);

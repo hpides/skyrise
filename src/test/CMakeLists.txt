@@ -1,6 +1,7 @@
 include_directories(
     ${PROJECT_SOURCE_DIR}/src/benchmark/lib
     ${PROJECT_SOURCE_DIR}/src/test/lib
+    ${PROJECT_SOURCE_DIR}/third_party/googletest/googlemock/include
     ${PROJECT_SOURCE_DIR}/third_party/googletest/googletest/include
 )
 
@@ -124,6 +125,9 @@ set(
     lib/storage/table/table_key_constraint_test.cpp
     lib/storage/table/table_test.cpp
     lib/storage/table/value_segment_test.cpp
+
+    lib/tool/function_upload_tool_test.cpp
+    lib/tool/tool_config_test.cpp
 
     lib/utils/costs/cost_calculator_test.cpp
     lib/utils/costs/pricing_test.cpp
