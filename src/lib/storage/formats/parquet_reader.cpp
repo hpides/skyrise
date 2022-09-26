@@ -23,6 +23,7 @@
 #include "storage/backend/stream.hpp"
 #include "storage/table/value_segment.hpp"
 
+// TODO(anyone): Remove this macro and use assertions.
 #define HANDLE_RESULT(result, reason) \
   if (!((result).ok())) {             \
     throw std::logic_error(reason);   \
@@ -90,8 +91,15 @@ ParquetFormatReader::ParquetFormatReader(std::unique_ptr<ObjectReader> source, C
   try {
     auto file_source = arrow::dataset::FileSource(input_stream);
     auto parquet_format = std::make_shared<arrow::dataset::ParquetFileFormat>();
+    std::shared_ptr<arrow::dataset::Fragment> fragment = parquet_format->MakeFragment(file_source).ValueOrDie();
 
-    auto fragment = parquet_format->MakeFragment(file_source).ValueOrDie();
+    // Read only specific partitions if row group ids are provided.
+    if (configuration_.row_group_ids.has_value()) {
+      auto row_group_subset = (std::dynamic_pointer_cast<arrow::dataset::ParquetFileFragment>(fragment))
+                                  ->Subset(configuration_.row_group_ids.value());
+      HANDLE_RESULT(row_group_subset, row_group_subset.status().ToString());
+      fragment = row_group_subset.ValueOrDie();
+    }
 
     auto scan_options = std::make_shared<arrow::dataset::ScanOptions>();
     scan_options->use_threads = false;
