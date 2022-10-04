@@ -1,5 +1,9 @@
 set(CMAKE_INSTALL_PREFIX ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
+add_compile_options(
+    -Wno-unqualified-std-cast-call
+)
+
 # aws-lambda-cpp
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Enable shared libraries for AWS Lambda runtime for C++")
 set(ENABLE_LTO ON CACHE BOOL "Enable LTO for AWS Lambda runtmie for C++")
@@ -11,7 +15,7 @@ set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Enable testing of the benchmark lib
 add_subdirectory(benchmark)
 
 add_compile_options(
-        -Wno-sign-conversion
+    -Wno-sign-conversion
 )
 
 # googletest
@@ -38,6 +42,10 @@ target_link_libraries(
     ${ORC_THIRDPARTY_LIBRARY_OUTPUT_DIRECTORY}/snappy_ep-install/lib/libsnappy.a
     ${ORC_THIRDPARTY_LIBRARY_OUTPUT_DIRECTORY}/zlib_ep-install/lib/libz.a
     ${ORC_THIRDPARTY_LIBRARY_OUTPUT_DIRECTORY}/zstd_ep-install/lib/libzstd.a
+)
+
+add_compile_options(
+    -Wno-deprecated-non-prototype
 )
 
 # tpch-dbgen

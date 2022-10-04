@@ -71,28 +71,28 @@ bool Compressor::Finish() {
 NoneCompressor::NoneCompressor() {
   compression_stream_ = std::make_unique<OrcBufferedOutputStreamFacadeImplementation>(
       orc::createCompressor(orc::CompressionKind_NONE, &output_, orc::CompressionStrategy_SPEED, kBufferCapacity,
-                            kCompressionBlockSize, *orc::getDefaultPool()));
+                            kCompressionBlockSize, *orc::getDefaultPool(), nullptr));
 }
 
 ZlibCompressor::ZlibCompressor(bool favor_speed_over_compression) {
   compression_stream_ = std::make_unique<OrcBufferedOutputStreamFacadeImplementation>(orc::createCompressor(
       orc::CompressionKind_ZLIB, &output_,
       favor_speed_over_compression ? orc::CompressionStrategy_SPEED : orc::CompressionStrategy_COMPRESSION,
-      kBufferCapacity, kCompressionBlockSize, *orc::getDefaultPool()));
+      kBufferCapacity, kCompressionBlockSize, *orc::getDefaultPool(), nullptr));
 }
 
 ZstdCompressor::ZstdCompressor(bool favor_speed_over_compression) {
   compression_stream_ = std::make_unique<OrcBufferedOutputStreamFacadeImplementation>(orc::createCompressor(
       orc::CompressionKind_ZSTD, &output_,
       favor_speed_over_compression ? orc::CompressionStrategy_SPEED : orc::CompressionStrategy_COMPRESSION,
-      kBufferCapacity, kCompressionBlockSize, *orc::getDefaultPool()));
+      kBufferCapacity, kCompressionBlockSize, *orc::getDefaultPool(), nullptr));
 }
 
 Lz4Compressor::Lz4Compressor(bool favor_speed_over_compression) {
   compression_stream_ = std::make_unique<OrcBufferedOutputStreamFacadeImplementation>(orc::createCompressor(
       orc::CompressionKind_LZ4, &output_,
       favor_speed_over_compression ? orc::CompressionStrategy_SPEED : orc::CompressionStrategy_COMPRESSION,
-      kBufferCapacity, kCompressionBlockSize, *orc::getDefaultPool()));
+      kBufferCapacity, kCompressionBlockSize, *orc::getDefaultPool(), nullptr));
 }
 
 }  // namespace skyrise
