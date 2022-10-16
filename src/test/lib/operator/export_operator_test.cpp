@@ -59,7 +59,7 @@ TEST_F(ExportOperatorTest, ExportToCsv) {
   mock_input_operator->Execute(operator_execution_context);
   export_operator->Execute(operator_execution_context);
 
-  ObjectStatus status = storage->GetStatus(output_object_name);
+  const ObjectStatus status = storage->GetStatus(output_object_name);
   EXPECT_FALSE(status.GetError().IsError());
 
   auto reader = storage->OpenForReading(output_object_name);
@@ -82,7 +82,7 @@ TEST_F(ExportOperatorTest, OperatorWorksWithDifferentExportFormats) {
 
   // Since every FormatWriter is tested separately we only need to check that we have valid code paths for each format
   // and some output is produced.
-  for (ExportFormat format : formats) {
+  for (const ExportFormat format : formats) {
     auto mock_input_operator = std::make_shared<TableWrapper>(table);
     auto storage = std::make_shared<MockStorage>();
 
@@ -95,7 +95,7 @@ TEST_F(ExportOperatorTest, OperatorWorksWithDifferentExportFormats) {
     mock_input_operator->Execute(operator_execution_context);
     export_operator->Execute(operator_execution_context);
 
-    ObjectStatus status = storage->GetStatus(output_object_name);
+    const ObjectStatus status = storage->GetStatus(output_object_name);
     EXPECT_FALSE(status.GetError().IsError());
   }
 }

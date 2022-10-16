@@ -75,13 +75,13 @@ std::unique_ptr<ObjectWriter> MockStorage::OpenForWriting(const std::string& obj
   }
 
   return std::make_unique<MockWriter>(object_identifier, [&](std::string&& key, std::string&& value) {
-    std::lock_guard guard(store_mutex_);
+    const std::lock_guard guard(store_mutex_);
     store_.insert_or_assign(std::move(key), std::make_shared<std::string>(std::move(value)));
   });
 }
 
 std::unique_ptr<ObjectReader> MockStorage::OpenForReading(const std::string& object_identifier) {
-  std::lock_guard guard(store_mutex_);
+  const std::lock_guard guard(store_mutex_);
 
   auto iterator = store_.find(object_identifier);
   if (iterator == store_.end()) {
@@ -92,7 +92,7 @@ std::unique_ptr<ObjectReader> MockStorage::OpenForReading(const std::string& obj
 }
 
 StorageError MockStorage::Delete(const std::string& object_identifier) {
-  std::lock_guard guard(store_mutex_);
+  const std::lock_guard guard(store_mutex_);
 
   auto iterator = store_.find(object_identifier);
   if (iterator != store_.end()) {

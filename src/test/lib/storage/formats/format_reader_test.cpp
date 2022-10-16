@@ -73,7 +73,7 @@ class FormatReaderTest : public ::testing::Test {
   void WriteMockData() {
     using Writer = typename Formatter::second_type::first_type;
     using Options = typename Formatter::second_type::second_type;
-    Options options;
+    const Options options;
     auto object_writer = storage_.OpenForWriting(object_name_);
     auto chunk = CreateChunkWithMockData();
     Writer writer(options);
@@ -139,9 +139,9 @@ TYPED_TEST(FormatReaderTest, UnexpectedSchema) {
   Options options;
   options.expected_schema = std::make_shared<TableColumnDefinitions>();
 
-  Reader reader(this->test_data_storage_->OpenForReading(this->file_format_ + "/timestamp_date_bool_varchar." +
-                                                         this->file_format_),
-                options);
+  const Reader reader(this->test_data_storage_->OpenForReading(this->file_format_ + "/timestamp_date_bool_varchar." +
+                                                               this->file_format_),
+                      options);
   EXPECT_TRUE(reader.HasError());
   EXPECT_EQ(reader.GetError().GetMessage(), "Unexpected schema found.");
 }
@@ -237,7 +237,7 @@ TYPED_TEST(FormatReaderTest, ReadInvalidFile) {
   writer->Write(file_content.data(), file_content.size());
   writer->Close();
 
-  Reader reader(this->storage_.OpenForReading(filename));
+  const Reader reader(this->storage_.OpenForReading(filename));
   EXPECT_TRUE(reader.HasError());
   auto msg = reader.GetError().GetMessage();
   EXPECT_EQ(reader.GetError().GetMessage(), this->invalid_file_error_message_);
@@ -245,7 +245,7 @@ TYPED_TEST(FormatReaderTest, ReadInvalidFile) {
 
 TYPED_TEST(FormatReaderTest, UnsupportedTypes) {
   using Reader = typename TypeParam::first_type::first_type;
-  Reader reader(
+  const Reader reader(
       this->test_data_storage_->OpenForReading(this->file_format_ + "/unsupported_array." + this->file_format_));
   EXPECT_TRUE(reader.HasError());
 }

@@ -7,7 +7,7 @@ namespace skyrise {
 class SchemaSerializationTest : public ::testing::Test {};
 
 TEST_F(SchemaSerializationTest, SerializeTableColumnDefinition) {
-  TableColumnDefinitions definition = {
+  const TableColumnDefinitions definition = {
       TableColumnDefinition("id", DataType::kInt, false),
       TableColumnDefinition("name", DataType::kString, false),
       TableColumnDefinition("comment", DataType::kString, true),

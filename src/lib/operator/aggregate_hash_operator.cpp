@@ -987,7 +987,8 @@ void AggregateHashOperator::WriteGroupByOutput(RowIdPositionList& position_list)
       null_values.reserve(column_is_nullable ? position_list.size() : 0);
 
       for (const auto& row_id : position_list) {
-        std::shared_ptr<AbstractSegment> segment = input_table->GetChunk(row_id.chunk_id)->GetSegment(input_column_id);
+        const std::shared_ptr<AbstractSegment> segment =
+            input_table->GetChunk(row_id.chunk_id)->GetSegment(input_column_id);
         auto value_segment = std::dynamic_pointer_cast<ValueSegment<ColumnDataType>>(segment);
 
         std::optional<ColumnDataType> optional_value = value_segment->GetTypedValue(row_id.chunk_offset);

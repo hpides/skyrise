@@ -114,7 +114,7 @@ TEST_F(CsvReaderTest, LineItemExpectedChunks) {
     auto next_chunk = csv_reader.Next();
   }
 
-  size_t num_at_least_expected_chunks = std::ceil(static_cast<double>(file_size) / kBufferSize);
+  const size_t num_at_least_expected_chunks = std::ceil(static_cast<double>(file_size) / kBufferSize);
 
   ASSERT_GE(counter, num_at_least_expected_chunks);
   ASSERT_FALSE(csv_reader.GetError());
@@ -186,7 +186,7 @@ TEST_F(CsvReaderTest, BuildSchemaNoHeader) {
   configuration.guess_has_header = false;
   configuration.has_header = false;
 
-  CsvFormatReader csv_reader(storage_.OpenForReading(kLineItemTblPath), configuration);
+  const CsvFormatReader csv_reader(storage_.OpenForReading(kLineItemTblPath), configuration);
   EXPECT_FALSE(csv_reader.HasError());
   const auto& discovered_schema = csv_reader.GetSchema();
   EXPECT_EQ(discovered_schema->size(), 17);

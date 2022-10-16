@@ -35,7 +35,7 @@ TYPED_TEST(CompressionTest, CompressDecompress) {
   // Compress
   typename TypeParam::Compressor compressor;
   constexpr size_t kDataLength = 5_MB + 7;  // Something that is not dividable by block size.
-  std::string input_data = RandomString(kDataLength);
+  const std::string input_data = RandomString(kDataLength);
   std::stringstream compressed_data;
 
   compressor.SetOutput([&compressed_data](const char* data, size_t length) { compressed_data.write(data, length); });

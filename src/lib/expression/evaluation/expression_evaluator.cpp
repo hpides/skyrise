@@ -211,8 +211,8 @@ RowIdPositionList ExpressionEvaluator::EvaluateExpressionToPositionList(const Ab
             using LeftDataType = typename std::decay_t<decltype(left_result)>::Type;
             using RightDataType = typename std::decay_t<decltype(right_result)>::Type;
 
-            std::vector<LeftDataType> left;
-            std::vector<RightDataType> right;
+            const std::vector<LeftDataType> left;
+            const std::vector<RightDataType> right;
 
             ResolveBinaryPredicateEvaluator(predicate_condition, [&](const auto functor) {
               using ExpressionFunctorType = typename std::decay_t<decltype(functor)>;
@@ -865,7 +865,7 @@ std::shared_ptr<ExpressionResult<Result>> ExpressionEvaluator::EvaluateValueOrCo
     // NullValue can be evaluated to any type; it is then a null value of that type. That makes it easier to implement
     // expressions where a certain data type is expected, but a Null literal is given. Think of `CASE NULL THEN ... ELSE
     // ...`; the `NULL` will be evaluated to be a bool.
-    std::vector<bool> nulls = {true};
+    const std::vector<bool> nulls = {true};
     return std::make_shared<ExpressionResult<Result>>(std::vector<Result>{{Result{}}}, nulls);
   } else {
     Assert(std::holds_alternative<Result>(value), "Cannot evaluate ValueExpression to requested type Result.");
@@ -876,7 +876,7 @@ std::shared_ptr<ExpressionResult<Result>> ExpressionEvaluator::EvaluateValueOrCo
 template <size_t Offset, size_t Count>
 std::shared_ptr<ExpressionResult<std::string>> ExpressionEvaluator::EvaluateExtractSubstr(
     const ExpressionResult<std::string>& from_result) {
-  std::shared_ptr<ExpressionResult<std::string>> result;
+  const std::shared_ptr<ExpressionResult<std::string>> result;
 
   std::vector<std::string> values(from_result.Size());
 
@@ -916,7 +916,7 @@ void ExpressionEvaluator::ResolveToExpressionResult(const AbstractExpression& ex
 
   if (expression.GetDataType() == DataType::kNull) {
     // ResolveDataType() does not support DataType::kNull, so we have handle it explicitly.
-    ExpressionResult<NullValue> null_value_result({NullValue{}}, {true});
+    const ExpressionResult<NullValue> null_value_result({NullValue{}}, {true});
 
     functor(null_value_result);
 
@@ -1099,7 +1099,7 @@ std::shared_ptr<ExpressionResult<std::string>> ExpressionEvaluator::EvaluateConc
   for (const auto& argument : arguments) {
     // `CONCAT` with a `NULL` literal argument yields `NULL`.
     if (argument->GetDataType() == DataType::kNull) {
-      ExpressionResult<std::string> null_value_result({std::string()}, {true});
+      const ExpressionResult<std::string> null_value_result({std::string()}, {true});
       return std::make_shared<ExpressionResult<std::string>>(null_value_result);
     }
 

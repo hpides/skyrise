@@ -31,7 +31,7 @@ TEST_F(ManifestMergerTest, MergeManifestFiles) {
   WriteMockManifest("mockC.orc", statistics_, 3);
 
   ManifestMerger merger(storage_);
-  bool is_success = merger.Merge({"mockA.orc", "mockB.orc", "mockC.orc"}, "mockD.orc");
+  const bool is_success = merger.Merge({"mockA.orc", "mockB.orc", "mockC.orc"}, "mockD.orc");
   EXPECT_TRUE(is_success);
   EXPECT_FALSE(merger.GetError());
 
@@ -56,7 +56,7 @@ TEST_F(ManifestMergerTest, NoMergeDueToSchemaMissmatch) {
   WriteMockManifest("mockB.orc", different_statistic);
 
   ManifestMerger merger(storage_);
-  bool is_success = merger.Merge({"mockA.orc", "mockB.orc"}, "mockD.orc");
+  const bool is_success = merger.Merge({"mockA.orc", "mockB.orc"}, "mockD.orc");
   EXPECT_FALSE(is_success);
 }
 

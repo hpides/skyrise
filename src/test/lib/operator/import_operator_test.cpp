@@ -77,7 +77,7 @@ class ImportOperatorTest : public ::testing::Test {
     EXPECT_EQ(table->ChunkCount(), num_chunks);
     EXPECT_EQ(table->RowCount(), row_count);
 
-    std::optional<std::string> name = import_operator->Name();
+    const std::optional<std::string> name = import_operator->Name();
     EXPECT_TRUE(name.has_value());
 
     std::sort(included_column_ids->begin(), included_column_ids->end());
@@ -269,12 +269,12 @@ TEST_F(ImportOperatorTest, MultipleBuckets) {
 
 TEST_F(ImportOperatorTest, EtagMissmatch) {
   auto format_factory = std::make_shared<FormatReaderFactory<MockChunkReader>>(mock_formatter_configuration_);
-  std::vector<ObjectReference> object_references{
+  const std::vector<ObjectReference> object_references{
       ObjectReference{"MockStorage", "a", ""},
       ObjectReference{"MockStorage", "b", "etag"},
   };
 
-  std::vector<ColumnId> included_column_ids = {ColumnId(0), ColumnId(1)};
+  const std::vector<ColumnId> included_column_ids = {ColumnId(0), ColumnId(1)};
 
   ImportOperator import_operator(object_references, included_column_ids, format_factory);
 

@@ -163,7 +163,7 @@ size_t CachingObjectReader::DetermineMaxCacheSize() {
     return CachingObjectReader::kFallbackMaxBufferSize;
   }
 
-  long memory_mb_number = std::strtol(memory_mb_string, nullptr, 10) * 1_MB;
+  const long memory_mb_number = std::strtol(memory_mb_string, nullptr, 10) * 1_MB;
   if (memory_mb_number == 0) {
     return CachingObjectReader::kFallbackMaxBufferSize;
   }
@@ -286,7 +286,7 @@ StorageError CachingObjectReader::ReadTail(size_t num_last_bytes, ByteBuffer* bu
   }
 
   const ObjectStatus& status = source_->GetStatus();
-  size_t first_byte = std::max<int64_t>(0, status.GetSize() - num_last_bytes);
+  const size_t first_byte = std::max<int64_t>(0, status.GetSize() - num_last_bytes);
   return Read(first_byte, status.GetSize() - 1, buffer);
 }
 

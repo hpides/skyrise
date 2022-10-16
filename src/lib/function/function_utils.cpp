@@ -38,7 +38,7 @@ Aws::Lambda::Model::FunctionCode GetRemoteFunctionCode(const Aws::String& functi
   Aws::Lambda::Model::FunctionCode code;
 
   // Extract function name suffix after "S3_".
-  std::regex s3_function_name_regex("S3_([^-]*)");
+  const std::regex s3_function_name_regex("S3_([^-]*)");
   std::smatch matches;
 
   const auto s3_function_name_found = std::regex_search(function_name, matches, s3_function_name_regex);

@@ -24,11 +24,11 @@ const std::string& ExportOperator::Name() const { return kName; }
 std::unique_ptr<AbstractFormatWriter> ExportOperator::GetWriter() {
   switch (export_format_) {
     case ExportFormat::kCsv: {
-      CsvFormatWriterOptions options;
+      const CsvFormatWriterOptions options;
       return std::make_unique<CsvFormatWriter>(options);
     }
     case ExportFormat::kOrc: {
-      OrcFormatWriterOptions options;
+      const OrcFormatWriterOptions options;
       return std::make_unique<OrcFormatWriter>(options);
     }
     case ExportFormat::kOrcPartitioned: {

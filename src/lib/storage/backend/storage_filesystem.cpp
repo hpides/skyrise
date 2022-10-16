@@ -157,7 +157,7 @@ StorageError FilesystemReader::Read(size_t first_byte, size_t last_byte, ByteBuf
 
   in_.clear();
 
-  std::ifstream::pos_type p = in_.tellg();
+  const std::ifstream::pos_type p = in_.tellg();
   if (p == std::ifstream::pos_type(-1)) {
     return StorageError(StorageErrorType::kIOError);
   }
@@ -194,7 +194,7 @@ StorageError FilesystemReader::Read(size_t first_byte, size_t last_byte, ByteBuf
 }
 
 StorageError FilesystemStorage::Delete(const std::string& object_identifier) {
-  std::string full_path = JoinPath(root_directory_, object_identifier);
+  const std::string full_path = JoinPath(root_directory_, object_identifier);
   if (!unlink(full_path.c_str())) {
     return StorageError::Success();
   }
@@ -209,8 +209,8 @@ std::string FilesystemStorage::JoinPath(const std::string& part_a, const std::st
     return part_a;
   }
 
-  bool part_a_ends_with_seperator = part_a.back() == '/';
-  bool part_b_starts_with_seperator = part_b.front() == '/';
+  const bool part_a_ends_with_seperator = part_a.back() == '/';
+  const bool part_b_starts_with_seperator = part_b.front() == '/';
 
   if (!part_a_ends_with_seperator && !part_b_starts_with_seperator) {
     return part_a + '/' + part_b;

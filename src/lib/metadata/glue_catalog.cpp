@@ -71,7 +71,7 @@ std::shared_ptr<const TableSchema> TableSchemaFromGlueTable(const Aws::Glue::Mod
 
   const auto potential_key_constraint_iter = glue_table.GetParameters().find(kKeyConstraintRootKey);
   if (potential_key_constraint_iter != glue_table.GetParameters().end()) {
-    Aws::Utils::Json::JsonValue json(potential_key_constraint_iter->second);
+    const Aws::Utils::Json::JsonValue json(potential_key_constraint_iter->second);
     const auto key_constraints_array = json.View().AsArray();
     for (size_t i = 0; i < key_constraints_array.GetLength(); ++i) {
       const auto key_constraint_json = key_constraints_array.GetItem(i);

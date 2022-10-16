@@ -22,7 +22,7 @@ inline const std::string kJsonKeyOperators = "operators";
 
 void SerializeOperatorProxiesRecursively(const std::shared_ptr<AbstractOperatorProxy>& operator_proxy,
                                          Aws::Utils::Json::JsonValue& operators_json) {
-  std::string operator_identity = operator_proxy->Identity();
+  const std::string operator_identity = operator_proxy->Identity();
 
   if (operators_json.View().KeyExists(operator_identity)) {
     return;
@@ -92,7 +92,7 @@ std::string SerializePqp(const std::shared_ptr<AbstractOperatorProxy>& root_oper
 }
 
 std::shared_ptr<AbstractOperatorProxy> DeserializePqp(const std::string& pqp_string) {
-  Aws::Utils::Json::JsonValue pqp_json(pqp_string);
+  const Aws::Utils::Json::JsonValue pqp_json(pqp_string);
   Assert(pqp_json.View().KeyExists(kJsonKeyRootOperatorIdentity),
          "Attribute '" + kJsonKeyRootOperatorIdentity + "' is required.");
   Assert(pqp_json.View().KeyExists(kJsonKeyOperators), "Attribute '" + kJsonKeyOperators + "' is required.");

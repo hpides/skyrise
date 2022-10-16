@@ -11,7 +11,7 @@ PartitionedChunkWriter::~PartitionedChunkWriter() { NonVirtualFinalize(); }
 
 void PartitionedChunkWriter::Flush() {
   current_formatter_->Finalize();
-  StorageError error = current_output_object_->Close();
+  const StorageError error = current_output_object_->Close();
   if (error) {
     SetError(error);
   }
@@ -25,7 +25,7 @@ void PartitionedChunkWriter::ProcessChunk(std::shared_ptr<const Chunk> chunk) {
   }
 
   auto writer_callback = [this](const char* data, size_t length) {
-    StorageError error = current_output_object_->Write(data, length);
+    const StorageError error = current_output_object_->Write(data, length);
     if (error) {
       this->SetError(error);
     }

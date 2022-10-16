@@ -82,7 +82,7 @@ int ObjectReaderStreamBuffer::underflow() {
 
   buffer_.resize(expected_bytes);
   ByteBuffer buffer_view(buffer_.data(), expected_bytes);
-  StorageError read_result = reader_->Read(read_from, read_until_inclusive, &buffer_view);
+  const StorageError read_result = reader_->Read(read_from, read_until_inclusive, &buffer_view);
   buffer_.resize(buffer_view.Size());
 
   if (read_result.IsError()) {
@@ -151,7 +151,7 @@ std::streamsize DelegateStreamBuffer::xsputn(const char* s, std::streamsize n) {
 
 int DelegateStreamBuffer::overflow(int ch) {
   if (ch != traits_type::eof()) {
-    char c = ch;
+    const char c = ch;
     xsputn(&c, 1);
   }
 

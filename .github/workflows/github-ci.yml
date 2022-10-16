@@ -18,7 +18,7 @@ jobs:
     if: github.event_name == 'push' || !github.event.pull_request.draft
     name: "Check Format"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: "C++"
         run: "python3 script/run_clang_format.py --clang_format_binary clang-format --source_dir src --quiet"
       - name: "Python"
@@ -29,7 +29,7 @@ jobs:
     name: "Test Clang Debug on Amazon Linux 2"
     needs: check-format
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
       
@@ -84,7 +84,7 @@ jobs:
       # In PRs, we store a summary of the code coverage.
       - name: Archive code coverage results
         if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'full-ci')
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: code-coverage-report
           path: cmake-build-debug/coverage/
@@ -130,7 +130,7 @@ jobs:
     needs: check-format
     if: contains(github.event.pull_request.labels.*.name, 'full-ci') && github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
       - name: "Configure Clang Debug with Tidy"
@@ -154,7 +154,7 @@ jobs:
     needs: check-format
     if: contains(github.event.pull_request.labels.*.name, 'full-ci') && github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
       - name: "Configure Clang Release"
@@ -177,7 +177,7 @@ jobs:
     needs: check-format
     if: contains(github.event.pull_request.labels.*.name, 'full-ci') && github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
       - name: "Configure GCC Debug"

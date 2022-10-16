@@ -62,6 +62,7 @@ FunctionWarmUpContinuousBenchmark::FunctionWarmUpContinuousBenchmark(
 Aws::Utils::Array<Aws::Utils::Json::JsonValue> FunctionWarmUpContinuousBenchmark::OnRun(
     const std::shared_ptr<LambdaBenchmarkRunner>& benchmark_runner) {
   std::vector<std::shared_ptr<LambdaBenchmarkResult>> benchmark_results;
+  benchmark_results.reserve(benchmark_configs_.size());
 
   for (const auto& config : benchmark_configs_) {
     benchmark_results.emplace_back(benchmark_runner->RunLambdaConfig(config.second));

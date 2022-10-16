@@ -9,7 +9,7 @@ void ConcurrentErrorState::SetError(const StorageError& error) {
     return;
   }
 
-  std::lock_guard guard(error_mutex_);
+  const std::lock_guard guard(error_mutex_);
   if (error_.IsError()) {
     return;
   }

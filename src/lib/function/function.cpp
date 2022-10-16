@@ -129,7 +129,7 @@ void Function::RunStandalone(
   std::cout << "---------------------------------------" << std::endl;
 
   // Call the handler.
-  aws::lambda_runtime::invocation_response response = handler(request);
+  const aws::lambda_runtime::invocation_response response = handler(request);
 
   // Print information about the response.
   std::cout << "---------------------------------------\n"

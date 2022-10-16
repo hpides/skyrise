@@ -10,7 +10,7 @@ namespace skyrise {
 class AwsS3Test : public ::testing::Test {};
 
 TEST_F(AwsS3Test, TestErrorTranslation) {
-  std::map<StorageErrorType, std::vector<Aws::S3::S3Errors>> mapping = {
+  const std::map<StorageErrorType, std::vector<Aws::S3::S3Errors>> mapping = {
       {StorageErrorType::kInvalidArgument,
        {Aws::S3::S3Errors::INCOMPLETE_SIGNATURE, Aws::S3::S3Errors::INVALID_ACTION,
         Aws::S3::S3Errors::INVALID_PARAMETER_COMBINATION, Aws::S3::S3Errors::INVALID_PARAMETER_VALUE,

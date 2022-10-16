@@ -36,7 +36,7 @@ FunctionWarmUpBenchmark::FunctionWarmUpBenchmark(std::shared_ptr<const CostCalcu
     for (const auto invocation_count : invocation_counts) {
       for (const auto sleep_ms_duration : sleep_ms_durations) {
         for (const auto provisioning_factor : provisioning_factors) {
-          std::vector<std::function<void()>> after_repetition_callbacks(
+          const std::vector<std::function<void()>> after_repetition_callbacks(
               repetition_count, [&]() { std::this_thread::sleep_for(std::chrono::minutes(kRepetitionSleepMin)); });
 
           const auto config = std::make_shared<LambdaBenchmarkConfig>(
@@ -78,6 +78,7 @@ FunctionWarmUpBenchmark::FunctionWarmUpBenchmark(std::shared_ptr<const CostCalcu
 Aws::Utils::Array<Aws::Utils::Json::JsonValue> FunctionWarmUpBenchmark::OnRun(
     const std::shared_ptr<LambdaBenchmarkRunner>& benchmark_runner) {
   std::vector<std::shared_ptr<LambdaBenchmarkResult>> benchmark_results;
+  benchmark_results.reserve(benchmark_configs_.size());
 
   for (const auto& config : benchmark_configs_) {
     benchmark_results.emplace_back(benchmark_runner->RunLambdaConfig(config.second));

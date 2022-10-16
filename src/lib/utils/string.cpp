@@ -44,7 +44,7 @@ std::string RandomString(const size_t length, const std::string& character_set) 
 size_t StringHeapSize(const std::string& string) {
   // Get the default pre-allocated capacity of SSO strings. Note that the empty string has an unspecified capacity, so
   // we use a really short one here.
-  size_t sso_string_capacity = std::string{"."}.capacity();
+  const size_t sso_string_capacity = std::string{"."}.capacity();
 
   if (string.capacity() > sso_string_capacity) {
     // For heap-allocated strings, \0 is appended to denote the end of the string. capacity() is used over length()
@@ -59,7 +59,7 @@ size_t StringHeapSize(const std::string& string) {
 }
 
 size_t StringVectorMemoryUsage(const std::vector<std::string>& string_vector) {
-  size_t base_size = sizeof(std::vector<std::string>);
+  const size_t base_size = sizeof(std::vector<std::string>);
 
   // Early out
   if (string_vector.empty()) {

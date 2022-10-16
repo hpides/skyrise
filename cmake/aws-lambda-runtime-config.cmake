@@ -12,7 +12,6 @@ function(aws_lambda_package_target target)
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 
-    # The ARM build does currently not support static linking.
     if (${LSB_RELEASE_ID_SHORT} STREQUAL "Amazon")
 
         set(RUN_STRIP)

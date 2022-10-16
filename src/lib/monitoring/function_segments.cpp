@@ -87,7 +87,7 @@ std::map<Aws::String, Aws::XRay::Model::Trace> FunctionSegmentsAnalyzer::GetTrac
 
     for (const auto& batch_trace : batch_traces) {
       for (const auto& segment : batch_trace.GetSegments()) {
-        Aws::Utils::Json::JsonValue document_json(segment.GetDocument());
+        const Aws::Utils::Json::JsonValue document_json(segment.GetDocument());
 
         if (document_json.View().KeyExists("subsegments") && document_json.View().KeyExists("end_time")) {
           traces[batch_trace.GetId()] = batch_trace;
@@ -133,7 +133,7 @@ std::map<Aws::String, Aws::Utils::Json::JsonValue> FunctionSegmentsAnalyzer::Get
   }
 
   for (const auto& segment : trace.GetSegments()) {
-    Aws::Utils::Json::JsonValue document_json(segment.GetDocument());
+    const Aws::Utils::Json::JsonValue document_json(segment.GetDocument());
 
     FlattenSubsegments(unprocessed_lambda_segments, "", document_json.View());
 

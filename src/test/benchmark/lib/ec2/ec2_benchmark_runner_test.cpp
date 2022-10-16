@@ -35,7 +35,7 @@ class AwsEc2BenchmarkRunnerTest : public ::testing::Test {
 };
 
 TEST_F(AwsEc2BenchmarkRunnerTest, IntegrationTest) {
-  std::vector<std::shared_ptr<Ec2BenchmarkConfig>> benchmark_configs = {
+  const std::vector<std::shared_ptr<Ec2BenchmarkConfig>> benchmark_configs = {
       std::make_shared<Ec2BenchmarkConfig>(Ec2InstanceType::kT3Micro, 1, 1),
       std::make_shared<Ec2BenchmarkConfig>(Ec2InstanceType::kT3Micro, 2, 3)};
 

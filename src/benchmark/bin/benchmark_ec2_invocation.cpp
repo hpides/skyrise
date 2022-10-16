@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
     option_adder("instance_types", "The instance types", cxxopts::value<std::vector<std::string>>());
     option_adder("repetition_count", "The repetition count", cxxopts::value<size_t>());
 
-    cxxopts::ParseResult& parse_result = executable.GetParseResult(argc, argv);
+    const cxxopts::ParseResult& parse_result = executable.GetParseResult(argc, argv);
 
     auto benchmark = std::make_shared<skyrise::Ec2InvocationBenchmark>(
         parse_result["concurrent_invocation_counts"].as<std::vector<size_t>>(),

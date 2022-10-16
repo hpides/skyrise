@@ -71,7 +71,7 @@ TEST_F(OperatorsProjectionTest, ExecuteOnAllChunks) {
       std::make_shared<PqpColumnExpression>(0, DataType::kInt, false, "Column1")};
   const auto projection = std::make_shared<ProjectionOperator>(table_wrapper_, expressions);
   projection->Execute(operator_context_);
-  std::shared_ptr<const skyrise::Table> output_table = projection->GetOutput();
+  const std::shared_ptr<const skyrise::Table> output_table = projection->GetOutput();
   EXPECT_EQ(output_table->ChunkCount(), table_->ChunkCount());
   EXPECT_EQ(output_table->GetColumnCount(), expressions.size());
 
@@ -93,7 +93,7 @@ TEST_F(OperatorsProjectionTest, ExecuteNonPqpExpression) {
       std::make_shared<ArithmeticExpression>(ArithmeticOperator::kAddition, pqp_expression, literal_expression)};
   const auto projection = std::make_shared<ProjectionOperator>(table_wrapper_, expressions);
   projection->Execute(operator_context_);
-  std::shared_ptr<const skyrise::Table> output_table = projection->GetOutput();
+  const std::shared_ptr<const skyrise::Table> output_table = projection->GetOutput();
 
   EXPECT_EQ(output_table->ChunkCount(), table_->ChunkCount());
   EXPECT_EQ(output_table->GetColumnCount(), 1);

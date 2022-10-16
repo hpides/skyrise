@@ -16,7 +16,7 @@ Tracer::Tracer(std::shared_ptr<const Aws::XRay::XRayClient> xray_client, const s
     : xray_client_(std::move(xray_client)),
       subquery_fragment_identifier_(subquery_fragment_identifier),
       current_operator_id_("Undefined") {
-  std::regex trace_id_regex(kTraceIdRegex);
+  const std::regex trace_id_regex(kTraceIdRegex);
   std::smatch matches;
 
   if (std::regex_match(xray_trace_id, matches, trace_id_regex)) {

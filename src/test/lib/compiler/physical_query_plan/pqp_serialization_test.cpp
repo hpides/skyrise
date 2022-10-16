@@ -31,7 +31,7 @@ TEST_F(PqpSerializationTest, SingleOperatorProxy) {
   const std::string comment = "This is a test comment";
   import_proxy->SetComment(comment);
 
-  std::string serialized_proxy = SerializePqp(import_proxy);
+  const std::string serialized_proxy = SerializePqp(import_proxy);
   const auto deserialized_proxy = DeserializePqp(serialized_proxy);
 
   const auto deserialized_import_proxy = std::dynamic_pointer_cast<ImportOperatorProxy>(deserialized_proxy);
@@ -48,7 +48,7 @@ TEST_F(PqpSerializationTest, LinearOperatorChain) {
       GreaterThanEquals_(PqpColumn_(ColumnId{0}, DataType::kLong, false, "a"), 100), import_proxy);
   const auto export_proxy = ExportOperatorProxy::Make(target_object_, ExportFormat::kOrc, filter_proxy);
 
-  std::string serialized_proxy = SerializePqp(export_proxy);
+  const std::string serialized_proxy = SerializePqp(export_proxy);
   const auto deserialized_proxy = DeserializePqp(serialized_proxy);
 
   const auto deserialized_export_proxy = std::dynamic_pointer_cast<ExportOperatorProxy>(deserialized_proxy);
@@ -76,7 +76,7 @@ TEST_F(PqpSerializationTest, OperatorTree) {
       GreaterThanEquals_(PqpColumn_(ColumnId{0}, DataType::kLong, false, "a"), 100), import_proxy);
   const auto union_all_proxy = UnionOperatorProxy::Make(SetOperationMode::kAll, filter_proxy_1, filter_proxy_2);
 
-  std::string serialized_proxy = SerializePqp(union_all_proxy);
+  const std::string serialized_proxy = SerializePqp(union_all_proxy);
   const auto deserialized_proxy = DeserializePqp(serialized_proxy);
 
   const auto deserialized_union_all_proxy = std::dynamic_pointer_cast<UnionOperatorProxy>(deserialized_proxy);

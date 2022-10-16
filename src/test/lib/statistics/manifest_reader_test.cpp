@@ -59,7 +59,7 @@ TEST_F(ManifestReaderTest, ReadObjectStatistic) {
 
   EXPECT_EQ(reader.GetNumberOfPartitions(), 1);
   EXPECT_TRUE(reader.HasNextPartition());
-  ObjectStatistics result = reader.ReadNextPartition();
+  const ObjectStatistics result = reader.ReadNextPartition();
   EXPECT_FALSE(reader.HasNextPartition());
 
   EXPECT_EQ(result.object_identifier, kDataFile);
@@ -72,7 +72,7 @@ TEST_F(ManifestReaderTest, ReadObjectStatistic) {
 }
 
 TEST_F(ManifestReaderTest, MultipleReadBatchesRequired) {
-  size_t num_partitions = 100000;
+  const size_t num_partitions = 100000;
   WriteMockPartition(num_partitions);
 
   ManifestReader reader(storage_->OpenForReading(kMetadataFile));

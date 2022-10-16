@@ -57,7 +57,7 @@ TEST_F(TpchDataGeneratorTest, GenerateRegionTable) {
   // Check contents of file
   ByteBuffer content_buffer;
   storage_->OpenForReading("region.csv")->Read(0, ObjectReader::kLastByteInFile, &content_buffer);
-  std::string content(content_buffer.CharData(), content_buffer.Size());
+  const std::string content(content_buffer.CharData(), content_buffer.Size());
 
   ASSERT_TRUE(content.find("r_regionkey,r_name,r_comment") != content.npos);
   ASSERT_TRUE(content.find("AFRICA") != content.npos);
@@ -76,7 +76,7 @@ TEST_F(TpchDataGeneratorTest, GenerateAlmostAllTables) {
   generator.Generate();
 
   for (const auto& table_name : tables) {
-    ObjectStatus info = storage_->GetStatus(table_name);
+    const ObjectStatus info = storage_->GetStatus(table_name);
     ASSERT_FALSE(info.GetError());
     ASSERT_GT(info.GetSize(), 0);
   }
@@ -94,7 +94,7 @@ TEST_F(TpchDataGeneratorTest, GenerateAllTables) {
   generator.Generate();
 
   for (const auto& table_name : tables) {
-    ObjectStatus info = storage_->GetStatus(table_name);
+    const ObjectStatus info = storage_->GetStatus(table_name);
     ASSERT_FALSE(info.GetError());
     ASSERT_GT(info.GetSize(), 0);
   }

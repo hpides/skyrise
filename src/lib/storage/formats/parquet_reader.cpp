@@ -46,7 +46,7 @@ class ParquetInputProxy : public arrow::io::RandomAccessFile {
 
   arrow::Result<int64_t> Read(int64_t nbytes, void* out) override {
     ByteBuffer buffer_view(out, nbytes);
-    StorageError error = source_->Read(offset_, offset_ + nbytes - 1, &buffer_view);
+    const StorageError error = source_->Read(offset_, offset_ + nbytes - 1, &buffer_view);
     offset_ += buffer_view.Size();
 
     if (error || static_cast<int64_t>(buffer_view.Size()) != nbytes || buffer_view.Data() != out) {
@@ -60,7 +60,7 @@ class ParquetInputProxy : public arrow::io::RandomAccessFile {
     arrow::BufferBuilder builder;
     RETURN_NOT_OK(builder.Reserve(nbytes));
     ByteBuffer buffer_view(builder.mutable_data(), nbytes);
-    StorageError error = source_->Read(offset_, offset_ + nbytes - 1, &buffer_view);
+    const StorageError error = source_->Read(offset_, offset_ + nbytes - 1, &buffer_view);
     if (error || static_cast<int64_t>(buffer_view.Size()) != nbytes || buffer_view.Data() != builder.mutable_data()) {
       return {arrow::Status::IOError("IOError")};
     }

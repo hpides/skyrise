@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
                  cxxopts::value<std::vector<size_t>>());
     option_adder("repetition_count", "The repetition count", cxxopts::value<size_t>());
 
-    cxxopts::ParseResult& parse_result = executable.GetParseResult(argc, argv);
+    const cxxopts::ParseResult& parse_result = executable.GetParseResult(argc, argv);
 
     auto benchmark = std::make_shared<skyrise::InvocationLatencyBenchmark>(
         executable.GetClient().GetXRayClient(), executable.GetBenchmarkHelper(), executable.GetCostCalculator(),

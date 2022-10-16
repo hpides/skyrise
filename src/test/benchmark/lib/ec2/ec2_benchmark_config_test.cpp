@@ -14,7 +14,7 @@ const std::vector<Ec2InstanceType> kInstanceTypes{
 
 TEST(Ec2BenchmarkConfigTest, Ec2InstanceMapping) {
   for (const auto instance_type : kInstanceTypes) {
-    Ec2BenchmarkConfig config(instance_type, 2, 3);
+    const Ec2BenchmarkConfig config(instance_type, 2, 3);
     EXPECT_EQ(config.instance_names_.size(), 2);
     EXPECT_EQ(config.concurrent_invocation_count_, 3);
     EXPECT_EQ(config.instance_type_, Ec2BenchmarkConfig::ToAwsType(instance_type));

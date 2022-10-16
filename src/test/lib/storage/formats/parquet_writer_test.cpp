@@ -19,7 +19,7 @@ TEST_F(ParquetFormatWriterTest, FormatChunkAsParquet) {
   std::stringstream output;
   std::shared_ptr<std::stringstream> output_ptr(&output, [](auto /*unused*/) {});
 
-  ParquetFormatWriter::Configuration formatter_config{parquet::Compression::UNCOMPRESSED};
+  const ParquetFormatWriter::Configuration formatter_config{parquet::Compression::UNCOMPRESSED};
   ParquetFormatWriter formatter{formatter_config};
 
   formatter.SetOutputHandler([&output_ptr](const char* data, size_t size) { output_ptr->write(data, size); });

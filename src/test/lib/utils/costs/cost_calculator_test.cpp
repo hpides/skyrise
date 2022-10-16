@@ -19,8 +19,8 @@ class AwsCostCalculatorTest : public ::testing::Test {
 };
 
 TEST_F(AwsCostCalculatorTest, CalculateCostLambda) {
-  Client client;
-  Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
+  const Client client;
+  const Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
   const CostCalculator cost_calculator(client.GetPricingClient(), client.GetClientRegion());
 
   const auto& lambda_pricing = pricing.GetLambdaPricing();
@@ -58,8 +58,8 @@ TEST_F(AwsCostCalculatorTest, CalculateCostLambda) {
 }
 
 TEST_F(AwsCostCalculatorTest, CalculateCostS3StorageMonthly) {
-  Client client;
-  Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
+  const Client client;
+  const Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
   const CostCalculator cost_calculator(client.GetPricingClient(), client.GetClientRegion());
 
   const auto& s3_pricing = pricing.GetS3Pricing();
@@ -75,8 +75,8 @@ TEST_F(AwsCostCalculatorTest, CalculateCostS3StorageMonthly) {
 }
 
 TEST_F(AwsCostCalculatorTest, CalculateCostS3Requests) {
-  Client client;
-  Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
+  const Client client;
+  const Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
   const CostCalculator cost_calculator(client.GetPricingClient(), client.GetClientRegion());
 
   const auto& s3_pricing = pricing.GetS3Pricing();
@@ -87,8 +87,8 @@ TEST_F(AwsCostCalculatorTest, CalculateCostS3Requests) {
 }
 
 TEST_F(AwsCostCalculatorTest, CalculateCostS3Select) {
-  Client client;
-  Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
+  const Client client;
+  const Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
   const CostCalculator cost_calculator(client.GetPricingClient(), client.GetClientRegion());
 
   const auto& s3_pricing = pricing.GetS3Pricing();
@@ -105,8 +105,8 @@ TEST_F(AwsCostCalculatorTest, CalculateCostS3Select) {
 }
 
 TEST_F(AwsCostCalculatorTest, CalculateCostXray) {
-  Client client;
-  Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
+  const Client client;
+  const Pricing pricing(client.GetPricingClient(), client.GetClientRegion());
   const CostCalculator cost_calculator(client.GetPricingClient(), client.GetClientRegion());
 
   const auto& xray_pricing = pricing.GetXrayPricing();

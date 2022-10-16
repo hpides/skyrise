@@ -45,7 +45,7 @@ NetworkThroughputParallelBenchmark::NetworkThroughputParallelBenchmark(
                 const auto config =
                     std::make_shared<LambdaBenchmarkConfig>(function_name.str(), function_instance_mb_size,
                                                             repetition_count, invocation_count, WarmUp::kDefault);
-                NetworkBenchmarkParameters parameters{
+                const NetworkBenchmarkParameters parameters{
                     function_instance_mb_size, object_byte_size, batch_size,       thread_count,
                     invocation_count,          bucket_count,     repetition_count, operation_type};
                 config->SetPayloads(GeneratePayloads(parameters));

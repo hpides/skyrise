@@ -34,7 +34,7 @@ class AwsBaseStorageTest : public ::testing::Test {
     }
 
     for (int i = 0; i < kNumTries; ++i) {
-      ObjectStatus status = this->storage_->GetStatus(object_identifier);
+      const ObjectStatus status = this->storage_->GetStatus(object_identifier);
       const auto& error = status.GetError();
       const auto error_type = error.GetType();
       if ((visible && error_type == StorageErrorType::kNotFound) ||
@@ -82,7 +82,7 @@ TYPED_TEST(AwsBaseStorageTest, CreateReadDeleteSmallObject) {
 
   this->WaitForObjectToBecomeVisible(kFilename);
 
-  ObjectStatus status = this->storage_->GetStatus(kFilename);
+  const ObjectStatus status = this->storage_->GetStatus(kFilename);
   EXPECT_FALSE(status.GetError());
   EXPECT_EQ(status.GetSize(), 4);
   EXPECT_EQ(status.GetIdentifier(), kFilename);
@@ -211,8 +211,8 @@ TYPED_TEST(AwsBaseStorageTest, ListObjects) {
   this->WaitForObjectToBecomeVisible(kFilename2);
 
   auto list_result = this->storage_->List();
-  std::vector<ObjectStatus>& list = list_result.first;
-  StorageError& error = list_result.second;
+  const std::vector<ObjectStatus>& list = list_result.first;
+  const StorageError& error = list_result.second;
 
   EXPECT_FALSE(error);
   EXPECT_GE(list.size(), 2);

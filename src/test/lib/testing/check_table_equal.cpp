@@ -41,7 +41,7 @@ TableCheckMatrix TableToMatrix(const std::shared_ptr<const Table>& table) {
   for (ColumnId column_id = 0; column_id < table->GetColumnCount(); ++column_id) {
     matrix[0][column_id] = std::string(table->ColumnName(column_id));
 
-    LeftConstIterator data_type = kDataTypeToString.left.find(table->ColumnDataType(column_id));
+    const LeftConstIterator data_type = kDataTypeToString.left.find(table->ColumnDataType(column_id));
     if (data_type != kDataTypeToString.left.end()) {
       matrix[1][column_id] = data_type->second;
     } else {

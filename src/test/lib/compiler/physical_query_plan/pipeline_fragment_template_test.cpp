@@ -106,7 +106,7 @@ TEST_F(PipelineFragmentTemplateTest, GenerateFragmentPlan) {
       import_proxy_a_));
   // clang-format on
 
-  PipelineFragmentTemplate fragment_template(pqp);
+  const PipelineFragmentTemplate fragment_template(pqp);
 
   // Define Fragment Plan
   std::unordered_map<std::string, std::vector<ObjectReference>> identity_to_objects;
@@ -146,7 +146,7 @@ TEST_F(PipelineFragmentTemplateTest, GenerateFragmentPlanMultipleImports) {
       import_proxy_b_));
   // clang-format on
 
-  PipelineFragmentTemplate fragment_template(pqp);
+  const PipelineFragmentTemplate fragment_template(pqp);
 
   // Define Fragment Plan
   std::unordered_map<std::string, std::vector<ObjectReference>> identity_to_objects;

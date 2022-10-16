@@ -47,7 +47,7 @@ TEST_F(ParquetFormatReaderTest, ProjectionPushdown) {
 }
 
 TEST_F(ParquetFormatReaderTest, ReadAllPartitions) {
-  ParquetFormatReaderOptions parquet_options;
+  const ParquetFormatReaderOptions parquet_options;
 
   ParquetFormatReader parquet_reader(test_data_storage_->OpenForReading("parquet/partitioned_int_string.parquet"),
                                      parquet_options);
@@ -87,7 +87,8 @@ TEST_F(ParquetFormatReaderTest, ReadInvalidPartition) {
   ParquetFormatReaderOptions parquet_options;
   parquet_options.row_group_ids = {1};
 
-  ParquetFormatReader parquet_reader(test_data_storage_->OpenForReading("parquet/with_types.parquet"), parquet_options);
+  const ParquetFormatReader parquet_reader(test_data_storage_->OpenForReading("parquet/with_types.parquet"),
+                                           parquet_options);
 
   EXPECT_TRUE(parquet_reader.HasError());
   EXPECT_EQ(parquet_reader.GetError().GetMessage(),

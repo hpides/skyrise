@@ -55,7 +55,7 @@ class AwsDynamoDbUtilsTest : public ::testing::Test {
 TEST_F(AwsDynamoDbUtilsTest, WriteReadDeleteSingleItem) {
   DynamoDbItem item;
   item.emplace(table_key_, "...");
-  DynamoDbItem item_key = item;
+  const DynamoDbItem item_key = item;
   item.emplace("body", Aws::DynamoDB::Model::AttributeValue().SetN("123"));
 
   const auto write_outcome = WriteDynamoDbItem(client_, table_name_, item);
@@ -131,7 +131,7 @@ TEST_F(AwsDynamoDbUtilsTest, WriteReadBatch) {
 TEST_F(AwsDynamoDbUtilsTest, UpdateExistentItem) {
   DynamoDbItem item;
   item.emplace(table_key_, "...");
-  DynamoDbItem item_key = item;
+  const DynamoDbItem item_key = item;
   item.emplace("accessCounter", Aws::DynamoDB::Model::AttributeValue().SetN(123));
   item.emplace("description", "A");
 
@@ -195,7 +195,7 @@ TEST_F(AwsDynamoDbUtilsTest, UpdateNonExistentItemWithCondition) {
 }
 
 TEST_F(AwsDynamoDbUtilsTest, ScanItems) {
-  size_t num_items = 256;
+  const size_t num_items = 256;
   std::vector<DynamoDbItem> items;
   items.reserve(num_items);
   std::vector<DynamoDbItem> item_keys;
@@ -244,7 +244,7 @@ TEST_F(AwsDynamoDbUtilsTest, ActivateTimeToLive) {
 }
 
 TEST(DynamoDbUtilsTest, TestErrorTranslation) {
-  std::map<StorageErrorType, std::vector<Aws::DynamoDB::DynamoDBErrors>> mapping = {
+  const std::map<StorageErrorType, std::vector<Aws::DynamoDB::DynamoDBErrors>> mapping = {
       {StorageErrorType::kInvalidArgument,
        {Aws::DynamoDB::DynamoDBErrors::INCOMPLETE_SIGNATURE, Aws::DynamoDB::DynamoDBErrors::INVALID_ACTION,
         Aws::DynamoDB::DynamoDBErrors::INVALID_PARAMETER_COMBINATION,

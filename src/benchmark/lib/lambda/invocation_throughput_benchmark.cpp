@@ -23,7 +23,7 @@ InvocationThroughputBenchmark::InvocationThroughputBenchmark(std::shared_ptr<con
                                                              const std::vector<size_t>& function_payload_byte_sizes,
                                                              const size_t repetition_count)
     : LambdaBenchmark(std::move(cost_calculator)) {
-  std::array<UseEventQueue, 2> use_event_queues{UseEventQueue::kYes, UseEventQueue::kNo};
+  const std::array<UseEventQueue, 2> use_event_queues{UseEventQueue::kYes, UseEventQueue::kNo};
 
   benchmark_configs_.reserve(function_instance_mb_sizes.size() * invocation_counts.size() *
                              function_payload_byte_sizes.size() * use_event_queues.size());

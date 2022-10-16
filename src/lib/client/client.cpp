@@ -26,7 +26,7 @@ Client::Client() {
   auto client_configuration_s3 = GenerateClientConfig();
   client_configuration_s3.executor = std::make_shared<Aws::Utils::Threading::PooledThreadExecutor>(kS3ExecutorPoolSize);
 
-  std::vector<std::function<void()>> initializers{
+  const std::vector<std::function<void()>> initializers{
       [&]() {
         cloudwatch_client_ =
             std::make_shared<const Aws::CloudWatch::CloudWatchClient>(credentials_provider, client_configuration);

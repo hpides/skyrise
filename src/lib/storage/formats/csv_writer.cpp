@@ -44,8 +44,8 @@ void CsvFormatWriter::ProcessChunk(std::shared_ptr<const Chunk> chunk) {
 
   for (size_t row_id = 0; row_id < chunk->Size(); ++row_id) {
     for (size_t column_id = 0; column_id < num_fields_; ++column_id) {
-      std::shared_ptr<AbstractSegment> column = chunk->GetSegment(column_id);
-      AllTypeVariant value = (*column)[row_id];
+      const std::shared_ptr<AbstractSegment> column = chunk->GetSegment(column_id);
+      const AllTypeVariant value = (*column)[row_id];
       if (column_id != 0) {
         buffer << options_.field_separator;
       }

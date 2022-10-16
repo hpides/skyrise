@@ -13,10 +13,10 @@ inline constexpr size_t kMsSleep = 3000;
 
 aws::lambda_runtime::invocation_response FunctionHostId::OnHandleRequest(
     const Aws::Utils::Json::JsonView& /*request*/) const {
-  skyrise::FunctionHostInformationCollectorConfiguration config;
+  const skyrise::FunctionHostInformationCollectorConfiguration config;
 
   skyrise::FunctionHostInformationCollector collector{config};
-  skyrise::FunctionHostInformationIdentification information_identification =
+  const skyrise::FunctionHostInformationIdentification information_identification =
       collector.CollectInformationIdentification();
 
   std::stringstream identifier;
@@ -32,7 +32,7 @@ aws::lambda_runtime::invocation_response FunctionHostId::OnHandleRequest(
 }  // namespace skyrise
 
 int main() {
-  skyrise::FunctionHostId function_host_id;
+  const skyrise::FunctionHostId function_host_id;
   function_host_id.HandleRequest();
 
   return 0;

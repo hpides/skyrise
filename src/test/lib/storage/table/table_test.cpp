@@ -88,7 +88,7 @@ TEST_F(TableTest, RowCount) {
   auto value_segment_integer = std::make_shared<ValueSegment<int>>();
   auto value_segment_string = std::make_shared<ValueSegment<std::string>>();
 
-  size_t expected_row_count = 10;
+  const size_t expected_row_count = 10;
   for (size_t i = 0; i < expected_row_count; ++i) {
     value_segment_integer->Append(1);
     value_segment_string->Append("Hello World");
@@ -101,15 +101,15 @@ TEST_F(TableTest, RowCount) {
 TEST_F(TableTest, GetColumnCount) { EXPECT_EQ(table_->GetColumnCount(), 2); }
 
 TEST_F(TableTest, ChunkCount) {
-  size_t number_chunks = 5;
-  std::shared_ptr<Table> table = CreateTableWithNChunks(number_chunks);
+  const size_t number_chunks = 5;
+  const std::shared_ptr<Table> table = CreateTableWithNChunks(number_chunks);
 
   EXPECT_EQ(table->ChunkCount(), 5);
 }
 
 TEST_F(TableTest, GetChunk) {
-  size_t number_chunks = 2;
-  std::shared_ptr<Table> table = CreateTableWithNChunks(number_chunks);
+  const size_t number_chunks = 2;
+  const std::shared_ptr<Table> table = CreateTableWithNChunks(number_chunks);
 
   ASSERT_EQ(table->ChunkCount(), 2);
   EXPECT_NE(table->GetChunk(ChunkId{0}), nullptr);

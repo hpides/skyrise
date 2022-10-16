@@ -101,7 +101,7 @@ TEST_F(AwsGlueUtilsTest, TableSchemas) {
 }
 
 TEST(GlueUtilsTest, TestErrorTranslation) {
-  std::map<StorageErrorType, std::vector<Aws::Glue::GlueErrors>> mapping = {
+  const std::map<StorageErrorType, std::vector<Aws::Glue::GlueErrors>> mapping = {
       {StorageErrorType::kInvalidArgument,
        {Aws::Glue::GlueErrors::INCOMPLETE_SIGNATURE, Aws::Glue::GlueErrors::INVALID_ACTION,
         Aws::Glue::GlueErrors::INVALID_PARAMETER_COMBINATION, Aws::Glue::GlueErrors::INVALID_PARAMETER_VALUE,

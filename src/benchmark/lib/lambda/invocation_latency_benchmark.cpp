@@ -152,7 +152,7 @@ Aws::Utils::Array<Aws::Utils::Json::JsonValue> InvocationLatencyBenchmark::OnRun
 
 void InvocationLatencyBenchmark::Setup() {
   std::vector<Aws::String> s3_package_names;
-  std::regex s3_package_name_regex("S3_([^-]*)");
+  const std::regex s3_package_name_regex("S3_([^-]*)");
 
   for (const auto& package_name : kPackageNames) {
     std::smatch matches;
@@ -197,7 +197,7 @@ void InvocationLatencyBenchmark::Setup() {
   s3_objects.reserve(s3_package_names.size());
 
   for (const auto& s3_package_name : s3_package_names) {
-    std::shared_ptr<Aws::IOStream> package_file = Aws::MakeShared<Aws::FStream>(
+    const std::shared_ptr<Aws::IOStream> package_file = Aws::MakeShared<Aws::FStream>(
         s3_package_name.c_str(), GetProjectDirectoryPath() + "pkg/" + s3_package_name + ".zip",
         std::ios_base::in | std::ios_base::binary);
 

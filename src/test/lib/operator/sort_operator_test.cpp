@@ -122,7 +122,7 @@ TEST_F(SortOperatorTest, SortLargeMultiChunkTable) {
   mock_input_operator->Execute();
 
   // (3) Create and run SortOperator.
-  SortColumnDefinition sort_definition(0, SortMode::kAscending);
+  const SortColumnDefinition sort_definition(0, SortMode::kAscending);
   const auto sort_operator =
       std::make_shared<SortOperator>(mock_input_operator, std::vector<SortColumnDefinition>{sort_definition});
   sort_operator->Execute(operator_execution_context_);

@@ -23,8 +23,8 @@ void FunctionUploadTool(const cxxopts::ParseResult& parse_result) {
 
   Assert(std::ifstream(path).good(), "Function ZIP '" + path + "' not found.");
 
-  FunctionConfig function_config(path, name, static_cast<size_t>(ByteToMb(MbToByte(memory_size))), true,
-                                 parse_result[kFunctionDescriptionOption].as<std::string>());
+  const FunctionConfig function_config(path, name, static_cast<size_t>(ByteToMb(MbToByte(memory_size))), true,
+                                       parse_result[kFunctionDescriptionOption].as<std::string>());
 
   const std::vector<FunctionConfig> function_configs({function_config});
 

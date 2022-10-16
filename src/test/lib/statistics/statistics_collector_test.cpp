@@ -142,7 +142,7 @@ class StatisticsCollectorTest : public ::testing::Test {
     writer->Write(reinterpret_cast<const char*>(kOrcSampleFileData.data()), kOrcSampleFileData.size());
     writer->Close();
 
-    ObjectStatus status = storage_->GetStatus(kTestFile);
+    const ObjectStatus status = storage_->GetStatus(kTestFile);
     EXPECT_FALSE(status.GetError());
     collector_ = std::make_shared<StatisticsOrcFormatReader>(storage_, status);
   };
@@ -157,7 +157,7 @@ TEST_F(StatisticsCollectorTest, GetNumRowsAndColumns) {
 }
 
 TEST_F(StatisticsCollectorTest, GetAllStatistics) {
-  ObjectStatistics statistics = collector_->GetAllStatistics();
+  const ObjectStatistics statistics = collector_->GetAllStatistics();
 
   EXPECT_EQ(statistics.num_rows, collector_->GetNumRows());
   EXPECT_EQ(*statistics.schema, *collector_->GetSchema());
@@ -214,7 +214,7 @@ TEST_F(StatisticsCollectorTest, GetMinMaxValues) {
 }
 
 TEST_F(StatisticsCollectorTest, GetSchema) {
-  std::shared_ptr<TableColumnDefinitions> schema = collector_->GetSchema();
+  const std::shared_ptr<TableColumnDefinitions> schema = collector_->GetSchema();
 
   std::vector<std::string> expected_names = {
       "orderkey",   "partkey",    "suppkey",  "linenumber", "quantity",    "extendedprice", "discount", "tax",

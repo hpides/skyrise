@@ -111,7 +111,7 @@ std::shared_ptr<const Table> ImportOperator::OnExecute(
         std::shared_ptr<Chunk> chunk;
 
         while ((chunk = GetNextChunk(reader)) != nullptr && !reader_error.IsError() && !reader->HasError()) {
-          std::lock_guard<std::mutex> lock(chunk_store_mutex);
+          const std::lock_guard<std::mutex> lock(chunk_store_mutex);
           chunks.push_back(std::move(chunk));
         }
 
