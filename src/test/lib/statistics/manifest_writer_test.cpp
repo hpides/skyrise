@@ -49,7 +49,7 @@ TEST_F(ManifestWriterTest, WriteManifestWithMultiplePartitions) {
 
   EXPECT_FALSE(manifest_writer.GetError());
 
-  ManifestReader reader(storage_->OpenForReading(kTestFile));
+  const ManifestReader reader(storage_->OpenForReading(kTestFile));
   EXPECT_EQ(reader.GetNumberOfPartitions(), 3);
 }
 

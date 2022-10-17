@@ -44,7 +44,7 @@ T ValueSegment<T>::get(const ChunkOffset chunk_offset) const {
 
 template <typename T>
 void ValueSegment<T>::Append(const AllTypeVariant& val) {
-  bool is_null = VariantIsNull(val);
+  const bool is_null = VariantIsNull(val);
 
   if (IsNullable()) {
     (*null_values_).push_back(is_null);
@@ -77,7 +77,7 @@ const std::vector<bool>& ValueSegment<T>::NullValues() const {
 
 template <typename T>
 void ValueSegment<T>::SetNullValue(ChunkOffset chunk_offset) {
-  std::lock_guard<std::mutex> lock{null_value_modification_mutex_};
+  const std::lock_guard<std::mutex> lock{null_value_modification_mutex_};
   (*null_values_)[chunk_offset] = true;
 }
 
@@ -90,7 +90,7 @@ template <typename T>
 void ValueSegment<T>::Resize(size_t size) {
   values_.resize(size);
   if (IsNullable()) {
-    std::lock_guard<std::mutex> lock{null_value_modification_mutex_};
+    const std::lock_guard<std::mutex> lock{null_value_modification_mutex_};
     null_values_->resize(size);
   }
 }

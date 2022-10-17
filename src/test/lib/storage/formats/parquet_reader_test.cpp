@@ -46,4 +46,53 @@ TEST_F(ParquetFormatReaderTest, ProjectionPushdown) {
   EXPECT_EQ(1, chunk_projection->GetColumnCount());
 }
 
+TEST_F(ParquetFormatReaderTest, ReadAllPartitions) {
+  const ParquetFormatReaderOptions parquet_options;
+
+  ParquetFormatReader parquet_reader(test_data_storage_->OpenForReading("parquet/partitioned_int_string.parquet"),
+                                     parquet_options);
+
+  const auto chunk = parquet_reader.Next();
+  EXPECT_EQ(5, chunk->GetSegment(ColumnId(0))->Size());
+  EXPECT_TRUE(parquet_reader.HasNext());
+}
+
+TEST_F(ParquetFormatReaderTest, ReadFirstPartition) {
+  ParquetFormatReaderOptions parquet_options;
+  parquet_options.row_group_ids = {0};
+
+  ParquetFormatReader parquet_reader(test_data_storage_->OpenForReading("parquet/partitioned_int_string.parquet"),
+                                     parquet_options);
+
+  const auto chunk = parquet_reader.Next();
+  EXPECT_EQ(5, chunk->GetSegment(ColumnId(0))->Size());
+  EXPECT_EQ(0, std::static_pointer_cast<ValueSegment<int>>(chunk->GetSegment(ColumnId(0)))->GetTypedValue(0));
+  EXPECT_FALSE(parquet_reader.HasNext());
+}
+
+TEST_F(ParquetFormatReaderTest, ReadLastPartition) {
+  ParquetFormatReaderOptions parquet_options;
+  parquet_options.row_group_ids = {1};
+
+  ParquetFormatReader parquet_reader(test_data_storage_->OpenForReading("parquet/partitioned_int_string.parquet"),
+                                     parquet_options);
+
+  const auto chunk = parquet_reader.Next();
+  EXPECT_EQ(5, chunk->GetSegment(ColumnId(0))->Size());
+  EXPECT_EQ(5, std::static_pointer_cast<ValueSegment<int>>(chunk->GetSegment(ColumnId(0)))->GetTypedValue(0));
+  EXPECT_FALSE(parquet_reader.HasNext());
+}
+
+TEST_F(ParquetFormatReaderTest, ReadInvalidPartition) {
+  ParquetFormatReaderOptions parquet_options;
+  parquet_options.row_group_ids = {1};
+
+  const ParquetFormatReader parquet_reader(test_data_storage_->OpenForReading("parquet/with_types.parquet"),
+                                           parquet_options);
+
+  EXPECT_TRUE(parquet_reader.HasError());
+  EXPECT_EQ(parquet_reader.GetError().GetMessage(),
+            "Index error: ParquetFileFragment references row group 1 but <Buffer> only has 1 row groups");
+}
+
 }  // namespace skyrise

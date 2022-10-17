@@ -26,7 +26,7 @@ template <typename SegmentValueType>
 void CheckSegment(const std::shared_ptr<AbstractSegment>& segment,
                   const std::function<bool(SegmentValueType value)>& test_function) {
   auto value_segment = std::dynamic_pointer_cast<ValueSegment<SegmentValueType>>(segment);
-  bool all_values_as_expected =
+  const bool all_values_as_expected =
       std::all_of(value_segment->Values().begin(), value_segment->Values().end(), test_function);
   ASSERT_TRUE(all_values_as_expected);
 }
@@ -51,10 +51,10 @@ class OrcFormatReaderTest : public ::testing::Test {
     TableColumnDefinitions schema;
     schema.emplace_back("numbers", DataType::kInt, false);
 
-    std::shared_ptr<Chunk> partition1 =
+    const std::shared_ptr<Chunk> partition1 =
         first_partition_is_empty ? CreateEmptyChunk() : CreateChunkWithConstantValues(1, kPartitionSegmentCapacity);
-    std::shared_ptr<Chunk> partition2 = CreateChunkWithConstantValues(2, kPartitionSegmentCapacity);
-    std::shared_ptr<Chunk> partition3 = CreateChunkWithConstantValues(3, kPartitionSegmentCapacity);
+    const std::shared_ptr<Chunk> partition2 = CreateChunkWithConstantValues(2, kPartitionSegmentCapacity);
+    const std::shared_ptr<Chunk> partition3 = CreateChunkWithConstantValues(3, kPartitionSegmentCapacity);
 
     auto object_writer = storage_.OpenForWriting(kPartitionedObjectName);
     OrcFormatWriterOptions options;
@@ -85,7 +85,7 @@ TEST_F(OrcFormatReaderTest, ReadSinglePartition) {
   OrcFormatReaderOptions options;
   options.select_partition_range = std::pair<size_t, size_t>(1, 1);
   OrcFormatReader reader(storage_.OpenForReading(kPartitionedObjectName), options);
-  size_t num_rows = ReadChunksAndCheckFirstSegment<int32_t>(&reader, [](int32_t v) { return v == 2; });
+  const size_t num_rows = ReadChunksAndCheckFirstSegment<int32_t>(&reader, [](int32_t v) { return v == 2; });
 
   ASSERT_EQ(num_rows, kPartitionSegmentCapacity);
 }
@@ -96,7 +96,7 @@ TEST_F(OrcFormatReaderTest, ReadFirstTwoPartition) {
   OrcFormatReaderOptions options;
   options.select_partition_range = std::pair<size_t, size_t>(0, 1);
   OrcFormatReader reader(storage_.OpenForReading(kPartitionedObjectName), options);
-  size_t num_rows = ReadChunksAndCheckFirstSegment<int32_t>(&reader, [](int32_t v) { return v == 1 || v == 2; });
+  const size_t num_rows = ReadChunksAndCheckFirstSegment<int32_t>(&reader, [](int32_t v) { return v == 1 || v == 2; });
 
   ASSERT_EQ(num_rows, 2 * kPartitionSegmentCapacity);
 }
@@ -107,7 +107,7 @@ TEST_F(OrcFormatReaderTest, ReadLastTwoPartition) {
   OrcFormatReaderOptions options;
   options.select_partition_range = std::pair<size_t, size_t>(1, 2);
   OrcFormatReader reader(storage_.OpenForReading(kPartitionedObjectName), options);
-  size_t num_rows = ReadChunksAndCheckFirstSegment<int32_t>(&reader, [](int32_t v) { return v == 2 || v == 3; });
+  const size_t num_rows = ReadChunksAndCheckFirstSegment<int32_t>(&reader, [](int32_t v) { return v == 2 || v == 3; });
 
   ASSERT_EQ(num_rows, 2 * kPartitionSegmentCapacity);
 }
@@ -127,7 +127,7 @@ TEST_F(OrcFormatReaderTest, ReadInvalidPartition) {
 
   OrcFormatReaderOptions options;
   options.select_partition_range = std::pair<size_t, size_t>(1, 8);
-  OrcFormatReader reader(storage_.OpenForReading(kPartitionedObjectName), options);
+  const OrcFormatReader reader(storage_.OpenForReading(kPartitionedObjectName), options);
   EXPECT_TRUE(reader.HasError());
 }
 
@@ -142,7 +142,7 @@ TEST_F(OrcFormatReaderTest, ReadSingleRow) {
   while (reader.HasNext()) {
     auto chunk = reader.Next();
     auto value_segment = std::dynamic_pointer_cast<ValueSegment<int32_t>>(chunk->GetSegment(0));
-    bool all_values_as_expected =
+    const bool all_values_as_expected =
         std::all_of(value_segment->Values().begin(), value_segment->Values().end(), [](int32_t v) { return v == 1; });
     ASSERT_TRUE(all_values_as_expected);
     num_rows += chunk->Size();

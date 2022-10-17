@@ -31,7 +31,7 @@ std::shared_ptr<OperatorTask> OperatorTask::AddOperatorTasksRecursively(
 
   auto add_operator_subtasks = [&](const std::shared_ptr<skyrise::AbstractOperator>& any_operator) {
     if (any_operator) {
-      std::shared_ptr<skyrise::OperatorTask> operator_task =
+      const std::shared_ptr<skyrise::OperatorTask> operator_task =
           AddOperatorTasksRecursively(any_operator, operator_to_task, operator_execution_context);
       if (operator_task) {
         operator_task->SetAsPredecessorOf(task);

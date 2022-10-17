@@ -94,9 +94,9 @@ void ManifestReader::ReconstructStatisticsFromChunk(std::unique_ptr<Chunk> chunk
       } else if (max_column->GetDataType() == DataType::kString) {
         auto* column_min_value = dynamic_cast<ValueSegment<std::string>*>(min_column);
         auto* column_max_value = dynamic_cast<ValueSegment<std::string>*>(max_column);
-        AllTypeVariant min_value = column_min_value->get(row_index);
-        AllTypeVariant max_value = column_max_value->get(row_index);
-        statistics.minmax.emplace_back(std::make_pair(min_value, max_value));
+        const AllTypeVariant min_value = column_min_value->get(row_index);
+        const AllTypeVariant max_value = column_max_value->get(row_index);
+        statistics.minmax.emplace_back(min_value, max_value);
       } else {
         Fail("Type not supported.");
       }

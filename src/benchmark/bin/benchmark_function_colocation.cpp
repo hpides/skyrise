@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
     option_adder("sleep_min_durations", "The sleep durations [min]", cxxopts::value<std::vector<size_t>>());
     option_adder("repetition_count", "The repetition count", cxxopts::value<size_t>());
 
-    cxxopts::ParseResult& parse_result = executable.GetParseResult(argc, argv);
+    const cxxopts::ParseResult& parse_result = executable.GetParseResult(argc, argv);
 
     auto benchmark = std::make_shared<skyrise::FunctionColocationBenchmark>(
         executable.GetCostCalculator(), parse_result["function_instance_mb_sizes"].as<std::vector<size_t>>(),

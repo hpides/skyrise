@@ -230,7 +230,7 @@ void LambdaBenchmarkRunner::WarmUpFunctions(const size_t repetition) {
   const size_t function_index =
       typed_config_->use_one_function_per_repetition_ == UseOneFunctionPerRepetition::kYes ? repetition : 0;
 
-  long double function_warm_up_cost = typed_config_->warm_up_strategy_->WarmUpFunctions(
+  const long double function_warm_up_cost = typed_config_->warm_up_strategy_->WarmUpFunctions(
       lambda_client_, cost_calculator_, typed_config_->function_configs_[function_index],
       typed_config_->concurrent_invocation_count_);
 

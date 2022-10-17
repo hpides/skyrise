@@ -76,7 +76,7 @@ aws::lambda_runtime::invocation_response FunctionReadS3::OnHandleRequest(
 }  // namespace skyrise
 
 int main() {
-  skyrise::FunctionReadS3 function_read_s3;
+  const skyrise::FunctionReadS3 function_read_s3;
   function_read_s3.HandleRequest();
 
   return 0;

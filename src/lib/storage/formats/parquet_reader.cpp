@@ -23,6 +23,7 @@
 #include "storage/backend/stream.hpp"
 #include "storage/table/value_segment.hpp"
 
+// TODO(anyone): Remove this macro and use assertions.
 #define HANDLE_RESULT(result, reason) \
   if (!((result).ok())) {             \
     throw std::logic_error(reason);   \
@@ -45,7 +46,7 @@ class ParquetInputProxy : public arrow::io::RandomAccessFile {
 
   arrow::Result<int64_t> Read(int64_t nbytes, void* out) override {
     ByteBuffer buffer_view(out, nbytes);
-    StorageError error = source_->Read(offset_, offset_ + nbytes - 1, &buffer_view);
+    const StorageError error = source_->Read(offset_, offset_ + nbytes - 1, &buffer_view);
     offset_ += buffer_view.Size();
 
     if (error || static_cast<int64_t>(buffer_view.Size()) != nbytes || buffer_view.Data() != out) {
@@ -59,7 +60,7 @@ class ParquetInputProxy : public arrow::io::RandomAccessFile {
     arrow::BufferBuilder builder;
     RETURN_NOT_OK(builder.Reserve(nbytes));
     ByteBuffer buffer_view(builder.mutable_data(), nbytes);
-    StorageError error = source_->Read(offset_, offset_ + nbytes - 1, &buffer_view);
+    const StorageError error = source_->Read(offset_, offset_ + nbytes - 1, &buffer_view);
     if (error || static_cast<int64_t>(buffer_view.Size()) != nbytes || buffer_view.Data() != builder.mutable_data()) {
       return {arrow::Status::IOError("IOError")};
     }
@@ -90,8 +91,15 @@ ParquetFormatReader::ParquetFormatReader(std::unique_ptr<ObjectReader> source, C
   try {
     auto file_source = arrow::dataset::FileSource(input_stream);
     auto parquet_format = std::make_shared<arrow::dataset::ParquetFileFormat>();
+    std::shared_ptr<arrow::dataset::Fragment> fragment = parquet_format->MakeFragment(file_source).ValueOrDie();
 
-    auto fragment = parquet_format->MakeFragment(file_source).ValueOrDie();
+    // Read only specific partitions if row group ids are provided.
+    if (configuration_.row_group_ids.has_value()) {
+      auto row_group_subset = (std::dynamic_pointer_cast<arrow::dataset::ParquetFileFragment>(fragment))
+                                  ->Subset(configuration_.row_group_ids.value());
+      HANDLE_RESULT(row_group_subset, row_group_subset.status().ToString());
+      fragment = row_group_subset.ValueOrDie();
+    }
 
     auto scan_options = std::make_shared<arrow::dataset::ScanOptions>();
     scan_options->use_threads = false;

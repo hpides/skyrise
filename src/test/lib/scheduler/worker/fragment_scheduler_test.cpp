@@ -42,17 +42,17 @@ class FragmentSchedulerTest : public ::testing::Test {
                                        const std::shared_ptr<FragmentScheduler>& scheduler) {
     auto task_1 = std::make_shared<GenericTask>([counter]() {
       uint32_t current_value = 0;
-      bool successful = counter->compare_exchange_strong(current_value, 1);
+      const bool successful = counter->compare_exchange_strong(current_value, 1);
       ASSERT_TRUE(successful);
     });
     auto task_2 = std::make_shared<GenericTask>([counter]() {
       uint32_t current_value = 1;
-      bool successful = counter->compare_exchange_strong(current_value, 2);
+      const bool successful = counter->compare_exchange_strong(current_value, 2);
       ASSERT_TRUE(successful);
     });
     auto task_3 = std::make_shared<GenericTask>([counter]() {
       uint32_t current_value = 2;
-      bool successful = counter->compare_exchange_strong(current_value, 3);
+      const bool successful = counter->compare_exchange_strong(current_value, 3);
       ASSERT_TRUE(successful);
     });
 
@@ -70,7 +70,7 @@ class FragmentSchedulerTest : public ::testing::Test {
     auto task_2 = std::make_shared<GenericTask>([counter]() { (*counter) += 2; });
     auto task_3 = std::make_shared<GenericTask>([counter]() {
       uint32_t current_value = 3;
-      bool successful = counter->compare_exchange_strong(current_value, 4);
+      const bool successful = counter->compare_exchange_strong(current_value, 4);
       ASSERT_TRUE(successful);
     });
 
@@ -86,14 +86,14 @@ class FragmentSchedulerTest : public ::testing::Test {
                                         const std::shared_ptr<FragmentScheduler>& scheduler) {
     auto task_1 = std::make_shared<GenericTask>([counter]() {
       uint32_t current_value = 0;
-      bool successful = counter->compare_exchange_strong(current_value, 1);
+      const bool successful = counter->compare_exchange_strong(current_value, 1);
       ASSERT_TRUE(successful);
     });
     auto task_2 = std::make_shared<GenericTask>([counter]() { (*counter) += 2; });
     auto task_3 = std::make_shared<GenericTask>([counter]() { (*counter) += 3; });
     auto task_4 = std::make_shared<GenericTask>([counter]() {
       uint32_t current_value = 6;
-      bool successful = counter->compare_exchange_strong(current_value, 7);
+      const bool successful = counter->compare_exchange_strong(current_value, 7);
       ASSERT_TRUE(successful);
     });
 
@@ -189,7 +189,7 @@ TEST_F(FragmentSchedulerTest, MultipleOperators) {
 
   auto tasks = OperatorTask::GenerateTasksFromOperator(root_operator, nullptr);
 
-  std::vector<std::shared_ptr<AbstractTask>>& all_operator_tasks = tasks.first;
+  const std::vector<std::shared_ptr<AbstractTask>>& all_operator_tasks = tasks.first;
   EXPECT_EQ(all_operator_tasks.size(), 4);
 
   auto scheduler = std::make_shared<FragmentScheduler>();

@@ -28,7 +28,7 @@ TEST_F(ToolConfigTest, ToolOptionToEnumValidInputFormatButNotFound) {
 }
 
 TEST_F(ToolConfigTest, ConfigureCliOptions) {
-  cxxopts::Options options = ConfigureCliOptions();
+  const cxxopts::Options options = ConfigureCliOptions();
   EXPECT_EQ(options.program(), kProgramName);
   EXPECT_EQ(options.groups().size(), 3);
   EXPECT_EQ(options.groups()[1], "function-upload");

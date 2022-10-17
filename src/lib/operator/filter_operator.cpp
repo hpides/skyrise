@@ -95,7 +95,7 @@ std::shared_ptr<const Table> FilterOperator::OnExecute(
 
       const auto chunk = std::make_shared<Chunk>(std::move(output_segments));
 
-      std::lock_guard<std::mutex> lock(output_mutex);
+      const std::lock_guard<std::mutex> lock(output_mutex);
       output_chunks.push_back(chunk);
     };
 

@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
     option_adder("enable_reads", "Enable reads", cxxopts::value<bool>());
     option_adder("repetition_count", "The repetition count", cxxopts::value<size_t>());
 
-    cxxopts::ParseResult& parse_result = executable.GetParseResult(argc, argv);
+    const cxxopts::ParseResult& parse_result = executable.GetParseResult(argc, argv);
 
     auto benchmark = std::make_shared<skyrise::NetworkThroughputParallelBenchmark>(
         executable.GetBenchmarkHelper(), executable.GetCostCalculator(),

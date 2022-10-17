@@ -41,25 +41,25 @@ std::function<int()> GetValueGenerator(const ColumnDataDistribution& column_data
 
   switch (column_data_distribution.distribution_type) {
     case DataDistributionType::kUniform: {
-      boost::math::uniform_distribution<double> uniform_dist(column_data_distribution.min_value,
-                                                             column_data_distribution.max_value);
+      const boost::math::uniform_distribution<double> uniform_dist(column_data_distribution.min_value,
+                                                                   column_data_distribution.max_value);
       return [uniform_dist, &probability_dist, &random_generator]() {
         const auto probability = probability_dist(random_generator);
         return static_cast<int>(std::round(boost::math::quantile(uniform_dist, probability)));
       };
     }
     case DataDistributionType::kSkewedNormal: {
-      boost::math::skew_normal_distribution<double> skew_dist(column_data_distribution.skew_location,
-                                                              column_data_distribution.skew_scale,
-                                                              column_data_distribution.skew_shape);
+      const boost::math::skew_normal_distribution<double> skew_dist(column_data_distribution.skew_location,
+                                                                    column_data_distribution.skew_scale,
+                                                                    column_data_distribution.skew_shape);
       return [skew_dist, &probability_dist, &random_generator]() {
         const auto probability = probability_dist(random_generator);
         return static_cast<int>(std::round(boost::math::quantile(skew_dist, probability) * 10));
       };
     }
     case DataDistributionType::kPareto: {
-      boost::math::pareto_distribution<double> pareto_dist(column_data_distribution.pareto_scale,
-                                                           column_data_distribution.pareto_shape);
+      const boost::math::pareto_distribution<double> pareto_dist(column_data_distribution.pareto_scale,
+                                                                 column_data_distribution.pareto_shape);
       return [pareto_dist, &probability_dist, &random_generator]() {
         const auto probability = probability_dist(random_generator);
         return static_cast<int>(std::round(boost::math::quantile(pareto_dist, probability)));
@@ -126,8 +126,8 @@ std::shared_ptr<ValueSegment<ColumnDataType>> GenerateSegment(const ColumnSpecif
 
 std::shared_ptr<Table> SyntheticTableGenerator::GenerateTable(const size_t num_columns, const size_t num_rows,
                                                               const ChunkOffset chunk_size) {
-  ColumnSpecification column_specification = {{ColumnDataDistribution::MakeUniformConfig(0.0, kMaxDifferentValues)},
-                                              DataType::kInt};
+  const ColumnSpecification column_specification = {
+      {ColumnDataDistribution::MakeUniformConfig(0.0, kMaxDifferentValues)}, DataType::kInt};
   return GenerateTable({num_columns, column_specification}, num_rows, chunk_size);
 }
 

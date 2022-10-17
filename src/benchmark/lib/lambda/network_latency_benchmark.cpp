@@ -34,8 +34,8 @@ NetworkLatencyBenchmark::NetworkLatencyBenchmark(std::shared_ptr<const Benchmark
 
           const auto config =
               std::make_shared<LambdaBenchmarkConfig>(function_name.str(), function_instance_mb_size, repetition_count);
-          NetworkBenchmarkParameters parameters{function_instance_mb_size, object_byte_size, batch_size, 1, 1, 1,
-                                                repetition_count,          operation_type};
+          const NetworkBenchmarkParameters parameters{function_instance_mb_size, object_byte_size, batch_size, 1, 1, 1,
+                                                      repetition_count,          operation_type};
           config->SetPayloads(GeneratePayloads(parameters));
 
           benchmark_configs_.emplace_back(parameters, config);

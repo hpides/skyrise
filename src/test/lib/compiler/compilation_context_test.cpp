@@ -30,7 +30,7 @@ class CompilationContextTest : public ::testing::Test {
     auto arrival_time = std::chrono::system_clock::from_time_t(std::mktime(&tm));
     arrival_time += std::chrono::milliseconds(500);
 
-    SqlRequest request(kTestQueryString, kTestUserName, arrival_time);
+    const SqlRequest request(kTestQueryString, kTestUserName, arrival_time);
     compilation_context_ = std::make_shared<CompilationContext>(request, mock_catalog_);
   }
 
@@ -70,7 +70,7 @@ TEST_F(CompilationContextTest, NextPipelineId) {
 }
 
 TEST_F(CompilationContextTest, PipelineExportPrefix) {
-  std::string prefix = "result/test_user/2022-07-22_12:50:30'500_" + compilation_context_->QueryIdentity();
+  const std::string prefix = "result/test_user/2022-07-22_12:50:30'500_" + compilation_context_->QueryIdentity();
   for (size_t i = 1; i < 10; ++i) {
     EXPECT_EQ(compilation_context_->PipelineExportPrefix(i), prefix + "/pipeline_00" + std::to_string(i) + "/");
   }

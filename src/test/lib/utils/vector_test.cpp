@@ -5,7 +5,7 @@
 namespace skyrise {
 
 TEST(VectorUtilsTest, SplitVectorIntoChunks) {
-  std::vector<std::string> vector = {"a", "b", "c", "d"};
+  const std::vector<std::string> vector = {"a", "b", "c", "d"};
   {
     const size_t chunk_size = 1;
     const auto vector_chunks = SplitVectorIntoChunks(vector, chunk_size);

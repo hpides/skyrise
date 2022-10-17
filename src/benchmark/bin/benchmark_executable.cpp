@@ -51,7 +51,7 @@ cxxopts::ParseResult& BenchmarkExecutable::GetParseResult(
   }
 
   if (cli_parse_result_.count("verbose") > 0) {
-    Aws::Utils::Logging::LogLevel log_level{Aws::Utils::Logging::LogLevel::Info};
+    const Aws::Utils::Logging::LogLevel log_level{Aws::Utils::Logging::LogLevel::Info};
     sdk_options_.loggingOptions.logLevel = log_level;
     sdk_options_.loggingOptions.logger_create_fn = [log_level]() {
       return Aws::MakeShared<Aws::Utils::Logging::ConsoleLogSystem>("console_logger", log_level);

@@ -86,15 +86,15 @@ TEST_F(StorageValueSegmentTest, MemoryUsageEstimation) {
    * on the heap.
    */
 
-  size_t empty_usage_int = value_segment_int_.MemoryUsage();
-  size_t empty_usage_double = value_segment_double_.MemoryUsage();
-  size_t empty_usage_str = value_segment_str_.MemoryUsage();
+  const size_t empty_usage_int = value_segment_int_.MemoryUsage();
+  const size_t empty_usage_double = value_segment_double_.MemoryUsage();
+  const size_t empty_usage_str = value_segment_str_.MemoryUsage();
 
   value_segment_int_.Append(1);
   value_segment_int_.Append(2);
 
-  std::string short_str = "Hello";
-  std::string longer_str = "HelloWorldHaveANiceDayWithSunshineAndGoodCofefe";
+  const std::string short_str = "Hello";
+  const std::string longer_str = "HelloWorldHaveANiceDayWithSunshineAndGoodCofefe";
 
   value_segment_str_.Append(short_str);
   value_segment_str_.Append(longer_str);

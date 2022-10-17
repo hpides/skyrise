@@ -14,7 +14,7 @@ aws::lambda_runtime::invocation_response FunctionSimple::OnHandleRequest(
 }  // namespace skyrise
 
 int main() {
-  skyrise::FunctionSimple function_simple;
+  const skyrise::FunctionSimple function_simple;
   function_simple.HandleRequest();
 
   return 0;

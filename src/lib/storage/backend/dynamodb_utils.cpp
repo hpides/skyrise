@@ -97,12 +97,12 @@ Aws::DynamoDB::Model::CreateTableOutcome CreateDynamoDbTable(
   Aws::DynamoDB::Model::CreateTableRequest request;
   request.WithTableName(table_name).WithBillingMode(Aws::DynamoDB::Model::BillingMode::PAY_PER_REQUEST);
 
-  Aws::DynamoDB::Model::KeySchemaElement partition_key =
+  const Aws::DynamoDB::Model::KeySchemaElement partition_key =
       CreateKeySchemaElement(partition_key_definition, Aws::DynamoDB::Model::KeyType::HASH);
   request.AddKeySchema(partition_key).AddAttributeDefinitions(partition_key_definition);
 
   if (sort_key_definition.has_value()) {
-    Aws::DynamoDB::Model::KeySchemaElement sort_key =
+    const Aws::DynamoDB::Model::KeySchemaElement sort_key =
         CreateKeySchemaElement(sort_key_definition.value(), Aws::DynamoDB::Model::KeyType::RANGE);
 
     request.AddKeySchema(sort_key).AddAttributeDefinitions(sort_key_definition.value());

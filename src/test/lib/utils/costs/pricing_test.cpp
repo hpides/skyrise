@@ -19,7 +19,7 @@ class AwsPricingTest : public ::testing::Test {
 };
 
 TEST_F(AwsPricingTest, PricingLambda) {
-  Pricing pricing(client_.GetPricingClient(), client_.GetClientRegion());
+  const Pricing pricing(client_.GetPricingClient(), client_.GetClientRegion());
 
   const auto& lambda_pricing1 = pricing.GetLambdaPricing();
 
@@ -38,7 +38,7 @@ TEST_F(AwsPricingTest, PricingLambda) {
 }
 
 TEST_F(AwsPricingTest, PricingS3) {
-  Pricing pricing(client_.GetPricingClient(), client_.GetClientRegion());
+  const Pricing pricing(client_.GetPricingClient(), client_.GetClientRegion());
 
   const auto& s3_pricing1 = pricing.GetS3Pricing();
 
@@ -60,7 +60,7 @@ TEST_F(AwsPricingTest, PricingS3) {
 }
 
 TEST_F(AwsPricingTest, PricingXray) {
-  Pricing pricing(client_.GetPricingClient(), client_.GetClientRegion());
+  const Pricing pricing(client_.GetPricingClient(), client_.GetClientRegion());
 
   const auto& xray_pricing_1 = pricing.GetXrayPricing();
 
@@ -79,7 +79,7 @@ TEST_F(AwsPricingTest, DifferentPricingRegions) {
                                                     Aws::Region::AF_SOUTH_1};
 
   for (const auto& pricing_region : pricing_regions) {
-    Pricing pricing(client_.GetPricingClient(), pricing_region);
+    const Pricing pricing(client_.GetPricingClient(), pricing_region);
     EXPECT_NE(pricing.GetLambdaPricing(), nullptr);
     EXPECT_NE(pricing.GetS3Pricing(), nullptr);
     EXPECT_NE(pricing.GetXrayPricing(), nullptr);

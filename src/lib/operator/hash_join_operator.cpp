@@ -126,7 +126,7 @@ std::shared_ptr<const Table> HashJoinOperator::OnExecute(
       const auto typed_segment = std::dynamic_pointer_cast<ValueSegment<ColumnDataType>>(abstract_segment);
       const auto segment_values = typed_segment->Values();
 
-      left_table_matched.emplace_back(std::vector(input_chunk->Size(), false));
+      left_table_matched.emplace_back(input_chunk->Size(), false);
 
       for (ChunkOffset j = 0; j < segment_values.size(); ++j) {
         build_table.emplace(segment_values[j], RowId{i, j});
@@ -231,7 +231,7 @@ std::shared_ptr<const Table> HashJoinOperator::OnExecute(
     }
   }
 
-  TableColumnDefinitions definitions = Concatenated(LeftInputTable()->ColumnDefinitions(), right_schema);
+  const TableColumnDefinitions definitions = Concatenated(LeftInputTable()->ColumnDefinitions(), right_schema);
 
   // materialize all unmatched tuples of left table for left outer joins
   if (join_mode_ == JoinMode::kLeftOuter) {

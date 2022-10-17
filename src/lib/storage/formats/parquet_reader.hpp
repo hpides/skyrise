@@ -20,6 +20,7 @@ struct ParquetFormatReaderOptions {
   bool parse_dates_as_string = false;
   std::shared_ptr<TableColumnDefinitions> expected_schema = nullptr;
   std::optional<std::vector<ColumnId>> include_columns = std::nullopt;
+  std::optional<std::vector<int32_t>> row_group_ids = std::nullopt;
   std::optional<arrow::compute::Expression> arrow_expression = std::nullopt;
   std::optional<std::shared_ptr<AbstractPredicateExpression>> skyrise_expression = std::nullopt;
 };
@@ -47,9 +48,6 @@ class ParquetFormatReader : public AbstractChunkReader {
   Configuration configuration_;
 
  private:
-  std::unique_ptr<parquet::ParquetFileReader> file_reader_;
-  std::unique_ptr<parquet::arrow::FileReader> arrow_file_reader_;
-  std::shared_ptr<::arrow::RecordBatchReader> record_batch_reader_;
   std::shared_ptr<arrow::dataset::Scanner> scanner_;
   arrow::dataset::TaggedRecordBatchIterator batch_iterator_;
 

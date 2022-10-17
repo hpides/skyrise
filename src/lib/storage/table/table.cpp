@@ -148,7 +148,7 @@ void Table::AppendChunk(const Segments& segments) {
   AssertInput(static_cast<ColumnCount>(segments.size()) == GetColumnCount(),
               "Input does not have the same number of columns.");
 
-  std::lock_guard<std::mutex> lock(chunks_mutex_);
+  const std::lock_guard<std::mutex> lock(chunks_mutex_);
   chunks_.push_back(std::make_shared<Chunk>(segments));
 }
 

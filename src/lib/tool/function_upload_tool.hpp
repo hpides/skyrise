@@ -11,7 +11,7 @@ static constexpr auto kFunctionNameHint = "Function name, e.g., skyriseFunctionR
 static constexpr auto kFunctionDescriptionOption = "description";
 static constexpr auto kFunctionDescriptionHint = "Function description, e.g., 'username'";
 
-static constexpr auto kFunctionMemoryOption = "memory";
+static constexpr auto kFunctionMemoryOption = "memory_size";
 static constexpr auto kFunctionMemoryHint = "Memory configuration in MB, e.g., 128";
 static constexpr int kFunctionDefaultMemory = 128;
 

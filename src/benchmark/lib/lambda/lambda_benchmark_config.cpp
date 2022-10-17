@@ -55,11 +55,11 @@ LambdaBenchmarkConfig::LambdaBenchmarkConfig(const Aws::String& function_zip_nam
 
   if (use_one_function_per_repetition_ == UseOneFunctionPerRepetition::kYes) {
     for (size_t i = 0; i < repetition_count_; ++i) {
-      function_configs_.emplace_back(
-          FunctionConfig{function_location, function_name_base.str() + "-" + std::to_string(i), memory_size, is_local});
+      function_configs_.emplace_back(function_location, function_name_base.str() + "-" + std::to_string(i), memory_size,
+                                     is_local);
     }
   } else {
-    function_configs_.emplace_back(FunctionConfig{function_location, function_name_base.str(), memory_size, is_local});
+    function_configs_.emplace_back(function_location, function_name_base.str(), memory_size, is_local);
   }
 
   auto empty_payload = std::make_shared<Aws::StringStream>();

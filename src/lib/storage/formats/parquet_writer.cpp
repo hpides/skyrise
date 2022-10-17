@@ -45,8 +45,8 @@ void ParquetFormatWriter::GenericCopySegmentToParquetColumn(ValueSegment<std::st
   const auto& segment_values = segment->Values();
   const bool is_nullable = segment->IsNullable();
   for (size_t i = 0; i < segment_values.size(); ++i) {
-    int16_t definition_level = !(is_nullable && segment->NullValues()[i]);
-    parquet::ByteArray byte_value(segment_values[i]);
+    const int16_t definition_level = !(is_nullable && segment->NullValues()[i]);
+    const parquet::ByteArray byte_value(segment_values[i]);
     column_writer->WriteBatch(1, &definition_level, nullptr, &byte_value);
   }
 }

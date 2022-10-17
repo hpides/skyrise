@@ -54,7 +54,8 @@ TEST_P(SyntheticTableGeneratorDataTypeTests, IntegerTable) {
   const auto tested_data_type = std::get<0>(GetParam());
   auto table_generator = std::make_shared<SyntheticTableGenerator>();
 
-  std::vector<ColumnSpecification> column_specifications{{std::get<1>(GetParam()), tested_data_type, "column_name"}};
+  const std::vector<ColumnSpecification> column_specifications{
+      {std::get<1>(GetParam()), tested_data_type, "column_name"}};
 
   auto table = table_generator->GenerateTable(column_specifications, row_count, chunk_size);
 

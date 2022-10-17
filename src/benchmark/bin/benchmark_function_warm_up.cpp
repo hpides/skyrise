@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
     option_adder("enable_provisioned_concurrency", "Enable provisioned concurrency", cxxopts::value<bool>());
     option_adder("repetition_count", "The repetition count", cxxopts::value<size_t>());
 
-    cxxopts::ParseResult& parse_result = executable.GetParseResult(argc, argv);
+    const cxxopts::ParseResult& parse_result = executable.GetParseResult(argc, argv);
 
     auto benchmark = std::make_shared<skyrise::FunctionWarmUpBenchmark>(
         executable.GetCostCalculator(), parse_result["function_instance_mb_sizes"].as<std::vector<size_t>>(),

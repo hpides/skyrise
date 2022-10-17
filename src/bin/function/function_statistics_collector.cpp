@@ -19,9 +19,9 @@ aws::lambda_runtime::invocation_response FunctionStatisticsCollector::OnHandleRe
     return aws::lambda_runtime::invocation_response::failure("You provided invalid arguments.", kInvalidArguments);
   }
 
-  std::string manifest_bucket = request.GetString("manifest_bucket");
+  const std::string manifest_bucket = request.GetString("manifest_bucket");
   std::string manifest_object = request.GetString("manifest_object");
-  std::string source_bucket = request.GetString("source_bucket");
+  const std::string source_bucket = request.GetString("source_bucket");
   std::vector<std::string> objects;
   auto source_objects = request.GetArray("source_objects");
   objects.reserve(source_objects.GetLength());
@@ -44,15 +44,15 @@ aws::lambda_runtime::invocation_response FunctionStatisticsCollector::OnHandleRe
   // Iterate over passed objects and write their statistics into one manifest file.
   for (const auto& object_identifier : objects) {
     // Check if object is available.
-    ObjectStatus status = source_storage->GetStatus(object_identifier);
+    const ObjectStatus status = source_storage->GetStatus(object_identifier);
     if (status.GetError()) {
       return return_error("Could not get status of object with identifier " + object_identifier, kObjectNotAccessible);
     }
 
     try {
       // Collect statistics for object.
-      StatisticsOrcFormatReader collector(source_storage, status);
-      ObjectStatistics statistics = collector.GetAllStatistics();
+      const StatisticsOrcFormatReader collector(source_storage, status);
+      const ObjectStatistics statistics = collector.GetAllStatistics();
       // Write statistics into assigned output manifest object.
       if (!writer.WritePartition(statistics)) {
         std::stringstream message;
@@ -77,7 +77,7 @@ aws::lambda_runtime::invocation_response FunctionStatisticsCollector::OnHandleRe
 }  // namespace skyrise
 
 int main() {
-  skyrise::FunctionStatisticsCollector statistics_collector;
+  const skyrise::FunctionStatisticsCollector statistics_collector;
   statistics_collector.HandleRequest();
 
   return 0;

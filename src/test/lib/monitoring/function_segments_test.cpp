@@ -100,7 +100,7 @@ TEST_F(AwsFunctionSegmentsAnalyzerTest, GetCalculatedSegmentsFail) {
 
   EXPECT_TRUE(trace_ids.empty());
 
-  std::map<Aws::String, Aws::XRay::Model::Trace> traces = analyzer.GetTraces({});
+  const std::map<Aws::String, Aws::XRay::Model::Trace> traces = analyzer.GetTraces({});
 
   EXPECT_TRUE(traces.empty());
 

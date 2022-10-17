@@ -3,7 +3,7 @@
 namespace skyrise {
 
 ObjectStatistics StatisticsOrcFormatReader::GetAllStatistics() const {
-  size_t num_rows = GetNumColumns();
+  const size_t num_rows = GetNumColumns();
   std::vector<size_t> null_count;
   std::vector<std::pair<AllTypeVariant, AllTypeVariant>> minmax;
 
@@ -82,7 +82,7 @@ std::pair<AllTypeVariant, AllTypeVariant> StatisticsOrcFormatReader::ConvertDate
 
 std::pair<AllTypeVariant, AllTypeVariant> StatisticsOrcFormatReader::GetMinMaxForColumn(size_t column_index) const {
   const orc::Type* orc_type = reader_->getType().getSubtype(column_index);
-  std::unique_ptr<orc::ColumnStatistics> stats = reader_->getColumnStatistics(orc_type->getColumnId());
+  const std::unique_ptr<orc::ColumnStatistics> stats = reader_->getColumnStatistics(orc_type->getColumnId());
 
   switch (orc_type->getKind()) {
     case orc::INT:
@@ -128,10 +128,10 @@ std::shared_ptr<TableColumnDefinitions> StatisticsOrcFormatReader::GetSchema() c
   const auto& type = reader_->getType();
   for (size_t i = 0; i < type.getSubtypeCount(); ++i) {
     const orc::Type* orc_type = type.getSubtype(i);
-    DataType skyrise_type = OrcTypeKindToDataType(orc_type->getKind());
+    const DataType skyrise_type = OrcTypeKindToDataType(orc_type->getKind());
 
     // The current ORC definition has no information about whether or not NULL values are allowed for a column.
-    bool nullable = false;
+    const bool nullable = false;
 
     schema->emplace_back(type.getFieldName(i), skyrise_type, nullable);
   }

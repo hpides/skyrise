@@ -12,8 +12,7 @@ function(aws_lambda_package_target target)
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 
-    # The ARM build does currently not support static linking.
-    if (${LSB_RELEASE_ID_SHORT} STREQUAL "Amazon" AND NOT ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "aarch64")
+    if (${LSB_RELEASE_ID_SHORT} STREQUAL "Amazon")
 
         set(RUN_STRIP)
         if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")

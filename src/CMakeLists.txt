@@ -9,7 +9,15 @@ else()
     add_compile_definitions(SKYRISE_DEBUG=0)
 endif()
 
-add_compile_options(-pthread -Wall -Wextra -Wpedantic -Werror)
+list(APPEND compile_options -pthread -Wall -Wextra -Wpedantic -Werror)
+
+# Specific flags to exploit Graviton2 processor features (c.f. https://github.com/aws/aws-graviton-getting-started)
+if (${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "aarch64" AND SKYRISE_BUILD_GRAVITON2)
+    message(STATUS "Graviton2 optimizations enabled")
+    list(APPEND compile_options -mcpu=neoverse-n1)
+endif()
+
+add_compile_options(${compile_options})
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/src/lib

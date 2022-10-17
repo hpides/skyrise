@@ -72,7 +72,7 @@ void OrcFormatWriter::AddChunkOffsetsToOutput() {
 
   serializer << static_cast<int64_t>(chunk_row_offsets_.size());
 
-  for (size_t offset : chunk_row_offsets_) {
+  for (const size_t offset : chunk_row_offsets_) {
     serializer << static_cast<int64_t>(offset);
   }
 

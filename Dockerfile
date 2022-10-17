@@ -1,17 +1,15 @@
 # Tool versions
-ARG ARROW_PARQUET_VERSION=8.0.1
-ARG AWS_SDK_VERSION=1.9.302
-ARG BOOST_VERSION=1.79.0
-ARG CCACHE_VERSION=4.6.1
-ARG CMAKE_MAJOR_MINOR=3.23
+ARG ARROW_PARQUET_VERSION=9.0.0
+ARG AWS_SDK_VERSION=1.9.321
+ARG BOOST_VERSION=1.80.0
+ARG CCACHE_VERSION=4.6.3
+ARG CMAKE_MAJOR_MINOR=3.24
 ARG CMAKE_PATCH=2
-ARG CPPCHECK_VERSION=2.8
-ARG CPPLINT_COMMIT=e880840
-ARG GCC_VERSION=7.5.0
-ARG GCC_SUFFIX=75
+ARG CPPCHECK_VERSION=2.9
+ARG CPPLINT_COMMIT=099770e
 ARG HEAPTRACK_VERSION=1.3.0
-ARG LLVM_CLANG_VERSION=14.0.6
-ARG ORC_VERSION=1.7.5
+ARG LLVM_CLANG_VERSION=15.0.2
+ARG ORC_VERSION=1.8.0
 ARG VALGRIND_VERSION=3.19.0
 
 # Tool locations
@@ -22,7 +20,6 @@ ARG CCACHE_DIR=/opt/build/ccache-${CCACHE_VERSION}
 ARG CMAKE_DIR=/opt/build/cmake-${CMAKE_MAJOR_MINOR}.${CMAKE_PATCH}
 ARG CPPCHECK_DIR=/opt/build/cppcheck-${CPPCHECK_VERSION}
 ARG CPPLINT_DIR=/opt/build/cpplint-${CPPLINT_COMMIT}
-ARG GCC_DIR=/opt/build/gcc-${GCC_VERSION}
 ARG HEAPTRACK_DIR=/opt/run/heaptrack-${HEAPTRACK_VERSION}
 ARG LLVM_CLANG_DIR=/opt/build/llvm-clang-${LLVM_CLANG_VERSION}
 ARG ORC_DIR=/opt/build/orc-${ORC_VERSION}
@@ -32,12 +29,10 @@ ARG VALGRIND_DIR=/opt/run/valgrind-${VALGRIND_VERSION}
 # We set different environment variables based on the target processor architecture.
 FROM public.ecr.aws/sam/build-provided.al2:latest AS base-install-amd64
 ENV CMAKE_ARCH=x86_64
-ENV AWS_SDK_BUILD_SHARED_LIBS=OFF
 
 
 FROM public.ecr.aws/sam/build-provided.al2:latest AS base-install-arm64
 ENV CMAKE_ARCH=aarch64
-ENV AWS_SDK_BUILD_SHARED_LIBS=ON
 
 # Packages for builing Docker images
 FROM base-install-${TARGETARCH} AS base-install
@@ -102,24 +97,6 @@ ARG CPPLINT_DIR
 WORKDIR ${CPPLINT_DIR}/bin
 RUN wget -nv  https://raw.githubusercontent.com/google/styleguide/${CPPLINT_COMMIT}/cpplint/cpplint.py && \
     chmod +x cpplint.py
-
-
-# GCC
-FROM base-install AS base-gcc
-ARG GCC_VERSION
-ARG GCC_SUFFIX
-ARG GCC_DIR
-
-WORKDIR ${GCC_DIR}/src
-RUN wget -nv https://mirrors.kernel.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz -O - \
-        | tar -xz --strip-components=1 && \
-    ./contrib/download_prerequisites && \
-    mkdir build && \
-    cd build && \
-    ../configure --enable-languages=c,c++ --disable-multilib --prefix=${GCC_DIR} --program-suffix=${GCC_SUFFIX} && \
-    make -j$(nproc) && \
-    make install-strip && \
-    rm -rf ${GCC_DIR}/src
 
 
 # Ccache
@@ -223,7 +200,6 @@ RUN wget -nv https://sourceware.org/pub/valgrind/valgrind-${VALGRIND_VERSION}.ta
 FROM base-llvm-clang AS base-aws-sdk
 ARG AWS_SDK_VERSION
 ARG AWS_SDK_DIR
-ARG AWS_SDK_BUILD_SHARED_LIBS
 
 WORKDIR ${AWS_SDK_DIR}
 RUN git clone --branch ${AWS_SDK_VERSION} --depth 1 --recurse-submodules --shallow-submodules https://github.com/aws/aws-sdk-cpp.git src && \
@@ -232,8 +208,8 @@ RUN git clone --branch ${AWS_SDK_VERSION} --depth 1 --recurse-submodules --shall
     cmake .. \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=${AWS_SDK_DIR} \
-            -DBUILD_ONLY="dynamodb;ec2;glue;iam;lambda;logs;monitoring;pricing;s3;sqs;ssm;xray" \
-            -DBUILD_SHARED_LIBS=${AWS_SDK_BUILD_SHARED_LIBS} \
+            -DBUILD_ONLY="dynamodb;ec2;glue;iam;lambda;logs;monitoring;pricing;s3;s3-crt;sqs;ssm;xray" \
+            -DBUILD_SHARED_LIBS=OFF \
             -DCPP_STANDARD=17 \
             -DCUSTOM_MEMORY_MANAGEMENT=OFF \
             -DENABLE_TESTING=OFF \
@@ -319,7 +295,6 @@ ARG CCACHE_DIR
 ARG CMAKE_DIR
 ARG CPPCHECK_DIR
 ARG CPPLINT_DIR
-ARG GCC_DIR
 ARG HEAPTRACK_DIR
 ARG LLVM_CLANG_DIR
 ARG VALGRIND_DIR
@@ -331,7 +306,6 @@ COPY --from=base-ccache ${CCACHE_DIR} ${CCACHE_DIR}
 COPY --from=base-cmake ${CMAKE_DIR} ${CMAKE_DIR}
 COPY --from=base-cppcheck ${CPPCHECK_DIR} ${CPPCHECK_DIR}
 COPY --from=base-cpplint ${CPPLINT_DIR} ${CPPLINT_DIR}
-COPY --from=base-gcc ${GCC_DIR} ${GCC_DIR}
 COPY --from=base-heaptrack ${HEAPTRACK_DIR} ${HEAPTRACK_DIR}
 COPY --from=base-llvm-clang ${LLVM_CLANG_DIR} ${LLVM_CLANG_DIR}
 COPY --from=base-valgrind ${VALGRIND_DIR} ${VALGRIND_DIR}
@@ -342,7 +316,6 @@ FROM public.ecr.aws/sam/build-provided.al2:latest AS al2
 ARG ARROW_PARQUET_DIR
 ARG AWS_SDK_DIR
 ARG BOOST_DIR
-ARG GCC_DIR
 
     # Update packages
 RUN yum update -y && \
@@ -393,7 +366,6 @@ RUN for file in /opt/*/*/bin/*; \
     cp -r ${ARROW_PARQUET_DIR}/{include,lib64} /usr && \
     cp -r ${AWS_SDK_DIR}/{include,lib64} /usr && \
     cp -r ${BOOST_DIR}/{include,lib} /usr && \
-    cp -r ${GCC_DIR}/{include,lib,lib64} /usr && \
     mv /usr/bin/ccache /usr/local/bin/ccache && \
     ln -s /usr/local/bin/ccache /usr/local/bin/clang && \
     ln -s /usr/local/bin/ccache /usr/local/bin/clang++
@@ -428,8 +400,8 @@ RUN git clone --branch ${AWS_SDK_VERSION} --depth 1 --recurse-submodules --shall
     cmake .. \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_CXX_FLAGS="-Wno-error=deprecated-declarations" \
-            -DBUILD_ONLY="dynamodb;ec2;glue;iam;lambda;logs;monitoring;pricing;s3;sqs;ssm;xray" \
-            -DBUILD_SHARED_LIBS=OFF \
+            -DBUILD_ONLY="dynamodb;ec2;glue;iam;lambda;logs;monitoring;pricing;s3;s3-crt;sqs;ssm;xray" \
+            -DBUILD_SHARED_LIBS=ON \
             -DCPP_STANDARD=17 \
             -DCUSTOM_MEMORY_MANAGEMENT=OFF \
             -DENABLE_TESTING=OFF \

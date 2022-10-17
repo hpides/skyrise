@@ -13,11 +13,11 @@ class TableColumnDefinitionTest : public ::testing::Test {
 };
 
 TEST_F(TableColumnDefinitionTest, EqualityCheck) {
-  TableColumnDefinition column_definition{"a", DataType::kInt, false};
-  TableColumnDefinition equal_column_definition{"a", DataType::kInt, false};
-  TableColumnDefinition different_column_definition_a{"c", DataType::kInt, false};
-  TableColumnDefinition different_column_definition_b{"a", DataType::kDouble, false};
-  TableColumnDefinition different_column_definition_c{"a", DataType::kInt, true};
+  const TableColumnDefinition column_definition{"a", DataType::kInt, false};
+  const TableColumnDefinition equal_column_definition{"a", DataType::kInt, false};
+  const TableColumnDefinition different_column_definition_a{"c", DataType::kInt, false};
+  const TableColumnDefinition different_column_definition_b{"a", DataType::kDouble, false};
+  const TableColumnDefinition different_column_definition_c{"a", DataType::kInt, true};
 
   EXPECT_EQ(column_definition, equal_column_definition);
   // `operator!=` is not implemented for TableColumnDefinition,

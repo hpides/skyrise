@@ -30,33 +30,33 @@ void RequestTracker::Install(Aws::SDKOptions* options) {
 
 void RequestTracker::RegisterRequestSucceeded(const Aws::String& serviceName, const Aws::String& requestName) {
   const std::string key = GetKey(serviceName, requestName);
-  std::lock_guard<std::mutex> lock(counter_mutex_);
+  const std::lock_guard<std::mutex> lock(counter_mutex_);
 
   ++request_counters_[key].succeeded;
 }
 
 void RequestTracker::RegisterRequestFailed(const Aws::String& serviceName, const Aws::String& requestName) {
   const std::string key = GetKey(serviceName, requestName);
-  std::lock_guard<std::mutex> lock(counter_mutex_);
+  const std::lock_guard<std::mutex> lock(counter_mutex_);
 
   ++request_counters_[key].failed;
 }
 
 void RequestTracker::RegisterRequestFinished(const Aws::String& serviceName, const Aws::String& requestName) {
   const std::string key = GetKey(serviceName, requestName);
-  std::lock_guard<std::mutex> lock(counter_mutex_);
+  const std::lock_guard<std::mutex> lock(counter_mutex_);
 
   ++request_counters_[key].finished;
 }
 
 void RequestTracker::Reset() {
-  std::lock_guard<std::mutex> lock(counter_mutex_);
+  const std::lock_guard<std::mutex> lock(counter_mutex_);
 
   request_counters_.clear();
 }
 
 std::unordered_map<std::string, RequestTracker::Statistics> RequestTracker::GetRequests() const {
-  std::lock_guard<std::mutex> lock(counter_mutex_);
+  const std::lock_guard<std::mutex> lock(counter_mutex_);
 
   return request_counters_;
 }

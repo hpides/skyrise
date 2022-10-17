@@ -103,7 +103,7 @@ StorageError S3ObjectWriter::Write(const char* data, size_t length) {
 
   if (use_multipart_upload_ && new_buffer_size > kMultipartByteSize) {
     while (new_buffer_size > kMultipartByteSize) {
-      size_t left_to_write = kMultipartByteSize - bytes_written_;
+      const size_t left_to_write = kMultipartByteSize - bytes_written_;
       if (left_to_write > 0) {
         buffer_.sputn(data, left_to_write);
         length -= left_to_write;
@@ -383,7 +383,7 @@ Aws::S3::Model::GetObjectRequest S3ObjectReader::CreateGetObjectRequest(ByteBuff
 }
 
 StorageError S3ObjectReader::Read(size_t first_byte, size_t last_byte, ByteBuffer* buffer) {
-  bool read_entire_object = (first_byte == 0 && last_byte == kLastByteInFile);
+  const bool read_entire_object = (first_byte == 0 && last_byte == kLastByteInFile);
   std::string range_string;
   if (!read_entire_object) {
     range_string = GetRangeString(first_byte, last_byte);
@@ -405,7 +405,7 @@ StorageError S3ObjectReader::ProcessGetObjectRequest(const Aws::S3::Model::GetOb
 
   // If we do not have status information about the object, we can obtain it now.
   if (status_.GetError().IsError()) {
-    Aws::S3::Model::GetObjectResult& result = outcome.GetResult();
+    const Aws::S3::Model::GetObjectResult& result = outcome.GetResult();
     const time_t last_modified = ConvertAwsDateTime(result.GetLastModified());
     const std::string& hash = result.GetETag();
 
@@ -423,12 +423,12 @@ size_t S3ObjectReader::ParseContentLengthFromRange(const Aws::String& content_ra
   // A header line might look like "Content-Range: bytes 0-1023/146515"
   // We are interested in the number after '/'.
 
-  size_t index_of_slash = content_range.find_last_of('/');
+  const size_t index_of_slash = content_range.find_last_of('/');
   if (index_of_slash == Aws::String::npos) {
     Fail("Found a malformed value for header entry 'Content-Range'.");
   }
 
-  Aws::String content_length_string = content_range.substr(index_of_slash + 1);
+  const Aws::String content_length_string = content_range.substr(index_of_slash + 1);
   try {
     return std::stoull(content_length_string);
   } catch (const std::exception& e) {

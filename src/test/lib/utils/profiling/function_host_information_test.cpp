@@ -59,7 +59,7 @@ TEST_F(FunctionHostInformationTest, FunctionHostInformationTestIdentificationWit
   config_.ip_public_command = "exit 1";
 
   FunctionHostInformationCollector collector(config_);
-  FunctionHostInformationIdentification information_identification = collector.CollectInformationIdentification();
+  const FunctionHostInformationIdentification information_identification = collector.CollectInformationIdentification();
   EXPECT_EQ(information_identification.id, "pQEzKi");
   // We don't know the real private ip address, but at least, it should not be empty.
   EXPECT_NE(information_identification.ip_private, "");
@@ -70,13 +70,13 @@ TEST_F(FunctionHostInformationTest, FunctionHostInformationTestIdentificationWit
   config_.collect_ip_public = true;
 
   FunctionHostInformationCollector collector(config_);
-  FunctionHostInformationIdentification information_identification = collector.CollectInformationIdentification();
+  const FunctionHostInformationIdentification information_identification = collector.CollectInformationIdentification();
   EXPECT_EQ(information_identification.ip_public, "5.6.7.8");
 }
 
 TEST_F(FunctionHostInformationTest, FunctionHostInformationTestEnvironment) {
   FunctionHostInformationCollector collector(config_);
-  FunctionHostInformationEnvironment information_environment = collector.CollectInformationEnvironment();
+  const FunctionHostInformationEnvironment information_environment = collector.CollectInformationEnvironment();
   EXPECT_EQ(information_environment.operating_system_details, "OSDetails");
   EXPECT_EQ(information_environment.file_system_details, "testTmpFile");
   EXPECT_EQ(information_environment.boot_time_seconds, 123456);
@@ -85,7 +85,7 @@ TEST_F(FunctionHostInformationTest, FunctionHostInformationTestEnvironment) {
 
 TEST_F(FunctionHostInformationTest, FunctionHostInformationTestResources) {
   FunctionHostInformationCollector collector(config_);
-  FunctionHostInformationResources information_resources = collector.CollectInformationResources();
+  const FunctionHostInformationResources information_resources = collector.CollectInformationResources();
   EXPECT_EQ(information_resources.cpu_count, 2);
   EXPECT_EQ(information_resources.cpu_model, "CpuModelName");
   EXPECT_EQ(information_resources.cpu_features, "three test flags");
@@ -120,8 +120,8 @@ TEST_F(FunctionHostInformationTest, FunctionHostInformationTestJson) {
   const auto information_identification = collector.CollectInformationIdentification();
   const auto information_environment = collector.CollectInformationEnvironment();
   const auto information_resources = collector.CollectInformationResources();
-  FunctionHostInformationIdentification mocked_information_identification{information_identification.id, "1.2.3.4",
-                                                                          information_identification.ip_public};
+  const FunctionHostInformationIdentification mocked_information_identification{
+      information_identification.id, "1.2.3.4", information_identification.ip_public};
   auto json = collector.AsJson(mocked_information_identification, information_environment, information_resources);
   EXPECT_EQ(json, expected_json);
 }

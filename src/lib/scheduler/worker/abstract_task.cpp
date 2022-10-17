@@ -32,7 +32,7 @@ void AbstractTask::SetAsPredecessorOf(const std::shared_ptr<AbstractTask>& succe
   successors_.push_back(successor);
   successor->predecessors_.emplace_back(shared_from_this());
 
-  std::lock_guard<std::mutex> lock(done_condition_variable_mutex_);
+  const std::lock_guard<std::mutex> lock(done_condition_variable_mutex_);
   if (!IsDone()) {
     ++successor->pending_predecessors_;
   }
@@ -91,7 +91,7 @@ size_t AbstractTask::AtomicDecrementPredecessorCount() {
 }
 
 bool AbstractTask::TryTransitionTo(TaskState new_state) {
-  std::lock_guard<std::mutex> lock(transition_to_mutex_);
+  const std::lock_guard<std::mutex> lock(transition_to_mutex_);
   switch (new_state) {
     case TaskState::kScheduled:
       if (state_ >= TaskState::kScheduled) {

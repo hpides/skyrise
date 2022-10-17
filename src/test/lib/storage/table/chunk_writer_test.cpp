@@ -62,7 +62,7 @@ class PartitionedChunkWriterTest : public ::testing::Test {
 };
 
 TEST_F(PartitionedChunkWriterTest, WriteTable) {
-  std::shared_ptr<MockStorage> storage = std::make_shared<MockStorage>();
+  const std::shared_ptr<MockStorage> storage = std::make_shared<MockStorage>();
   PartitionedChunkWriter writer(config_, storage);
   writer.Initialize(schema_);
 
@@ -81,7 +81,7 @@ TEST_F(PartitionedChunkWriterTest, WriteTable) {
   ASSERT_FALSE(writer.HasError());
   int chunks_found = 0;
   for (size_t last_id = 0;; ++last_id) {
-    ObjectStatus status = storage->GetStatus(config_.naming_strategy(last_id));
+    const ObjectStatus status = storage->GetStatus(config_.naming_strategy(last_id));
     if (status.GetError()) {
       break;
     }
@@ -98,7 +98,7 @@ TEST_F(PartitionedChunkWriterTest, WriteTable) {
 }
 
 TEST_F(PartitionedChunkWriterTest, WriteTableErrorCase) {
-  std::shared_ptr<MockStorage> storage = std::make_shared<MockStorage>();
+  const std::shared_ptr<MockStorage> storage = std::make_shared<MockStorage>();
   storage->SetSimulateWriteErrorAfter(10);  // The 10th ObjectWriter will cause an error
   PartitionedChunkWriter writer(config_, storage);
   writer.Initialize(schema_);

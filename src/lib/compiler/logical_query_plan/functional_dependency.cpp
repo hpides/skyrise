@@ -151,10 +151,10 @@ std::vector<FunctionalDependency> UnionFunctionalDependencies(
     const std::vector<FunctionalDependency>& functional_dependencies_a,
     const std::vector<FunctionalDependency>& functional_dependencies_b) {
   if constexpr (SKYRISE_DEBUG) {
-    std::unordered_set<FunctionalDependency> functional_dependencies_a_set(functional_dependencies_a.cbegin(),
-                                                                           functional_dependencies_a.cend());
-    std::unordered_set<FunctionalDependency> functional_dependencies_b_set(functional_dependencies_b.cbegin(),
-                                                                           functional_dependencies_b.cend());
+    const std::unordered_set<FunctionalDependency> functional_dependencies_a_set(functional_dependencies_a.cbegin(),
+                                                                                 functional_dependencies_a.cend());
+    const std::unordered_set<FunctionalDependency> functional_dependencies_b_set(functional_dependencies_b.cbegin(),
+                                                                                 functional_dependencies_b.cend());
     Assert(functional_dependencies_a.size() == functional_dependencies_a_set.size() &&
                functional_dependencies_b.size() == functional_dependencies_b_set.size(),
            "Did not expect input vector to contain multiple FDs with the same determinant expressions.");

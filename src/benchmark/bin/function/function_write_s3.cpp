@@ -81,7 +81,7 @@ aws::lambda_runtime::invocation_response FunctionWriteS3::OnHandleRequest(
 }  // namespace skyrise
 
 int main() {
-  skyrise::FunctionWriteS3 function_write_s3;
+  const skyrise::FunctionWriteS3 function_write_s3;
   function_write_s3.HandleRequest();
 
   return 0;

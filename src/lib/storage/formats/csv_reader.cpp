@@ -32,7 +32,7 @@ void Split(std::string_view data, char delimiter,
   size_t split_element_counter = 0;
   do {
     const size_t next_newline = data.find(delimiter, current_offset);
-    std::string_view line = data.substr(current_offset, next_newline - current_offset);
+    const std::string_view line = data.substr(current_offset, next_newline - current_offset);
 
     callback(line, split_element_counter);
 
@@ -126,8 +126,8 @@ char CsvFormatReader::GuessDelimiter(const Lines& lines) {
     }
   }
 
-  size_t maximum_index = std::distance(delimiter_probability.cbegin(),
-                                       std::max_element(delimiter_probability.cbegin(), delimiter_probability.cend()));
+  const size_t maximum_index = std::distance(
+      delimiter_probability.cbegin(), std::max_element(delimiter_probability.cbegin(), delimiter_probability.cend()));
   return kPossibleDelimiters[maximum_index];
 }
 
@@ -135,7 +135,7 @@ CsvFormatReader::CsvFormatReader(std::unique_ptr<ObjectReader> source, Configura
     : configuration_(std::move(configuration)), source_(std::move(source)) {
   schema_ = configuration_.expected_schema;
   buffer_.reserve(configuration_.read_buffer_size);
-  StorageError maybe_error = FillBuffer();
+  const StorageError maybe_error = FillBuffer();
 
   if (maybe_error.IsError()) {
     SetError(maybe_error);
@@ -207,7 +207,7 @@ void CsvFormatReader::BuildSchema() {
 
 void CsvFormatReader::InitialSetup() {
   Lines lines;
-  std::string_view buffer_content(buffer_.data(), buffer_.size());
+  const std::string_view buffer_content(buffer_.data(), buffer_.size());
   const size_t num_lines_look_ahead = 5;
   const auto line_handler = [&lines](std::string_view data, size_t /*counter*/) { lines.emplace_back(data); };
   Split(buffer_content, '\n', line_handler, num_lines_look_ahead);
@@ -283,7 +283,7 @@ StorageError CsvFormatReader::FillBuffer() {
 
 void CsvFormatReader::ExtractColumns() {
   columns_.clear();
-  std::string_view buffer_content(buffer_.data(), buffer_.size());
+  const std::string_view buffer_content(buffer_.data(), buffer_.size());
 
   Split(buffer_content, '\n', [this](std::string_view line, size_t /*line_num*/) {
     if (!line.empty()) {
@@ -366,7 +366,7 @@ std::unique_ptr<Chunk> CsvFormatReader::Next() {
 
   num_ignore_lines_in_next_chunk_ = 0;
 
-  StorageError maybe_error = FillBuffer();
+  const StorageError maybe_error = FillBuffer();
   if (maybe_error.IsError()) {
     SetError(maybe_error);
   }

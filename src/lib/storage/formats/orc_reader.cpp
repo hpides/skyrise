@@ -36,7 +36,7 @@ uint64_t OrcInputProxy::getNaturalReadSize() const { return kS3NaturalReadSize; 
 
 void OrcInputProxy::read(void* buf, uint64_t length, uint64_t offset) {
   ByteBuffer buffer_view(buf, length);
-  StorageError error = source_->Read(offset, offset + length - 1, &buffer_view);
+  const StorageError error = source_->Read(offset, offset + length - 1, &buffer_view);
 
   if (error || buffer_view.Size() != length || buffer_view.Data() != buf) {
     throw std::logic_error("Error while reading from ORC file.");
@@ -142,7 +142,7 @@ OrcFormatReader::OrcFormatReader(std::unique_ptr<ObjectReader> source, Configura
     : configuration_(std::move(configuration)), cache_manager_(std::make_shared<CacheManager>()) {
   Assert(!(configuration_.select_partition_range.has_value() && configuration_.select_row_range.has_value()),
          "You may only select by partition or rows.");
-  orc::ReaderOptions options;
+  const orc::ReaderOptions options;
 
   auto caching_reader = std::make_unique<CachingObjectReader>(std::move(source), cache_manager_);
   InitializeCacheManager(caching_reader);
@@ -198,7 +198,7 @@ void OrcFormatReader::InitializeCacheManager(const std::unique_ptr<CachingObject
   const size_t temporary_read_size = std::min<size_t>(kTailCacheDefaultSize, caching_reader->MaxCacheSize());
   ByteBuffer temporary_buffer(temporary_read_size);
 
-  StorageError error = caching_reader->ReadTail(temporary_read_size, &temporary_buffer);
+  const StorageError error = caching_reader->ReadTail(temporary_read_size, &temporary_buffer);
   if (error) {
     SetError(error);
   }
@@ -244,7 +244,7 @@ void OrcFormatReader::DetermineCacheableLocations() {
 }
 
 std::vector<size_t> OrcFormatReader::ExtractPartitionInformation() {
-  std::string payload = reader_->getMetadataValue("partition_offsets");
+  const std::string payload = reader_->getMetadataValue("partition_offsets");
   Assert(!payload.empty(), "Parition information expected.");
 
   auto stream = std::make_shared<std::stringstream>(payload);
@@ -312,7 +312,7 @@ void OrcFormatReader::ExtractSchema() {
 
   for (size_t i = 0; i < type.getSubtypeCount(); ++i) {
     const orc::Type* orc_type = type.getSubtype(i);
-    DataType skyrise_type = OrcTypeKindToDataType(orc_type->getKind(), configuration_.parse_dates_as_string);
+    const DataType skyrise_type = OrcTypeKindToDataType(orc_type->getKind(), configuration_.parse_dates_as_string);
 
     // The current ORC definition has no information about whether or not NULL values are allowed for a column.
     // TODO(jansiebert): Implement support for null-values
@@ -376,7 +376,7 @@ std::unique_ptr<Chunk> OrcFormatReader::Next() {
 }
 
 std::string OrcFormatReader::OrcTimestampToDateString(int32_t num_days_since_1970) {
-  time_t seconds_since_1970 = static_cast<time_t>(num_days_since_1970) * static_cast<time_t>(60 * 60 * 24);
+  const time_t seconds_since_1970 = static_cast<time_t>(num_days_since_1970) * static_cast<time_t>(60 * 60 * 24);
   tm calendar_date{};
   std::array<char, 11> buffer = {0};  // YYYY-mm-dd + '\0'
   gmtime_r(&seconds_since_1970, &calendar_date);

@@ -102,10 +102,10 @@ Aws::Pricing::Model::GetProductsRequest Pricing::CreateGetProductsRequest(const 
   const Aws::String& location = kRegionToLocation.at(client_region_);
 
   // Create filters for Price List Service API
-  Aws::Vector<Aws::Pricing::Model::Filter> filters = {Aws::Pricing::Model::Filter()
-                                                          .WithType(Aws::Pricing::Model::FilterType::TERM_MATCH)
-                                                          .WithField("location")
-                                                          .WithValue(location)};
+  const Aws::Vector<Aws::Pricing::Model::Filter> filters = {Aws::Pricing::Model::Filter()
+                                                                .WithType(Aws::Pricing::Model::FilterType::TERM_MATCH)
+                                                                .WithField("location")
+                                                                .WithValue(location)};
 
   Aws::Pricing::Model::GetProductsRequest request;
   request.SetServiceCode(service_code);

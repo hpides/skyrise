@@ -29,9 +29,9 @@ bool NetworkInterface::IsIpv6LinkLocalAddress() {
 
 std::string NetworkInterface::GetNumericHostname() {
   std::array<char, 255> name_buffer{};
-  int address_struct_length = IsIpv4() ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
-  int get_name_result = getnameinfo(current_interface_address_->ifa_addr, address_struct_length, name_buffer.data(),
-                                    sizeof(name_buffer), nullptr, 0, NI_NUMERICHOST);
+  const int address_struct_length = IsIpv4() ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
+  const int get_name_result = getnameinfo(current_interface_address_->ifa_addr, address_struct_length,
+                                          name_buffer.data(), sizeof(name_buffer), nullptr, 0, NI_NUMERICHOST);
 
   // getnameinfo will return 0 for success
   return get_name_result == 0 ? name_buffer.data() : std::string();

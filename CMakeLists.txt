@@ -4,6 +4,7 @@ project(skyrise
     VERSION 0.1.0
     LANGUAGES C CXX)
 
+option(SKYRISE_BUILD_GRAVITON2 "Enable Graviton2 specific processor features" OFF)
 option(SKYRISE_ENABLE_CCACHE "Enable build caching with Ccache" ON)
 option(SKYRISE_ENABLE_CLANG_FORMAT "Enable formatting with Clang-Format" OFF)
 option(SKYRISE_ENABLE_CLANG_TIDY "Enable static analysis with Clang-Tidy" OFF)
@@ -27,7 +28,7 @@ include(cmake/CompilerSettings.cmake)
 # Locate third-party packages
 set(aws-lambda-runtime_DIR cmake)
 find_package(aws-lambda-runtime CONFIG REQUIRED)
-find_package(AWSSDK REQUIRED COMPONENTS dynamodb ec2 glue iam lambda logs monitoring pricing s3 sqs ssm xray)
+find_package(AWSSDK REQUIRED COMPONENTS dynamodb ec2 glue iam lambda logs monitoring pricing s3 s3-crt sqs ssm xray)
 find_package(Boost)
 # Arrow and Parquet are tightly coupled: Parquet depends on Arrow and ArrowDataSet depends on Parquet
 find_package(Arrow REQUIRED)
