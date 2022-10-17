@@ -15,7 +15,7 @@
 #include "expression/lqp_column_expression.hpp"
 #include "expression/value_expression.hpp"
 #include "lqp_expression_utils.hpp"
-//#include "operators/operator_scan_predicate.hpp"
+// #include "operators/operator_scan_predicate.hpp"
 #include "types.hpp"
 #include "utils/assert.hpp"
 
