@@ -1,5 +1,8 @@
 name: deploy-lambda-functions-arm
 on:
+  # Weekly schedule for Sundays at 21:59 UTC.
+  schedule:
+    - cron: '59 21 * * 0'
   workflow_dispatch:
     inputs:
       # Name of the target function without 'aws-lambda-package-' prefix.
@@ -34,6 +37,12 @@ on:
         required: true
         default: GitHub Username
 
+env:
+  FUNCTION_NAME: ${{ inputs.function_name }}
+  MEMORY_CONFIGURATION: ${{ inputs.memory_configuration }}
+  BUILD_TYPE: ${{ inputs.build_type }}
+  DESCRIPTION: ${{ inputs.description }}
+
 jobs:
   # Start the Amazon EC2 CI runner.
   start-ec2-instance:
@@ -55,10 +64,19 @@ jobs:
         with:
           submodules: 'recursive'
 
+      # Set the environment variables for a scheduled run.
+      - name: Configure Scheduled Run
+        if: github.event_name == 'schedule'
+        run: |
+          echo "FUNCTION_NAME=skyriseFunctionReadS3" >> $GITHUB_ENV
+          echo "MEMORY_CONFIGURATION=128" >> $GITHUB_ENV
+          echo "BUILD_TYPE=Release" >> $GITHUB_ENV
+          echo "DESCRIPTION=skyrise-ci" >> $GITHUB_ENV    
+
       - name: Set Description
         run: |
-          if [ '${{ inputs.description }}' = 'GitHub Username' ]; then echo "DESCRIPTION=${{ github.actor }}" >> $GITHUB_ENV; \
-          else echo "DESCRIPTION=${{ inputs.description }}" >> $GITHUB_ENV; fi;    
+          if [ '${{ env.DESCRIPTION }}' = 'GitHub Username' ]; then echo "DESCRIPTION=${{ github.actor }}" >> $GITHUB_ENV; \
+          else echo "DESCRIPTION=${{ env.DESCRIPTION }}" >> $GITHUB_ENV; fi;    
 
       - name: "CMake Configure"
         run: |
@@ -67,18 +85,18 @@ jobs:
           cmake .. -GNinja \
             -DCMAKE_C_COMPILER=/usr/bin/clang \
             -DCMAKE_CXX_COMPILER=/usr/bin/clang++ \
-            -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
             -DSKYRISE_ENABLE_CCACHE=OFF \
 
-      - name: "Build ${{ inputs.function_name }}"
+      - name: "Build ${{ env.FUNCTION_NAME }}"
         run: |
           cd cmake-build
-          ninja-build aws-lambda-package-${{ inputs.function_name }} skyrise -j$(nproc)
+          ninja-build aws-lambda-package-${{ env.FUNCTION_NAME }} skyrise -j$(nproc)
 
-      - name: "Upload ${{ inputs.function_name }} to AWS"
+      - name: "Upload ${{ env.FUNCTION_NAME }} to AWS"
         run: |
           cd cmake-build
-          ./bin/skyrise -t function-upload -n ${{ inputs.function_name }} -d ${{ env.DESCRIPTION}} -m ${{ inputs.memory_configuration }}
+          ./bin/skyrise -t function-upload -n ${{ env.FUNCTION_NAME }} -d ${{ env.DESCRIPTION}} -m ${{ env.MEMORY_CONFIGURATION }}
 
   # Stop the Amazon EC2 instance.
   stop-ec2-instance:
