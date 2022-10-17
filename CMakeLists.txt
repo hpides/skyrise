@@ -4,6 +4,7 @@ project(skyrise
     VERSION 0.1.0
     LANGUAGES C CXX)
 
+option(SKYRISE_BUILD_GRAVITON2 "Enable Graviton2 specific processor features" OFF)
 option(SKYRISE_ENABLE_CCACHE "Enable build caching with Ccache" ON)
 option(SKYRISE_ENABLE_CLANG_FORMAT "Enable formatting with Clang-Format" OFF)
 option(SKYRISE_ENABLE_CLANG_TIDY "Enable static analysis with Clang-Tidy" OFF)

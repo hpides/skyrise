@@ -86,6 +86,7 @@ jobs:
             -DCMAKE_C_COMPILER=/usr/bin/clang \
             -DCMAKE_CXX_COMPILER=/usr/bin/clang++ \
             -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+            -DSKYRISE_BUILD_GRAVITON2=ON \
             -DSKYRISE_ENABLE_CCACHE=OFF \
 
       - name: "Build ${{ env.FUNCTION_NAME }}"
