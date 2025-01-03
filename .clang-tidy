@@ -1,0 +1,142 @@
+Checks: '
+        *,
+        -*-avoid-const-or-ref-data-members,
+        -*-avoid-do-while,
+        -*-avoid-goto,
+        -*-default-arguments*,
+        -*-else-after-return,
+        -*-magic-numbers,
+        -*-multiple-inheritance,
+        -*-narrowing-conversions,
+        -*-non-private-member-variables-in-classes,
+        -*-uppercase-literal-suffix,
+        -abseil-string-find-startswith,
+        -abseil-string-find-str-contains,
+        -altera-id-dependent-backward-branch,
+        -altera-struct-pack-align,
+        -altera-unroll-loops,
+        -bugprone-easily-swappable-parameters,
+        -bugprone-unchecked-optional-access,
+        -cert-dcl16-c,
+        -cert-dcl58-cpp,
+        -cert-env33-c,
+        -cert-err33-c,
+        -cert-err58-cpp,
+        -clang-analyzer-cplusplus.NewDeleteLeaks,
+        -cppcoreguidelines-avoid-non-const-global-variables,
+        -cppcoreguidelines-interfaces-global-init,
+        -cppcoreguidelines-macro-usage,
+        -cppcoreguidelines-owning-memory,
+        -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+        -cppcoreguidelines-pro-bounds-constant-array-index,
+        -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+        -cppcoreguidelines-pro-type-reinterpret-cast,
+        -fuchsia-overloaded-operator,
+        -fuchsia-statically-constructed-objects,
+        -fuchsia-trailing-return,
+        -google-readability-casting,
+        -google-runtime-int,
+        -hicpp-no-array-decay,
+        -llvm-header-guard,
+        -llvm-include-order,
+        -llvmlibc-*,
+        -misc-confusable-identifiers,
+        -misc-const-correctness,
+        -misc-no-recursion,
+        -modernize-concat-nested-namespaces,
+        -modernize-pass-by-value,
+        -modernize-use-nodiscard,
+        -modernize-use-trailing-return-type,
+        -performance-inefficient-string-concatenation,
+        -readability-avoid-const-params-in-decls,
+        -readability-function-cognitive-complexity,
+        -readability-identifier-length,
+        -readability-implicit-bool-conversion
+        '
+
+# Explanation of disabled checks
+#   *-avoid-const-or-ref-data-members                       We use const-qualified data members in classes
+#   *-avoid-do-while                                        We use do-while loops
+#   *-avoid-goto                                            Does not like Google Test
+#   *-default-arguments*                                    We use default arguments
+#   *-else-after-return                                     We use else blocks after return statements
+#   *-magic-numbers                                         We do not want to enforce constants for every "magic" number
+#   *-multiple-inheritance                                  We want to look at this in reviews on a case to case basis
+#   *-narrowing-conversions                                 TODO(tobodner): Fix storage classes
+#   *-non-private-member-variables-in-classes               We use public member variables
+#   *-uppercase-literal-suffix                              Using 1.0f instead of 1.0F is fine for us
+#   abseil-string-find-startswith                           We do not use abseil
+#   abseil-string-find-str-contains                         We do not use abseil
+#   altera-id-dependent-backward-branch                     We do not avoid ID-dependent variables within loops
+#   altera-struct-pack-align                                We do not use alignment annotations
+#   altera-unroll-loops                                     We do not use loop unroll directives
+#   bugprone-easily-swappable-parameters                    We allow subsequent function parameters of convertible types
+#   bugprone-unchecked-optional-access                      Uses resource-intensive, flow-sensitive static analysis
+#   cert-dcl16-c                                            Using 1.0f instead of 1.0F is fine for us
+#   cert-env33-c                                            We use popen()
+#   cert-err33-c                                            We use strftime()
+#   cert-err58-cpp                                          We are okay with uncaught errors
+#   clang-analyzer-cplusplus.NewDeleteLeaks                 We should really fix this issue
+#   cppcoreguidelines-avoid-non-const-global-variables      Does not like Google Test
+#   cppcoreguidelines-interfaces-global-init                Does not like std::vector<std::function<void()>> a{[]() { std::cout << "a"; }};
+#   cppcoreguidelines-macro-usage                           We use macros for Assert/Fail/...
+#   cppcoreguidelines-owning-memory                         Does not like Google Test
+#   cppcoreguidelines-pro-bounds-array-to-pointer-decay     Does not like Pricing pricing(Aws::Region::US_EAST_1);
+#   cppcoreguidelines-pro-bounds-constant-array-index       We have some c-style arrays
+#   cppcoreguidelines-pro-bounds-pointer-arithmetic         We have some c-style arrays
+#   cppcoreguidelines-pro-type-reinterpret-cast             We use reinterpret_cast
+#   fuchsia-overloaded-operator                             We overload operators
+#   fuchsia-statically-constructed-objects                  Does not like Google Test
+#   fuchsia-trailing-return                                 Gives various false positives
+#   google-readability-casting                              We do allow C-style casts
+#   google-runtime-int                                      We want to use "long long" instead of int64_t, because of tpch-dbgen
+#   hicpp-no-array-decay                                    Does not like Pricing pricing(Aws::Region::US_EAST_1);
+#   llvm-header-guard                                       We do not use LLVM header guards
+#   llvm-include-order                                      We use #pragma once
+#   llvmlibc-*                                              We do not use LLVM's libc++, but GCC's libstdc++
+#   misc-confusable-identifiers                             Uses resource-intensive static analysis
+#   misc-const-correctness                                  Uses resource-intensive static analysis
+#   misc-no-recursion                                       Recursion is useful when parsing data nested structures
+#   modernize-concat-nested-namespaces                      We want clearly separated namespaces
+#   modernize-pass-by-value                                 We do not trust people to properly use std::move
+#   modernize-use-nodiscard                                 We do not enforce the use of [[nodiscard]]
+#   modernize-use-trailing-return-type                      We do not want to use trailing return types
+#   performance-inefficient-string-concatenation            We should really fix this issue
+#   readability-avoid-const-params-in-decls                 This is used in Hyrise and we do not want to enforce changes
+#   readability-function-cognitive-complexity               We nest code extensively in our parameterizable benchmarks
+#   readability-identifier-length                           We do allow short names in loops, tests, and benchmarks
+#   readability-implicit-bool-conversion                    We use some C-functions like unlink, isalpha, ...
+
+CheckOptions:
+  - { key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor,  value: 1          }
+  - { key: hicpp-move-const-arg.CheckTriviallyCopyableMove,                  value: 0          }
+  - { key: hicpp-special-member-functions.AllowSoleDefaultDtor,              value: 1          }
+  - { key: performance-move-const-arg.CheckTriviallyCopyableMove,            value: 0          }
+  - { key: readability-identifier-naming.ClassCase,                          value: CamelCase  }
+  - { key: readability-identifier-naming.ClassMemberCase,                    value: lower_case }
+  - { key: readability-identifier-naming.ClassMemberSuffix,                  value: _          }
+  - { key: readability-identifier-naming.ConstexprVariableCase,              value: CamelCase  }
+  - { key: readability-identifier-naming.ConstexprVariablePrefix,            value: k          }
+  - { key: readability-identifier-naming.EnumConstantCase,                   value: CamelCase  }
+  - { key: readability-identifier-naming.EnumConstantPrefix,                 value: k          }
+  - { key: readability-identifier-naming.FunctionCase,                       value: CamelCase  }
+  - { key: readability-identifier-naming.GlobalConstantCase,                 value: CamelCase  }
+  - { key: readability-identifier-naming.GlobalConstantPrefix,               value: k          }
+  - { key: readability-identifier-naming.MemberCase,                         value: lower_case }
+  - { key: readability-identifier-naming.MemberConstantCase,                 value: CamelCase  }
+  - { key: readability-identifier-naming.MemberConstantPrefix,               value: k          }
+  - { key: readability-identifier-naming.NamespaceCase,                      value: lower_case }
+  - { key: readability-identifier-naming.PrivateMemberSuffix,                value: _          }
+  - { key: readability-identifier-naming.ProtectedMemberSuffix,              value: _          }
+  - { key: readability-identifier-naming.StaticConstantCase,                 value: CamelCase  }
+  - { key: readability-identifier-naming.StaticConstantPrefix,               value: k          }
+  - { key: readability-identifier-naming.StructCase,                         value: CamelCase  }
+  - { key: readability-identifier-naming.TemplateParameterCase,              value: CamelCase  }
+  - { key: readability-identifier-naming.TemplateParameterIgnoredRegexp,     value: expr-type  }
+  - { key: readability-identifier-naming.TypeTemplateParameterIgnoredRegexp, value: expr-type  }
+  - { key: readability-identifier-naming.VariableCase,                       value: lower_case }
+  - { key: readability-implicit-bool-conversion.AllowIntegerConditions,      value: 1          }
+  - { key: readability-implicit-bool-conversion.AllowPointerConditions,      value: 1          }
+
+WarningsAsErrors: '*'
+HeaderFilterRegex: 'src/.*\.(cpp|hpp)$'

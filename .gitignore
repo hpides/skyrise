@@ -1,0 +1,17 @@
+# Target directory of Ccache.
+ccache
+# Build directories of CLion.
+cmake-build-*
+# Implementation file created by Git Watcher.
+src/lib/utils/git_metadata.cpp
+# Temporary files created by most text editors.
+*~
+# Files created by macOS.
+.DS_STORE
+# Project configuration of CLion.
+.idea
+# Byte compiled Python modules.
+*.pyc
+# Swap files created by Vim.
+.*.sw?
+.sw?
