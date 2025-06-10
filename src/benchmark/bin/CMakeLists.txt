@@ -1,0 +1,2 @@
+add_subdirectory(micro_benchmark)
+add_subdirectory(system_benchmark)

@@ -1,0 +1,78 @@
+{
+	"context":	{
+		"name":	"lambdaNetworkBenchmark",
+		"commit":	"b102b55f5200d1c9cdd5e36c8cbdbc1ee48da12a",
+		"date":	"2025/03/23-17:21:24"
+	},
+	"runs":	[{
+			"parameters":	{
+				"function_instance_size_mb":	7076,
+				"concurrent_instance_count":	1,
+				"repetition_count":	1,
+				"ec2_instance_type":	"c7gn.4xlarge",
+				"report_interval_ms":	1000,
+				"duration_s":	10,
+				"target_throughput_mbps":	"unlimited",
+				"enable_vpc":	false,
+				"message_size_kb":	16
+			},
+			"metrics":	{
+				"lambda_runtime_duration_ms":	21161.315288,
+				"lambda_total_cost_usd":	0.0019276176903736,
+				"lambda_warmup_cost_usd":	0,
+				"lambda_runtime_cost_usd":	0.0019276176903736,
+				"lambda_trace_cost_usd":	0,
+				"total_duration_ms":	173875.948915,
+				"total_costs_usd":	0.0435276176903736,
+				"ec2_runtime_duration_ms":	149006,
+				"ec2_cost_usd":	0.0416,
+				"throughput_upload_mbps_minimum":	71,
+				"throughput_upload_mbps_maximum":	361,
+				"throughput_upload_mbps_average":	105.9,
+				"throughput_upload_mbps_median":	82,
+				"throughput_upload_mbps_percentile_10":	72,
+				"throughput_upload_mbps_percentile_1":	71,
+				"throughput_upload_mbps_0.1":	71,
+				"throughput_upload_mbps_0.01":	71,
+				"throughput_upload_mbps_std_dev":	85.169,
+				"throughput_download_mbps_minimum":	71,
+				"throughput_download_mbps_maximum":	369,
+				"throughput_download_mbps_average":	106.3,
+				"throughput_download_mbps_median":	80,
+				"throughput_download_mbps_percentile_10":	72,
+				"throughput_download_mbps_percentile_1":	71,
+				"throughput_download_mbps_0.1":	71,
+				"throughput_download_mbps_0.01":	71,
+				"throughput_download_mbps_std_dev":	87.636
+			},
+			"repetitions":	[{
+					"repetition_end_timestamp":	"20250323T172119",
+					"repetition_duration_ms":	21163.750287,
+					"repetition_lambda_runtime_duration_ms":	21161.315288,
+					"repetition_lambda_total_cost_usd":	0.0019276176903736,
+					"repetition_lambda_warmup_cost_usd":	0,
+					"repetition_lambda_runtime_cost_usd":	0.0019276176903736,
+					"aggregated_throughput_upload_mbps":	[361, 80, 72, 83, 71, 82, 73, 83, 72, 82],
+					"aggregated_throughput_download_mbps":	[369, 73, 80, 80, 71, 79, 80, 80, 72, 79],
+					"invocations":	[{
+							"invocation_id":	"20250323T171853-skyriseNetworkIoFunction-P91MD7fb-0-0",
+							"succeeded":	true,
+							"invocation_total_duration_ms":	21161.315288,
+							"invocation_billed_duration_ms":	20429,
+							"invocation_sleep_duration_seconds":	0,
+							"invocation_cost_usd":	0.0019276176903736,
+							"introspection":	{
+								"environment_id":	"qWMj7C"
+							},
+							"metering":	{
+							},
+							"ip":	"3.80.88.91",
+							"invocation_start_timestamp":	"20250323T162058",
+							"measurement_upload_start_timestamp":	"20250323T162108",
+							"measurement_download_start_timestamp":	"20250323T162058",
+							"intervals_upload":	[361, 80, 72, 83, 71, 82, 73, 83, 72, 82],
+							"intervals_download":	[369, 73, 80, 80, 71, 79, 80, 80, 72, 79]
+						}]
+				}]
+		}]
+}
