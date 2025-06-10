@@ -1,12 +1,9 @@
 Checks: '
         *,
-        -*-avoid-const-or-ref-data-members,
-        -*-avoid-do-while,
         -*-avoid-goto,
         -*-default-arguments*,
         -*-else-after-return,
         -*-magic-numbers,
-        -*-multiple-inheritance,
         -*-narrowing-conversions,
         -*-non-private-member-variables-in-classes,
         -*-uppercase-literal-suffix,
@@ -15,6 +12,8 @@ Checks: '
         -altera-id-dependent-backward-branch,
         -altera-struct-pack-align,
         -altera-unroll-loops,
+        -boost-use-ranges,
+        -bugprone-crtp-constructor-accessibility,
         -bugprone-easily-swappable-parameters,
         -bugprone-unchecked-optional-access,
         -cert-dcl16-c,
@@ -23,7 +22,9 @@ Checks: '
         -cert-err33-c,
         -cert-err58-cpp,
         -clang-analyzer-cplusplus.NewDeleteLeaks,
+        -cppcoreguidelines-avoid-do-while,
         -cppcoreguidelines-avoid-non-const-global-variables,
+        -cppcoreguidelines-avoid-const-or-ref-data-members,
         -cppcoreguidelines-interfaces-global-init,
         -cppcoreguidelines-macro-usage,
         -cppcoreguidelines-owning-memory,
@@ -31,6 +32,7 @@ Checks: '
         -cppcoreguidelines-pro-bounds-constant-array-index,
         -cppcoreguidelines-pro-bounds-pointer-arithmetic,
         -cppcoreguidelines-pro-type-reinterpret-cast,
+        -fuchsia-multiple-inheritance,
         -fuchsia-overloaded-operator,
         -fuchsia-statically-constructed-objects,
         -fuchsia-trailing-return,
@@ -42,12 +44,15 @@ Checks: '
         -llvmlibc-*,
         -misc-confusable-identifiers,
         -misc-const-correctness,
+        -misc-include-cleaner,
         -misc-no-recursion,
         -modernize-concat-nested-namespaces,
         -modernize-pass-by-value,
+        -modernize-use-constraints,
         -modernize-use-nodiscard,
         -modernize-use-trailing-return-type,
         -performance-inefficient-string-concatenation,
+        -portability-template-virtual-member-function,
         -readability-avoid-const-params-in-decls,
         -readability-function-cognitive-complexity,
         -readability-identifier-length,
@@ -55,13 +60,10 @@ Checks: '
         '
 
 # Explanation of disabled checks
-#   *-avoid-const-or-ref-data-members                       We use const-qualified data members in classes
-#   *-avoid-do-while                                        We use do-while loops
 #   *-avoid-goto                                            Does not like Google Test
 #   *-default-arguments*                                    We use default arguments
 #   *-else-after-return                                     We use else blocks after return statements
 #   *-magic-numbers                                         We do not want to enforce constants for every "magic" number
-#   *-multiple-inheritance                                  We want to look at this in reviews on a case to case basis
 #   *-narrowing-conversions                                 TODO(tobodner): Fix storage classes
 #   *-non-private-member-variables-in-classes               We use public member variables
 #   *-uppercase-literal-suffix                              Using 1.0f instead of 1.0F is fine for us
@@ -70,6 +72,8 @@ Checks: '
 #   altera-id-dependent-backward-branch                     We do not avoid ID-dependent variables within loops
 #   altera-struct-pack-align                                We do not use alignment annotations
 #   altera-unroll-loops                                     We do not use loop unroll directives
+#   boost-use-ranges                                        We use standard ranges
+#   bugprone-crtp-constructor-accessibility                 TODO(tobodner): Refactor
 #   bugprone-easily-swappable-parameters                    We allow subsequent function parameters of convertible types
 #   bugprone-unchecked-optional-access                      Uses resource-intensive, flow-sensitive static analysis
 #   cert-dcl16-c                                            Using 1.0f instead of 1.0F is fine for us
@@ -77,6 +81,8 @@ Checks: '
 #   cert-err33-c                                            We use strftime()
 #   cert-err58-cpp                                          We are okay with uncaught errors
 #   clang-analyzer-cplusplus.NewDeleteLeaks                 We should really fix this issue
+#   cppcoreguidelines-avoid-do-while                        We use do-while loops
+#   cppcoreguidelines-avoid-const-or-ref-data-members       We use const-qualified data members in classes
 #   cppcoreguidelines-avoid-non-const-global-variables      Does not like Google Test
 #   cppcoreguidelines-interfaces-global-init                Does not like std::vector<std::function<void()>> a{[]() { std::cout << "a"; }};
 #   cppcoreguidelines-macro-usage                           We use macros for Assert/Fail/...
@@ -85,6 +91,7 @@ Checks: '
 #   cppcoreguidelines-pro-bounds-constant-array-index       We have some c-style arrays
 #   cppcoreguidelines-pro-bounds-pointer-arithmetic         We have some c-style arrays
 #   cppcoreguidelines-pro-type-reinterpret-cast             We use reinterpret_cast
+#   fuchsia-multiple-inheritance                            We want to look at this in reviews on a case to case basis
 #   fuchsia-overloaded-operator                             We overload operators
 #   fuchsia-statically-constructed-objects                  Does not like Google Test
 #   fuchsia-trailing-return                                 Gives various false positives
@@ -96,12 +103,15 @@ Checks: '
 #   llvmlibc-*                                              We do not use LLVM's libc++, but GCC's libstdc++
 #   misc-confusable-identifiers                             Uses resource-intensive static analysis
 #   misc-const-correctness                                  Uses resource-intensive static analysis
+#   misc-include-cleaner                                    TODO(tobodner): Refactor
 #   misc-no-recursion                                       Recursion is useful when parsing data nested structures
 #   modernize-concat-nested-namespaces                      We want clearly separated namespaces
+#   modernize-use-constraints                               Our magic_enum third-party dependency has this issue
 #   modernize-pass-by-value                                 We do not trust people to properly use std::move
 #   modernize-use-nodiscard                                 We do not enforce the use of [[nodiscard]]
 #   modernize-use-trailing-return-type                      We do not want to use trailing return types
 #   performance-inefficient-string-concatenation            We should really fix this issue
+#   portability-template-virtual-member-function            TODO(tobodner): Refactor
 #   readability-avoid-const-params-in-decls                 This is used in Hyrise and we do not want to enforce changes
 #   readability-function-cognitive-complexity               We nest code extensively in our parameterizable benchmarks
 #   readability-identifier-length                           We do allow short names in loops, tests, and benchmarks
