@@ -25,7 +25,7 @@ In a Docker setup, continue with:
 
 Maintainers: [Thomas Bodner](https://hpi.de/plattner/people/phd-students/thomas-bodner.html)
 
-Contributors:  [Lars Jonas Bollmeier](https://github.com/LJBollmeier), [Fabian Engel](https://github.com/engelfa),
+Contributors:  [Lars Jonas Bollmeier](https://github.com/LJBollmeier), [Lukas Budach](https://github.com/LukasBudach), [Fabian Engel](https://github.com/engelfa),
 [David Justen](https://hpi.de/plattner/people/phd-students/david-justen.html), [Jakob Köhler](https://github.com/jkhlr),
 [Fabian Mahling](https://github.com/Tratori), [Moritz Manner](https://github.com/manner), [Tobias Maltenberger](https://github.com/maltenbergert), [Jan Mensch](https://github.com/CAJan93),
 [Julian Menzler](https://github.com/julianmenzler), [Timon Millich](https://github.com/tmillich), [Tobias Pietz](https://github.com/Tobias314), [Theo Radig](https://github.com/TheoRadig),
