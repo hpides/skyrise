@@ -40,8 +40,8 @@ void CompilationContext::SetExportFormat(const FileFormat target_format) { targe
 
 std::string CompilationContext::ExportFileExtension() const {
   switch (target_format_) {
-    case FileFormat::kOrc:
-      return GetFormatExtension(FileFormat::kOrc);
+    case FileFormat::kParquet:
+      return GetFormatExtension(FileFormat::kParquet);
     case FileFormat::kCsv:
       return GetFormatExtension(FileFormat::kCsv);
     default:

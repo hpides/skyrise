@@ -173,16 +173,13 @@ inline bool operator==(const SortColumnDefinition& lhs, const SortColumnDefiniti
 /**
  * Defines the file formats supported by the ExportOperator.
  */
-enum class FileFormat { kCsv, kOrc, kParquet };
+enum class FileFormat { kCsv, kParquet };
 
 inline std::string GetFormatName(const FileFormat& format) {
   std::string format_name;
   switch (format) {
     case FileFormat::kCsv:
       format_name = "csv";
-      break;
-    case FileFormat::kOrc:
-      format_name = "orc";
       break;
     case FileFormat::kParquet:
       format_name = "parquet";

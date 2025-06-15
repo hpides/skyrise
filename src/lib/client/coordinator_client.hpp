@@ -31,8 +31,6 @@ class CoordinatorClient : public BaseClient {
   const CoordinatorClient& operator=(const CoordinatorClient&) = delete;
   CoordinatorClient& operator=(CoordinatorClient&&) = default;
 
-  ~CoordinatorClient() = default;
-
   std::shared_ptr<const Aws::CloudWatch::CloudWatchClient> GetCloudWatchClient() const;
   std::shared_ptr<const Aws::EC2::EC2Client> GetEc2Client() const;
   std::shared_ptr<const Aws::Glue::GlueClient> GetGlueClient() const;
@@ -40,6 +38,9 @@ class CoordinatorClient : public BaseClient {
   std::shared_ptr<const Aws::Pricing::PricingClient> GetPricingClient() const;
   std::shared_ptr<const Aws::SSM::SSMClient> GetSsmClient() const;
   std::shared_ptr<const Aws::XRay::XRayClient> GetXRayClient() const;
+
+  std::shared_ptr<const Aws::S3::S3Client> getS3Client() const override;
+  std::shared_ptr<const Aws::SQS::SQSClient> GetSqsClient() const override;
 
  private:
   std::shared_ptr<const Aws::CloudWatch::CloudWatchClient> cloudwatch_client_;

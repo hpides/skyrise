@@ -8,7 +8,7 @@ class ValueSegmentGenerator {
  public:
   using LambdaGenerate = std::function<std::shared_ptr<AbstractSegment>()>;
 
-  explicit ValueSegmentGenerator(LambdaGenerate generate) : generate_(std::move(generate)){};
+  explicit ValueSegmentGenerator(LambdaGenerate generate) : generate_(std::move(generate)) {};
 
   std::shared_ptr<AbstractSegment> Generate() const { return generate_(); }
 

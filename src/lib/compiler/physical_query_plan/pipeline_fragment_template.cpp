@@ -104,7 +104,7 @@ PipelineFragmentTemplate::PipelineFragmentTemplate(const std::shared_ptr<Abstrac
 
   // Clear Export fields
   const auto export_proxy = std::static_pointer_cast<ExportOperatorProxy>(mutable_template);
-  export_proxy->SetTargetObject(kTargetObjectPlaceholder, FileFormat::kOrc);
+  export_proxy->SetTargetObject(kTargetObjectPlaceholder, FileFormat::kParquet);
 
   // Clear Import fields
   auto leaf_proxies = PqpFindLeaves(std::const_pointer_cast<AbstractOperatorProxy>(mutable_template));

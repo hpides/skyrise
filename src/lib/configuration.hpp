@@ -107,7 +107,7 @@ static constexpr uint16_t kEc2TerminationGuardMinutes = 30;
 /**
  * The maximum number of workers for the execution of a PQP pipeline.
  */
-inline constexpr size_t kWorkerMaximumCountPerPipeline = kLambdaFunctionConcurrencyLimit;
+inline constexpr size_t kWorkerMaximumCountPerPipeline = 3000;
 
 /**
  * The number of worker invocations at which we switch to recursive invocation.
@@ -131,5 +131,10 @@ const Aws::String kDefaultAvailabilityZone = "us-east-1a";
 const Aws::String kDefaultSubnet = "subnet-1225ae5f";
 const Aws::String kDefaultSecurityGroup = "sg-4a242c6a";
 const Aws::String kSshSecurityGroup = "sg-05fb6181d99306e8c";
+
+/**
+ * CloudFlare R2 endpoint configuration
+ */
+inline const std::string kR2Endpoint = "https://<your-bucket-name>.r2.cloudflarestorage.com";
 
 }  // namespace skyrise

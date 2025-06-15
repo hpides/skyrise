@@ -1,36 +1,37 @@
 #pragma once
 
+#include <functional>
+#include <memory>
 #include <string>
-
-#include <aws/core/Aws.h>
-#include <aws/iam/IAMClient.h>
-#include <aws/lambda/LambdaClient.h>
-#include <aws/lambda/model/FunctionCode.h>
-
-#include "function/function_config.hpp"
+#include <vector>
 
 namespace skyrise {
 
-std::string GetProjectDirectoryPath();
+/**
+ * Utility functions for working with functions and callbacks.
+ */
+namespace FunctionUtils {
 
-std::string GetFunctionZipFilePath(const std::string& zip_file_name);
+/**
+ * Creates a function that will be executed when the returned object is destroyed.
+ * @param func The function to execute
+ * @return A unique_ptr that will execute the function when destroyed
+ */
+template <typename Func>
+std::unique_ptr<void, std::function<void(void*)>> MakeScopedFunction(Func&& func) {
+  return std::unique_ptr<void, std::function<void(void*)>>(nullptr, [func = std::forward<Func>(func)](void*) { func(); });
+}
 
-Aws::Utils::CryptoBuffer OpenFunctionZipFile(const std::string& zip_file_path);
+/**
+ * Creates a function that will be executed when the returned object is destroyed.
+ * @param func The function to execute
+ * @return A shared_ptr that will execute the function when destroyed
+ */
+template <typename Func>
+std::shared_ptr<void> MakeSharedScopedFunction(Func&& func) {
+  return std::shared_ptr<void>(nullptr, [func = std::forward<Func>(func)](void*) { func(); });
+}
 
-Aws::Lambda::Model::FunctionCode GetRemoteFunctionCode(const std::string& function_path,
-                                                       const std::string& function_name);
+}  // namespace FunctionUtils
 
-bool IsActive(const std::shared_ptr<const Aws::Lambda::LambdaClient>& lambda_client, const std::string& function_name);
-
-void UploadFunctions(const std::shared_ptr<const Aws::IAM::IAMClient>& iam_client,
-                     const std::shared_ptr<const Aws::Lambda::LambdaClient>& lambda_client,
-                     const std::vector<FunctionDeployable>& function_deployables, const bool enable_tracing);
-
-void UploadFunctions(const std::shared_ptr<const Aws::IAM::IAMClient>& iam_client,
-                     const std::shared_ptr<const Aws::Lambda::LambdaClient>& lambda_client,
-                     const std::vector<FunctionConfig>& function_configs, const bool enable_tracing);
-
-void DeleteFunction(const std::shared_ptr<const Aws::Lambda::LambdaClient>& lambda_client,
-                    const std::string& function_name);
-
-}  // namespace skyrise
+}  // namespace skyrise 

@@ -11,7 +11,7 @@ namespace skyrise {
 namespace {
 
 bool DirectoryExists(const std::string& path) {
-  struct stat info {};
+  struct stat info{};
   const int stat_result = stat(path.c_str(), &info);
   if (stat_result == -1) {
     return false;

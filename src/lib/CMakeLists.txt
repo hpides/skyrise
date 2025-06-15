@@ -1,3 +1,7 @@
+add_subdirectory(client)
+add_subdirectory(storage)
+add_subdirectory(utils)
+
 set(PRE_CONFIGURE_FILE "utils/git_metadata.cpp.in")
 set(PRE_CONFIGURE_FILE "utils/git_metadata.cpp.in")
 set(POST_CONFIGURE_FILE "utils/git_metadata.cpp")
@@ -142,61 +146,16 @@ set(
     metering/request_tracker/request_tracker.hpp
 )
 
-set(
-    SHARED_OPERATOR_SOURCES
-
-    operator/abstract_aggregate_operator.cpp
-    operator/abstract_aggregate_operator.hpp
-    operator/aggregate_hash_operator.cpp
-    operator/aggregate_hash_operator.hpp
-    operator/abstract_operator.cpp
-    operator/abstract_operator.hpp
-    operator/alias_operator.cpp
-    operator/alias_operator.hpp
-    operator/execution_context.cpp
-    operator/execution_context.hpp
-    operator/export_operator.cpp
-    operator/export_operator.hpp
-    operator/filter_operator.cpp
-    operator/filter_operator.hpp
-    operator/filter/abstract_filter_implementation.hpp
-    operator/filter/expression_evaluator_filter_implementation.cpp
-    operator/filter/expression_evaluator_filter_implementation.hpp
-    operator/hash_join_operator.cpp
-    operator/hash_join_operator.hpp
-    operator/import_operator.cpp
-    operator/import_operator.hpp
-    operator/join_operator_predicate.hpp
-    operator/partition_operator.cpp
-    operator/partition_operator.hpp
-    operator/partitioning_function.cpp
-    operator/partitioning_function.hpp
-    operator/projection_operator.cpp
-    operator/projection_operator.hpp
-    operator/sort_operator.cpp
-    operator/sort_operator.hpp
-    operator/table_wrapper.hpp
-)
 
 set(
     SHARED_SCHEDULER_SOURCES
 
-    scheduler/coordinator/lambda_executor.cpp
-    scheduler/coordinator/lambda_executor.hpp
     scheduler/coordinator/pqp_pipeline_scheduler.cpp
     scheduler/coordinator/pqp_pipeline_scheduler.hpp
-    scheduler/warmup_strategy.cpp
-    scheduler/warmup_strategy.hpp
     scheduler/worker/abstract_task.cpp
     scheduler/worker/abstract_task.hpp
     scheduler/worker/task_executor.cpp
     scheduler/worker/task_executor.hpp
-    scheduler/worker/generic_task.cpp
-    scheduler/worker/generic_task.hpp
-    scheduler/worker/operator_task.cpp
-    scheduler/worker/operator_task.hpp
-    scheduler/worker/fragment_scheduler.cpp
-    scheduler/worker/fragment_scheduler.hpp
 )
 
 set(
@@ -235,10 +194,6 @@ set(
     storage/formats/csv_reader.hpp
     storage/formats/csv_writer.cpp
     storage/formats/csv_writer.hpp
-    storage/formats/orc_reader.cpp
-    storage/formats/orc_reader.hpp
-    storage/formats/orc_writer.cpp
-    storage/formats/orc_writer.hpp
     storage/formats/parquet_expression.cpp
     storage/formats/parquet_expression.hpp
     storage/formats/parquet_metadata_reader.cpp
@@ -275,7 +230,6 @@ set(
 set(
     SHARED_UTILS_SOURCES
 
-    function/function_config.hpp
     utils/array.hpp
     utils/assert.hpp
     utils/compression.cpp
@@ -318,8 +272,6 @@ set(
     constant_mappings.cpp
     constant_mappings.hpp
     constants.hpp
-    function/function.cpp
-    function/function.hpp
     monitoring/monitoring_types.hpp
     types.cpp
     types.hpp
@@ -337,17 +289,9 @@ set(
 set(
     SHARED_LIBRARIES
 
-    # Libraries that are listed here will be linked to many different executables. Be careful what you place here,
-    # since it will affect the size, and thus, the invocation latency of AWS Lambda functions.
+    # Libraries that are listed here will be linked to many different executables.
     aws-cpp-sdk-core
-    aws-cpp-sdk-dynamodb
-    aws-cpp-sdk-ec2
-    aws-cpp-sdk-elasticfilesystem
-    aws-cpp-sdk-lambda
     aws-cpp-sdk-s3
-    aws-cpp-sdk-sqs
-    aws-cpp-sdk-xray
-    aws-lambda-runtime
 
     # Link Arrow and Parquet libraries in order of dependencies
     arrow_dataset_static
@@ -381,39 +325,18 @@ add_library(skyriseShared INTERFACE)
 
 target_link_libraries(skyriseShared INTERFACE skyriseSharedLibrary)
 
-
-
 set(
     COORDINATOR_SOURCES
 
     client/coordinator_client.cpp
     client/coordinator_client.hpp
     configuration.hpp
-    function/function_utils.cpp
-    function/function_utils.hpp
-    monitoring/lambda_segments_analyzer.cpp
-    monitoring/lambda_segments_analyzer.hpp
-    tool/function_upload_tool.cpp
-    tool/function_upload_tool.hpp
-    tool/tool_config.cpp
-    tool/tool_config.hpp
-    utils/costs/cost_calculator.cpp
-    utils/costs/cost_calculator.hpp
-    utils/costs/pricing.cpp
-    utils/costs/pricing.hpp
     ${COORDINATOR_COMPILER_SOURCES}
     ${COORDINATOR_METADATA_SOURCES}
 )
 
 set(
     COORDINATOR_LIBRARIES
-
-    aws-cpp-sdk-glue
-    aws-cpp-sdk-iam
-    aws-cpp-sdk-logs
-    aws-cpp-sdk-monitoring
-    aws-cpp-sdk-pricing
-    aws-cpp-sdk-ssm
 
     skyriseShared
 )
@@ -435,8 +358,6 @@ set(
 
 set(
     WORKER_LIBRARIES
-
-    aws-lambda-runtime
 
     skyriseShared
 )

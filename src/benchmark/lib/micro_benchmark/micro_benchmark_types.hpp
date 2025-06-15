@@ -6,7 +6,7 @@ namespace skyrise {
 
 enum class StorageOperation { kRead, kWrite };
 
-enum class StorageSystem { kDynamoDb, kEfs, kS3 };
+enum class StorageSystem { kS3 };
 
 struct StorageBenchmarkParameters {
   size_t object_size_kb{0};

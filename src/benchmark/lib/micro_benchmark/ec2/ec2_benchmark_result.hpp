@@ -35,7 +35,7 @@ struct Ec2BenchmarkRepetitionResult {
   Aws::EC2::Model::InstanceType instance_type;
   std::unordered_map<Aws::String, Ec2BenchmarkInvocationResult> invocation_results;
   std::optional<double> duration_ms;
-  explicit Ec2BenchmarkRepetitionResult(Aws::EC2::Model::InstanceType type) : instance_type(type){};
+  explicit Ec2BenchmarkRepetitionResult(Aws::EC2::Model::InstanceType type) : instance_type(type) {};
 };
 
 class Ec2BenchmarkResult : public AbstractBenchmarkResult {

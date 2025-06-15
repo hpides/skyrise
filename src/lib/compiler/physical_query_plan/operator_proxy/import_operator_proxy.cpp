@@ -181,8 +181,6 @@ std::shared_ptr<AbstractOperator> ImportOperatorProxy::CreateOperatorInstanceRec
 
     if (specifies_format(GetFormatExtension(FileFormat::kCsv))) {
       import_options_ = std::make_shared<ImportOptions>(ImportFormat::kCsv, column_ids_);
-    } else if (specifies_format(GetFormatExtension(FileFormat::kOrc))) {
-      import_options_ = std::make_shared<ImportOptions>(ImportFormat::kOrc, column_ids_);
     } else if (specifies_format(GetFormatExtension(FileFormat::kParquet))) {
       import_options_ = std::make_shared<ImportOptions>(ImportFormat::kParquet, column_ids_, partitions);
     } else {

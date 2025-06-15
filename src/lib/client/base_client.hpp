@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 #include <aws/core/Aws.h>
 #include <aws/core/Region.h>
@@ -13,38 +14,38 @@
 #include <aws/sqs/SQSClient.h>
 
 #include "configuration.hpp"
+#include "constants.hpp"
 
 namespace skyrise {
 
 // TODO(tobodner): Introduce lazy initialization (https://github.com/hpi-epic/skyrise/issues/549)
 class BaseClient {
  public:
-  BaseClient();
+  explicit BaseClient(const std::string& access_key_id, const std::string& secret_access_key);
+
   BaseClient(const BaseClient&) = delete;
   BaseClient(BaseClient&&) = default;
-  const BaseClient& operator=(const BaseClient&) = delete;
+
+  BaseClient& operator=(const BaseClient&) = delete;
   BaseClient& operator=(BaseClient&&) = default;
 
-  ~BaseClient() = default;
+  virtual ~BaseClient();
 
-  std::shared_ptr<const Aws::DynamoDB::DynamoDBClient> GetDynamoDbClient() const;
-  std::shared_ptr<const Aws::EFS::EFSClient> GetEfsClient() const;
-  std::shared_ptr<const Aws::Lambda::LambdaClient> GetLambdaClient() const;
-  std::shared_ptr<const Aws::S3::S3Client> GetS3Client() const;
-  std::shared_ptr<const Aws::SQS::SQSClient> GetSqsClient() const;
+  // std::shared_ptr<const Aws::DynamoDB::DynamoDBClient> GetDynamoDbClient() const;
+  // std::shared_ptr<const Aws::EFS::EFSClient> GetEfsClient() const;
+  // std::shared_ptr<const Aws::Lambda::LambdaClient> GetLambdaClient() const;
+  virtual std::shared_ptr<const Aws::S3::S3Client> getS3Client() const;
+  virtual std::shared_ptr<const Aws::SQS::SQSClient> GetSqsClient() const;
 
   const Aws::String& GetClientRegion() const;
 
  protected:
-  static Aws::Client::ClientConfiguration GenerateClientConfig();
+  Aws::Client::ClientConfiguration GenerateClientConfig();
 
- private:
-  std::shared_ptr<const Aws::DynamoDB::DynamoDBClient> dynamodb_client_;
-  std::shared_ptr<const Aws::EFS::EFSClient> efs_client_;
-  std::shared_ptr<const Aws::Lambda::LambdaClient> lambda_client_;
+  std::string access_key_id_;
+  std::string secret_access_key_;
   std::shared_ptr<const Aws::S3::S3Client> s3_client_;
   std::shared_ptr<const Aws::SQS::SQSClient> sqs_client_;
-
   Aws::String client_region_;
 
   inline static const Aws::Http::Scheme kHttpScheme = Aws::Http::Scheme::HTTPS;

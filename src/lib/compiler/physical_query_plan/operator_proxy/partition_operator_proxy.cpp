@@ -8,8 +8,8 @@
 
 namespace {
 
-const std::string kJsonKeyPartitionCount = "partition_count";
-const std::string kJsonKeyPartitionColumnIds = "partition_column_ids";
+// const std::string kJsonKeyPartitionCount = "partition_count";
+// const std::string kJsonKeyPartitionColumnIds = "partition_column_ids";
 const std::string kName = "Partition";
 
 }  // namespace

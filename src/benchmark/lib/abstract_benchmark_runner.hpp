@@ -12,7 +12,7 @@ namespace skyrise {
 class AbstractBenchmarkRunner {
  public:
   AbstractBenchmarkRunner(const bool enable_metering, const bool enable_introspection)
-      : enable_metering_(enable_metering), enable_introspection_(enable_introspection){};
+      : enable_metering_(enable_metering), enable_introspection_(enable_introspection) {};
   virtual ~AbstractBenchmarkRunner() = default;
 
   virtual std::shared_ptr<AbstractBenchmarkResult> RunConfig(const std::shared_ptr<AbstractBenchmarkConfig>& config) {

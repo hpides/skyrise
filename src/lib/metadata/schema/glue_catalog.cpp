@@ -130,7 +130,7 @@ const std::vector<TablePartition>& GlueCatalog::GetTablePartitions(const std::st
   const auto& table = LoadTableMetadata(table_name);
 
   if (table->partitions.empty()) {
-    const auto table_storage = std::make_shared<S3Storage>(client_->GetS3Client(), table->location->bucket_name);
+    const auto table_storage = std::make_shared<S3Storage>(client_->getS3Client(), table->location->bucket_name);
     const auto listing_outcome = table_storage->List(table->location->identifier);
     Assert(!listing_outcome.second.IsError(), listing_outcome.second.GetMessage());
 

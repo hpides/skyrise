@@ -2,32 +2,31 @@
 
 #include <memory>
 #include <variant>
+#include <string>
 
 #include <aws/core/utils/json/JsonSerializer.h>
 
 #include "storage/formats/abstract_chunk_reader.hpp"
 #include "storage/formats/csv_reader.hpp"
-#include "storage/formats/orc_reader.hpp"
 #include "storage/formats/parquet_reader.hpp"
 
 namespace skyrise {
 
-enum class ImportFormat { kCsv, kOrc, kParquet };
+enum class ImportFormat { kCsv, kParquet };
 
 class ImportOptions {
  public:
   explicit ImportOptions(ImportFormat object_format);
   ImportOptions(ImportFormat object_format, const std::vector<skyrise::ColumnId>& columns);
   explicit ImportOptions(CsvFormatReaderOptions csv_format_reader_options);
-  explicit ImportOptions(OrcFormatReaderOptions orc_format_reader_options);
   explicit ImportOptions(ParquetFormatReaderOptions parquet_format_reader_options);
   ImportOptions(ImportFormat object_format, const std::vector<skyrise::ColumnId>& columns,
                 std::optional<std::vector<int32_t>> partitions);
 
   /**
-   * @return a FormatReaderFactory for either CSV, ORC or PARQUET data.
+   * @return a FormatReaderFactory for either CSV or PARQUET data.
    *          The factory uses custom reader options, if provided. Otherwise, the factory is initialized with default
-   *          reader options for CSV, ORC or PARQUET data, respectively.
+   *          reader options for CSV or PARQUET data, respectively.
    */
   std::shared_ptr<AbstractChunkReaderFactory> CreateReaderFactory() const;
 
@@ -45,7 +44,19 @@ class ImportOptions {
 
  private:
   ImportFormat import_format_;
-  std::variant<CsvFormatReaderOptions, OrcFormatReaderOptions, ParquetFormatReaderOptions> reader_options_;
+  std::variant<CsvFormatReaderOptions, ParquetFormatReaderOptions> reader_options_;
 };
+
+extern const std::string kJsonKeyFormat;
+extern const std::string kJsonKeyCsvDelimiter;
+extern const std::string kJsonKeyCsvQuote;
+extern const std::string kJsonKeyCsvEscape;
+extern const std::string kJsonKeyCsvNullString;
+extern const std::string kJsonKeyCsvHasHeader;
+extern const std::string kJsonKeyCsvSkipRows;
+extern const std::string kJsonKeyParquetSelectRowRange;
+extern const std::string kJsonKeyParquetRangeBegin;
+extern const std::string kJsonKeyParquetRangeEnd;
+extern const std::string kJsonKeyParquetSelectPartitionRange;
 
 }  // namespace skyrise

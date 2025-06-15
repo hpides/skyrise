@@ -1,5 +1,3 @@
-add_subdirectory(function)
-
 add_executable(
     skyrise
 

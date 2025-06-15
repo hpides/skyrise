@@ -5,6 +5,9 @@
 #include "expression/expression_serialization.hpp"
 #include "storage/formats/parquet_expression.hpp"
 #include "utils/json.hpp"
+#include "storage/formats/csv_reader.hpp"
+#include "storage/formats/parquet_reader.hpp"
+#include "types.hpp"
 
 namespace {
 
@@ -13,24 +16,13 @@ const std::string kJsonKeyExpectedSchemaColumnName = "name";
 const std::string kJsonKeyExpectedSchemaDataType = "data_type";
 const std::string kJsonKeyExpectedSchemaNullable = "nullable";
 
-// OrcFormatReaderOptions
-const std::string kJsonKeyOrcFormatReaderOptions = "orc_format_reader_options";
-const std::string kJsonKeyOrcIncludeColumns = "include_columns";
-const std::string kJsonKeyOrcParseDatesAsString = "parse_dates_as_string";
-const std::string kJsonKeyOrcSelectRowRange = "select_row_range";
-const std::string kJsonKeyOrcRangeBegin = "range_begin";
-const std::string kJsonKeyOrcRangeEnd = "range_end";
-const std::string kJsonKeyOrcSelectPartitionRange = "select_partition_range";
-
 // CsvFormatReaderOptions
 const std::string kJsonKeyCsvFormatReaderOptions = "csv_format_reader_options";
-const std::string kJsonKeyCsvDelimiter = "delimiter";
+const std::string kJsonKeyCsvReadBufferSize = "read_buffer_size";
 const std::string kJsonKeyCsvGuessDelimiter = "guess_delimiter";
 const std::string kJsonKeyCsvGuessHasHeader = "guess_has_header";
 const std::string kJsonKeyCsvGuessHasTypes = "guess_has_types";
-const std::string kJsonKeyCsvHasHeader = "has_header";
 const std::string kJsonKeyCsvHasTypes = "has_types";
-const std::string kJsonKeyCsvReadBufferSize = "read_buffer_size";
 
 // ParquetFormatReaderOptions
 const std::string kJsonKeyParquetFormatReaderOptions = "parquet_format_reader_options";
@@ -56,11 +48,6 @@ ImportOptions::ImportOptions(ImportFormat object_format, const std::vector<Colum
     case ImportFormat::kCsv: {
       reader_options_ = CsvFormatReaderOptions();
     } break;
-    case ImportFormat::kOrc: {
-      auto options = OrcFormatReaderOptions();
-      options.include_columns = columns;
-      reader_options_ = options;
-    } break;
     case ImportFormat::kParquet: {
       auto options = ParquetFormatReaderOptions();
       options.include_columns = columns;
@@ -76,9 +63,6 @@ ImportOptions::ImportOptions(ImportFormat object_format, const std::vector<Colum
 
 ImportOptions::ImportOptions(CsvFormatReaderOptions csv_format_reader_options)
     : import_format_(ImportFormat::kCsv), reader_options_(std::move(csv_format_reader_options)){};
-
-ImportOptions::ImportOptions(OrcFormatReaderOptions orc_format_reader_options)
-    : import_format_(ImportFormat::kOrc), reader_options_(std::move(orc_format_reader_options)){};
 
 ImportOptions::ImportOptions(ParquetFormatReaderOptions parquet_format_reader_options)
     : import_format_(ImportFormat::kParquet), reader_options_(std::move(parquet_format_reader_options)){};
@@ -104,23 +88,6 @@ Aws::Utils::Json::JsonValue ImportOptions::ToJson() const {
       }
 
       json_output.WithObject(kJsonKeyCsvFormatReaderOptions, json_csv_options);
-    } break;
-
-    case ImportFormat::kOrc: {
-      const auto& orc_options = std::get<OrcFormatReaderOptions>(reader_options_);
-      auto json_orc_options =
-          Aws::Utils::Json::JsonValue().WithBool(kJsonKeyOrcParseDatesAsString, orc_options.parse_dates_as_string);
-
-      if (orc_options.expected_schema) {
-        json_orc_options.WithArray(kJsonKeyExpectedSchema,
-                                   TableColumnDefinitionsToJsonArray(orc_options.expected_schema));
-      } else if (orc_options.include_columns.has_value()) {
-        json_orc_options.WithArray(kJsonKeyOrcIncludeColumns,
-                                   VectorToJsonArray<ColumnId>(orc_options.include_columns.value()));
-      }
-
-      json_output.WithObject(kJsonKeyOrcFormatReaderOptions, json_orc_options);
-
     } break;
 
     case ImportFormat::kParquet: {
@@ -183,23 +150,7 @@ std::shared_ptr<const ImportOptions> ImportOptions::FromJson(const Aws::Utils::J
     return std::make_shared<ImportOptions>(csv_options);
   }
 
-  // (b) ORC Options
-  if (json_in.ValueExists(kJsonKeyOrcFormatReaderOptions)) {
-    const auto json = json_in.GetObject(kJsonKeyOrcFormatReaderOptions);
-    OrcFormatReaderOptions orc_options;
-    orc_options.parse_dates_as_string = json.GetObject(kJsonKeyOrcParseDatesAsString).AsBool();
-
-    if (json.KeyExists(kJsonKeyExpectedSchema)) {
-      orc_options.expected_schema =
-          ImportOptions::TableColumnDefinitionsFromJsonArray(json.GetArray(kJsonKeyExpectedSchema));
-    } else if (json.KeyExists(kJsonKeyOrcIncludeColumns)) {
-      orc_options.include_columns = JsonArrayToVector<ColumnId>(json.GetArray(kJsonKeyOrcIncludeColumns));
-    }
-
-    return std::make_shared<ImportOptions>(orc_options);
-  }
-
-  // (c) PARQUET Options
+  // (b) Parquet Options
   if (json_in.ValueExists(kJsonKeyParquetFormatReaderOptions)) {
     const auto json = json_in.GetObject(kJsonKeyParquetFormatReaderOptions);
     ParquetFormatReaderOptions parquet_options;
@@ -208,37 +159,38 @@ std::shared_ptr<const ImportOptions> ImportOptions::FromJson(const Aws::Utils::J
     if (json.KeyExists(kJsonKeyExpectedSchema)) {
       parquet_options.expected_schema =
           ImportOptions::TableColumnDefinitionsFromJsonArray(json.GetArray(kJsonKeyExpectedSchema));
-    }
-
-    if (json.KeyExists(kJsonKeyParquetIncludeColumns)) {
+    } else if (json.KeyExists(kJsonKeyParquetIncludeColumns)) {
       parquet_options.include_columns = JsonArrayToVector<ColumnId>(json.GetArray(kJsonKeyParquetIncludeColumns));
-    }
-
-    if (json.KeyExists(kJsonKeyParquetExpression)) {
-      const auto serialized_expression = json.GetObject(kJsonKeyParquetExpression);
-      const auto skyrise_expression = DeserializeExpression(serialized_expression);
-      parquet_options.arrow_expression = CreateArrowExpression(skyrise_expression);
     }
 
     if (json.KeyExists(kJsonKeyParquetRowGroupIds)) {
       parquet_options.row_group_ids = JsonArrayToVector<int32_t>(json.GetArray(kJsonKeyParquetRowGroupIds));
     }
 
+    if (json.KeyExists(kJsonKeyParquetExpression)) {
+      auto expr = DeserializeExpression(json.GetObject(kJsonKeyParquetExpression));
+      if (auto pred_expr = std::dynamic_pointer_cast<AbstractPredicateExpression>(expr)) {
+        parquet_options.skyrise_expression = pred_expr;
+      } else {
+        Fail("Expected predicate expression for Parquet format reader options.");
+      }
+    }
+
     return std::make_shared<ImportOptions>(parquet_options);
   }
 
-  Fail("Failed to create ImportOptions because JSON values are missing.");
+  Fail("Expected either CSV or Parquet format reader options.");
 }
 
 std::shared_ptr<AbstractChunkReaderFactory> ImportOptions::CreateReaderFactory() const {
   switch (import_format_) {
-    case ImportFormat::kCsv:
+    case ImportFormat::kCsv: {
       return std::make_shared<FormatReaderFactory<CsvFormatReader>>(std::get<CsvFormatReaderOptions>(reader_options_));
-    case ImportFormat::kOrc:
-      return std::make_shared<FormatReaderFactory<OrcFormatReader>>(std::get<OrcFormatReaderOptions>(reader_options_));
-    case ImportFormat::kParquet:
+    }
+    case ImportFormat::kParquet: {
       return std::make_shared<FormatReaderFactory<ParquetFormatReader>>(
           std::get<ParquetFormatReaderOptions>(reader_options_));
+    }
     default:
       Fail("Unexpected ImportFormat.");
   }
@@ -246,41 +198,27 @@ std::shared_ptr<AbstractChunkReaderFactory> ImportOptions::CreateReaderFactory()
 
 Aws::Utils::Array<Aws::Utils::Json::JsonValue> ImportOptions::TableColumnDefinitionsToJsonArray(
     const std::shared_ptr<TableColumnDefinitions>& column_definitions) {
-  Aws::Utils::Array<Aws::Utils::Json::JsonValue> json_output(column_definitions->size());
-
+  Aws::Utils::Array<Aws::Utils::Json::JsonValue> json_array(column_definitions->size());
   for (size_t i = 0; i < column_definitions->size(); ++i) {
-    const auto& column_definition = (*column_definitions)[i];
-    json_output[i] =
-        Aws::Utils::Json::JsonValue()
-            .WithString(kJsonKeyExpectedSchemaColumnName, column_definition.name)
-            .WithString(kJsonKeyExpectedSchemaDataType, std::string(magic_enum::enum_name(column_definition.data_type)))
-            .WithBool(kJsonKeyExpectedSchemaNullable, column_definition.nullable);
+    const auto& column_definition = column_definitions->at(i);
+    json_array[i] = Aws::Utils::Json::JsonValue()
+                        .WithString(kJsonKeyExpectedSchemaColumnName, column_definition.name)
+                        .WithString(kJsonKeyExpectedSchemaDataType, std::string(magic_enum::enum_name(column_definition.data_type)))
+                        .WithBool(kJsonKeyExpectedSchemaNullable, column_definition.nullable);
   }
-
-  return json_output;
+  return json_array;
 }
 
 std::shared_ptr<TableColumnDefinitions> ImportOptions::TableColumnDefinitionsFromJsonArray(
     const Aws::Utils::Array<Aws::Utils::Json::JsonView>& json_array) {
-  Assert(json_array.GetLength(), "Expected JSON array with at least one entry.");
   auto column_definitions = std::make_shared<TableColumnDefinitions>();
   column_definitions->reserve(json_array.GetLength());
-
   for (size_t i = 0; i < json_array.GetLength(); ++i) {
-    Assert(json_array[i].ValueExists(kJsonKeyExpectedSchemaColumnName),
-           "Expected JSON value " + kJsonKeyExpectedSchemaColumnName);
-    const auto column_name = json_array[i].GetString(kJsonKeyExpectedSchemaColumnName);
-    Assert(json_array[i].ValueExists(kJsonKeyExpectedSchemaDataType),
-           "Expected JSON value " + kJsonKeyExpectedSchemaDataType);
-    const auto data_type =
-        magic_enum::enum_cast<DataType>(json_array[i].GetString(kJsonKeyExpectedSchemaDataType)).value();
-    Assert(json_array[i].ValueExists(kJsonKeyExpectedSchemaNullable),
-           "Expected JSON value " + kJsonKeyExpectedSchemaNullable);
-    const auto nullable = json_array[i].GetBool(kJsonKeyExpectedSchemaNullable);
-
-    column_definitions->emplace_back(column_name, data_type, nullable);
+    const auto& json = json_array[i];
+    const auto data_type = *magic_enum::enum_cast<DataType>(json.GetString(kJsonKeyExpectedSchemaDataType));
+    column_definitions->emplace_back(json.GetString(kJsonKeyExpectedSchemaColumnName), data_type,
+                                     json.GetBool(kJsonKeyExpectedSchemaNullable));
   }
-
   return column_definitions;
 }
 

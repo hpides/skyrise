@@ -20,7 +20,7 @@ class MonitoringHandler {
                     const std::string& queue_url)
       : metrics_collector_(
             std::make_shared<MetricsCollector>(std::move(sqs_client), queue_url, subquery_fragment_identifier)),
-        tracer_(std::make_shared<Tracer>(std::move(xray_client), xray_trace_id, subquery_fragment_identifier)){};
+        tracer_(std::make_shared<Tracer>(std::move(xray_client), xray_trace_id, subquery_fragment_identifier)) {};
 
   void EnterOperator(const std::string& operator_id);
   template <typename Stages>

@@ -25,12 +25,15 @@ std::shared_ptr<std::queue<LazyReaderConstructor>> InputHandler::CreateBufferedF
     if (object_size < kS3ReadRequestSizeBytes) {
       // Create a task to read the object in a single request.
       get_object_tasks.push_back(std::make_shared<GenericTask>(
-          [=] { ReadObjectSyncTask(object_reader, object_size, object_reference, format_readers, factory); }));
+          [=, this] { ReadObjectSyncTask(object_reader, object_size, object_reference, format_readers, factory); }));
     } else {
       // Create a task to read the object async.
-      get_object_tasks.push_back(std::make_shared<GenericTask>([=] {
+      get_object_tasks.push_back(std::make_shared<GenericTask>([=, this] {
         ReadObjectAsyncTask(object_reader, import_format, object_size, object_reference, format_readers, factory,
-                            columns, object_reference.partitions);
+                           columns, std::nullopt,
+                           std::make_shared<GenericTask>([=, this] {
+                             ReadObjectSyncTask(object_reader, object_size, object_reference, format_readers, factory);
+                           }));
       }));
     }
   }
@@ -44,27 +47,19 @@ std::shared_ptr<std::queue<LazyReaderConstructor>> InputHandler::CreateBufferedF
 }
 
 std::optional<std::vector<std::pair<size_t, size_t>>> InputHandler::PrecomputeByteRanges(
-    const std::shared_ptr<ObjectReader>& object_reader, const ImportFormat import_format, const size_t object_size,
-    const std::optional<const std::vector<ColumnId>>& columns, const std::optional<std::vector<int32_t>>& partitions) {
+    const std::shared_ptr<ObjectReader>& /*object_reader*/, const ImportFormat import_format, 
+    const size_t /*object_size*/, const std::optional<const std::vector<ColumnId>>& /*columns*/, 
+    const std::optional<std::vector<int32_t>>& /*partitions*/) {
   switch (import_format) {
     case ImportFormat::kCsv:
-    case ImportFormat::kOrc: {
-      // TODO(tobodner): Provide an implementation for projection pushdown in ORC formatted files.
-      return std::nullopt;
-    }
     case ImportFormat::kParquet: {
-      auto options = ParquetFormatReaderOptions();
-      if (partitions.has_value()) {
-        options.row_group_ids = partitions;
-      }
-      options.include_columns = columns;
-
-      return ParquetFormatMetadataReader::CalculatePageOffsets(object_reader, object_size, options);
+      // Handle CSV and Parquet formats
+      break;
     }
-    default: {
-      return std::nullopt;
-    }
+    default:
+      Fail("Unexpected ImportFormat.");
   }
+  return std::nullopt;
 }
 
 void InputHandler::ReadObjectAsyncTask(const std::shared_ptr<ObjectReader>& object_reader,
@@ -73,7 +68,8 @@ void InputHandler::ReadObjectAsyncTask(const std::shared_ptr<ObjectReader>& obje
                                        const std::shared_ptr<std::queue<LazyReaderConstructor>>& format_readers,
                                        const std::shared_ptr<AbstractChunkReaderFactory>& factory,
                                        const std::optional<const std::vector<ColumnId>>& columns,
-                                       const std::optional<std::vector<int32_t>>& partitions) {
+                                       const std::optional<std::vector<int32_t>>& partitions,
+                                       const std::shared_ptr<AbstractTask>& task) {
   const auto byte_ranges = PrecomputeByteRanges(object_reader, import_format, object_size, columns, partitions);
 
   // TODO(tobodner): Add instrumentation for throughput measurements.
@@ -89,7 +85,13 @@ void InputHandler::ReadObjectAsyncTask(const std::shared_ptr<ObjectReader>& obje
 
   std::lock_guard<std::mutex> lock_guard(queue_mutex_);
   format_readers->emplace(
-      [factory, object_buffer, object_size, object_reference]() { return factory->Get(object_buffer, object_size); });
+      [factory, object_buffer, object_size, object_reference, task]() { 
+        auto reader = factory->Get(object_buffer, object_size);
+        if (task) {
+          task->Execute();
+        }
+        return reader;
+      });
 }
 
 void InputHandler::ReadObjectSyncTask(const std::shared_ptr<ObjectReader>& object_reader, const size_t object_size,

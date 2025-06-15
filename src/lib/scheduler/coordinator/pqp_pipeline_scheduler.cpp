@@ -16,6 +16,8 @@ PqpPipelineScheduler::PqpPipelineScheduler(std::shared_ptr<AbstractPqpPipelineFr
                    std::make_shared<PqpPipelineTask>(PqpPipelineTask{pipeline, pipeline->FragmentDefinitions().size(),
                                                                      pipeline->Predecessors().size()}));
   }
+
+  s3_client_ = std::make_shared<Aws::S3::S3Client>(config);
 };
 
 std::pair<std::shared_ptr<ObjectReference>, std::vector<std::shared_ptr<PqpPipelineTask>>>

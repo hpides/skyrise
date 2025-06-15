@@ -2,6 +2,10 @@
 
 Skyrise is a research project exploring data processing on elastic cloud resources.
 
+## Paper
+
+Paper related to the framework: https://openproceedings.org/2025/conf/edbt/paper-239.pdf
+
 ## Team
 
 Maintainers: [Thomas Bodner](https://hpi.de/plattner/people/phd-students/thomas-bodner.html)

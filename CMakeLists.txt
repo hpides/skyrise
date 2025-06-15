@@ -31,12 +31,8 @@ set_property(GLOBAL PROPERTY JOB_POOLS serial_jobs=1)
 include(cmake/CompilerSettings.cmake)
 
 # Locate third-party packages
-set(aws-lambda-runtime_DIR cmake)
-find_package(aws-lambda-runtime CONFIG REQUIRED)
-find_package(AWSSDK REQUIRED COMPONENTS dynamodb ec2 elasticfilesystem events glue iam lambda logs monitoring pricing s3 sqs
-    ssm xray)
+find_package(AWSSDK REQUIRED COMPONENTS s3)
 find_package(Boost)
-# Arrow and Parquet are tightly coupled: Parquet depends on Arrow and ArrowDataSet depends on Parquet
 find_package(Arrow REQUIRED)
 get_filename_component(ARROW_DIR ${Arrow_CONFIG} DIRECTORY)
 find_package(Parquet REQUIRED HINTS ${ARROW_DIR})

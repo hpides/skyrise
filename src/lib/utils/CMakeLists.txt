@@ -1,0 +1,46 @@
+add_library(skyriseUtils
+    array.hpp
+    assert.hpp
+    compression.cpp
+    compression.hpp
+    concurrent/concurrent_queue.hpp
+    filesystem.cpp
+    filesystem.hpp
+    git_metadata.cpp
+    git_metadata.hpp
+    invalid_input_exception.hpp
+    json.hpp
+    literal.hpp
+    map.hpp
+    print_directed_acyclic_graph.hpp
+    profiling/function_host_information.cpp
+    profiling/function_host_information.hpp
+    random.hpp
+    region.cpp
+    region.hpp
+    self_name.cpp
+    self_name.hpp
+    signal_handler.cpp
+    signal_handler.hpp
+    string.cpp
+    string.hpp
+    time.cpp
+    time.hpp
+    unit_conversion.hpp
+    vector.hpp
+)
+
+target_include_directories(skyriseUtils
+    PUBLIC
+    ${PROJECT_SOURCE_DIR}/src/lib
+)
+
+target_link_libraries(skyriseUtils
+    PUBLIC
+    boost_stacktrace_backtrace
+    dl
+    backtrace
+    arrow_static
+    arrow_dataset_static
+    parquet_static
+) 

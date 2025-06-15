@@ -46,7 +46,7 @@ StorageError ErrnoToStorageError() {
 // the filepath can be hidden to simulate behaviour like in a chroot. Be aware that this is not a security feature and
 // can easily be circumvented.
 ObjectStatus GetFileStatus(const std::string& filename, size_t num_characters_hidden = 0) {
-  struct stat buffer {};
+  struct stat buffer{};
   const int stat_result = stat(filename.c_str(), &buffer);
   const int64_t last_modified = buffer.st_mtime;
 

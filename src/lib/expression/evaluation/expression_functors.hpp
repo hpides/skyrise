@@ -219,8 +219,8 @@ struct DivisionEvaluator {
 struct CaseEvaluator {
   template <typename Result, typename ArgA, typename ArgB>
   struct Supports {
-    static constexpr bool kValue = (std::is_same_v<std::string, ArgA> == std::is_same_v<std::string, ArgB>)&&(
-        std::is_same_v<std::string, ArgA> == std::is_same_v<std::string, Result>);
+    static constexpr bool kValue = (std::is_same_v<std::string, ArgA> == std::is_same_v<std::string, ArgB>) &&
+                                   (std::is_same_v<std::string, ArgA> == std::is_same_v<std::string, Result>);
   };
 
   template <typename Result, typename ArgA, typename ArgB>

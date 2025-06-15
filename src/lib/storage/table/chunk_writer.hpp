@@ -59,7 +59,7 @@ class PartitionedChunkWriter : public AbstractChunkWriter {
 class MemoryChunkWriter : public AbstractChunkWriter {
  public:
   void Finalize() override {}
-  void Initialize(const TableColumnDefinitions& /*schema*/) override{};
+  void Initialize(const TableColumnDefinitions& /*schema*/) override {};
   void ProcessChunk(std::shared_ptr<const Chunk> chunk) override;
   const std::vector<std::shared_ptr<const Chunk>>& GetChunks() { return chunks_; }
 

@@ -1,0 +1,31 @@
+add_library(skyriseStorage
+    backend/abstract_storage.cpp
+    backend/abstract_storage.hpp
+    backend/errors.cpp
+    backend/errors.hpp
+    backend/filesystem_storage.cpp
+    backend/filesystem_storage.hpp
+    backend/s3_storage.cpp
+    backend/s3_storage.hpp
+    backend/s3_utils.cpp
+    backend/s3_utils.hpp
+    backend/stream.cpp
+    backend/stream.hpp
+    io_handle/byte_buffer.cpp
+    io_handle/byte_buffer.hpp
+    io_handle/input_handler.cpp
+    io_handle/object_buffer.cpp
+    io_handle/object_buffer.hpp
+    storage_types.hpp
+)
+
+target_include_directories(skyriseStorage
+    PUBLIC
+    ${PROJECT_SOURCE_DIR}/src/lib
+)
+
+target_link_libraries(skyriseStorage
+    PUBLIC
+    aws-cpp-sdk-s3
+    aws-cpp-sdk-core
+) 
