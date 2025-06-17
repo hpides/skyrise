@@ -1,0 +1,29 @@
+Benchmark Summary Report
+=====================
+
+Parameters:
+-----------
+Object Size: 1 KB
+Object Count: 1000
+Thread Count: 8
+Bucket: benchmarking
+
+Write Results:
+-------------
+Min Latency: 138.32 ms
+Max Latency: 750.91 ms
+Avg Latency: 182.33 ms
+Sequential Throughput: 0.01 MB/s
+Wall-Clock Throughput: 0.04 MB/s
+Total Duration: 182334.69 ms
+Wall Duration: 23383.76 ms
+
+Read Results:
+------------
+Min Latency: 51.76 ms
+Max Latency: 1049.65 ms
+Avg Latency: 76.64 ms
+Sequential Throughput: 0.01 MB/s
+Wall-Clock Throughput: 0.10 MB/s
+Total Duration: 766403.04 ms
+Wall Duration: 97259.17 ms
