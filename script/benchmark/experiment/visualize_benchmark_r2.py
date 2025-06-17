@@ -37,22 +37,28 @@ def plot_latency_distribution(data, operation, output_dir):
 
 def plot_throughput_comparison(data, output_dir):
     operations = ['write', 'read']
-    throughputs = [data[op]['throughput_mbps'] for op in operations]
-    
-    plt.figure(figsize=(8, 6))
-    bars = plt.bar(operations, throughputs)
-    
+    seq_throughputs = [data[op]['throughput_mbps'] for op in operations]
+    wall_throughputs = [data[op]['wall_throughput_mbps'] for op in operations]
+    x = np.arange(len(operations))
+    width = 0.35
+
+    plt.figure(figsize=(10, 6))
+    bars1 = plt.bar(x - width/2, seq_throughputs, width, label='Sequential')
+    bars2 = plt.bar(x + width/2, wall_throughputs, width, label='Wall-Clock')
+
     # Add value labels on top of bars
-    for bar in bars:
-        height = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2., height,
-                f'{height:.2f} MB/s',
-                ha='center', va='bottom')
-    
-    plt.title('Throughput Comparison')
+    for bars in [bars1, bars2]:
+        for bar in bars:
+            height = bar.get_height()
+            plt.text(bar.get_x() + bar.get_width()/2., height,
+                     f'{height:.2f}',
+                     ha='center', va='bottom', fontsize=10)
+
+    plt.title('Throughput Comparison (Sequential vs Wall-Clock)')
     plt.ylabel('Throughput (MB/s)')
+    plt.xticks(x, operations)
+    plt.legend()
     plt.grid(True, alpha=0.3)
-    
     plt.savefig(output_dir / 'throughput_comparison.png')
     plt.close()
 
@@ -86,16 +92,20 @@ Write Results:
 Min Latency: {data['write']['min_latency_ms']:.2f} ms
 Max Latency: {data['write']['max_latency_ms']:.2f} ms
 Avg Latency: {data['write']['avg_latency_ms']:.2f} ms
-Throughput: {data['write']['throughput_mbps']:.2f} MB/s
+Sequential Throughput: {data['write']['throughput_mbps']:.2f} MB/s
+Wall-Clock Throughput: {data['write']['wall_throughput_mbps']:.2f} MB/s
 Total Duration: {data['write']['duration_ms']:.2f} ms
+Wall Duration: {data['write']['wall_duration_ms']:.2f} ms
 
 Read Results:
 ------------
 Min Latency: {data['read']['min_latency_ms']:.2f} ms
 Max Latency: {data['read']['max_latency_ms']:.2f} ms
 Avg Latency: {data['read']['avg_latency_ms']:.2f} ms
-Throughput: {data['read']['throughput_mbps']:.2f} MB/s
+Sequential Throughput: {data['read']['throughput_mbps']:.2f} MB/s
+Wall-Clock Throughput: {data['read']['wall_throughput_mbps']:.2f} MB/s
 Total Duration: {data['read']['duration_ms']:.2f} ms
+Wall Duration: {data['read']['wall_duration_ms']:.2f} ms
 """
     
     with open(output_dir / 'summary_report.txt', 'w') as f:

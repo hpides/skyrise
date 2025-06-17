@@ -135,6 +135,6 @@ const Aws::String kSshSecurityGroup = "sg-05fb6181d99306e8c";
 /**
  * CloudFlare R2 endpoint configuration
  */
-inline const std::string kR2Endpoint = "https://<your-bucket-name>.r2.cloudflarestorage.com";
+inline const std::string kR2Endpoint = "https://0a3675349f63db3e1f510c90ed0002ce.r2.cloudflarestorage.com";
 
 }  // namespace skyrise
