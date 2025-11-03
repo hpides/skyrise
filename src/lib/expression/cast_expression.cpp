@@ -28,7 +28,7 @@ DataType CastExpression::GetDataType() const { return data_type_; }
 
 bool CastExpression::ShallowEquals(const AbstractExpression& expression) const {
   DebugAssert(dynamic_cast<const CastExpression*>(&expression),
-              "Different expression type should have been caught by AbstractExpression::operator==");
+              "Different expression type should have been caught by AbstractExpression::operator==.");
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
   const auto& other_cast_expression = static_cast<const CastExpression&>(expression);
   return data_type_ == other_cast_expression.data_type_;

@@ -18,9 +18,8 @@ AWS_SECRET_ACCESS_KEY=$(aws --profile default configure get aws_secret_access_ke
 
 COMMAND="cd /var/skyrise/cmake-build-debug/ && bin/skyriseTest $GTEST_FILTER_FLAGS"
 
-PREFIX="hpiepic"
-IMAGE_DATE="20211208"
-IMAGE="skyrise:al2-${IMAGE_DATE}"
+# Sets variables describing the most recent Docker image version
+source $(dirname $0)/image.conf
 
 USER="$(id -u)"
 GROUP="$(id -g)"
@@ -32,6 +31,6 @@ DOCKER_COMMAND="docker run --rm -it \
                            --volume ${SOURCE_DIR}:${PROJECT_MOUNT_POINT} \
                            -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
                            -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
-                           ${PREFIX}/${IMAGE} bash -c \"${COMMAND}\""
+                           ${IMAGE_PREFIX}/${IMAGE_NAME}-${IMAGE_DATE} bash -c \"${COMMAND}\""
 
 eval ${DOCKER_COMMAND}

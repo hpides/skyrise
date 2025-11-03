@@ -3,6 +3,7 @@
 #include <set>
 
 #include "abstract_operator_proxy.hpp"
+#include "operator/partitioning_function.hpp"
 #include "types.hpp"
 
 namespace skyrise {
@@ -10,7 +11,7 @@ namespace skyrise {
 class PartitionOperatorProxy : public EnableMakeForPlanNode<PartitionOperatorProxy, AbstractOperatorProxy>,
                                public AbstractOperatorProxy {
  public:
-  PartitionOperatorProxy(const size_t partition_count, const std::set<ColumnId>& partition_column_ids);
+  PartitionOperatorProxy(std::shared_ptr<AbstractPartitioningFunction> partitioning_function);
 
   const std::string& Name() const override;
   std::string Description(const DescriptionMode mode) const override;
@@ -36,11 +37,11 @@ class PartitionOperatorProxy : public EnableMakeForPlanNode<PartitionOperatorPro
   std::shared_ptr<AbstractOperatorProxy> OnDeepCopy(
       const std::shared_ptr<AbstractOperatorProxy>& copied_left_input,
       const std::shared_ptr<AbstractOperatorProxy>& copied_right_input) const override;
+  size_t ShallowHash() const override;
   std::shared_ptr<AbstractOperator> CreateOperatorInstanceRecursively() override;
 
  private:
-  const size_t partition_count_;
-  const std::set<ColumnId> partition_column_ids_;
+  const std::shared_ptr<AbstractPartitioningFunction> partitioning_function_;
 };
 
 }  // namespace skyrise

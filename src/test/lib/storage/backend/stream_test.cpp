@@ -67,10 +67,10 @@ TEST_F(StreamTest, TestSmallSequentialReads) {
 TEST_F(StreamTest, TestSequentialReads) {
   auto stream = GetStreamLarge();
   EXPECT_EQ(stream.get(), 'a');
-  for (size_t i = 0; i < kTestObjectLargeBlockSize; i++) {
+  for (size_t i = 0; i < kTestObjectLargeBlockSize; ++i) {
     EXPECT_EQ(stream.get(), 'b');
   }
-  for (size_t i = 0; i < kTestObjectLargeBlockSize; i++) {
+  for (size_t i = 0; i < kTestObjectLargeBlockSize; ++i) {
     EXPECT_EQ(stream.get(), 'c');
   }
   EXPECT_EQ(stream.get(), 'd');
@@ -124,6 +124,67 @@ TEST_F(StreamTest, TestGetFilesize) {
   stream.seekg(0, std::ios_base::end);
   auto filesize = static_cast<size_t>(stream.tellg());
   EXPECT_EQ(filesize, kTestObjectLargeSize);
+}
+
+TEST(DelegateStreamTest, SimpleWriteRead) {
+  std::vector<char> stream_buffer;
+  stream_buffer.reserve(3);
+  DelegateStreamBuffer buffer_stream(&stream_buffer);
+  std::iostream test_stream(&buffer_stream);
+
+  test_stream << "AB";
+  test_stream.put('C');
+
+  EXPECT_TRUE(test_stream.good());
+  EXPECT_TRUE(memcmp(stream_buffer.data(), "ABC", 3) == 0);
+
+  EXPECT_EQ(test_stream.get(), 'A');
+  EXPECT_EQ(test_stream.get(), 'B');
+  EXPECT_EQ(test_stream.get(), 'C');
+  EXPECT_EQ(test_stream.get(), std::char_traits<char>::eof());
+}
+
+TEST(DelegateStreamTest, RandomAccessReadWrite) {
+  std::vector<char> stream_buffer;
+  DelegateStreamBuffer buffer_stream(&stream_buffer);
+  std::iostream test_stream(&buffer_stream);
+
+  test_stream << "ABCDEFG";
+  EXPECT_EQ(std::string(stream_buffer.data(), stream_buffer.size()), "ABCDEFG");
+
+  test_stream.seekg(1);
+  EXPECT_EQ(test_stream.get(), 'B');
+
+  test_stream.seekp(1);
+  test_stream << "X";
+  EXPECT_EQ(std::string(stream_buffer.data(), stream_buffer.size()), "AXCDEFG");
+  EXPECT_EQ(stream_buffer.size(), 7);
+
+  test_stream.seekg(1);
+  EXPECT_EQ(test_stream.get(), 'X');
+  EXPECT_EQ(test_stream.get(), 'C');
+
+  test_stream.seekp(6);
+  test_stream << "P";
+  EXPECT_EQ(std::string(stream_buffer.data(), stream_buffer.size()), "AXCDEFP");
+}
+
+TEST(DelegateStreamTest, RelativeSeeking) {
+  std::vector<char> stream_buffer;
+  DelegateStreamBuffer buffer_stream(&stream_buffer);
+  std::iostream test_stream(&buffer_stream);
+
+  std::stringstream golden_stream;
+  test_stream << "ABC";
+  golden_stream << "ABC";
+
+  test_stream.seekp(-1, std::ios::cur);
+  golden_stream.seekp(-1, std::ios::cur);
+
+  test_stream << "X";
+  golden_stream << "X";
+  EXPECT_EQ(golden_stream.str(), "ABX");
+  EXPECT_EQ(golden_stream.str(), std::string(stream_buffer.data(), stream_buffer.size()));
 }
 
 }  // namespace skyrise

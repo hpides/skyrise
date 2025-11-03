@@ -117,7 +117,7 @@ bool AggregateExpression::IsCountStar(const AbstractExpression& expression) {
 
 bool AggregateExpression::ShallowEquals(const AbstractExpression& expression) const {
   DebugAssert(dynamic_cast<const AggregateExpression*>(&expression),
-              "Different expression type should have been caught by AbstractExpression::operator==");
+              "Different expression type should have been caught by AbstractExpression::operator==.");
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
   return aggregate_function_ == static_cast<const AggregateExpression&>(expression).aggregate_function_;
 }

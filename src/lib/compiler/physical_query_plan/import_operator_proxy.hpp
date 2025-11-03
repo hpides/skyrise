@@ -5,15 +5,15 @@
 
 #include "abstract_operator_proxy.hpp"
 #include "import_options.hpp"
-#include "storage/table/chunk_reader.hpp"
 #include "storage/table/table_column_definition.hpp"
+#include "types.hpp"
 
 namespace skyrise {
 
 class ImportOperatorProxy : public EnableMakeForPlanNode<ImportOperatorProxy, AbstractOperatorProxy>,
                             public AbstractOperatorProxy {
  public:
-  ImportOperatorProxy(std::string bucket_name, std::vector<std::string> object_keys, std::vector<ColumnId> column_ids);
+  ImportOperatorProxy(const std::vector<ObjectReference>& object_references, const std::vector<ColumnId>& column_ids);
 
   const std::string& Name() const override;
   std::string Description(const DescriptionMode mode) const override;
@@ -21,8 +21,7 @@ class ImportOperatorProxy : public EnableMakeForPlanNode<ImportOperatorProxy, Ab
   /**
    * Accessors
    */
-  const std::string& BucketName() const;
-  const std::vector<std::string>& ObjectKeys() const;
+  const std::vector<ObjectReference>& ObjectReferences() const;
   const std::vector<ColumnId>& ColumnIds() const;
 
   // If desired, non-default options for reading CSV/ORC data can be set.
@@ -47,14 +46,14 @@ class ImportOperatorProxy : public EnableMakeForPlanNode<ImportOperatorProxy, Ab
   std::shared_ptr<AbstractOperatorProxy> OnDeepCopy(
       const std::shared_ptr<AbstractOperatorProxy>& copied_left_input,
       const std::shared_ptr<AbstractOperatorProxy>& copied_right_input) const override;
+  size_t ShallowHash() const override;
   std::shared_ptr<AbstractOperator> CreateOperatorInstanceRecursively() override;
 
  private:
-  const std::string bucket_name_;
-  const std::vector<std::string> object_keys_;
   const std::vector<ColumnId> column_ids_;
+  const std::vector<ObjectReference> object_references_;
   std::shared_ptr<const ImportOptions> import_options_;
-  size_t output_objects_count_;
+  size_t output_objects_count_ = std::numeric_limits<size_t>::max();
 };
 
 }  // namespace skyrise

@@ -57,7 +57,7 @@ DataType ExtractExpression::GetDataType() const {
 
 bool ExtractExpression::ShallowEquals(const AbstractExpression& expression) const {
   DebugAssert(dynamic_cast<const ExtractExpression*>(&expression),
-              "Different expression type should have been caught by AbstractExpression::operator==");
+              "Different expression type should have been caught by AbstractExpression::operator==.");
   const auto& other_extract_expression =
       static_cast<const ExtractExpression&>(expression);  // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 

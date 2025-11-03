@@ -43,7 +43,7 @@ const std::vector<std::shared_ptr<AbstractTask>>& AbstractTask::Predecessors() c
 const std::vector<std::shared_ptr<AbstractTask>>& AbstractTask::Successors() const { return successors_; }
 
 void AbstractTask::SetDoneCallback(std::function<void()> done_callback) {
-  DebugAssert(!IsScheduled(), "Possible race: Do not set callback after the Task was scheduled");
+  DebugAssert(!IsScheduled(), "Possible race: Do not set callback after the Task was scheduled.");
 
   done_callback_ = std::move(done_callback);
 }
@@ -104,7 +104,7 @@ bool AbstractTask::TryTransitionTo(TaskState new_state) {
              "Illegal state transition to TaskState::kStarted: Task should have been scheduled before being executed.");
       break;
     case TaskState::kDone:
-      Assert(state_ == TaskState::kStarted, "Illegal state transition to TaskState::kDone");
+      Assert(state_ == TaskState::kStarted, "Illegal state transition to TaskState::kDone.");
       break;
     default:
       Fail("Unexpected target state in AbstractTask.");

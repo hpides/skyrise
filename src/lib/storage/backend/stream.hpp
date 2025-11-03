@@ -70,4 +70,27 @@ class ObjectReaderStream : public std::iostream {
   ObjectReaderStreamBuffer stream_buffer_;
 };
 
+/**
+ * A DelegateStreamBuffer reads and writes data from and to an externally owned std::vector. It will resize the vector
+ * accordingly.
+ */
+class DelegateStreamBuffer : public std::streambuf {
+ public:
+  DelegateStreamBuffer() : buffer_(nullptr) {}
+
+  DelegateStreamBuffer(std::vector<char>* data);
+  void Reset(std::vector<char>* data);
+
+ protected:
+  std::streamsize xsputn(const char* s, std::streamsize n) override;
+  pos_type seekpos(pos_type pos, std::ios::openmode which = std::ios::in | std::ios::out) override;
+  pos_type seekoff(off_type off, std::ios::seekdir dir,
+                   std::ios::openmode which = std::ios::in | std::ios::out) override;
+
+  int overflow(int ch = traits_type::eof()) override;
+
+ private:
+  std::vector<char>* buffer_;
+};
+
 }  // namespace skyrise

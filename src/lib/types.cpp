@@ -3,6 +3,8 @@
  */
 #include "types.hpp"
 
+#include <boost/container_hash/hash.hpp>
+
 #include "constant_mappings.hpp"
 #include "utils/assert.hpp"
 
@@ -169,6 +171,12 @@ std::ostream& operator<<(std::ostream& stream, ExchangeMode exchange_mode) {
 
 std::ostream& operator<<(std::ostream& stream, SetOperationMode set_operation_mode) {
   return stream << kSetOperationModeToString.left.at(set_operation_mode);
+}
+
+size_t SortColumnDefinition::Hash() const {
+  size_t hash = boost::hash_value(column_id);
+  boost::hash_combine(hash, sort_mode);
+  return hash;
 }
 
 std::ostream& operator<<(std::ostream& stream, SortMode sort_mode) {

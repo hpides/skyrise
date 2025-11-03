@@ -54,7 +54,7 @@ TEST(ExchangeOperatorProxyTest, DeepCopy) {
   // clang-format off
   const auto exchange_proxy =
   ExchangeOperatorProxy::Make(
-    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}}));
+    ImportOperatorProxy::Make(std::vector<ObjectReference>{ObjectReference("bucket_name", "import.orc")}, std::vector<ColumnId>{ColumnId{0}}));
 
   // clang-format on
   exchange_proxy->SetToPartialMerge(50);
@@ -71,7 +71,7 @@ TEST(ExchangeOperatorProxyTest, DisabledFunctionality) {
   // clang-format off
   const auto exchange_proxy =
   ExchangeOperatorProxy::Make(
-    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}}));
+    ImportOperatorProxy::Make(std::vector<ObjectReference>{ObjectReference("bucket_name", "import.orc")}, std::vector<ColumnId>{ColumnId{0}}));
 
   // clang-format on
   EXPECT_THROW(exchange_proxy->ToJson(), std::logic_error);

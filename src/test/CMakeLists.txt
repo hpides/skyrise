@@ -1,6 +1,6 @@
 include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib
+    ${PROJECT_SOURCE_DIR}/src/benchmark/lib
+    ${PROJECT_SOURCE_DIR}/src/test/lib
     ${PROJECT_SOURCE_DIR}/third_party/googletest/googletest/include
 )
 
@@ -9,8 +9,8 @@ set(
     TEST_SOURCES
     benchmark/lib/benchmark_integration_test.cpp
     benchmark/lib/benchmark_result_aggregate_test.cpp
-    benchmark/lib/compression/compression_test.cpp
-    benchmark/lib/data_generation/tpch_test.cpp
+        benchmark/lib/lambda/compression/compression_test.cpp
+        benchmark/lib/tpch/tpch_data_generator_test.cpp
     benchmark/lib/ec2/ec2_benchmark_config_test.cpp
     benchmark/lib/ec2/ec2_benchmark_result_test.cpp
     benchmark/lib/ec2/ec2_benchmark_runner_test.cpp
@@ -32,6 +32,7 @@ set(
     lib/compiler/physical_query_plan/operator_proxy_test.cpp
     lib/compiler/physical_query_plan/partition_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/pqp_serialization_test.cpp
+    lib/compiler/physical_query_plan/pqp_utils_test.cpp
     lib/compiler/physical_query_plan/projection_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/sort_operator_proxy_test.cpp
     lib/compiler/physical_query_plan/union_operator_proxy_test.cpp
@@ -40,7 +41,7 @@ set(
     lib/expression/expression_serialization_test.cpp
 
     lib/metadata/mock_catalog_test.cpp
-    lib/metadata/tpch_mock_catalog_test.cpp
+        benchmark/lib/tpch/tpch_mock_catalog_test.cpp
 
     lib/monitoring/function_segments_test.cpp
     lib/monitoring/metrics_collector_test.cpp
@@ -62,18 +63,12 @@ set(
 
     lib/serialization/schema_serialization_test.cpp
 
-    lib/statistics/manifest_shared.cpp
-    lib/statistics/manifest_shared.hpp
-    lib/statistics/manifest_reader_test.cpp
-    lib/statistics/manifest_writer_test.cpp
-    lib/statistics/statistics_collector_test.cpp
-
-    lib/statistics/statistics_collector_test.cpp
-    lib/statistics/manifest_shared.cpp
-    lib/statistics/manifest_shared.hpp
-    lib/statistics/manifest_reader_test.cpp
-    lib/statistics/manifest_writer_test.cpp
     lib/statistics/manifest_merger_test.cpp
+    lib/statistics/manifest_reader_test.cpp
+    lib/statistics/manifest_shared.cpp
+    lib/statistics/manifest_shared.hpp
+    lib/statistics/manifest_writer_test.cpp
+    lib/statistics/statistics_collector_test.cpp
 
     lib/storage/backend/abstract_provider.hpp
     lib/storage/backend/filesystem_provider.hpp
@@ -93,12 +88,13 @@ set(
     lib/storage/formats/orc_reader_test.cpp
     lib/storage/formats/orc_writer_test.cpp
 
-    lib/storage/table/chunk_test.cpp
-    lib/storage/table/table_column_definition_test.cpp
     lib/storage/table/chunk_reader_test.cpp
+    lib/storage/table/chunk_test.cpp
     lib/storage/table/chunk_writer_test.cpp
-    lib/storage/table/value_segment_test.cpp
+    lib/storage/table/table_column_definition_test.cpp
+    lib/storage/table/table_key_constraint_test.cpp
     lib/storage/table/table_test.cpp
+    lib/storage/table/value_segment_test.cpp
 
     lib/utils/costs/cost_calculator_test.cpp
     lib/utils/costs/pricing_test.cpp

@@ -87,7 +87,8 @@ TEST_F(AggregateOperatorProxyTest, DeepCopy) {
   // clang-format off
   const auto aggregate_proxy =
   AggregateOperatorProxy::Make(group_by_column_ids_, aggregates_,
-    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
+    ImportOperatorProxy::Make(
+      std::vector<ObjectReference>{ObjectReference("bucket_name", "import.orc")}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
   // clang-format on
   aggregate_proxy->SetIsPipelineBreaker(false);
@@ -107,7 +108,7 @@ TEST_F(AggregateOperatorProxyTest, CreateOperatorInstance) {
   // clang-format off
   const auto aggregate_proxy =
   AggregateOperatorProxy::Make(group_by_column_ids_, aggregates_,
-    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}, ColumnId{2}}));
+    ImportOperatorProxy::Make(std::vector<ObjectReference>{ObjectReference("bucket_name", "import.orc")}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}, ColumnId{2}}));
 
   // clang-format on
   EXPECT_THROW(aggregate_proxy->GetOrCreateOperatorInstance(), std::logic_error);

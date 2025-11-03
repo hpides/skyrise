@@ -72,7 +72,7 @@ void BenchmarkHelper::UploadObjectsToS3Parallel(
 
   size_t num_errors = 0;
 
-  for (size_t i = 0; i < callables.size(); i++) {
+  for (size_t i = 0; i < callables.size(); ++i) {
     const auto& outcome = callables[i].get();
 
     if (!outcome.IsSuccess()) {

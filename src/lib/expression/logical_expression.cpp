@@ -48,7 +48,7 @@ DataType LogicalExpression::GetDataType() const { return DataType::kInt; }
 
 bool LogicalExpression::ShallowEquals(const AbstractExpression& expression) const {
   DebugAssert(dynamic_cast<const LogicalExpression*>(&expression),
-              "Different expression type should have been caught by AbstractExpression::operator==");
+              "Different expression type should have been caught by AbstractExpression::operator==.");
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
   return logical_operator_ == static_cast<const LogicalExpression&>(expression).logical_operator_;
 }

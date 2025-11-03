@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+#include <boost/container_hash/hash.hpp>
+
 #include "operator/hash_join_operator.hpp"
 #include "operator/join_operator_predicate.hpp"
 
@@ -186,6 +188,16 @@ std::shared_ptr<AbstractOperatorProxy> JoinOperatorProxy::OnDeepCopy(
                                  copied_right_input);
 }
 
+size_t JoinOperatorProxy::ShallowHash() const {
+  size_t hash = boost::hash_value(mode_);
+  boost::hash_combine(hash, primary_predicate_->Hash());
+  for (const auto& secondary_predicate : secondary_predicates_) {
+    boost::hash_combine(hash, secondary_predicate->Hash());
+  }
+
+  return hash;
+}
+
 std::shared_ptr<AbstractOperator> JoinOperatorProxy::CreateOperatorInstanceRecursively() {
   Assert(type_ == OperatorType::kHashJoin, "OperatorType must be HashJoin.");
   Assert(secondary_predicates_.empty(), "Join does not support secondary predicates yet.");
@@ -214,6 +226,21 @@ std::shared_ptr<JoinOperatorPredicate> JoinOperatorProxy::DeserializePredicate(
       static_cast<ColumnId>(predicate.GetInteger(kJsonKeyColumnIdLeft)),
       static_cast<ColumnId>(predicate.GetInteger(kJsonKeyColumnIdRight)),
       magic_enum::enum_cast<PredicateCondition>(predicate.GetString(kJsonKeyPredicateCondition)).value()});
+}
+
+std::shared_ptr<JoinOperatorPredicate> JoinOperatorPredicate_(
+    const std::shared_ptr<BinaryPredicateExpression>& binary_predicate_expression) {
+  Assert(binary_predicate_expression->LeftOperand()->type_ == ExpressionType::kPqpColumn &&
+             binary_predicate_expression->RightOperand()->type_ == ExpressionType::kPqpColumn,
+         "Binary predicate must have PQP columns as operands.");
+  const auto left_pqp_column =
+      std::static_pointer_cast<PqpColumnExpression>(binary_predicate_expression->LeftOperand());
+  const auto right_pqp_column =
+      std::static_pointer_cast<PqpColumnExpression>(binary_predicate_expression->RightOperand());
+
+  const auto join_operator_predicate = std::make_shared<JoinOperatorPredicate>(JoinOperatorPredicate{
+      left_pqp_column->column_id_, right_pqp_column->column_id_, binary_predicate_expression->predicate_condition_});
+  return join_operator_predicate;
 }
 
 }  // namespace skyrise

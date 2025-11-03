@@ -1,5 +1,6 @@
 #include "import_operator_proxy.hpp"
 
+#include <boost/container_hash/hash.hpp>
 #include <magic_enum.hpp>
 
 #include "operator/import_operator.hpp"
@@ -9,29 +10,31 @@
 
 namespace {
 
-const std::string kCsvExtension = ".csv";
-const std::string kJsonKeyBucketName = "bucket_name";
-const std::string kJsonKeyColumnIds = "column_ids";
-const std::string kJsonKeyImportOptions = "import_options";
-const std::string kJsonKeyObjectKeys = "object_keys";
 const std::string kName = "Import";
+const std::string kJsonKeyImportOptions = "import_options";
+const std::string kJsonKeyColumnIds = "column_ids";
+
+const std::string kCsvExtension = ".csv";
 const std::string kOrcExtension = ".orc";
+
+const std::string kJsonKeyObjectReferences = "import_references";
+const std::string kJsonKeyBucketName = "bucket";
+const std::string kJsonKeyObjectKey = "key";
+const std::string kJsonKeyObjectEtag = "etag";
 
 }  // namespace
 
 namespace skyrise {
 
-ImportOperatorProxy::ImportOperatorProxy(std::string bucket_name, std::vector<std::string> object_keys,
-                                         std::vector<ColumnId> column_ids)
-    : AbstractOperatorProxy(OperatorType::kImport),
-      bucket_name_(std::move(bucket_name)),
-      object_keys_(std::move(object_keys)),
-      column_ids_(std::move(column_ids)),
-      output_objects_count_(std::numeric_limits<size_t>::max()) {
+ImportOperatorProxy::ImportOperatorProxy(const std::vector<ObjectReference>& object_references,
+                                         const std::vector<ColumnId>& column_ids)
+    : AbstractOperatorProxy(OperatorType::kImport), column_ids_(column_ids), object_references_(object_references) {
   Assert(!column_ids_.empty(), "Import must involve at least one ColumnId.");
 }
 
 const std::string& ImportOperatorProxy::Name() const { return kName; }
+
+const std::vector<ObjectReference>& ImportOperatorProxy::ObjectReferences() const { return object_references_; }
 
 std::string ImportOperatorProxy::Description(const DescriptionMode mode) const {
   std::stringstream stream;
@@ -39,24 +42,20 @@ std::string ImportOperatorProxy::Description(const DescriptionMode mode) const {
   stream << AbstractOperatorProxy::Description(mode) << separator;
 
   // Import details
-  stream << bucket_name_ << "/";
+  stream << object_references_.front().bucket_name << "/";
   if (mode == DescriptionMode::kMultiLine) {
     stream << separator;
   }
-  if (object_keys_.size() == 1) {
-    stream << object_keys_.front();
+  if (object_references_.size() == 1) {
+    stream << object_references_.front().identifier;
   } else {
-    stream << "{" << object_keys_.size() << " objects}";
+    stream << "{" << object_references_.size() << " objects}";
   }
   // todo(anyone) input format ORC/CSV?
 
   stream << separator << "ColumnIds{" << column_ids_ << "}";
   return stream.str();
 }
-
-const std::string& ImportOperatorProxy::BucketName() const { return bucket_name_; }
-
-const std::vector<std::string>& ImportOperatorProxy::ObjectKeys() const { return object_keys_; }
 
 const std::vector<ColumnId>& ImportOperatorProxy::ColumnIds() const { return column_ids_; }
 
@@ -72,8 +71,8 @@ std::shared_ptr<const ImportOptions> ImportOperatorProxy::GetImportOptions() con
 bool ImportOperatorProxy::IsPipelineBreaker() const { return false; }
 
 size_t ImportOperatorProxy::OutputObjectsCount() const {
-  Assert(!object_keys_.empty(), "ImportOperatorProxy has no object keys set.");
-  return std::min(object_keys_.size(), output_objects_count_);
+  Assert(!object_references_.empty(), "ImportOperatorProxy has no object keys set.");
+  return std::min(object_references_.size(), output_objects_count_);
 }
 
 void ImportOperatorProxy::SetOutputObjectsCount(size_t output_objects_count) {
@@ -84,10 +83,18 @@ void ImportOperatorProxy::SetOutputObjectsCount(size_t output_objects_count) {
 size_t ImportOperatorProxy::OutputColumnsCount() const { return column_ids_.size(); }
 
 Aws::Utils::Json::JsonValue ImportOperatorProxy::ToJson() const {
+  Aws::Utils::Array<Aws::Utils::Json::JsonValue> object_references_array(object_references_.size());
+  for (size_t i = 0; i < object_references_.size(); ++i) {
+    const auto& object_reference = object_references_[i];
+    object_references_array[i]
+        .WithString(kJsonKeyBucketName, object_reference.bucket_name)
+        .WithString(kJsonKeyObjectKey, object_reference.identifier)
+        .WithString(kJsonKeyObjectEtag, object_reference.etag);
+  }
+
   auto json_output = AbstractOperatorProxy::ToJson()
-                         .WithString(kJsonKeyBucketName, bucket_name_)
-                         .WithArray(kJsonKeyObjectKeys, VectorToJsonArray(object_keys_))
-                         .WithArray(kJsonKeyColumnIds, VectorToJsonArray(column_ids_));
+                         .WithArray(kJsonKeyColumnIds, VectorToJsonArray(column_ids_))
+                         .WithArray(kJsonKeyObjectReferences, object_references_array);
 
   if (import_options_ != nullptr) {
     json_output.WithObject(kJsonKeyImportOptions, import_options_->ToJson());
@@ -97,11 +104,18 @@ Aws::Utils::Json::JsonValue ImportOperatorProxy::ToJson() const {
 }
 
 std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::FromJson(const Aws::Utils::Json::JsonView& json) {
-  const Aws::String bucket_name = json.GetString(kJsonKeyBucketName);
-  const auto object_keys = JsonArrayToVector<std::string>(json.GetArray(kJsonKeyObjectKeys));
   const auto column_ids = JsonArrayToVector<ColumnId>(json.GetArray(kJsonKeyColumnIds));
+  const auto object_references_json_array = json.GetArray(kJsonKeyObjectReferences);
+  std::vector<ObjectReference> objects_references;
+  objects_references.reserve(object_references_json_array.GetLength());
+  for (size_t i = 0; i < object_references_json_array.GetLength(); ++i) {
+    const auto serialized_obect_reference = object_references_json_array.GetItem(i);
+    objects_references.emplace_back(serialized_obect_reference.GetString(kJsonKeyBucketName),
+                                    serialized_obect_reference.GetString(kJsonKeyObjectKey),
+                                    serialized_obect_reference.GetString(kJsonKeyObjectEtag));
+  }
 
-  auto import_proxy = ImportOperatorProxy::Make(bucket_name, object_keys, column_ids);
+  auto import_proxy = ImportOperatorProxy::Make(objects_references, column_ids);
   import_proxy->SetAttributesFromJson(json);
 
   if (json.ValueExists(kJsonKeyImportOptions)) {
@@ -115,7 +129,7 @@ std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::FromJson(const Aws::
 std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::OnDeepCopy(
     const std::shared_ptr<AbstractOperatorProxy>& /*copied_left_input*/,
     const std::shared_ptr<AbstractOperatorProxy>& /*copied_right_input*/) const {
-  auto copy = ImportOperatorProxy::Make(bucket_name_, object_keys_, column_ids_);
+  auto copy = ImportOperatorProxy::Make(object_references_, column_ids_);
   copy->SetOutputObjectsCount(output_objects_count_);
   if (import_options_ != nullptr) {
     copy->SetImportOptions(import_options_);
@@ -124,9 +138,30 @@ std::shared_ptr<AbstractOperatorProxy> ImportOperatorProxy::OnDeepCopy(
   return copy;
 }
 
+size_t ImportOperatorProxy::ShallowHash() const {
+  size_t hash = 0;
+  for (const auto& object_reference : object_references_) {
+    boost::hash_combine(hash, object_reference.bucket_name);
+    boost::hash_combine(hash, object_reference.identifier);
+    boost::hash_combine(hash, object_reference.etag);
+  }
+
+  for (const auto column_id : column_ids_) {
+    boost::hash_combine(hash, column_id);
+  }
+
+  if (import_options_) {
+    // TODO(anyone): Do we want to hash ImportOptions attribute-by-attribute?
+    boost::hash_combine(hash, import_options_);
+  }
+
+  boost::hash_combine(hash, output_objects_count_);
+
+  return hash;
+}
+
 std::shared_ptr<AbstractOperator> ImportOperatorProxy::CreateOperatorInstanceRecursively() {
-  Assert(!bucket_name_.empty(), "ImportOperatorProxy has no bucket name.");
-  Assert(!object_keys_.empty(), "ImportOperatorProxy must specify at least one object key.");
+  Assert(!object_references_.empty(), "ImportOperatorProxy must specify at least one object.");
   Assert(!column_ids_.empty(), "ImportOperatorProxy must specify at least one column id.");
 
   // The ImportOperator requires a reader factory for its operations. It can be generated from the ImportOptions object
@@ -136,7 +171,7 @@ std::shared_ptr<AbstractOperator> ImportOperatorProxy::CreateOperatorInstanceRec
   if (import_options_ != nullptr) {
     reader_factory = import_options_->CreateReaderFactory();
   } else {
-    const std::string first_object_key = object_keys_.front();
+    const std::string first_object_key = object_references_.front().identifier;
     auto specifies_format = [&first_object_key](const std::string& file_extension) -> bool {
       if (first_object_key.size() <= file_extension.size()) {
         return false;
@@ -153,10 +188,10 @@ std::shared_ptr<AbstractOperator> ImportOperatorProxy::CreateOperatorInstanceRec
     } else {
       Fail("Expected object key to have either a .csv or .orc file extension.");
     }
-    reader_factory = ImportOptions(import_format).CreateReaderFactory();
+    reader_factory = ImportOptions(import_format, column_ids_).CreateReaderFactory();
   }
 
-  return std::make_shared<ImportOperator>(bucket_name_, object_keys_, column_ids_, reader_factory);
+  return std::make_shared<ImportOperator>(object_references_, column_ids_, reader_factory);
 }
 
 }  // namespace skyrise

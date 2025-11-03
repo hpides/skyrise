@@ -1,7 +1,8 @@
+#include "tpch/tpch_data_generator.hpp"
+
 #include <gtest/gtest.h>
 
-#include "data_generation/tpch/tpch_generator.hpp"
-#include "lib/storage/backend/mock_storage.hpp"
+#include "storage/backend/mock_storage.hpp"
 #include "storage/formats/csv_writer.hpp"
 #include "storage/table/chunk_writer.hpp"
 
@@ -43,7 +44,7 @@ TEST_F(TpchDataGeneratorTest, GenerateRegionTable) {
   ASSERT_TRUE(status.GetError());
 
   // Now generate table
-  TPCHGenerator generator(get_chunk_writer_, kScaleFactor);
+  TpchDataGenerator generator(get_chunk_writer_, kScaleFactor);
   generator.DisableAllTables();
   generator.EnableTable(TpchTable::kRegion);
   generator.Generate();
@@ -54,10 +55,9 @@ TEST_F(TpchDataGeneratorTest, GenerateRegionTable) {
   ASSERT_GT(status.GetSize(), 0);
 
   // Check contents of file
-  std::string content;
-  storage_->OpenForReading("region.csv")
-      ->Read(0, ObjectReader::kLastByteInFile,
-             [&content](const char* data, size_t length) { content.append(data, length); });
+  std::vector<char> content_buffer;
+  storage_->OpenForReading("region.csv")->Read(0, ObjectReader::kLastByteInFile, &content_buffer);
+  std::string content(content_buffer.data(), content_buffer.size());
 
   ASSERT_TRUE(content.find("r_regionkey,r_name,r_comment") != content.npos);
   ASSERT_TRUE(content.find("AFRICA") != content.npos);
@@ -69,7 +69,7 @@ TEST_F(TpchDataGeneratorTest, GenerateAlmostAllTables) {
   const std::vector<std::string> tables = {"partsupp.csv", "supplier.csv", "customer.csv",
                                            "orders.csv",   "nation.csv",   "region.csv"};
 
-  TPCHGenerator generator(get_chunk_writer_, kScaleFactor);
+  TpchDataGenerator generator(get_chunk_writer_, kScaleFactor);
   generator.EnableAllTables();
   generator.DisableTable(TpchTable::kLineItem);
   generator.DisableTable(TpchTable::kPart);
@@ -89,7 +89,7 @@ TEST_F(TpchDataGeneratorTest, GenerateAllTables) {
   const std::vector<std::string> tables = {"part.csv",   "partsupp.csv", "supplier.csv", "customer.csv",
                                            "orders.csv", "nation.csv",   "region.csv",   "lineitem.csv"};
 
-  TPCHGenerator generator(get_chunk_writer_, kScaleFactor);
+  TpchDataGenerator generator(get_chunk_writer_, kScaleFactor);
   generator.EnableAllTables();
   generator.Generate();
 

@@ -4,6 +4,7 @@
 #include <string>
 
 #include <boost/algorithm/string/join.hpp>
+#include <boost/container_hash/hash.hpp>
 
 #include "operator/alias_operator.hpp"
 #include "types.hpp"
@@ -67,6 +68,18 @@ std::shared_ptr<AbstractOperatorProxy> AliasOperatorProxy::OnDeepCopy(
     const std::shared_ptr<AbstractOperatorProxy>& copied_left_input,
     const std::shared_ptr<AbstractOperatorProxy>& /*copied_right_input*/) const {
   return AliasOperatorProxy::Make(column_ids_, aliases_, copied_left_input);
+}
+
+size_t AliasOperatorProxy::ShallowHash() const {
+  size_t hash = 0;
+  for (const auto column_id : column_ids_) {
+    boost::hash_combine(hash, column_id);
+  }
+  for (const auto& alias : aliases_) {
+    boost::hash_combine(hash, alias);
+  }
+
+  return hash;
 }
 
 std::shared_ptr<AbstractOperator> AliasOperatorProxy::CreateOperatorInstanceRecursively() {

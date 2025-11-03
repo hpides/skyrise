@@ -1,6 +1,10 @@
 #include "partition_operator_proxy.hpp"
 
+#include <boost/container_hash/hash.hpp>
+#include <magic_enum.hpp>
+
 #include "operator/partition_operator.hpp"
+#include "utils/assert.hpp"
 
 namespace {
 
@@ -12,64 +16,50 @@ const std::string kName = "Partition";
 
 namespace skyrise {
 
-PartitionOperatorProxy::PartitionOperatorProxy(const size_t partition_count,
-                                               const std::set<ColumnId>& partition_column_ids)
-    : AbstractOperatorProxy(OperatorType::kPartition),
-      partition_count_(partition_count),
-      partition_column_ids_(partition_column_ids) {}
+PartitionOperatorProxy::PartitionOperatorProxy(std::shared_ptr<AbstractPartitioningFunction> partitioning_function)
+    : AbstractOperatorProxy(OperatorType::kPartition), partitioning_function_(std::move(partitioning_function)) {}
 
 const std::string& PartitionOperatorProxy::Name() const { return kName; }
 
 std::string PartitionOperatorProxy::Description(const DescriptionMode mode) const {
-  std::stringstream stream;
   const char separator = mode == DescriptionMode::kSingleLine ? ' ' : '\n';
+
+  std::stringstream stream;
   stream << AbstractOperatorProxy::Description(mode) << separator;
-  stream << partition_count_ << " partition(s)" << separator;
-  stream << "ColumnIds{";
-  auto column_ids_iter = partition_column_ids_.cbegin();
-  while (column_ids_iter != partition_column_ids_.cend()) {
-    stream << *column_ids_iter++;
-    if (column_ids_iter != partition_column_ids_.cend()) {
+  // TODO(d-justen): Add PartitioningFunctionType
+  stream << partitioning_function_->PartitionCount() << " partition(s)" << separator << "ColumnIds{";
+
+  const auto& partition_column_ids = partitioning_function_->PartitionColumnIds();
+
+  for (auto column_id_iterator = partition_column_ids.cbegin(); column_id_iterator != partition_column_ids.cend();
+       ++column_id_iterator) {
+    stream << *column_id_iterator;
+    if (column_id_iterator != std::prev(partition_column_ids.cend(), 1)) {
       stream << ", ";
     }
   }
+
   stream << "}";
 
   return stream.str();
 }
 
-size_t PartitionOperatorProxy::PartitionCount() const { return partition_count_; }
+size_t PartitionOperatorProxy::PartitionCount() const { return partitioning_function_->PartitionCount(); }
 
-const std::set<ColumnId>& PartitionOperatorProxy::PartitionColumnIds() const { return partition_column_ids_; }
+const std::set<ColumnId>& PartitionOperatorProxy::PartitionColumnIds() const {
+  return partitioning_function_->PartitionColumnIds();
+}
 
 bool PartitionOperatorProxy::IsPipelineBreaker() const { return false; }
 
 Aws::Utils::Json::JsonValue PartitionOperatorProxy::ToJson() const {
-  Aws::Utils::Array<Aws::Utils::Json::JsonValue> partition_column_id_array(partition_column_ids_.size());
-
-  size_t i = 0;
-
-  for (const auto& partition_column_id : partition_column_ids_) {
-    partition_column_id_array[i++] = Aws::Utils::Json::JsonValue().AsInteger(partition_column_id);
-  }
-
-  return AbstractOperatorProxy::ToJson()
-      .WithInteger(kJsonKeyPartitionCount, partition_count_)
-      .WithArray(kJsonKeyPartitionColumnIds, partition_column_id_array);
+  return AbstractOperatorProxy::ToJson().WithObject("partitioning_function", partitioning_function_->ToJson());
 }
 
 std::shared_ptr<AbstractOperatorProxy> PartitionOperatorProxy::FromJson(const Aws::Utils::Json::JsonView& json) {
-  const size_t partition_count = json.GetInteger(kJsonKeyPartitionCount);
-  const auto partition_column_id_array = json.GetArray(kJsonKeyPartitionColumnIds);
+  const auto partitioning_function = AbstractPartitioningFunction::FromJson(json.GetObject("partitioning_function"));
 
-  // Store ColumnIds in a set to provide a deterministic order.
-  std::set<ColumnId> partition_column_id_set;
-
-  for (size_t i = 0; i < partition_column_id_array.GetLength(); ++i) {
-    partition_column_id_set.emplace(partition_column_id_array[i].AsInteger());
-  }
-
-  auto partition_proxy = PartitionOperatorProxy::Make(partition_count, partition_column_id_set);
+  auto partition_proxy = PartitionOperatorProxy::Make(partitioning_function);
   partition_proxy->SetAttributesFromJson(json);
 
   return partition_proxy;
@@ -78,13 +68,24 @@ std::shared_ptr<AbstractOperatorProxy> PartitionOperatorProxy::FromJson(const Aw
 std::shared_ptr<AbstractOperatorProxy> PartitionOperatorProxy::OnDeepCopy(
     const std::shared_ptr<AbstractOperatorProxy>& copied_left_input,
     const std::shared_ptr<AbstractOperatorProxy>& /*copied_right_input*/) const {
-  return PartitionOperatorProxy::Make(partition_count_, partition_column_ids_, copied_left_input);
+  return PartitionOperatorProxy::Make(
+      std::make_shared<HashPartitioningFunction>(partitioning_function_->PartitionColumnIds(),
+                                                 partitioning_function_->PartitionCount()),
+      copied_left_input);
+}
+
+size_t PartitionOperatorProxy::ShallowHash() const {
+  size_t hash = boost::hash_value(partitioning_function_->PartitionCount());
+  for (const auto partition_column_id : partitioning_function_->PartitionColumnIds()) {
+    boost::hash_combine(hash, partition_column_id);
+  }
+
+  return hash;
 }
 
 std::shared_ptr<AbstractOperator> PartitionOperatorProxy::CreateOperatorInstanceRecursively() {
   Assert(LeftInput(), "Missing input operator proxy.");
-  return std::make_shared<PartitionOperator>(LeftInput()->GetOrCreateOperatorInstance(), partition_count_,
-                                             partition_column_ids_);
+  return std::make_shared<PartitionOperator>(LeftInput()->GetOrCreateOperatorInstance(), partitioning_function_);
 }
 
 }  // namespace skyrise

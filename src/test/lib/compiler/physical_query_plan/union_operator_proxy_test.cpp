@@ -13,13 +13,16 @@ namespace skyrise {
 class UnionOperatorProxyTest : public ::testing::Test {
  public:
   void SetUp() override {
-    import_proxy_a_ = ImportOperatorProxy::Make("bucket1", kObjectKeys, kColumnIds);
-    import_proxy_b_ = ImportOperatorProxy::Make("bucket2", kObjectKeys, kColumnIds);
+    import_proxy_a_ = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
+    import_proxy_b_ = ImportOperatorProxy::Make(kObjectReferences, kColumnIds);
   }
 
  protected:
   std::shared_ptr<ImportOperatorProxy> import_proxy_a_, import_proxy_b_;
-  static inline const std::vector<std::string> kObjectKeys = {"key1.orc", "key2.orc", "key3.orc"};
+  static inline const std::vector<ObjectReference> kObjectReferences = {ObjectReference("dummy_bucket", "key1.orc"),
+                                                                        ObjectReference("dummy_bucket", "key2.orc"),
+                                                                        ObjectReference("dummy_bucket", "key3.orc")};
+
   static inline const std::vector<ColumnId> kColumnIds = {ColumnId{0}, ColumnId{3}, ColumnId{4}};
 };
 

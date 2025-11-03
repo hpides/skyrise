@@ -1,4 +1,4 @@
-#include "metadata/tpch_mock_catalog.hpp"
+#include "tpch/tpch_mock_catalog.hpp"
 
 #include <gtest/gtest.h>
 

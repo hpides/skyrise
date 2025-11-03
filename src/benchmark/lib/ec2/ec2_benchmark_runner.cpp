@@ -40,7 +40,7 @@ void Ec2BenchmarkRunner::Setup() {
     return result;
   }();
 
-  for (size_t i = 0; i < typed_config_->repetition_count_; i++) {
+  for (size_t i = 0; i < typed_config_->repetition_count_; ++i) {
     run_instance_requests_[i].reserve(instances_per_request.size());
 
     for (const auto& instance_count : instances_per_request) {
@@ -66,7 +66,7 @@ std::shared_ptr<AbstractBenchmarkResult> Ec2BenchmarkRunner::OnRunConfig() {
 
   const auto benchmark_begin = std::chrono::steady_clock::now();
 
-  for (size_t i = 0; i < typed_config_->repetition_count_; i++) {
+  for (size_t i = 0; i < typed_config_->repetition_count_; ++i) {
     const auto repetition_begin = std::chrono::steady_clock::now();
 
     for (const auto& run_instance_request : run_instance_requests_[i]) {

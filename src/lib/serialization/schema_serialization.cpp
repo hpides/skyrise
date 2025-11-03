@@ -27,7 +27,7 @@ BinarySerializationStream& operator>>(BinarySerializationStream& stream, TableCo
   int64_t number_of_definitions = 0;
   stream >> number_of_definitions;
   values.resize(number_of_definitions);
-  for (int64_t i = 0; i < number_of_definitions; i++) {
+  for (int64_t i = 0; i < number_of_definitions; ++i) {
     stream >> values[i];
   }
   return stream;

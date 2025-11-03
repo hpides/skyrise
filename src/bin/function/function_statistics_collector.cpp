@@ -25,7 +25,7 @@ aws::lambda_runtime::invocation_response FunctionStatisticsCollector::OnHandleRe
   std::vector<std::string> objects;
   auto source_objects = request.GetArray("source_objects");
   objects.reserve(source_objects.GetLength());
-  for (size_t i = 0; i < source_objects.GetLength(); i++) {
+  for (size_t i = 0; i < source_objects.GetLength(); ++i) {
     objects.emplace_back(source_objects.GetItem(i).AsString());
   }
 

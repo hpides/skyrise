@@ -13,8 +13,8 @@ namespace skyrise {
 class SortOperatorProxyTest : public ::testing::Test {
  public:
   void SetUp() override {
-    const auto sort_definition1 = SortColumnDefinition{ColumnId{0}, SortMode::kAscending};
-    const auto sort_definition2 = SortColumnDefinition{ColumnId{1}, SortMode::kDescending};
+    const SortColumnDefinition sort_definition1(ColumnId{0}, SortMode::kAscending);
+    const SortColumnDefinition sort_definition2(ColumnId{1}, SortMode::kDescending);
     sort_definitions_ = {sort_definition1, sort_definition2};
   }
 
@@ -53,7 +53,7 @@ TEST_F(SortOperatorProxyTest, DeepCopy) {
   // clang-format off
   const auto sort_proxy =
   SortOperatorProxy::Make(sort_definitions_,
-    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
+    ImportOperatorProxy::Make(std::vector<ObjectReference>{ObjectReference("bucket_name", "import.orc")}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
   // clang-format on
   const auto sort_proxy_copy = std::dynamic_pointer_cast<SortOperatorProxy>(sort_proxy->DeepCopy());
@@ -68,7 +68,7 @@ TEST_F(SortOperatorProxyTest, CreateOperatorInstance) {
   // clang-format off
   const auto sort_proxy =
   SortOperatorProxy::Make(sort_definitions_, 
-    ImportOperatorProxy::Make("bucket_name", std::vector<std::string>{"import.orc"}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
+    ImportOperatorProxy::Make(std::vector<ObjectReference>{ObjectReference("bucket_name", "import.orc")}, std::vector<ColumnId>{ColumnId{0}, ColumnId{1}}));
 
   // clang-format on
   EXPECT_TRUE(sort_proxy->GetOrCreateOperatorInstance());

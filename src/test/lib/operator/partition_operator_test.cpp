@@ -32,9 +32,11 @@ class PartitionOperatorTest : public ::testing::Test {
   std::shared_ptr<Table> table_;
 };
 
-TEST_F(PartitionOperatorTest, Partition) {
+TEST_F(PartitionOperatorTest, HashPartitioning) {
   const auto table_wrapper = std::make_shared<TableWrapper>(table_);
-  const auto partition = std::make_shared<PartitionOperator>(table_wrapper, 4, std::set<ColumnId>{0, 2});
+
+  const auto partitioning_function = std::make_shared<HashPartitioningFunction>(std::set<ColumnId>{0, 2}, 4);
+  const auto partition = std::make_shared<PartitionOperator>(table_wrapper, partitioning_function);
 
   EXPECT_EQ(partition->Name(), "Partition");
 

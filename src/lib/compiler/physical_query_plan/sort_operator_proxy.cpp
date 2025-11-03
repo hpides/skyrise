@@ -66,6 +66,15 @@ std::shared_ptr<AbstractOperatorProxy> SortOperatorProxy::OnDeepCopy(
   return SortOperatorProxy::Make(sort_definitions_, copied_left_input);
 }
 
+size_t SortOperatorProxy::ShallowHash() const {
+  size_t hash = 0;
+  for (const auto& sort_definition : sort_definitions_) {
+    boost::hash_combine(hash, sort_definition.Hash());
+  }
+
+  return hash;
+}
+
 std::shared_ptr<AbstractOperator> SortOperatorProxy::CreateOperatorInstanceRecursively() {
   Assert(LeftInput(), "Missing input operator proxy.");
   Assert(!sort_definitions_.empty(), "SortOperatorProxy must specify at least one sort definition.");

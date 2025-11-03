@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+#include <boost/container_hash/hash.hpp>
+
 #include "expression/expression_serialization.hpp"
 
 namespace {
@@ -48,6 +50,8 @@ std::shared_ptr<AbstractOperatorProxy> LimitOperatorProxy::OnDeepCopy(
     const std::shared_ptr<AbstractOperatorProxy>& /*copied_right_input*/) const {
   return LimitOperatorProxy::Make(row_count_->DeepCopy(), copied_left_input);
 }
+
+size_t LimitOperatorProxy::ShallowHash() const { return row_count_->Hash(); }
 
 std::shared_ptr<AbstractOperator> LimitOperatorProxy::CreateOperatorInstanceRecursively() {
   Fail("CreateOperatorInstanceRecursively() is not yet implemented.");

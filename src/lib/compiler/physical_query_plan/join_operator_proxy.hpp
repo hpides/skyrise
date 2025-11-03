@@ -5,6 +5,8 @@
 #include <vector>
 
 #include "abstract_operator_proxy.hpp"
+#include "expression/binary_predicate_expression.hpp"
+#include "expression/pqp_column_expression.hpp"
 #include "magic_enum.hpp"
 #include "operator/join_operator_predicate.hpp"
 #include "types.hpp"
@@ -48,6 +50,7 @@ class JoinOperatorProxy : public EnableMakeForPlanNode<JoinOperatorProxy, Abstra
   std::shared_ptr<AbstractOperatorProxy> OnDeepCopy(
       const std::shared_ptr<AbstractOperatorProxy>& copied_left_input,
       const std::shared_ptr<AbstractOperatorProxy>& copied_right_input) const override;
+  size_t ShallowHash() const override;
   std::shared_ptr<AbstractOperator> CreateOperatorInstanceRecursively() override;
 
   static Aws::Utils::Json::JsonValue SerializePredicate(const std::shared_ptr<JoinOperatorPredicate>& predicate);
@@ -58,5 +61,13 @@ class JoinOperatorProxy : public EnableMakeForPlanNode<JoinOperatorProxy, Abstra
   const std::shared_ptr<JoinOperatorPredicate> primary_predicate_;
   const std::vector<std::shared_ptr<JoinOperatorPredicate>> secondary_predicates_;
 };
+
+/**
+ * Creates a JoinOperatorPredicate from @param binary_predicate_expression.
+ * @pre Both operands of @param binary_predicate_expression must have ExpressionType::kPqpColumn.
+ * @return a shared pointer to the JoinOperatorPredicate.
+ */
+std::shared_ptr<JoinOperatorPredicate> JoinOperatorPredicate_(
+    const std::shared_ptr<BinaryPredicateExpression>& binary_predicate_expression);
 
 }  // namespace skyrise

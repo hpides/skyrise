@@ -3,6 +3,7 @@
 #include <string>
 
 #include "storage/table/table_column_definition.hpp"
+#include "storage/table/table_key_constraint.hpp"
 #include "types.hpp"
 
 namespace skyrise {
@@ -21,11 +22,14 @@ class TableSchema : Noncopyable {
 
   ColumnCount TableColumnCount() const;
 
-  static std::shared_ptr<const TableSchema> FromTableColumnDefinitions(
-      const TableColumnDefinitions& column_definitions);
+  void AddKeyConstraint(const TableKeyConstraint& table_key_constraint);
+  const TableKeyConstraints& KeyConstraints() const;
+
+  static std::shared_ptr<TableSchema> FromTableColumnDefinitions(const TableColumnDefinitions& column_definitions);
 
  private:
   const TableColumnDefinitions column_definitions_;
+  TableKeyConstraints table_key_constraints_;
 };
 
 }  // namespace skyrise

@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+#include <boost/container_hash/hash.hpp>
+
 #include "expression/expression_serialization.hpp"
 #include "expression/expression_utils.hpp"
 #include "utils/json.hpp"
@@ -102,6 +104,19 @@ std::shared_ptr<AbstractOperatorProxy> AggregateOperatorProxy::OnDeepCopy(
   aggregate_proxy->is_pipeline_breaker_ = is_pipeline_breaker_;
 
   return aggregate_proxy;
+}
+
+size_t AggregateOperatorProxy::ShallowHash() const {
+  size_t hash = 0;
+  for (const auto groupby_column_id : groupby_column_ids_) {
+    boost::hash_combine(hash, groupby_column_id);
+  }
+  for (const auto& aggregate : aggregates_) {
+    boost::hash_combine(hash, aggregate->Hash());
+  }
+  boost::hash_combine(hash, is_pipeline_breaker_);
+
+  return hash;
 }
 
 std::shared_ptr<AbstractOperator> AggregateOperatorProxy::CreateOperatorInstanceRecursively() {

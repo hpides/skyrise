@@ -33,4 +33,27 @@ class AbstractChunkReader {
   StorageError error_;
 };
 
+class AbstractChunkReaderFactory {
+ public:
+  virtual ~AbstractChunkReaderFactory() = default;
+  virtual std::unique_ptr<AbstractChunkReader> Get(std::unique_ptr<ObjectReader> source) = 0;
+};
+
+template <typename Formatter>
+class FormatReaderFactory : public AbstractChunkReaderFactory {
+ public:
+  explicit FormatReaderFactory(
+      const typename Formatter::Configuration configuration = typename Formatter::Configuration())
+      : configuration_(std::move(configuration)) {}
+
+  std::unique_ptr<AbstractChunkReader> Get(std::unique_ptr<ObjectReader> source) override {
+    return std::make_unique<Formatter>(std::move(source), configuration_);
+  }
+
+  const typename Formatter::Configuration& Configuration() const { return configuration_; };
+
+ private:
+  typename Formatter::Configuration configuration_;
+};
+
 }  // namespace skyrise

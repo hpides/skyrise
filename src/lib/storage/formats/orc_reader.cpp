@@ -60,7 +60,7 @@ std::shared_ptr<AbstractSegment> ColumnVectorBatchToSegment(orc::ColumnVectorBat
   auto result = std::make_shared<ValueSegment<TargetSegmentType>>(false, length);
   auto& destination = result->Values();
   auto* source = specialized_batch->data.data();
-  for (size_t i = 0; i < length; i++) {
+  for (size_t i = 0; i < length; ++i) {
     destination.push_back(static_cast<TargetSegmentType>(source[i]));
   }
   return result;
@@ -76,7 +76,7 @@ std::shared_ptr<AbstractSegment> ColumnVectorBatchToSegment<orc::StringVectorBat
   auto& destination = result->Values();
   auto* source_data = specialized_batch->data.data();
   auto* source_length = specialized_batch->length.data();
-  for (size_t i = 0; i < length; i++) {
+  for (size_t i = 0; i < length; ++i) {
     destination.emplace_back(source_data[i], source_length[i]);
   }
 
@@ -92,7 +92,7 @@ std::shared_ptr<AbstractSegment> ColumnVectorBatchToSegment<orc::LongVectorBatch
   auto result = std::make_shared<ValueSegment<std::string>>(false, length);
   auto& destination = result->Values();
   auto* source_data = specialized_batch->data.data();
-  for (size_t i = 0; i < length; i++) {
+  for (size_t i = 0; i < length; ++i) {
     destination.emplace_back(OrcFormatReader::OrcTimestampToDateString(static_cast<int32_t>(source_data[i])));
   }
 
@@ -152,6 +152,14 @@ OrcFormatReader::OrcFormatReader(std::unique_ptr<ObjectReader> source, Configura
     // TODO(anyone): Once predicates become available through the configuration object and we decided on an internal
     // representation, push them down to orc::Reader.
     orc::RowReaderOptions row_options;
+
+    if (configuration_.include_columns.has_value()) {
+      const auto& columns = configuration_.include_columns.value();
+      // We cast the ColumnId (uint32_t) to an uin64_t becuase the ORC library requires a std::list<uint64_t>.
+      const std::list<uint64_t> columns_list(columns.cbegin(), columns.cend());
+      row_options.include(columns_list);
+    }
+
     row_reader_ = reader_->createRowReader(row_options);
 
     if (configuration_.select_partition_range.has_value() || configuration_.select_row_range.has_value()) {
@@ -245,13 +253,20 @@ void OrcFormatReader::ExtractSchema() {
   auto schema = std::make_shared<TableColumnDefinitions>();
   const auto& type = reader_->getType();
 
-  for (size_t i = 0; i < type.getSubtypeCount(); i++) {
+  for (size_t i = 0; i < type.getSubtypeCount(); ++i) {
     const orc::Type* orc_type = type.getSubtype(i);
     DataType skyrise_type = OrcTypeKindToDataType(orc_type->getKind(), configuration_.parse_dates_as_string);
 
     // The current ORC definition has no information about whether or not NULL values are allowed for a column.
     // TODO(jansiebert): Implement support for null-values
     const bool nullable = false;
+
+    if (configuration_.include_columns.has_value()) {
+      const auto& include_columns = configuration_.include_columns;
+      if (std::find(include_columns->cbegin(), include_columns->cend(), i) == include_columns->end()) {
+        continue;
+      }
+    }
 
     schema->emplace_back(type.getFieldName(i), skyrise_type, nullable);
   }
@@ -284,11 +299,20 @@ std::unique_ptr<Chunk> OrcFormatReader::Next() {
   num_rows_read_ += num_rows_read_now;
   auto* struct_batch = dynamic_cast<orc::StructVectorBatch*>(column_vector_batch_.get());
   const auto& type = reader_->getType();
-  segments.reserve(type.getSubtypeCount());
 
-  for (size_t column_id = 0; column_id < type.getSubtypeCount(); column_id++) {
-    segments.emplace_back(CreateSegment(struct_batch->fields[column_id], type.getSubtype(column_id)->getKind(),
-                                        configuration_.parse_dates_as_string, num_rows_read_now));
+  if (configuration_.include_columns.has_value()) {
+    segments.reserve(configuration_.include_columns->size());
+    for (size_t i = 0; i < configuration_.include_columns->size(); ++i) {
+      const ColumnId& original_column_id = configuration_.include_columns.value()[i];
+      segments.emplace_back(CreateSegment(struct_batch->fields[i], type.getSubtype(original_column_id)->getKind(),
+                                          configuration_.parse_dates_as_string, num_rows_read_now));
+    }
+  } else {
+    segments.reserve(type.getSubtypeCount());
+    for (size_t column_id = 0; column_id < type.getSubtypeCount(); ++column_id) {
+      segments.emplace_back(CreateSegment(struct_batch->fields[column_id], type.getSubtype(column_id)->getKind(),
+                                          configuration_.parse_dates_as_string, num_rows_read_now));
+    }
   }
 
   return std::make_unique<Chunk>(segments);
