@@ -10,6 +10,9 @@ set(
     compiler/compilation_context.hpp
     compiler/logical_query_plan/functional_dependency.cpp
     compiler/logical_query_plan/functional_dependency.hpp
+    compiler/visualization/abstract_visualizer.hpp
+    compiler/visualization/pqp_visualizer.cpp
+    compiler/visualization/pqp_visualizer.hpp
 )
 
 set(
