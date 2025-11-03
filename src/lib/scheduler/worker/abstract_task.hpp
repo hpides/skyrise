@@ -26,6 +26,11 @@ namespace skyrise {
  *    +-----------+
  *    | Scheduled |
  *    +-----------+
+ *          | Submit()
+ *          v
+ *    +-----------+
+ *    | Enqueued |
+ *    +-----------+
  *          | Execute()
  *          v
  *    +-----------+
@@ -39,13 +44,13 @@ namespace skyrise {
  *
  *  1. All tasks are initialized in TaskState::kCreated.
  *  2. A task changes to TaskState::kScheduled once the task is scheduled by a scheduler.
- *  3. Once the task is taken by an Executor thread, it transitions to TaskState:kStarted.
- *  4. A task switches to TaskState::kStarted when Execute() is called.
+ *  3. Once the scheduler submits a task to the executor queue, the task changes its state to TaskState::kEnqueued.
+ *  4. Once the task is taken by an executor thread, it transitions to TaskState:kStarted.
  *  5. After finishing its work, Execute() transitions the task to TaskState::kDone.
  */
 
 // The state enum values are declared in progressive order to allow for comparisons involving the >, >= operators.
-enum class TaskState { kCreated, kScheduled, kStarted, kDone };
+enum class TaskState { kCreated, kScheduled, kEnqueued, kStarted, kDone };
 static_assert(static_cast<std::underlying_type_t<TaskState>>(TaskState::kCreated) == 0,
               "TaskState::kCreated is not equal to 0. TaskState enum values are expected to be ordered.");
 
@@ -78,8 +83,6 @@ class AbstractTask : public std::enable_shared_from_this<AbstractTask> {
    */
   bool IsDone() const;
 
-  bool SetScheduled();
-
   /**
    * Description for debugging purposes.
    */
@@ -95,6 +98,10 @@ class AbstractTask : public std::enable_shared_from_this<AbstractTask> {
    * Make this Task the dependency of another @param successor Task that will be executed after this.
    */
   void SetAsPredecessorOf(const std::shared_ptr<AbstractTask>& successor);
+
+  bool TryTransitionToEnqueued();
+
+  bool TryTransitionToScheduled();
 
   /**
    * @return the predecessors of this Task.

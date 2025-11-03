@@ -1,19 +1,21 @@
 # Tool versions
-ARG AWS_SDK_VERSION=1.9.241
+ARG ARROW_PARQUET_VERSION=8.0.1
+ARG AWS_SDK_VERSION=1.9.302
 ARG BOOST_VERSION=1.79.0
-ARG CCACHE_VERSION=4.6
+ARG CCACHE_VERSION=4.6.1
 ARG CMAKE_MAJOR_MINOR=3.23
-ARG CMAKE_PATCH=1
-ARG CPPCHECK_VERSION=2.7
-ARG CPPLINT_COMMIT=629edc1
+ARG CMAKE_PATCH=2
+ARG CPPCHECK_VERSION=2.8
+ARG CPPLINT_COMMIT=e880840
 ARG GCC_VERSION=7.5.0
 ARG GCC_SUFFIX=75
 ARG HEAPTRACK_VERSION=1.3.0
-ARG LLVM_CLANG_VERSION=14.0.0
-ARG ORC_VERSION=1.7.4
+ARG LLVM_CLANG_VERSION=14.0.6
+ARG ORC_VERSION=1.7.5
 ARG VALGRIND_VERSION=3.19.0
 
 # Tool locations
+ARG ARROW_PARQUET_DIR=/opt/build/arrow-parquet-${ARROW_PARQUET_VERSION}
 ARG AWS_SDK_DIR=/opt/build/aws-sdk-${AWS_SDK_VERSION}
 ARG BOOST_DIR=/opt/build/boost-${BOOST_VERSION}
 ARG CCACHE_DIR=/opt/build/ccache-${CCACHE_VERSION}
@@ -22,7 +24,7 @@ ARG CPPCHECK_DIR=/opt/build/cppcheck-${CPPCHECK_VERSION}
 ARG CPPLINT_DIR=/opt/build/cpplint-${CPPLINT_COMMIT}
 ARG GCC_DIR=/opt/build/gcc-${GCC_VERSION}
 ARG HEAPTRACK_DIR=/opt/run/heaptrack-${HEAPTRACK_VERSION}
-ARG LLVM_CLANG_DIR=/opt/build/llvm-${LLVM_CLANG_VERSION}
+ARG LLVM_CLANG_DIR=/opt/build/llvm-clang-${LLVM_CLANG_VERSION}
 ARG ORC_DIR=/opt/build/orc-${ORC_VERSION}
 ARG VALGRIND_DIR=/opt/run/valgrind-${VALGRIND_VERSION}
 
@@ -58,6 +60,7 @@ RUN yum update -y && \
     yum clean all && \
     rm -rf /var/cache/yum
 
+
 # CMake
 FROM base-install AS base-cmake
 ARG CMAKE_MAJOR_MINOR
@@ -71,6 +74,34 @@ RUN wget -nv https://cmake.org/files/v${CMAKE_MAJOR_MINOR}/cmake-${CMAKE_MAJOR_M
         do \
             ln -s $file /usr/bin/$(basename $file); \
         done
+
+
+# Cpplint
+FROM base-install AS base-cpplint
+ARG CPPLINT_COMMIT
+ARG CPPLINT_DIR
+
+WORKDIR ${CPPLINT_DIR}/bin
+RUN wget -nv  https://raw.githubusercontent.com/google/styleguide/${CPPLINT_COMMIT}/cpplint/cpplint.py && \
+    chmod +x cpplint.py
+
+
+# GCC
+FROM base-install AS base-gcc
+ARG GCC_VERSION
+ARG GCC_SUFFIX
+ARG GCC_DIR
+
+WORKDIR ${GCC_DIR}/src
+RUN wget -nv https://mirrors.kernel.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz -O - \
+        | tar -xz --strip-components=1 && \
+    ./contrib/download_prerequisites && \
+    mkdir build && \
+    cd build && \
+    ../configure --enable-languages=c,c++ --disable-multilib --prefix=${GCC_DIR} --program-suffix=${GCC_SUFFIX} && \
+    make -j$(nproc) && \
+    make install-strip && \
+    rm -rf ${GCC_DIR}/src
 
 
 # Ccache
@@ -109,34 +140,6 @@ RUN wget -nv https://github.com/danmar/cppcheck/archive/${CPPCHECK_VERSION}.tar.
     make -j$(nproc) && \
     make install && \
     rm -rf ${CPPCHECK_DIR}/src
-
-
-# Cpplint
-FROM base-install AS base-cpplint
-ARG CPPLINT_COMMIT
-ARG CPPLINT_DIR
-
-WORKDIR ${CPPLINT_DIR}/bin
-RUN wget -nv  https://raw.githubusercontent.com/google/styleguide/${CPPLINT_COMMIT}/cpplint/cpplint.py && \
-    chmod +x cpplint.py
-
-
-# GCC
-FROM base-install AS base-gcc
-ARG GCC_VERSION
-ARG GCC_SUFFIX
-ARG GCC_DIR
-
-WORKDIR ${GCC_DIR}/src
-RUN wget -nv https://mirrors.kernel.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz -O - \
-        | tar -xz --strip-components=1 && \
-    ./contrib/download_prerequisites && \
-    mkdir build && \
-    cd build && \
-    ../configure --enable-languages=c,c++ --disable-multilib --prefix=${GCC_DIR} --program-suffix=${GCC_SUFFIX} && \
-    make -j$(nproc) && \
-    make install-strip && \
-    rm -rf ${GCC_DIR}/src
 
 
 # Heaptrack
@@ -183,6 +186,21 @@ ENV CC=clang \
     CXX=clang++
 
 
+# Valgrind
+FROM base-install AS base-valgrind
+ARG VALGRIND_VERSION
+ARG VALGRIND_DIR
+
+WORKDIR ${VALGRIND_DIR}/src
+RUN wget -nv https://sourceware.org/pub/valgrind/valgrind-${VALGRIND_VERSION}.tar.bz2 -O - \
+    | tar -xj --strip-components=1 && \
+    ./autogen.sh  && \
+    ./configure --prefix=${VALGRIND_DIR} && \
+    make -j$(nproc) && \
+    make install && \
+    rm -rf ${VALGRIND_DIR}/src
+
+
 # AWS SDK
 FROM base-llvm-clang AS base-aws-sdk
 ARG AWS_SDK_VERSION
@@ -222,30 +240,60 @@ RUN git clone --branch boost-${BOOST_VERSION} --depth 1 --recurse-submodules --s
         link=static \
         cxxflags="-std=c++17" \
         -j$(nproc) \
+        --with-filesystem \
         --with-math \
         --with-serialization \
         --with-stacktrace \
+        --with-system \
         install && \
     rm -rf ${BOOST_DIR}/src
 
 
-# Valgrind
-FROM base-install AS base-valgrind
-ARG VALGRIND_VERSION
-ARG VALGRIND_DIR
+# Arrow Parquet
+FROM base-llvm-clang AS base-arrow-parquet
+ARG ARROW_PARQUET_VERSION
+ARG ARROW_PARQUET_DIR
+ARG AWS_SDK_DIR
+ARG BOOST_DIR
 
-WORKDIR ${VALGRIND_DIR}/src
-RUN wget -nv https://sourceware.org/pub/valgrind/valgrind-${VALGRIND_VERSION}.tar.bz2 -O - \
-    | tar -xj --strip-components=1 && \
-    ./autogen.sh  && \
-    ./configure --prefix=${VALGRIND_DIR} && \
+COPY --from=base-aws-sdk ${AWS_SDK_DIR} ${AWS_SDK_DIR}
+COPY --from=base-boost ${BOOST_DIR} ${BOOST_DIR}
+RUN cp -r ${AWS_SDK_DIR}/{include,lib64} /usr && \
+    cp -r ${BOOST_DIR}/{include,lib} /usr
+
+WORKDIR ${ARROW_PARQUET_DIR}/src
+RUN wget -nv https://github.com/apache/arrow/archive/refs/tags/apache-arrow-${ARROW_PARQUET_VERSION}.tar.gz -O - \
+    | tar -xz --strip-components=1 && \
+    mkdir -p cpp/build && \
+    cd cpp/build && \
+    cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=${ARROW_PARQUET_DIR} \
+            -DARROW_BUILD_SHARED=OFF \
+            -DARROW_BUILD_STATIC=ON \
+            -DAWSSDK_SOURCE=SYSTEM \
+            -DBoost_SOURCE=SYSTEM \
+            -DARROW_DEPENDENCY_SOURCE=AUTO \
+            -DARROW_DEPENDENCY_USE_SHARED=OFF \
+            -DARROW_COMPUTE=ON \
+            -DARROW_DATASET=ON \
+            -DARROW_FILESYSTEM=ON \
+            -DARROW_PARQUET=ON \
+            -DARROW_WITH_BROTLI=ON \
+            -DARROW_WITH_BZ2=ON \
+            -DARROW_WITH_LZ4=ON \
+            -DARROW_WITH_RE2=ON\
+            -DARROW_WITH_SNAPPY=ON \
+            -DARROW_WITH_ZLIB=ON \
+            -DARROW_WITH_ZSTD=ON && \
     make -j$(nproc) && \
     make install && \
-    rm -rf ${VALGRIND_DIR}/src
+    rm -rf ${ARROW_PARQUET_DIR}/src
 
 
 # Base stage combining all tools
 FROM amazon/aws-sam-cli-build-image-provided.al2 AS base
+ARG ARROW_PARQUET_DIR
 ARG AWS_SDK_DIR
 ARG BOOST_DIR
 ARG CCACHE_DIR
@@ -257,6 +305,7 @@ ARG HEAPTRACK_DIR
 ARG LLVM_CLANG_DIR
 ARG VALGRIND_DIR
 
+COPY --from=base-arrow-parquet ${ARROW_PARQUET_DIR} ${ARROW_PARQUET_DIR}
 COPY --from=base-aws-sdk ${AWS_SDK_DIR} ${AWS_SDK_DIR}
 COPY --from=base-boost ${BOOST_DIR} ${BOOST_DIR}
 COPY --from=base-ccache ${CCACHE_DIR} ${CCACHE_DIR}
@@ -271,6 +320,7 @@ COPY --from=base-valgrind ${VALGRIND_DIR} ${VALGRIND_DIR}
 
 # Amazon Linux 2 Docker image for building Skyrise
 FROM amazon/aws-sam-cli-build-image-provided.al2 AS al2
+ARG ARROW_PARQUET_DIR
 ARG AWS_SDK_DIR
 ARG BOOST_DIR
 ARG GCC_DIR
@@ -278,8 +328,8 @@ ARG GCC_DIR
     # Update packages
 RUN yum update -y && \
     # Install packages
-    yum install -y \
     # AWS SDK dependency
+    yum install -y \
     libcurl-devel \
     libuuid-devel \
     openssl-devel \
@@ -321,6 +371,7 @@ RUN for file in /opt/*/*/bin/*; \
     do \
         ln -s $file /usr/bin/$(basename $file); \
     done && \
+    cp -r ${ARROW_PARQUET_DIR}/{include,lib64} /usr && \
     cp -r ${AWS_SDK_DIR}/{include,lib64} /usr && \
     cp -r ${BOOST_DIR}/{include,lib} /usr && \
     cp -r ${GCC_DIR}/{include,lib,lib64} /usr && \
@@ -333,13 +384,16 @@ ENV CC=clang \
 
 # Ubuntu Docker image for building Skyrise
 FROM ubuntu:22.04 AS ubuntu
+ARG ARROW_PARQUET_VERSION
+ARG ARROW_PARQUET_DIR
 ARG AWS_SDK_VERSION
 ARG AWS_SDK_DIR
 
 RUN apt-get update && \
     apt-get install -y \
     lsb-release \
-    sudo
+    sudo \
+    wget
 
 # Install packages
 COPY script/install_toolchain.sh install_toolchain.sh
@@ -354,7 +408,7 @@ RUN git clone --branch ${AWS_SDK_VERSION} --depth 1 --recurse-submodules --shall
     cd src/build && \
     cmake .. \
             -DCMAKE_BUILD_TYPE=Release \
--DCMAKE_CXX_FLAGS="-Wno-error=deprecated-declarations" \
+            -DCMAKE_CXX_FLAGS="-Wno-error=deprecated-declarations" \
             -DBUILD_ONLY="dynamodb;ec2;glue;iam;lambda;logs;monitoring;pricing;s3;sqs;ssm;xray" \
             -DBUILD_SHARED_LIBS=OFF \
             -DCPP_STANDARD=17 \
@@ -364,4 +418,33 @@ RUN git clone --branch ${AWS_SDK_VERSION} --depth 1 --recurse-submodules --shall
             -DTARGET_ARCH=LINUX && \
     make -j$(nproc) && \
     make install && \
-    rm -rf ${AWS_SDK_DIR}
+    rm -rf ${AWS_SDK_DIR}/src
+
+# Build and install Arrow Parquet
+WORKDIR ${ARROW_PARQUET_DIR}/src
+RUN wget -nv https://github.com/apache/arrow/archive/refs/tags/apache-arrow-${ARROW_PARQUET_VERSION}.tar.gz -O - \
+    | tar -xz --strip-components=1 && \
+    mkdir -p cpp/build && \
+    cd cpp/build && \
+    cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DARROW_BUILD_SHARED=OFF \
+            -DARROW_BUILD_STATIC=ON \
+            -DAWSSDK_SOURCE=SYSTEM \
+            -DBoost_SOURCE=SYSTEM \
+            -DARROW_DEPENDENCY_SOURCE=AUTO \
+            -DARROW_DEPENDENCY_USE_SHARED=OFF \
+            -DARROW_COMPUTE=ON \
+            -DARROW_DATASET=ON \
+            -DARROW_FILESYSTEM=ON \
+            -DARROW_PARQUET=ON \
+            -DARROW_WITH_BROTLI=ON \
+            -DARROW_WITH_BZ2=ON \
+            -DARROW_WITH_LZ4=ON \
+            -DARROW_WITH_RE2=ON\
+            -DARROW_WITH_SNAPPY=ON \
+            -DARROW_WITH_ZLIB=ON \
+            -DARROW_WITH_ZSTD=ON && \
+    make -j$(nproc) && \
+    make install && \
+    rm -rf ${ARROW_PARQUET_DIR}/src

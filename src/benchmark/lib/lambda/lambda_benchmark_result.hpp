@@ -62,6 +62,7 @@ class LambdaBenchmarkRepetition {
   const std::vector<LambdaInvokeResult>& GetInvokeResults() const;
   long double GetWarmUpCost() const;
   double GetDurationMs() const;
+  double GetDurationSeconds() const;
   bool IsComplete() const;
 
  private:

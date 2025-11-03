@@ -112,8 +112,8 @@ PredicateCondition ConditionsToBetween(const PredicateCondition lower, const Pre
 enum class AggregateFunction { kAny, kAvg, kCount, kCountDistinct, kMax, kMin, kStandardDeviationSample, kSum };
 std::ostream& operator<<(std::ostream& stream, const AggregateFunction aggregate_function);
 
-enum class ExchangeMode { kFullMerge, kPartialMerge };
-std::ostream& operator<<(std::ostream& stream, ExchangeMode exchange_mode);
+enum class ExchangeType { kCombine, kShuffle, kBroadcast };
+std::ostream& operator<<(std::ostream& stream, ExchangeType exchange_mode);
 
 /**
  * Let R and S be two tables and we want to perform R <JoinMode> S ON <condition>
@@ -156,6 +156,11 @@ inline bool operator==(const SortColumnDefinition& lhs, const SortColumnDefiniti
 }
 
 /**
+ * Defines the file formats supported by the ExportOperator.
+ */
+enum class ExportFormat { kCsv, kOrc, kOrcPartitioned };
+
+/**
  * Defines a general reference to an object stored in S3.
  */
 struct ObjectReference {
@@ -163,11 +168,11 @@ struct ObjectReference {
       : bucket_name(std::move(init_bucket_name)), identifier(std::move(init_identifier)), etag(std::move(init_etag)) {
     Assert(!bucket_name.empty(), "ObjectReference requires a non-empty bucket name.");
     Assert(!identifier.empty(), "ObjectReference requires a non-empty object identifier.");
-  };
+  }
 
   bool operator==(const ObjectReference& other) const {
     return bucket_name == other.bucket_name && identifier == other.identifier && etag == other.etag;
-  };
+  }
 
   std::string bucket_name;
   std::string identifier;

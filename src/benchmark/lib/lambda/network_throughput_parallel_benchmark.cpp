@@ -63,12 +63,9 @@ Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateResultOu
   throughputs.reserve(benchmark_repetitions.size());
 
   for (const auto& benchmark_repetition : benchmark_repetitions) {
-    const double duration_seconds =
-        std::chrono::duration<double>(std::chrono::duration<double, std::milli>(benchmark_repetition.GetDurationMs()))
-            .count();
     throughputs.emplace_back(ByteToMb(benchmark_parameters.object_byte_size) * benchmark_parameters.thread_count *
                              benchmark_parameters.batch_size * benchmark_repetition.GetInvokeResults().size() /
-                             duration_seconds);
+                             benchmark_repetition.GetDurationSeconds());
   }
 
   const BenchmarkResultAggregate aggregate(throughputs);
@@ -120,6 +117,41 @@ Aws::Utils::Json::JsonValue NetworkThroughputParallelBenchmark::GenerateResultOu
         }
 
         return std::make_tuple("duration_seconds", Aws::Utils::Json::JsonValue().AsArray(duration_seconds));
+      })
+      .WithDoubleRepetitionMetric([&](const LambdaBenchmarkRepetition& repetition) {
+        const auto throughput = ByteToMb(benchmark_parameters.object_byte_size) * benchmark_parameters.thread_count *
+                                benchmark_parameters.batch_size * repetition.GetInvokeResults().size() /
+                                repetition.GetDurationSeconds();
+        return std::make_tuple("parallel_throughput_mb_per_s", throughput);
+      })
+      .WithObjectRepetitionMetric([&](const LambdaBenchmarkRepetition& repetition) {
+        std::vector<double> throughputs;
+        throughputs.reserve(repetition.GetInvokeResults().size());
+
+        for (auto const& invocation : repetition.GetInvokeResults()) {
+          const double duration_ms = invocation.GetResponseBody().GetArray("ms_durations")[0].AsDouble();
+          const double duration_seconds =
+              std::chrono::duration<double>(std::chrono::duration<double, std::milli>(duration_ms)).count();
+          const double throughput =
+              ByteToMb(benchmark_parameters.object_byte_size) / duration_seconds * benchmark_parameters.thread_count;
+
+          throughputs.emplace_back(throughput);
+        }
+
+        const BenchmarkResultAggregate throughput_aggregates(throughputs);
+
+        return std::make_tuple(
+            "invocation_throughputs",
+            Aws::Utils::Json::JsonValue()
+                .WithDouble("invocation_throughput_mb_per_s_minimum", throughput_aggregates.GetMinimum())
+                .WithDouble("invocation_throughput_mb_per_s_maximum", throughput_aggregates.GetMaximum())
+                .WithDouble("invocation_throughput_mb_per_s_average", throughput_aggregates.GetAverage())
+                .WithDouble("invocation_throughput_mb_per_s_median", throughput_aggregates.GetMedian())
+                .WithDouble("invocation_throughput_mb_per_s_percentile_0.01", throughput_aggregates.GetPercentile(0.01))
+                .WithDouble("invocation_throughput_mb_per_s_percentile_0.1", throughput_aggregates.GetPercentile(0.1))
+                .WithDouble("invocation_throughput_mb_per_s_percentile_1", throughput_aggregates.GetPercentile(1))
+                .WithDouble("invocation_throughput_mb_per_s_percentile_10", throughput_aggregates.GetPercentile(10))
+                .WithDouble("invocation_throughput_mb_per_s_std_dev", throughput_aggregates.GetStandardDeviation()));
       })
       .Build();
 }

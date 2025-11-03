@@ -165,8 +165,8 @@ std::ostream& operator<<(std::ostream& stream, const JoinMode join_mode) {
   return stream << kJoinModeToString.left.at(join_mode);
 }
 
-std::ostream& operator<<(std::ostream& stream, ExchangeMode exchange_mode) {
-  return stream << kExchangeModeToString.left.at(exchange_mode);
+std::ostream& operator<<(std::ostream& stream, ExchangeType exchange_mode) {
+  return stream << kExchangeTypeToString.left.at(exchange_mode);
 }
 
 std::ostream& operator<<(std::ostream& stream, SetOperationMode set_operation_mode) {

@@ -18,22 +18,22 @@ ColumnId TableSchema::ColumnIdByName(const std::string& column_name) const {
 }
 
 const std::string& TableSchema::ColumnName(const ColumnId column_id) const {
-  DebugAssert(column_id < column_definitions_.size(), "ColumnId out of range.");
+  Assert(column_id < column_definitions_.size(), "ColumnId out of range.");
   return column_definitions_[column_id].name;
 }
 
 DataType TableSchema::ColumnDataType(const ColumnId column_id) const {
-  DebugAssert(column_id < column_definitions_.size(), "ColumnId out of range.");
+  Assert(column_id < column_definitions_.size(), "ColumnId out of range.");
   return column_definitions_[column_id].data_type;
 }
 
 bool TableSchema::ColumnIsNullable(const ColumnId column_id) const {
-  DebugAssert(column_id < column_definitions_.size(), "ColumnId out of range.");
+  Assert(column_id < column_definitions_.size(), "ColumnId out of range.");
   return column_definitions_[column_id].nullable;
 }
 
 TableColumnDefinition TableSchema::GetTableColumnDefinition(const ColumnId column_id) const {
-  DebugAssert(column_id < column_definitions_.size(), "ColumnId out of range.");
+  Assert(column_id < column_definitions_.size(), "ColumnId out of range.");
   return column_definitions_[column_id];
 }
 

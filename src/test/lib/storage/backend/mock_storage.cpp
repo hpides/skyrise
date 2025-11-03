@@ -1,5 +1,7 @@
 #include "mock_storage.hpp"
 
+#include <vector>
+
 namespace skyrise {
 
 MockReader::MockReader(std::shared_ptr<std::string> data, std::string identifier)

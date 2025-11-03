@@ -2,6 +2,7 @@
 
 #include "storage/formats/csv_writer.hpp"
 #include "storage/formats/orc_writer.hpp"
+#include "types.hpp"
 
 namespace {
 

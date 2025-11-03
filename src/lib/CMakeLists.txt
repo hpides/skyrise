@@ -4,125 +4,66 @@ set(GIT_FAIL_IF_NONZERO_EXIT FALSE)
 include(${PROJECT_SOURCE_DIR}/third_party/cmake-git-version-tracking/git_watcher.cmake)
 
 set(
-    SERIALIZATION_SOURCES
-    serialization/binary_serialization_stream.cpp
-    serialization/binary_serialization_stream.hpp
-    serialization/schema_serialization.cpp
-    serialization/schema_serialization.hpp
+    COORDINATOR_COMPILER_SOURCES
+
+    compiler/compilation_context.cpp
+    compiler/compilation_context.hpp
+    compiler/logical_query_plan/functional_dependency.cpp
+    compiler/logical_query_plan/functional_dependency.hpp
+    compiler/physical_query_plan/exchange/abstract_exchange_strategy.cpp
+    compiler/physical_query_plan/exchange/abstract_exchange_strategy.hpp
+    compiler/physical_query_plan/exchange/combine_objects_exchange_strategy.cpp
+    compiler/physical_query_plan/exchange/combine_objects_exchange_strategy.hpp
+    compiler/physical_query_plan/pqp_pipeline_slicer.cpp
+    compiler/physical_query_plan/pqp_pipeline_slicer.hpp
 )
 
 set(
-    STATISTICS_SOURCES
-    statistics/manifest_reader.cpp
-    statistics/manifest_reader.hpp
-    statistics/manifest_writer.cpp
-    statistics/manifest_writer.hpp
-    statistics/statistics_collector.cpp
-    statistics/statistics_collector.hpp
-)
-
-set(
-    STORAGE_SOURCES
-    storage/backend/abstract_storage.cpp
-    storage/backend/abstract_storage.hpp
-    storage/backend/errors.cpp
-    storage/backend/errors.hpp
-    storage/backend/storage_filesystem.cpp
-    storage/backend/storage_filesystem.hpp
-    storage/backend/storage_s3.cpp
-    storage/backend/storage_s3.hpp
-    storage/backend/stream.cpp
-    storage/backend/stream.hpp
-    storage/formats/abstract_chunk_reader.cpp
-    storage/formats/abstract_chunk_reader.hpp
-    storage/formats/abstract_chunk_writer.cpp
-    storage/formats/abstract_chunk_writer.hpp
-    storage/formats/csv_reader.cpp
-    storage/formats/csv_reader.hpp
-    storage/formats/csv_writer.cpp
-    storage/formats/csv_writer.hpp
-    storage/formats/orc_reader.cpp
-    storage/formats/orc_reader.hpp
-    storage/formats/orc_writer.cpp
-    storage/formats/orc_writer.hpp
-    storage/storage_types.hpp
-    storage/table/abstract_segment.hpp
-    storage/table/abstract_table_constraint.cpp
-    storage/table/abstract_table_constraint.hpp
-    storage/table/base_value_segment.hpp
-    storage/table/chunk.cpp
-    storage/table/chunk.hpp
-    storage/table/chunk_writer.cpp
-    storage/table/chunk_writer.hpp
-    storage/table/table.cpp
-    storage/table/table.hpp
-    storage/table/table_column_definition.cpp
-    storage/table/table_column_definition.hpp
-    storage/table/table_key_constraint.cpp
-    storage/table/table_key_constraint.hpp
-    storage/table/value_segment.cpp
-    storage/table/value_segment.hpp
-)
-
-set(
-    STATISTICS_SOURCES
-    statistics/manifest_reader.hpp
-    statistics/manifest_reader.cpp
-    statistics/manifest_writer.hpp
-    statistics/manifest_writer.cpp
-    statistics/manifest_merger.hpp
-    statistics/manifest_merger.cpp
-    statistics/statistics_collector.cpp
-    statistics/statistics_collector.hpp
-)
-
-set(
-    SHARED_SOURCES
-    aggregate_traits.hpp
-    all_type_variant.hpp
-    all_type_variant.cpp
-    constant_mappings.cpp
-    constant_mappings.hpp
+    SHARED_COMPILER_SOURCES
 
     compiler/abstract_plan_node.hpp
     compiler/enable_make_for_plan_node.hpp
-
-    compiler/logical_query_plan/functional_dependency.cpp
-    compiler/logical_query_plan/functional_dependency.hpp
-
-    compiler/physical_query_plan/abstract_operator_proxy.cpp
-    compiler/physical_query_plan/abstract_operator_proxy.hpp
-    compiler/physical_query_plan/aggregate_operator_proxy.cpp
-    compiler/physical_query_plan/aggregate_operator_proxy.hpp
-    compiler/physical_query_plan/alias_operator_proxy.cpp
-    compiler/physical_query_plan/alias_operator_proxy.hpp
-    compiler/physical_query_plan/exchange_operator_proxy.cpp
-    compiler/physical_query_plan/exchange_operator_proxy.hpp
-    compiler/physical_query_plan/export_operator_proxy.cpp
-    compiler/physical_query_plan/export_operator_proxy.hpp
-    compiler/physical_query_plan/filter_operator_proxy.cpp
-    compiler/physical_query_plan/filter_operator_proxy.hpp
-    compiler/physical_query_plan/import_operator_proxy.cpp
-    compiler/physical_query_plan/import_operator_proxy.hpp
-    compiler/physical_query_plan/import_options.cpp
-    compiler/physical_query_plan/import_options.hpp
-    compiler/physical_query_plan/join_operator_proxy.cpp
-    compiler/physical_query_plan/join_operator_proxy.hpp
-    compiler/physical_query_plan/limit_operator_proxy.cpp
-    compiler/physical_query_plan/limit_operator_proxy.hpp
-    compiler/physical_query_plan/partition_operator_proxy.cpp
-    compiler/physical_query_plan/partition_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/abstract_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/abstract_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/aggregate_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/aggregate_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/alias_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/alias_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/exchange_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/exchange_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/export_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/export_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/filter_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/filter_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/import_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/import_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/import_options.cpp
+    compiler/physical_query_plan/operator_proxy/import_options.hpp
+    compiler/physical_query_plan/operator_proxy/join_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/join_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/limit_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/limit_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/partition_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/partition_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/projection_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/projection_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/sort_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/sort_operator_proxy.hpp
+    compiler/physical_query_plan/operator_proxy/union_operator_proxy.cpp
+    compiler/physical_query_plan/operator_proxy/union_operator_proxy.hpp
+    compiler/physical_query_plan/pipeline_fragment_template.cpp
+    compiler/physical_query_plan/pipeline_fragment_template.hpp
+    compiler/physical_query_plan/pqp_pipeline.cpp
+    compiler/physical_query_plan/pqp_pipeline.hpp
     compiler/physical_query_plan/pqp_serialization.cpp
     compiler/physical_query_plan/pqp_serialization.hpp
     compiler/physical_query_plan/pqp_utils.cpp
     compiler/physical_query_plan/pqp_utils.hpp
-    compiler/physical_query_plan/projection_operator_proxy.cpp
-    compiler/physical_query_plan/projection_operator_proxy.hpp
-    compiler/physical_query_plan/sort_operator_proxy.cpp
-    compiler/physical_query_plan/sort_operator_proxy.hpp
-    compiler/physical_query_plan/union_operator_proxy.cpp
-    compiler/physical_query_plan/union_operator_proxy.hpp
     compiler/plan_utils.hpp
+)
+
+set(
+    SHARED_EXPRESSION_SOURCES
 
     expression/abstract_expression.cpp
     expression/abstract_expression.hpp
@@ -166,6 +107,10 @@ set(
     expression/unary_minus_expression.hpp
     expression/value_expression.cpp
     expression/value_expression.hpp
+)
+
+set(
+    SHARED_METADATA_SOURCES
 
     metadata/abstract_catalog.hpp
     metadata/mock_catalog.cpp
@@ -174,11 +119,19 @@ set(
     metadata/table_partition.hpp
     metadata/table_schema.cpp
     metadata/table_schema.hpp
-    
+)
+
+set(
+    SHARED_METERING_SOURCES
+
     metering/request_tracker/monitor.cpp
     metering/request_tracker/monitor.hpp
     metering/request_tracker/request_tracker.cpp
     metering/request_tracker/request_tracker.hpp
+)
+
+set(
+    SHARED_OPERATOR_SOURCES
 
     operator/abstract_aggregate_operator.cpp
     operator/abstract_aggregate_operator.hpp
@@ -211,6 +164,10 @@ set(
     operator/sort_operator.cpp
     operator/sort_operator.hpp
     operator/table_wrapper.hpp
+)
+
+set(
+    SHARED_SCHEDULER_SOURCES
 
     scheduler/scheduler_types.hpp
     scheduler/worker/abstract_task.cpp
@@ -223,9 +180,76 @@ set(
     scheduler/worker/operator_task.hpp
     scheduler/worker/fragment_scheduler.cpp
     scheduler/worker/fragment_scheduler.hpp
+)
 
-    types.cpp
-    types.hpp
+set(
+    SHARED_SERIALIZATION_SOURCES
+
+    serialization/binary_serialization_stream.cpp
+    serialization/binary_serialization_stream.hpp
+    serialization/schema_serialization.cpp
+    serialization/schema_serialization.hpp
+)
+
+set(
+    SHARED_STATISTICS_SOURCES
+
+    statistics/manifest_merger.cpp
+    statistics/manifest_merger.hpp
+    statistics/manifest_reader.cpp
+    statistics/manifest_reader.hpp
+    statistics/manifest_writer.cpp
+    statistics/manifest_writer.hpp
+    statistics/statistics_collector.cpp
+    statistics/statistics_collector.hpp
+)
+
+set(
+    SHARED_STORAGE_SOURCES
+
+    storage/backend/abstract_storage.cpp
+    storage/backend/abstract_storage.hpp
+    storage/backend/errors.cpp
+    storage/backend/errors.hpp
+    storage/backend/storage_filesystem.cpp
+    storage/backend/storage_filesystem.hpp
+    storage/backend/storage_s3.cpp
+    storage/backend/storage_s3.hpp
+    storage/backend/stream.cpp
+    storage/backend/stream.hpp
+    storage/formats/abstract_chunk_reader.cpp
+    storage/formats/abstract_chunk_reader.hpp
+    storage/formats/abstract_chunk_writer.cpp
+    storage/formats/abstract_chunk_writer.hpp
+    storage/formats/csv_reader.cpp
+    storage/formats/csv_reader.hpp
+    storage/formats/csv_writer.cpp
+    storage/formats/csv_writer.hpp
+    storage/formats/orc_reader.cpp
+    storage/formats/orc_reader.hpp
+    storage/formats/orc_writer.cpp
+    storage/formats/orc_writer.hpp
+    storage/storage_types.hpp
+    storage/table/abstract_segment.hpp
+    storage/table/abstract_table_constraint.cpp
+    storage/table/abstract_table_constraint.hpp
+    storage/table/base_value_segment.hpp
+    storage/table/chunk.cpp
+    storage/table/chunk.hpp
+    storage/table/chunk_writer.cpp
+    storage/table/chunk_writer.hpp
+    storage/table/table.cpp
+    storage/table/table.hpp
+    storage/table/table_column_definition.cpp
+    storage/table/table_column_definition.hpp
+    storage/table/table_key_constraint.cpp
+    storage/table/table_key_constraint.hpp
+    storage/table/value_segment.cpp
+    storage/table/value_segment.hpp
+)
+
+set(
+    SHARED_UTILS_SOURCES
 
     utils/array.hpp
     utils/assert.hpp
@@ -242,20 +266,42 @@ set(
     utils/profiling/function_host_information.cpp
     utils/profiling/function_host_information.hpp
     utils/random.hpp
+    utils/self_name.cpp
+    utils/self_name.hpp
     utils/string.cpp
     utils/string.hpp
     utils/time.cpp
     utils/time.hpp
     utils/unit_conversion.hpp
     utils/vector.hpp
+)
 
-    ${SERIALIZATION_SOURCES}
-    ${STATISTICS_SOURCES}
-    ${STORAGE_SOURCES}
+set(
+    SHARED_SOURCES
+
+    aggregate_traits.hpp
+    all_type_variant.cpp
+    all_type_variant.hpp
+    constant_mappings.cpp
+    constant_mappings.hpp
+    constants.hpp
+    types.cpp
+    types.hpp
+    ${SHARED_COMPILER_SOURCES}
+    ${SHARED_EXPRESSION_SOURCES}
+    ${SHARED_METADATA_SOURCES}
+    ${SHARED_METERING_SOURCES}
+    ${SHARED_OPERATOR_SOURCES}
+    ${SHARED_SCHEDULER_SOURCES}
+    ${SHARED_SERIALIZATION_SOURCES}
+    ${SHARED_STATISTICS_SOURCES}
+    ${SHARED_STORAGE_SOURCES}
+    ${SHARED_UTILS_SOURCES}
 )
 
 set(
     SHARED_LIBRARIES
+
     aws-cpp-sdk-core
     aws-cpp-sdk-s3
     aws-cpp-sdk-sqs
@@ -270,14 +316,11 @@ target_link_libraries(skyriseSharedLibrary PUBLIC ${SHARED_LIBRARIES})
 
 add_library(skyriseShared INTERFACE)
 
-target_link_libraries(skyriseShared
-    INTERFACE
-    skyriseSharedLibrary
-    orcWithDependencies
-)
+target_link_libraries(skyriseShared INTERFACE skyriseSharedLibrary orcWithDependencies)
 
 set(
     COORDINATOR_SOURCES
+
     client/client.cpp
     client/client.hpp
     configuration.hpp
@@ -294,10 +337,12 @@ set(
     utils/costs/cost_calculator.hpp
     utils/costs/pricing.cpp
     utils/costs/pricing.hpp
+    ${COORDINATOR_COMPILER_SOURCES}
 )
 
 set(
     COORDINATOR_LIBRARIES
+
     aws-cpp-sdk-ec2
     aws-cpp-sdk-iam
     aws-cpp-sdk-lambda
@@ -313,6 +358,7 @@ target_link_libraries(skyriseCoordinator PUBLIC ${COORDINATOR_LIBRARIES})
 
 set(
     WORKER_SOURCES
+
     function/function.cpp
     function/function.hpp
     monitoring/metrics_collector.cpp
@@ -325,6 +371,7 @@ set(
 
 set(
     WORKER_LIBRARIES
+
     aws-lambda-runtime
     skyriseShared
 )

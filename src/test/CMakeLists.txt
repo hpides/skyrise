@@ -1,6 +1,7 @@
 include_directories(
     ${PROJECT_SOURCE_DIR}/src/benchmark/lib
     ${PROJECT_SOURCE_DIR}/src/test/lib
+    ${PROJECT_SOURCE_DIR}/src/test/utils
     ${PROJECT_SOURCE_DIR}/third_party/googletest/googletest/include
 )
 
@@ -9,37 +10,44 @@ set(
     TEST_SOURCES
     benchmark/lib/benchmark_integration_test.cpp
     benchmark/lib/benchmark_result_aggregate_test.cpp
-        benchmark/lib/lambda/compression/compression_test.cpp
-        benchmark/lib/tpch/tpch_data_generator_test.cpp
     benchmark/lib/ec2/ec2_benchmark_config_test.cpp
     benchmark/lib/ec2/ec2_benchmark_result_test.cpp
     benchmark/lib/ec2/ec2_benchmark_runner_test.cpp
+    benchmark/lib/lambda/compression/compression_test.cpp
     benchmark/lib/lambda/lambda_benchmark_output_test.cpp
     benchmark/lib/lambda/lambda_benchmark_result_test.cpp
     benchmark/lib/lambda/lambda_benchmark_runner_test.cpp
+    benchmark/lib/synthetic_table_generator_test.cpp
+    benchmark/lib/tpch/tpch_data_generator_test.cpp
+    benchmark/lib/tpch/tpch_mock_catalog_test.cpp
 
-    lib/compiler/physical_query_plan/aggregate_operator_proxy_test.cpp
-    lib/compiler/physical_query_plan/alias_operator_proxy_test.cpp
-    lib/compiler/physical_query_plan/exchange_operator_proxy_test.cpp
-    lib/compiler/physical_query_plan/export_operator_proxy_test.cpp
-    lib/compiler/physical_query_plan/filter_operator_proxy_test.cpp
-    lib/compiler/physical_query_plan/import_options_test.cpp
-    lib/compiler/physical_query_plan/import_operator_proxy_test.cpp
-    lib/compiler/physical_query_plan/join_operator_proxy_test.cpp
-    lib/compiler/physical_query_plan/limit_operator_proxy_test.cpp
-    lib/compiler/physical_query_plan/operator_proxy_test.cpp
-    lib/compiler/physical_query_plan/partition_operator_proxy_test.cpp
+    lib/compiler/compilation_context_test.cpp
+
+    lib/compiler/physical_query_plan/exchange/combine_objects_exchange_strategy_test.cpp
+    lib/compiler/physical_query_plan/operator_proxy/aggregate_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/operator_proxy/alias_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/operator_proxy/exchange_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/operator_proxy/export_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/operator_proxy/filter_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/operator_proxy/import_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/operator_proxy/import_options_test.cpp
+    lib/compiler/physical_query_plan/operator_proxy/join_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/operator_proxy/limit_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/operator_proxy/operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/operator_proxy/partition_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/operator_proxy/projection_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/operator_proxy/sort_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/operator_proxy/union_operator_proxy_test.cpp
+    lib/compiler/physical_query_plan/pipeline_fragment_template_test.cpp
+    lib/compiler/physical_query_plan/pqp_pipeline_slicer_test.cpp
+    lib/compiler/physical_query_plan/pqp_pipeline_test.cpp
     lib/compiler/physical_query_plan/pqp_serialization_test.cpp
     lib/compiler/physical_query_plan/pqp_utils_test.cpp
-    lib/compiler/physical_query_plan/projection_operator_proxy_test.cpp
-    lib/compiler/physical_query_plan/sort_operator_proxy_test.cpp
-    lib/compiler/physical_query_plan/union_operator_proxy_test.cpp
 
     lib/expression/expression_evaluator_to_result_test.cpp
     lib/expression/expression_serialization_test.cpp
 
     lib/metadata/mock_catalog_test.cpp
-        benchmark/lib/tpch/tpch_mock_catalog_test.cpp
 
     lib/monitoring/function_segments_test.cpp
     lib/monitoring/metrics_collector_test.cpp
@@ -108,6 +116,8 @@ set(
     lib/testing/load_table_test.cpp
     lib/testing/testing_assert.hpp
 
+    utils/pqp_test_utils.cpp
+    utils/pqp_test_utils.hpp
     utils/string_test_utils.cpp
     utils/string_test_utils.hpp
 )

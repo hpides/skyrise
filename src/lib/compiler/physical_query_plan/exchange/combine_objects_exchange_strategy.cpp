@@ -1,0 +1,47 @@
+#include "combine_objects_exchange_strategy.hpp"
+
+#include <boost/container_hash/hash.hpp>
+
+namespace skyrise {
+
+CombineObjectsExchangeStrategy::CombineObjectsExchangeStrategy(size_t target_object_count)
+    : AbstractExchangeStrategy(ExchangeType::kCombine), target_object_count_(target_object_count) {
+  Assert(target_object_count_ > 0, "Cannot combine to zero objects.");
+}
+
+std::shared_ptr<const CombineObjectsExchangeStrategy> CombineObjectsExchangeStrategy::Create(
+    size_t target_object_count) {
+  return std::make_shared<const CombineObjectsExchangeStrategy>(target_object_count);
+}
+
+size_t CombineObjectsExchangeStrategy::TargetObjectsCount(size_t /* input_object_count */) const {
+  return target_object_count_;
+}
+
+size_t CombineObjectsExchangeStrategy::TargetPartitionsCount() const {
+  // TODO Partition Preserving by default. Not supported by ImportOperator yet.
+  return 1;
+}
+
+ExchangeResult CombineObjectsExchangeStrategy::ComputeExchangeResult(
+    const size_t /*pipeline_id*/, const std::shared_ptr<CompilationContext>& /*compilation_context*/,
+    const std::vector<std::shared_ptr<ImportOperatorProxy>>& /*import_proxies*/) const {
+  /**
+   * TODOs
+   * 1) Use Interface in ExchangeProxy -> Done.
+   * 2) Use Interface in Pipeline Slicer
+   * 2) Build ExchangeType tests
+   * 3) Implement this function
+   */
+
+  std::vector<PipelineFragmentDefinition> fragment_definitions;
+  std::vector<ObjectReference> target_objects;
+  const size_t partition_count = 1;
+  const size_t next_pipeline_target_object_count = target_object_count_;
+
+  return ExchangeResult(fragment_definitions, target_objects, partition_count, next_pipeline_target_object_count);
+}
+
+size_t CombineObjectsExchangeStrategy::ShallowHash() const { return boost::hash_value(target_object_count_); }
+
+}  // namespace skyrise
